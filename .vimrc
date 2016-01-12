@@ -77,6 +77,7 @@ set fileencodings=utf-8,gb18030,ucs-bom,big5,euc-jp,euc-kr,latin1
 " always show status line
 set laststatus=2
 
+" must execute 'export TERM=xterm-256color' first
 colorscheme molokai
 let g:molokai_original = 1
 let g:rehash256 = 1
