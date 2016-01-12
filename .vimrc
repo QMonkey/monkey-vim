@@ -109,7 +109,7 @@ autocmd BufWrite * :Autoformat
 " Generic C, C++, Objective-C style
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, Language: Cpp, BreakBeforeBraces: Allman, AllowShortBlocksOnASingleLine: false, AllowShortFunctionsOnASingleLine: false, AllowShortIfStatementsOnASingleLine: false, AllowShortLoopsOnASingleLine: false, IndentCaseLabels: false, DerivePointerAlignment: false, MaxEmptyLinesToKeep: 1, ColumnLimit: 0, PointerAlignment: Left}\"'"
 
-" go-vim settings
+" vim-go settings
 let g:go_highlight_functions               = 1
 let g:go_highlight_methods                 = 1
 let g:go_highlight_structs                 = 1
