@@ -16,10 +16,9 @@ Bundle 'szw/vim-tags'
 Bundle 'majutsushi/tagbar'
 Bundle 'itchyny/lightline.vim'
 Bundle 'Chiel92/vim-autoformat'
-Bundle 'Shougo/neocomplete.vim'
+Bundle 'Valloric/YouCompleteMe'
 Bundle 'fatih/vim-go'
 Bundle 'tomasr/molokai'
-"Bundle 'Rip-Rip/clang_complete'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -89,9 +88,6 @@ map <F3> :TagbarToggle<CR>
 " Open a NERDTree automatically when vim starts up
 " autocmd vimenter * NERDTree
 
-" Use neocomplete.
-let g:neocomplete#enable_at_startup = 1
-
 " Open a NERDTree automatically when vim starts up if no files were specified
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
@@ -99,13 +95,11 @@ autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
 " Close vim if the only window left open is a NERDTree
 autocmd bufenter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
 
-" Enable auto popup, use <Tab> to autocomplete
-let g:clang_complete_auto = 1
-" Show clang errors in the quickfix window
-let g:clang_complete_copen = 1
-
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
+
+" Config .ycm_extra_conf.py path
+let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 
 " Generic C, C++, Objective-C style
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, Language: Cpp, BreakBeforeBraces: Allman, AllowShortBlocksOnASingleLine: false, AllowShortFunctionsOnASingleLine: false, AllowShortIfStatementsOnASingleLine: false, AllowShortLoopsOnASingleLine: false, IndentCaseLabels: false, DerivePointerAlignment: false, MaxEmptyLinesToKeep: 1, ColumnLimit: 0, PointerAlignment: Left}\"'"
@@ -121,6 +115,7 @@ let g:go_fmt_command                       = "goimports"
 let g:godef_split                          = 2
 let g:godef_same_file_in_same_window       = 1
 
+" Tagbar
 let g:tagbar_type_go = {
 			\ 'ctagstype' : 'go',
 			\ 'kinds'     : [
