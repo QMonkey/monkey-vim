@@ -29,9 +29,14 @@ Bundle 'bronson/vim-trailing-whitespace'
 Bundle 'scrooloose/syntastic'
 Bundle 'Valloric/YouCompleteMe'
 Bundle 'Raimondi/delimitMate'
+Bundle 'tpope/vim-endwise'
+Bundle 'tpope/vim-ragtag'
 Bundle 'docunext/closetag.vim'
 Bundle 'fatih/vim-go'
+Bundle 'pangloss/vim-javascript'
+Bundle 'mattn/emmet-vim'
 Bundle 'tpope/vim-fugitive'
+Bundle 'airblade/vim-gitgutter'
 Bundle 'tomasr/molokai'
 
 " All of your Plugins must be added before the following line
@@ -151,6 +156,8 @@ endfunction
 colorscheme molokai
 let g:molokai_original = 1
 let g:rehash256 = 1
+syntax enable
+set regexpengine=1
 
 " Key map
 " tab
@@ -249,3 +256,7 @@ let g:syntastic_auto_loc_list = 0
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting=1
+
+" Emmet
+" enable all function in all mode.
+let g:user_emmet_mode='a'
