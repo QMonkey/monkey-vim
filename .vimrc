@@ -15,6 +15,7 @@ Bundle 'scrooloose/nerdtree'
 Bundle 'szw/vim-tags'
 Bundle 'majutsushi/tagbar'
 Bundle 'itchyny/lightline.vim'
+Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'Chiel92/vim-autoformat'
 Bundle 'Valloric/YouCompleteMe'
 Bundle 'fatih/vim-go'
@@ -114,6 +115,9 @@ let g:go_fmt_autosave                      = 1
 let g:go_fmt_command                       = "goimports"
 let g:godef_split                          = 2
 let g:godef_same_file_in_same_window       = 1
+
+" CtrlP runtime path
+set runtimepath^=~/.vim/bundle/ctrlp.vim
 
 " Tagbar
 let g:tagbar_type_go = {
