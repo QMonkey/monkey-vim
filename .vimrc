@@ -1,3 +1,12 @@
+" Add below code to .bashrc
+"export TERM=xterm-256color
+"
+"if [ -x $(which gvim) ]
+"then
+"	alias vi='gvim -v'
+"	alias vim='gvim -v'
+"fi
+
 set nocompatible
 filetype off
 
