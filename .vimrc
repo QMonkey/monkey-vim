@@ -153,6 +153,20 @@ let g:molokai_original = 1
 let g:rehash256 = 1
 
 " Key map
+" tab
+map <C-n> :tabnew<CR>
+map <C-d> :tabclose<CR>
+map <S-j> :tabprevious<CR>
+map <S-k> :tabNext<CR>
+map <S-h> :tabfirst<CR>
+map <S-l> :tablast<CR>
+
+" split
+map <C-j> <C-w>j
+map <C-k> <C-w>k
+map <C-h> <C-w>h
+map <C-l> <C-w>l
+
 map <F2> :NERDTreeToggle<CR>
 map <F3> :TagbarToggle<CR>
 
