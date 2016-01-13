@@ -62,7 +62,7 @@ set ignorecase
 set smartcase
 
 set wildmenu
-set completeopt=longest,menu
+set wildmode=longest,list,full
 
 set smartindent
 set autoindent
