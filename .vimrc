@@ -84,6 +84,8 @@ set shiftwidth=8
 " never use space to replace tab
 set noexpandtab
 
+set scrolloff=7
+
 set foldenable
 set foldmethod=manual
 set foldlevel=1
