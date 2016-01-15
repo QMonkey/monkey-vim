@@ -37,6 +37,7 @@ Bundle 'pangloss/vim-javascript'
 Bundle 'mattn/emmet-vim'
 Bundle 'godlygeek/tabular'
 Bundle 'plasticboy/vim-markdown'
+Bundle 'cespare/vim-toml'
 Bundle 'tpope/vim-fugitive'
 Bundle 'airblade/vim-gitgutter'
 Bundle 'tomasr/molokai'
@@ -95,7 +96,7 @@ set scrolloff=7
 
 set foldenable
 set foldmethod=manual
-set foldlevel=1
+set foldlevel=99
 
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
@@ -106,6 +107,12 @@ set ambiwidth=double
 scriptencoding utf-8
 set encoding=utf-8
 set fileencodings=utf-8,gb18030,ucs-bom,big5,euc-jp,euc-kr,latin1
+
+" Only work in terminal vim
+set termencoding=utf-8
+
+" A buffer becomes hidden when it is abandoned
+set hidden
 
 " Always show status line
 set laststatus=2
@@ -232,11 +239,25 @@ let g:godef_same_file_in_same_window       = 1
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 
 " Syntastic
+let g:syntastic_error_symbol='>>'
+let g:syntastic_warning_symbol='>'
 let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 0
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting=1
+
+function! ToggleErrors()
+	let old_last_winnr = winnr('$')
+	lclose
+	if old_last_winnr == winnr('$')
+		" Nothing was closed, open syntastic_error location panel
+		Errors
+	endif
+endfunction
+nnoremap <Leader>s :call ToggleErrors()<cr>
+" nnoremap <Leader>sn :lnext<cr>
+" nnoremap <Leader>sp :lprevious<cr>
 
 " Emmet
 " enable all function in all mode.
