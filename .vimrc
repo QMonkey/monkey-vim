@@ -62,6 +62,11 @@ set number
 " show the cursor position all the time
 set ruler
 
+set showmatch
+
+" hightlight current line
+set cursorline
+
 " search in time
 set incsearch
 set hlsearch
