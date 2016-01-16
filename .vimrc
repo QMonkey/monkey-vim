@@ -28,6 +28,8 @@ Bundle 'Chiel92/vim-autoformat'
 Bundle 'bronson/vim-trailing-whitespace'
 Bundle 'scrooloose/syntastic'
 Bundle 'Valloric/YouCompleteMe'
+Bundle 'SirVer/ultisnips'
+Bundle 'honza/vim-snippets'
 Bundle 'Raimondi/delimitMate'
 Bundle 'tpope/vim-endwise'
 Bundle 'tpope/vim-ragtag'
@@ -179,16 +181,18 @@ set regexpengine=1
 " tab
 map <C-n> :tabnew<CR>
 map <C-d> :tabclose<CR>
-map <S-j> :tabprevious<CR>
-map <S-k> :tabNext<CR>
-map <S-h> :tabfirst<CR>
-map <S-l> :tablast<CR>
+map <S-h> :tabprevious<CR>
+map <S-l> :tabNext<CR>
+map <leader><S-h> :tabfirst<CR>
+map <leader><S-l> :tablast<CR>
 
 " split
 map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-h> <C-w>h
 map <C-l> <C-w>l
+map <leader>s :split<CR>
+map <leader>v :vsplit<CR>
 
 map <F2> :NERDTreeToggle<CR>
 map <F3> :TagbarToggle<CR>
@@ -197,7 +201,7 @@ map <F3> :TagbarToggle<CR>
 " autocmd vimenter * NERDTree
 
 " Open a NERDTree automatically when vim starts up if no files were specified
-autocmd StdinReadPre * let s:std_in=1
+autocmd StdinReadPre * let s:std_in = 1
 autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
 
 " Close vim if the only window left open is a NERDTree
@@ -215,37 +219,52 @@ let g:ycm_complete_in_strings = 1
 let g:ycm_use_ultisnips_completer = 1
 let g:ycm_collect_identifiers_from_comments_and_strings = 1
 let g:ycm_collect_identifiers_from_tags_files = 1
-let g:ycm_seed_identifiers_with_syntax=1
-let g:ycm_goto_buffer_command = 'new-or-existing-tab'
+let g:ycm_seed_identifiers_with_syntax = 1
+let g:ycm_autoclose_preview_window_after_insertion = 1
+let g:ycm_goto_buffer_command = 'same-buffer'
+let g:ycm_filepath_completion_use_working_dir = 1
 
-nnoremap <leader>gd :YcmCompleter GoToDefinitionElseDeclaration<CR>
+" Use Ctrl-o to jump back, see :help jumplist
+nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 nnoremap <leader>dc :YcmCompleter GoToDeclaration<CR>
+nnoremap <leader>ji :YcmCompleter GoToInclude<CR>
+nnoremap <leader>jim :YcmCompleter GoToImprecise<CR>
 
 " Generic C, C++, Objective-C style
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, Language: Cpp, BreakBeforeBraces: Allman, AllowShortBlocksOnASingleLine: false, AllowShortFunctionsOnASingleLine: false, AllowShortIfStatementsOnASingleLine: false, AllowShortLoopsOnASingleLine: false, IndentCaseLabels: false, DerivePointerAlignment: false, MaxEmptyLinesToKeep: 1, ColumnLimit: 0, PointerAlignment: Left}\"'"
 
 " vim-go settings
-let g:go_highlight_functions               = 1
-let g:go_highlight_methods                 = 1
-let g:go_highlight_structs                 = 1
-let g:go_fmt_fail_silently                 = 1
-let g:go_disable_autoinstall               = 1
-let g:go_fmt_autosave                      = 1
-let g:go_fmt_command                       = "goimports"
-let g:godef_split                          = 2
-let g:godef_same_file_in_same_window       = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_build_constraints = 1
+let g:go_fmt_fail_silently = 1
+let g:go_disable_autoinstall = 1
+let g:go_fmt_autosave = 1
+let g:go_fmt_command = "goimports"
+let g:godef_split = 2
+let g:godef_same_file_in_same_window = 1
+
+" Use Ctrl-o to jump back, see :help jumplist
+nnoremap <leader>gd :GoDef<CR>
+nnoremap <leader>gi :GoImports<CR>
+nnoremap <leader>gt :GoTest<CR>
+nnoremap <leader>gtf :GoTestFunc<CR>
+nnoremap <leader>gl :GoLint<CR>
+nnoremap <leader>gv :GoVet<CR>
+nnoremap <leader>gdc :GoDoc<CR>
 
 " CtrlP runtime path
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 
 " Syntastic
-let g:syntastic_error_symbol='>>'
-let g:syntastic_warning_symbol='>'
+let g:syntastic_error_symbol = '>>'
+let g:syntastic_warning_symbol = '>'
 let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 0
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
-let g:syntastic_enable_highlighting=1
+let g:syntastic_enable_highlighting = 1
 
 function! ToggleErrors()
 	let old_last_winnr = winnr('$')
@@ -255,10 +274,13 @@ function! ToggleErrors()
 		Errors
 	endif
 endfunction
-nnoremap <Leader>s :call ToggleErrors()<cr>
+nnoremap <Leader>e :call ToggleErrors()<cr>
 " nnoremap <Leader>sn :lnext<cr>
 " nnoremap <Leader>sp :lprevious<cr>
 
 " Emmet
-" enable all function in all mode.
-let g:user_emmet_mode='a'
+" Enable all function in all mode.
+let g:user_emmet_mode = 'a'
+
+" Ultisnips
+let g:UltiSnipsExpandTrigger="<c-b>"
