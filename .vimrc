@@ -21,6 +21,7 @@ Plugin 'VundleVim/Vundle.vim'
 
 " Bundle
 Bundle 'scrooloose/nerdtree'
+Bundle 'jistr/vim-nerdtree-tabs'
 Bundle 'majutsushi/tagbar'
 Bundle 'itchyny/lightline.vim'
 Bundle 'ctrlpvim/ctrlp.vim'
@@ -195,15 +196,15 @@ map <C-l> <C-w>l
 map <leader>s :split<CR>
 map <leader>v :vsplit<CR>
 
-map <F2> :NERDTreeToggle<CR>
+map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
 
-" Open a NERDTree automatically when vim starts up
-" autocmd vimenter * NERDTree
+" Open NERDTreeTabs automatically when vim starts up
+" let g:nerdtree_tabs_open_on_console_startup = 1
 
-" Open a NERDTree automatically when vim starts up if no files were specified
+" Open NERDTreeTabs automatically when vim starts up if no files were specified
 autocmd StdinReadPre * let s:std_in = 1
-autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
+autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
 
 " Close vim if the only window left open is a NERDTree
 autocmd bufenter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
@@ -212,8 +213,8 @@ autocmd bufenter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isT
 autocmd BufWrite * :Autoformat
 
 " YouCompleteMe
-if !empty(glob("~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py"))
-	let g:ycm_global_ycm_extra_conf = "~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py"
+if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
+	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
 let g:ycm_complete_in_comments = 1
 let g:ycm_complete_in_strings = 1
