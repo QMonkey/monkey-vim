@@ -25,6 +25,8 @@ Bundle 'jistr/vim-nerdtree-tabs'
 Bundle 'majutsushi/tagbar'
 Bundle 'itchyny/lightline.vim'
 Bundle 'ctrlpvim/ctrlp.vim'
+Bundle 'easymotion/vim-easymotion'
+Bundle 'mileszs/ack.vim'
 Bundle 'Chiel92/vim-autoformat'
 Bundle 'bronson/vim-trailing-whitespace'
 Bundle 'scrooloose/syntastic'
@@ -285,4 +287,15 @@ nnoremap <Leader>e :call ToggleErrors()<cr>
 let g:user_emmet_mode = 'a'
 
 " Ultisnips
-let g:UltiSnipsExpandTrigger="<c-b>"
+let g:UltiSnipsExpandTrigger="<C-b>"
+
+" vim-EasyMotion
+let g:EasyMotion_smartcase = 1
+
+map <Leader><leader>h <Plug>(easymotion-linebackward)
+map <Leader><Leader>j <Plug>(easymotion-j)
+map <Leader><Leader>k <Plug>(easymotion-k)
+map <Leader><leader>l <Plug>(easymotion-lineforward)
+map <Leader><Leader>w <Plug>(easymotion-w)
+map <Leader><Leader>b <Plug>(easymotion-b)
+map <Leader><leader>s <Plug>(easymotion-sn)
