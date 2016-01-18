@@ -183,7 +183,7 @@ syntax enable
 set regexpengine=1
 
 " Key map
-map <C-d> :q<CR>
+map zz :q<CR>
 
 " tab
 map <C-n> :tabnew<CR>
