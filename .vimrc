@@ -7,6 +7,13 @@
 "	alias vim='gvim -v'
 "	alias vimdiff='gvim -v -d'
 "fi
+"
+"vman() {
+"	vim -R -c "Man $*" -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
+"	if [ "$?" != "0" ]; then
+"		echo "No manual entry for $*"
+"	fi
+"}
 
 set nocompatible
 filetype off
@@ -259,6 +266,10 @@ nnoremap <leader>gtf :GoTestFunc<CR>
 nnoremap <leader>gl :GoLint<CR>
 nnoremap <leader>gv :GoVet<CR>
 nnoremap <leader>gdc :GoDoc<CR>
+
+" Vim man
+source $VIMRUNTIME/ftplugin/man.vim
+noremap <S-k> :Man <cword><CR>
 
 " CtrlP runtime path
 set runtimepath^=~/.vim/bundle/ctrlp.vim
