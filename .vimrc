@@ -195,8 +195,8 @@ map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-h> <C-w>h
 map <C-l> <C-w>l
-map <leader>s :split<CR>
-map <leader>v :vsplit<CR>
+map <leader>s :new<CR>
+map <leader>v :vnew<CR>
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
