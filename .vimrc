@@ -289,7 +289,7 @@ nnoremap <Leader>e :call ToggleErrors()<cr>
 let g:user_emmet_mode = 'a'
 
 " Ultisnips
-let g:UltiSnipsExpandTrigger="<C-m>"
+let g:UltiSnipsExpandTrigger="<C-e>"
 
 " vim-EasyMotion
 let g:EasyMotion_smartcase = 1
