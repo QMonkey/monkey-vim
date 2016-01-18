@@ -5,6 +5,7 @@
 "then
 "	alias vi='gvim -v'
 "	alias vim='gvim -v'
+"	alias vimdiff='gvim -v -d'
 "fi
 
 set nocompatible
@@ -195,6 +196,7 @@ map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-h> <C-w>h
 map <C-l> <C-w>l
+map <leader>d :close<CR>
 map <leader>s :new<CR>
 map <leader>v :vnew<CR>
 
@@ -287,7 +289,7 @@ nnoremap <Leader>e :call ToggleErrors()<cr>
 let g:user_emmet_mode = 'a'
 
 " Ultisnips
-let g:UltiSnipsExpandTrigger="<C-b>"
+let g:UltiSnipsExpandTrigger="<C-m>"
 
 " vim-EasyMotion
 let g:EasyMotion_smartcase = 1
