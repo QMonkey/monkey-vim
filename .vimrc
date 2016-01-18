@@ -183,9 +183,10 @@ syntax enable
 set regexpengine=1
 
 " Key map
+map <C-d> :q<CR>
+
 " tab
 map <C-n> :tabnew<CR>
-map <C-d> :tabclose<CR>
 map <S-h> :tabprevious<CR>
 map <S-l> :tabNext<CR>
 map <leader><S-h> :tabfirst<CR>
@@ -196,7 +197,6 @@ map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-h> <C-w>h
 map <C-l> <C-w>l
-map <leader>d :close<CR>
 map <leader>s :new<CR>
 map <leader>v :vnew<CR>
 
