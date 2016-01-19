@@ -37,6 +37,8 @@ Bundle 'easymotion/vim-easymotion'
 Bundle 'mileszs/ack.vim'
 Bundle 'Chiel92/vim-autoformat'
 Bundle 'bronson/vim-trailing-whitespace'
+Bundle 'xolox/vim-misc'
+Bundle 'xolox/vim-easytags'
 Bundle 'scrooloose/syntastic'
 Bundle 'Valloric/YouCompleteMe'
 Bundle 'SirVer/ultisnips'
@@ -217,8 +219,11 @@ map <F3> :TagbarToggle<CR>
 " autocmd StdinReadPre * let s:std_in = 1
 " autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
 
+" Auto set tag file path, when vim start
+autocmd VimEnter * execute 'setlocal tags=' . getcwd() . "/.tags"
+
 " Close vim if the only window left open is a NERDTree
-autocmd bufenter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
+autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
 
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
@@ -273,6 +278,25 @@ noremap <S-k> :Man <cword><CR>
 
 " CtrlP runtime path
 set runtimepath^=~/.vim/bundle/ctrlp.vim
+
+" vim-easytags
+"
+" let g:easytags_async = 1
+"
+" Disable recurse, do it manually by :UpdateTags -R
+" let g:easytags_autorecurse = 1
+
+" Global tag file
+let g:easytags_file = '~/.vim/.tags'
+
+" Create dynamic tag file if not exists
+let g:easytags_dynamic_files = 2
+
+" Disable auto update tag files
+" let g:easytags_auto_update = 1
+
+" Update interval, default 4s
+" let g:easytags_updatetime_min = 10000
 
 " Syntastic
 let g:syntastic_error_symbol = '>>'
