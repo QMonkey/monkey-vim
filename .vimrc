@@ -284,9 +284,8 @@ noremap <S-k> :Man <cword><CR>
 set runtimepath^=~/.vim/bundle/ctrlp.vim
 
 " vim-easytags
-"
-" let g:easytags_async = 1
-"
+let g:easytags_async = 1
+
 " Disable recurse, do it manually by :UpdateTags -R
 " let g:easytags_autorecurse = 1
 
