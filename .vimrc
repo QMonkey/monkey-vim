@@ -221,7 +221,7 @@ map <F3> :TagbarToggle<CR>
 " autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
 
 " Auto set tag file path, when vim start
-autocmd VimEnter * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
+autocmd BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
@@ -304,6 +304,9 @@ let g:easytags_events = ['BufWritePost']
 let g:easytags_on_cursorhold = 0
 " Update interval, default 4s
 " let g:easytags_updatetime_min = 10000
+
+" vim-rooter
+let g:rooter_silent_chdir = 1
 
 " Syntastic
 let g:syntastic_error_symbol = '>>'
