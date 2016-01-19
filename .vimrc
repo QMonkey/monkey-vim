@@ -5,6 +5,7 @@
 "then
 "	alias vi='gvim -v'
 "	alias vim='gvim -v'
+"	alias view='gvim -v -R'
 "	alias vimdiff='gvim -v -d'
 "fi
 "
