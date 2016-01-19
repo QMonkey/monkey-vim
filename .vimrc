@@ -36,6 +36,7 @@ Bundle 'itchyny/lightline.vim'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
 Bundle 'mileszs/ack.vim'
+Bundle 'mhinz/vim-startify'
 Bundle 'Chiel92/vim-autoformat'
 Bundle 'bronson/vim-trailing-whitespace'
 Bundle 'airblade/vim-rooter'
@@ -54,7 +55,7 @@ Bundle 'pangloss/vim-javascript'
 Bundle 'mattn/emmet-vim'
 Bundle 'godlygeek/tabular'
 Bundle 'plasticboy/vim-markdown'
-Bundle 'cespare/vim-toml'
+Bundle 'sheerun/vim-polyglot'
 Bundle 'tpope/vim-fugitive'
 Bundle 'gregsexton/gitv'
 Bundle 'airblade/vim-gitgutter'
@@ -215,6 +216,7 @@ map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
 
 " Open NERDTreeTabs automatically when vim starts up
+let g:nerdtree_tabs_open_on_gui_startup = 0
 " let g:nerdtree_tabs_open_on_console_startup = 1
 
 " Open NERDTreeTabs automatically when vim starts up if no files were specified
@@ -232,6 +234,17 @@ autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isT
 
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
+
+" vim-startify
+function! s:filter_header(lines) abort
+	let longest_line   = max(map(copy(a:lines), 'len(v:val)'))
+	let centered_lines = map(copy(a:lines),
+				\ 'repeat(" ", (&columns / 2) - (longest_line / 2)) . v:val')
+	return centered_lines
+endfunction
+
+let g:startify_custom_header = s:filter_header(split(system('fortune | cowsay'), '\n'))
+let g:startify_bookmarks = ['~/.vimrc', '~/.bashrc']
 
 " YouCompleteMe
 if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
