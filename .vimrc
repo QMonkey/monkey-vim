@@ -37,6 +37,7 @@ Bundle 'easymotion/vim-easymotion'
 Bundle 'mileszs/ack.vim'
 Bundle 'Chiel92/vim-autoformat'
 Bundle 'bronson/vim-trailing-whitespace'
+Bundle 'airblade/vim-rooter'
 Bundle 'xolox/vim-misc'
 Bundle 'xolox/vim-easytags'
 Bundle 'scrooloose/syntastic'
@@ -220,7 +221,10 @@ map <F3> :TagbarToggle<CR>
 " autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
 
 " Auto set tag file path, when vim start
-autocmd VimEnter * execute 'setlocal tags=' . getcwd() . "/.tags"
+autocmd VimEnter * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
+
+" Highlight .tags file as tags file
+autocmd BufNewFile,BufRead *.tags set filetype=tags
 
 " Close vim if the only window left open is a NERDTree
 autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
@@ -289,12 +293,15 @@ set runtimepath^=~/.vim/bundle/ctrlp.vim
 " Global tag file
 let g:easytags_file = '~/.vim/.tags'
 
+let g:easytags_opts = ['--fields=+l']
 " Create dynamic tag file if not exists
 let g:easytags_dynamic_files = 2
-
 " Disable auto update tag files
-" let g:easytags_auto_update = 1
+let g:easytags_auto_update = 1
 
+" Only update tag file on write
+let g:easytags_events = ['BufWritePost']
+let g:easytags_on_cursorhold = 0
 " Update interval, default 4s
 " let g:easytags_updatetime_min = 10000
 
