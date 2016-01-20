@@ -141,17 +141,17 @@ set t_vb=
 " Always show status line
 set laststatus=2
 
-let g:airline_theme='powerlineish'
+let g:airline_theme = 'badwolf'
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
-let g:airline_left_sep=''
-let g:airline_right_sep=''
+let g:airline_left_sep = ""
+let g:airline_right_sep = ""
 if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
 let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
-let g:airline_symbols.linenr = "\ue0a1"
+let g:airline_symbols.linenr = "LN"
 
 " must execute 'export TERM=xterm-256color' first
 colorscheme molokai
@@ -254,10 +254,9 @@ let g:godef_same_file_in_same_window = 1
 nnoremap <leader>gd :GoDef<CR>
 nnoremap <leader>gi :GoImports<CR>
 nnoremap <leader>gt :GoTest<CR>
-nnoremap <leader>gtf :GoTestFunc<CR>
+nnoremap <leader>gf :GoTestFunc<CR>
 nnoremap <leader>gl :GoLint<CR>
 nnoremap <leader>gv :GoVet<CR>
-nnoremap <leader>gdc :GoDoc<CR>
 
 " Vim man
 source $VIMRUNTIME/ftplugin/man.vim
