@@ -32,7 +32,7 @@ Plugin 'VundleVim/Vundle.vim'
 Bundle 'scrooloose/nerdtree'
 Bundle 'jistr/vim-nerdtree-tabs'
 Bundle 'majutsushi/tagbar'
-Bundle 'itchyny/lightline.vim'
+Bundle 'vim-airline/vim-airline'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
 Bundle 'mileszs/ack.vim'
@@ -141,56 +141,17 @@ set t_vb=
 " Always show status line
 set laststatus=2
 
-" lightline.vim
-let g:lightline = {
-			\ 'colorscheme': 'powerline',
-			\ 'active': {
-			\   'left': [ [ 'mode', 'paste' ],
-			\             [ 'fugitive', 'filename' ] ]
-			\ },
-			\ 'component_function': {
-			\   'fugitive': 'LightLineFugitive',
-			\   'readonly': 'LightLineReadonly',
-			\   'modified': 'LightLineModified',
-			\   'filename': 'LightLineFilename'
-			\ }
-			\ }
-
-function! LightLineModified()
-	if &filetype == "help"
-		return ""
-	elseif &modified
-		return "+"
-	elseif &modifiable
-		return ""
-	else
-		return ""
-	endif
-endfunction
-
-function! LightLineReadonly()
-	if &filetype == "help"
-		return ""
-	elseif &readonly
-		return "\ue0a2"
-	else
-		return ""
-	endif
-endfunction
-
-function! LightLineFugitive()
-	if exists("*fugitive#head")
-		let _ = fugitive#head()
-		return strlen(_) ? "\ue0a0 "._ : ''
-	endif
-	return ''
-endfunction
-
-function! LightLineFilename()
-	return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
-				\ ('' != expand('%:t') ? expand('%:t') : '[No Name]') .
-				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
-endfunction
+let g:airline_theme='powerlineish'
+let g:airline#extensions#syntastic#enabled = 1
+let g:airline#extensions#tagbar#enabled = 1
+let g:airline_left_sep=''
+let g:airline_right_sep=''
+if !exists('g:airline_symbols')
+	let g:airline_symbols = {}
+endif
+let g:airline_symbols.branch = "\ue0a0"
+let g:airline_symbols.readonly = "\ue0a2"
+let g:airline_symbols.linenr = "\ue0a1"
 
 " must execute 'export TERM=xterm-256color' first
 colorscheme molokai
