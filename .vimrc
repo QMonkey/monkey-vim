@@ -115,7 +115,7 @@ set scrolloff=7
 
 set foldenable
 set foldmethod=manual
-set foldlevel=99
+set foldlevel=1
 
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
@@ -132,6 +132,11 @@ set termencoding=utf-8
 
 " A buffer becomes hidden when it is abandoned
 set hidden
+
+" No error bells
+set noerrorbells
+set novisualbell
+set t_vb=
 
 " Always show status line
 set laststatus=2
