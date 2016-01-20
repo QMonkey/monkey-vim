@@ -181,6 +181,15 @@ map <leader>v :vnew<CR>
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
 
+" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
+autocmd GUIEnter * set vb t_vb=
+
+" Auto set tag file path, when vim start
+autocmd BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
+
+" Highlight .tags file as tags file
+autocmd BufNewFile,BufRead *.tags set filetype=tags
+
 " Open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
 " let g:nerdtree_tabs_open_on_console_startup = 1
@@ -188,12 +197,6 @@ let g:nerdtree_tabs_open_on_gui_startup = 0
 " Open NERDTreeTabs automatically when vim starts up if no files were specified
 " autocmd StdinReadPre * let s:std_in = 1
 " autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
-
-" Auto set tag file path, when vim start
-autocmd BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
-
-" Highlight .tags file as tags file
-autocmd BufNewFile,BufRead *.tags set filetype=tags
 
 " Close vim if the only window left open is a NERDTree
 autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
