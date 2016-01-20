@@ -182,7 +182,9 @@ map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
 
 " When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
-autocmd GUIEnter * set vb t_vb=
+if has("gui_running")
+	autocmd GUIEnter * set vb t_vb=
+endif
 
 " Auto set tag file path, when vim start
 autocmd BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
