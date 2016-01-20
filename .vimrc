@@ -216,6 +216,9 @@ let g:startify_bookmarks = ['~/.vimrc', '~/.bashrc']
 if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
 	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
+
+" Use syntastic to check C, C++ and Objective-C
+let g:ycm_show_diagnostics_ui = 0
 let g:ycm_complete_in_comments = 1
 let g:ycm_complete_in_strings = 1
 let g:ycm_use_ultisnips_completer = 1
@@ -288,10 +291,12 @@ let g:easytags_on_cursorhold = 0
 let g:rooter_silent_chdir = 1
 
 " Syntastic
-let g:syntastic_error_symbol = '>>'
-let g:syntastic_warning_symbol = '>'
+let g:syntastic_error_symbol = "\xe2\x9c\x97"
+let g:syntastic_style_error_symbol = "\xe2\x9c\x97"
+let g:syntastic_warning_symbol = "\xe2\x9a\xa0"
+let g:syntastic_style_warning_symbol = "\xe2\x9a\xa0"
 let g:syntastic_always_populate_loc_list = 0
-let g:syntastic_auto_loc_list = 0
+let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting = 1
