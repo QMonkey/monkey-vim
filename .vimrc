@@ -263,6 +263,9 @@ nnoremap <leader>gf :GoTestFunc<CR>
 nnoremap <leader>gl :GoLint<CR>
 nnoremap <leader>gv :GoVet<CR>
 
+" vim-markdown
+let g:vim_markdown_folding_disabled = 1
+
 " Vim man
 source $VIMRUNTIME/ftplugin/man.vim
 noremap <S-k> :Man <cword><CR>
@@ -304,6 +307,7 @@ let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting = 1
+let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 
 function! ToggleErrors()
 	let old_last_winnr = winnr('$')
