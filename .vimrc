@@ -32,6 +32,7 @@ Plugin 'VundleVim/Vundle.vim'
 Bundle 'scrooloose/nerdtree'
 Bundle 'jistr/vim-nerdtree-tabs'
 Bundle 'majutsushi/tagbar'
+Bundle 'sjl/gundo.vim'
 Bundle 'vim-airline/vim-airline'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
@@ -180,6 +181,8 @@ map <leader>v :vnew<CR>
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
+map <F4> :GundoToggle<CR>
+map <F5> :set invpaste paste?<CR>
 
 " When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
 if has("gui_running")
