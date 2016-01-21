@@ -187,6 +187,8 @@ map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
 map <F4> :GundoToggle<CR>
 map <F5> :set invpaste paste?<CR>
+map <F6> :Dispatch<CR>
+map <F7> :Dispatch!<CR>
 
 if has("gui_running")
 	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
