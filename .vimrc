@@ -95,7 +95,7 @@ set ignorecase
 set smartcase
 
 set wildmenu
-set wildmode=longest,list,full
+set wildmode=list:longest,full
 
 set smartindent
 set autoindent
@@ -133,6 +133,9 @@ set termencoding=utf-8
 
 " A buffer becomes hidden when it is abandoned
 set hidden
+
+" Auto reload file changes outside vim
+set autoread
 
 " No error bells
 set noerrorbells
@@ -184,9 +187,12 @@ map <F3> :TagbarToggle<CR>
 map <F4> :GundoToggle<CR>
 map <F5> :set invpaste paste?<CR>
 
-" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
 if has("gui_running")
+	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
 	autocmd GUIEnter * set vb t_vb=
+else
+	" Check file changes outside vim when in console-vim
+	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() == '' | checktime | endif
 endif
 
 " Auto set tag file path, when vim start
