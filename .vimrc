@@ -63,6 +63,7 @@ Bundle 'tpope/vim-fugitive'
 Bundle 'gregsexton/gitv'
 Bundle 'airblade/vim-gitgutter'
 Bundle 'tomasr/molokai'
+Bundle 'kien/rainbow_parentheses.vim'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -159,6 +160,27 @@ let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
 let g:airline_symbols.linenr = "LN"
 
+let g:rbpt_colorpairs = [
+			\ ['brown',       'RoyalBlue3'],
+			\ ['Darkblue',    'SeaGreen3'],
+			\ ['darkgray',    'DarkOrchid3'],
+			\ ['darkgreen',   'firebrick3'],
+			\ ['darkcyan',    'RoyalBlue3'],
+			\ ['darkred',     'SeaGreen3'],
+			\ ['darkmagenta', 'DarkOrchid3'],
+			\ ['brown',       'firebrick3'],
+			\ ['gray',        'RoyalBlue3'],
+			\ ['black',       'SeaGreen3'],
+			\ ['darkmagenta', 'DarkOrchid3'],
+			\ ['Darkblue',    'firebrick3'],
+			\ ['darkgreen',   'RoyalBlue3'],
+			\ ['darkcyan',    'SeaGreen3'],
+			\ ['darkred',     'DarkOrchid3'],
+			\ ['red',         'firebrick3'],
+			\ ]
+let g:rbpt_max = 16
+let g:rbpt_loadcmd_toggle = 1
+
 " must execute 'export TERM=xterm-256color' first
 colorscheme molokai
 let g:molokai_original = 1
@@ -190,6 +212,7 @@ map <F4> :GundoToggle<CR>
 map <F5> :set invpaste paste?<CR>
 map <F6> :Dispatch<CR>
 map <F7> :Dispatch!<CR>
+map <F8> :RainbowParenthesesToggle<CR>
 
 if has("gui_running")
 	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
