@@ -60,6 +60,7 @@ Bundle 'pangloss/vim-javascript'
 Bundle 'mattn/emmet-vim'
 Bundle 'godlygeek/tabular'
 Bundle 'plasticboy/vim-markdown'
+Bundle 'suan/vim-instant-markdown'
 Bundle 'sheerun/vim-polyglot'
 Bundle 'tpope/vim-fugitive'
 Bundle 'gregsexton/gitv'
@@ -248,6 +249,13 @@ nnoremap <Leader>rc :call Replace(1, 0, input('Replace '.expand('<cword>').' wit
 nnoremap <Leader>rcw :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
 nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
 
+" Save session options
+set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
+" Backup
+map <leader>ss :mksession! .save.vim<cr> :wviminfo! .save.viminfo<cr>
+" Restore
+map <leader>rs :source .save.vim<cr> :rviminfo .save.viminfo<cr>
+
 if has("gui_running")
 	fun! ToggleFullscreen()
 		call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")
@@ -363,6 +371,10 @@ nnoremap <leader>gv :GoVet<CR>
 
 " vim-markdown
 let g:vim_markdown_folding_disabled = 1
+
+" vim-instant_markdown
+let g:instant_markdown_slow = 1
+let g:instant_markdown_autostart = 0
 
 " Vim man
 source $VIMRUNTIME/ftplugin/man.vim
