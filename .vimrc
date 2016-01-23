@@ -32,11 +32,13 @@ Plugin 'VundleVim/Vundle.vim'
 Bundle 'scrooloose/nerdtree'
 Bundle 'jistr/vim-nerdtree-tabs'
 Bundle 'majutsushi/tagbar'
+Bundle 'fholgado/minibufexpl.vim'
 Bundle 'sjl/gundo.vim'
 Bundle 'vim-airline/vim-airline'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
 Bundle 'mileszs/ack.vim'
+Bundle 'scrooloose/nerdcommenter'
 Bundle 'mhinz/vim-startify'
 Bundle 'Chiel92/vim-autoformat'
 Bundle 'bronson/vim-trailing-whitespace'
@@ -117,8 +119,9 @@ set noexpandtab
 
 set scrolloff=7
 
-set foldenable
-set foldmethod=manual
+" Disable fold on start up
+set nofoldenable
+set foldmethod=syntax
 set foldlevel=1
 
 language message en_US.UTF-8
@@ -214,11 +217,65 @@ map <F6> :Dispatch<CR>
 map <F7> :Dispatch!<CR>
 map <F8> :RainbowParenthesesToggle<CR>
 
+" confirm
+" wholeword
+" replace
+function! Replace(confirm, wholeword, replace)
+	wa
+	let flag = ''
+	if a:confirm
+		let flag .= 'gec'
+	else
+		let flag .= 'ge'
+	endif
+	let search = ''
+	if a:wholeword
+		let search .= '\<' . escape(expand('<cword>'), '/\.*$^~[') . '\>'
+	else
+		let search .= expand('<cword>')
+	endif
+	let replace = escape(a:replace, '/\&~')
+	execute 'argdo %s/' . search . '/' . replace . '/' . flag . '| update'
+endfunction
+
+" default
+nnoremap <Leader>R :call Replace(0, 0, input('Replace '.expand('<cword>').' with: '))<CR>
+" wholeword
+nnoremap <Leader>rw :call Replace(0, 1, input('Replace '.expand('<cword>').' with: '))<CR>
+" confirm
+nnoremap <Leader>rc :call Replace(1, 0, input('Replace '.expand('<cword>').' with: '))<CR>
+" wholeword, confirm
+nnoremap <Leader>rcw :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
+nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
+
 if has("gui_running")
+	fun! ToggleFullscreen()
+		call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")
+	endf
+	map <F11> :call ToggleFullscreen()<CR>
+	" Fullscreen when gvim start up
+	autocmd VimEnter * call ToggleFullscreen()
+
 	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
 	autocmd GUIEnter * set vb t_vb=
+
+	" Disable cursor flicker
+	set gcr=a:block-blinkon0
+
+	" Disable scroll bar
+	set guioptions-=l
+	set guioptions-=L
+	set guioptions-=r
+	set guioptions-=R
+
+	" Disable menu and tool bar
+	set guioptions-=m
+	set guioptions-=T
+
+	" Set gui font
+	set guifont=Monospace\ 9
 else
-	" Check file changes outside vim when in console-vim
+	" Check file changes outside vim when in xterm
 	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() == '' | checktime | endif
 endif
 
@@ -228,7 +285,9 @@ autocmd BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
 
-" Open NERDTreeTabs automatically when vim starts up
+" Set NERDTree window width
+let NERDTreeWinSize = 32
+" Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
 " let g:nerdtree_tabs_open_on_console_startup = 1
 
@@ -241,6 +300,9 @@ autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isT
 
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
+
+" Tagbar width
+let tagbar_width = 32
 
 " vim-startify
 function! s:filter_header(lines) abort
@@ -318,7 +380,7 @@ let g:easytags_async = 1
 " Global tag file
 let g:easytags_file = '~/.vim/.tags'
 
-let g:easytags_opts = ['--fields=+l']
+let g:easytags_opts = ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v ', '--fields=+liaS', '--extra=+q']
 " Create dynamic tag file if not exists
 let g:easytags_dynamic_files = 2
 " Disable auto update tag files
@@ -362,7 +424,7 @@ nnoremap <Leader>e :call ToggleErrors()<cr>
 let g:user_emmet_mode = 'a'
 
 " Ultisnips
-let g:UltiSnipsExpandTrigger="<C-e>"
+let g:UltiSnipsExpandTrigger="<leader><tab>"
 
 " vim-EasyMotion
 let g:EasyMotion_smartcase = 1
