@@ -37,6 +37,7 @@ Bundle 'sjl/gundo.vim'
 Bundle 'vim-airline/vim-airline'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
+Bundle 'rking/ag.vim'
 Bundle 'mileszs/ack.vim'
 Bundle 'scrooloose/nerdcommenter'
 Bundle 'mhinz/vim-startify'
@@ -251,6 +252,9 @@ nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' wi
 
 " Save session options
 set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
+" Undo files
+set undodir=~/.vim/undofiles/
+set undofile
 " Backup
 map <leader>ss :mksession! .save.vim<cr> :wviminfo! .save.viminfo<cr>
 " Restore
