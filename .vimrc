@@ -100,12 +100,16 @@ set incsearch
 set hlsearch
 set ignorecase
 set smartcase
+" By default add g flag to search/replace.
+set gdefault
 
 set wildmenu
 set wildmode=list:longest,full
 
 set smartindent
 set autoindent
+
+set shortmess=atI
 
 " share clipboard with system (gvim -v in xterm)
 set clipboard=unnamedplus
@@ -195,21 +199,22 @@ set regexpengine=1
 
 " Key map
 noremap q :q<CR>
+noremap <Leader>sw :w !sudo tee %<CR>
 
 " tab
 map <C-n> :tabnew<CR>
 map <S-h> :tabprevious<CR>
 map <S-l> :tabNext<CR>
-map <leader><S-h> :tabfirst<CR>
-map <leader><S-l> :tablast<CR>
+map <Leader><S-h> :tabfirst<CR>
+map <Leader><S-l> :tablast<CR>
 
 " split
 map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-h> <C-w>h
 map <C-l> <C-w>l
-map <leader>s :new<CR>
-map <leader>v :vnew<CR>
+map <Leader>s :new<CR>
+map <Leader>v :vnew<CR>
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
@@ -247,7 +252,6 @@ nnoremap <Leader>rw :call Replace(0, 1, input('Replace '.expand('<cword>').' wit
 " confirm
 nnoremap <Leader>rc :call Replace(1, 0, input('Replace '.expand('<cword>').' with: '))<CR>
 " wholeword, confirm
-nnoremap <Leader>rcw :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
 nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
 
 " Save session options
@@ -256,9 +260,9 @@ set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,hel
 set undodir=~/.vim/undofiles/
 set undofile
 " Backup
-map <leader>ss :mksession! .save.vim<cr> :wviminfo! .save.viminfo<cr>
+map <Leader>ss :mksession! .save.vim<cr> :wviminfo! .save.viminfo<cr>
 " Restore
-map <leader>rs :source .save.vim<cr> :rviminfo .save.viminfo<cr>
+map <Leader>rs :source .save.vim<cr> :rviminfo .save.viminfo<cr>
 
 if has("gui_running")
 	fun! ToggleFullscreen()
@@ -345,10 +349,10 @@ let g:ycm_goto_buffer_command = 'same-buffer'
 let g:ycm_filepath_completion_use_working_dir = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
-nnoremap <leader>dc :YcmCompleter GoToDeclaration<CR>
-nnoremap <leader>ji :YcmCompleter GoToInclude<CR>
-nnoremap <leader>jim :YcmCompleter GoToImprecise<CR>
+nnoremap <Leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
+nnoremap <Leader>dc :YcmCompleter GoToDeclaration<CR>
+nnoremap <Leader>ji :YcmCompleter GoToInclude<CR>
+nnoremap <Leader>jim :YcmCompleter GoToImprecise<CR>
 
 " Generic C, C++, Objective-C style
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, Language: Cpp, BreakBeforeBraces: Allman, AllowShortBlocksOnASingleLine: false, AllowShortFunctionsOnASingleLine: false, AllowShortIfStatementsOnASingleLine: false, AllowShortLoopsOnASingleLine: false, IndentCaseLabels: false, DerivePointerAlignment: false, MaxEmptyLinesToKeep: 1, ColumnLimit: 0, PointerAlignment: Left}\"'"
@@ -366,12 +370,12 @@ let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-nnoremap <leader>gd :GoDef<CR>
-nnoremap <leader>gi :GoImports<CR>
-nnoremap <leader>gt :GoTest<CR>
-nnoremap <leader>gf :GoTestFunc<CR>
-nnoremap <leader>gl :GoLint<CR>
-nnoremap <leader>gv :GoVet<CR>
+nnoremap <Leader>gd :GoDef<CR>
+nnoremap <Leader>gi :GoImports<CR>
+nnoremap <Leader>gt :GoTest<CR>
+nnoremap <Leader>gf :GoTestFunc<CR>
+nnoremap <Leader>gl :GoLint<CR>
+nnoremap <Leader>gv :GoVet<CR>
 
 " vim-markdown
 let g:vim_markdown_folding_disabled = 1
@@ -440,15 +444,15 @@ nnoremap <Leader>e :call ToggleErrors()<cr>
 let g:user_emmet_mode = 'a'
 
 " Ultisnips
-let g:UltiSnipsExpandTrigger="<leader><tab>"
+let g:UltiSnipsExpandTrigger="<Leader><tab>"
 
 " vim-EasyMotion
 let g:EasyMotion_smartcase = 1
 
-map <Leader><leader>h <Plug>(easymotion-linebackward)
+map <Leader><Leader>h <Plug>(easymotion-linebackward)
 map <Leader><Leader>j <Plug>(easymotion-j)
 map <Leader><Leader>k <Plug>(easymotion-k)
-map <Leader><leader>l <Plug>(easymotion-lineforward)
+map <Leader><Leader>l <Plug>(easymotion-lineforward)
 map <Leader><Leader>w <Plug>(easymotion-w)
 map <Leader><Leader>b <Plug>(easymotion-b)
-map <Leader><leader>s <Plug>(easymotion-sn)
+map <Leader><Leader>s <Plug>(easymotion-sn)
