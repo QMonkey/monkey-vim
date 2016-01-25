@@ -221,7 +221,8 @@ map <F4> :GundoToggle<CR>
 map <F5> :set invpaste paste?<CR>
 map <F6> :Dispatch<CR>
 map <F7> :Dispatch!<CR>
-map <F8> :RainbowParenthesesToggle<CR>
+map <F8> :InstantMarkdownPreview<CR>
+map <F9> :RainbowParenthesesToggle<CR>
 
 " confirm
 " wholeword
