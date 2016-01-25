@@ -108,17 +108,20 @@ set wildmode=list:longest,full
 set smartindent
 set autoindent
 
-" share clipboard with system (gvim -v in xterm)
+" Share clipboard with system (gvim -v in xterm)
 set clipboard=unnamedplus
 
-" make "tab" insert indents instead of tabs at the beginning of a line
+" Make "tab" insert indents instead of tabs at the beginning of a line
 set smarttab
-" size of a hard tabstop
+" Size of a hard tabstop
 set tabstop=8
-" size of an "indent"
+set softtabstop=8
+" Size of an "indent"
 set shiftwidth=8
-" never use space to replace tab
+" Never use space to replace tab
 set noexpandtab
+
+autocmd FileType python setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 
 set scrolloff=7
 
