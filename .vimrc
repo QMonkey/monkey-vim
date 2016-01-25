@@ -108,8 +108,6 @@ set wildmode=list:longest,full
 set smartindent
 set autoindent
 
-set shortmess=atI
-
 " share clipboard with system (gvim -v in xterm)
 set clipboard=unnamedplus
 
