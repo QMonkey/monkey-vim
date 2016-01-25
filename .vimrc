@@ -125,6 +125,11 @@ autocmd FileType python setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 
 set scrolloff=7
 
+" Enable undo file
+set undofile
+" Undo files
+set undodir=~/.vim/undofiles/
+
 " Disable fold on start up
 set nofoldenable
 set foldmethod=syntax
@@ -257,9 +262,6 @@ nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' wi
 
 " Save session options
 set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
-" Undo files
-set undodir=~/.vim/undofiles/
-set undofile
 " Backup
 map <Leader>ss :mksession! .save.vim<cr> :wviminfo! .save.viminfo<cr>
 " Restore
@@ -297,7 +299,7 @@ else
 endif
 
 " Auto set tag file path, when vim start
-autocmd BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
+autocmd BufNewFile,BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
@@ -317,6 +319,9 @@ autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isT
 
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
+
+" Disable autoindent
+let g:autoformat_autoindent = 0
 
 " Tagbar width
 let tagbar_width = 32
@@ -355,8 +360,16 @@ nnoremap <Leader>dc :YcmCompleter GoToDeclaration<CR>
 nnoremap <Leader>ji :YcmCompleter GoToInclude<CR>
 nnoremap <Leader>jim :YcmCompleter GoToImprecise<CR>
 
+" vim-autoformat
 " Generic C, C++, Objective-C style
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, Language: Cpp, BreakBeforeBraces: Allman, AllowShortBlocksOnASingleLine: false, AllowShortFunctionsOnASingleLine: false, AllowShortIfStatementsOnASingleLine: false, AllowShortLoopsOnASingleLine: false, IndentCaseLabels: false, DerivePointerAlignment: false, MaxEmptyLinesToKeep: 1, ColumnLimit: 0, PointerAlignment: Left}\"'"
+
+" Golang
+let g:formatdef_goimports = '"goimports"'
+let g:formatters_go = ['goimports']
+
+" Java
+let g:formatdef_astyle_java = '"astyle --mode=java --style=java -pH".(&expandtab ? "s".shiftwidth() : "t")'
 
 " vim-go settings
 let g:go_highlight_functions = 1
@@ -365,7 +378,8 @@ let g:go_highlight_structs = 1
 let g:go_highlight_build_constraints = 1
 let g:go_fmt_fail_silently = 1
 let g:go_disable_autoinstall = 1
-let g:go_fmt_autosave = 1
+" Disable run GoFmt on save, do it by vim-autoformat
+let g:go_fmt_autosave = 0
 let g:go_fmt_command = "goimports"
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
@@ -426,7 +440,7 @@ let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting = 1
-let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
 
 function! ToggleErrors()
 	let old_last_winnr = winnr('$')
