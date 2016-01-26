@@ -318,24 +318,24 @@ let g:nerdtree_tabs_open_on_gui_startup = 0
 autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
 
 " Auto refresh NERDTree
-"autocmd CursorHold,CursorHoldI * call ReRender()
+autocmd CursorHold,CursorHoldI * call ReRender()
 
-"function! ReRender()
-"        let bufnum = bufnr('%')
-"        set switchbuf+=useopen
-"        try
-"                sbuf NERD*
-"        catch
-"                return
-"        endtry
+function! ReRender()
+	if !g:NERDTree.IsOpen()
+		return
+	endif
 
-"        call b:NERDTree.root.refresh()
-"        call NERDTreeRender()
+	let winnr = winnr()
+	set switchbuf+=useopen
+	sbuf NERD*
 
-"        " Jump back
-"        execute ':sbnext ' . bufnum
-"        "redraw
-"endfunction
+	call b:NERDTree.root.refresh()
+	call NERDTreeRender()
+
+	" Jump back
+	execute winnr . "wincmd w"
+	"redraw
+endfunction
 
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
