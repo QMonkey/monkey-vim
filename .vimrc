@@ -299,7 +299,7 @@ else
 endif
 
 " Auto set tag file path, when vim start
-autocmd BufNewFile,BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags" : 'setlocal tags=./.tags'
+autocmd BufNewFile,BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags," . &tags : 'setlocal tags=./.tags,' . &tags
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
