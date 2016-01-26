@@ -209,7 +209,7 @@ noremap <Leader>sw :w !sudo tee %<CR>
 " tab
 map <C-n> :tabnew<CR>
 map <S-h> :tabprevious<CR>
-map <S-l> :tabNext<CR>
+map <S-l> :tabnext<CR>
 map <Leader><S-h> :tabfirst<CR>
 map <Leader><S-l> :tablast<CR>
 
