@@ -67,6 +67,11 @@ Bundle 'airblade/vim-gitgutter'
 Bundle 'tomasr/molokai'
 Bundle 'kien/rainbow_parentheses.vim'
 
+
+if has("gui_running")
+	Bundle 'ryanoasis/vim-devicons'
+endif
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -454,8 +459,8 @@ let g:easytags_on_cursorhold = 0
 let g:rooter_silent_chdir = 1
 
 " Syntastic
-let g:syntastic_error_symbol = "\xe2\x9c\x96"
-let g:syntastic_style_error_symbol = "\xe2\x9c\x96"
+let g:syntastic_error_symbol = "\xe2\x9c\x97"
+let g:syntastic_style_error_symbol = "\xe2\x9c\x97"
 let g:syntastic_warning_symbol = "!"
 let g:syntastic_style_warning_symbol = "!"
 let g:syntastic_always_populate_loc_list = 0
