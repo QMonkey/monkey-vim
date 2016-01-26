@@ -37,7 +37,6 @@ Bundle 'sjl/gundo.vim'
 Bundle 'vim-airline/vim-airline'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
-Bundle 'rking/ag.vim'
 Bundle 'mileszs/ack.vim'
 Bundle 'scrooloose/nerdcommenter'
 Bundle 'mhinz/vim-startify'
@@ -203,6 +202,7 @@ syntax enable
 set regexpengine=1
 
 " Key map
+noremap <C-c> <ESC>
 noremap q :q<CR>
 noremap <Leader>sw :w !sudo tee %<CR>
 
