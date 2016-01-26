@@ -317,6 +317,26 @@ let g:nerdtree_tabs_open_on_gui_startup = 0
 " Close vim if the only window left open is a NERDTree
 autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
 
+" Auto refresh NERDTree
+"autocmd CursorHold,CursorHoldI * call ReRender()
+
+"function! ReRender()
+"        let bufnum = bufnr('%')
+"        set switchbuf+=useopen
+"        try
+"                sbuf NERD*
+"        catch
+"                return
+"        endtry
+
+"        call b:NERDTree.root.refresh()
+"        call NERDTreeRender()
+
+"        " Jump back
+"        execute ':sbnext ' . bufnum
+"        "redraw
+"endfunction
+
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
 
@@ -434,10 +454,10 @@ let g:easytags_on_cursorhold = 0
 let g:rooter_silent_chdir = 1
 
 " Syntastic
-let g:syntastic_error_symbol = "\xe2\x9c\x97"
-let g:syntastic_style_error_symbol = "\xe2\x9c\x97"
-let g:syntastic_warning_symbol = "\xe2\x9a\xa0"
-let g:syntastic_style_warning_symbol = "\xe2\x9a\xa0"
+let g:syntastic_error_symbol = "\xe2\x9c\x96"
+let g:syntastic_style_error_symbol = "\xe2\x9c\x96"
+let g:syntastic_warning_symbol = "!"
+let g:syntastic_style_warning_symbol = "!"
 let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
