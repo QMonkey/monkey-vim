@@ -125,6 +125,9 @@ set shiftwidth=8
 " Never use space to replace tab
 set noexpandtab
 
+" Unrecognized filetype set to text
+autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
+
 autocmd FileType python setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 "autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -t\ markdown\ --reference-links\ --atx-headers
 " Disable autoindent for text file
