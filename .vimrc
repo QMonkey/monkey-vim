@@ -35,6 +35,7 @@ Bundle 'majutsushi/tagbar'
 "Bundle 'fholgado/minibufexpl.vim'
 Bundle 'sjl/gundo.vim'
 Bundle 'vim-airline/vim-airline'
+Bundle 'ryanoasis/vim-devicons'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'easymotion/vim-easymotion'
 Bundle 'mileszs/ack.vim'
@@ -66,11 +67,6 @@ Bundle 'gregsexton/gitv'
 Bundle 'airblade/vim-gitgutter'
 Bundle 'tomasr/molokai'
 Bundle 'kien/rainbow_parentheses.vim'
-
-
-if has("gui_running")
-	Bundle 'ryanoasis/vim-devicons'
-endif
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
