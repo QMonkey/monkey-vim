@@ -169,6 +169,7 @@ set t_vb=
 set laststatus=2
 
 let g:airline_theme = 'badwolf'
+let g:airline_detect_paste = 1
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline_left_sep = ""
