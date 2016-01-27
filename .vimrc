@@ -125,9 +125,9 @@ set noexpandtab
 autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
 
 autocmd FileType python setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-"autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -t\ markdown\ --reference-links\ --atx-headers
+autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
 " Disable autoindent for text file
-autocmd FileType markdown,text setlocal equalprg=cat
+autocmd FileType text setlocal equalprg=cat
 
 set scrolloff=7
 
