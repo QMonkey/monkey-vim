@@ -47,6 +47,7 @@ Bundle 'tpope/vim-dispatch'
 Bundle 'airblade/vim-rooter'
 Bundle 'xolox/vim-misc'
 Bundle 'xolox/vim-easytags'
+Bundle 'xolox/vim-session'
 Bundle 'scrooloose/syntastic'
 Bundle 'Valloric/YouCompleteMe'
 Bundle 'SirVer/ultisnips'
@@ -202,7 +203,7 @@ let g:rbpt_colorpairs = [
 let g:rbpt_max = 16
 let g:rbpt_loadcmd_toggle = 1
 
-" must execute 'export TERM=xterm-256color' first
+" Must execute 'export TERM=xterm-256color' first
 colorscheme molokai
 let g:molokai_original = 1
 let g:rehash256 = 1
@@ -214,20 +215,20 @@ noremap <C-c> <ESC>
 noremap q :q<CR>
 noremap <Leader>sw :w !sudo tee %<CR>
 
-" tab
-map <C-n> :tabnew<CR>
+" Tab
+map <C-n> :execute 'tabnew' Prompt('New tab name: ')<CR>
 map <S-h> :tabprevious<CR>
 map <S-l> :tabnext<CR>
 map <Leader><S-h> :tabfirst<CR>
 map <Leader><S-l> :tablast<CR>
 
-" split
+" Split
 map <C-j> <C-w>j
 map <C-k> <C-w>k
 map <C-h> <C-w>h
 map <C-l> <C-w>l
-map <Leader>s :new<CR>
-map <Leader>v :vnew<CR>
+map <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
+map <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
@@ -238,42 +239,16 @@ map <F7> :Dispatch!<CR>
 map <F8> :InstantMarkdownPreview<CR>
 map <F9> :RainbowParenthesesToggle<CR>
 
-" confirm
-" wholeword
-" replace
-function! Replace(confirm, wholeword, replace)
-	wa
-	let flag = ''
-	if a:confirm
-		let flag .= 'gec'
-	else
-		let flag .= 'ge'
-	endif
-	let search = ''
-	if a:wholeword
-		let search .= '\<' . escape(expand('<cword>'), '/\.*$^~[') . '\>'
-	else
-		let search .= expand('<cword>')
-	endif
-	let replace = escape(a:replace, '/\&~')
-	execute 'argdo %s/' . search . '/' . replace . '/' . flag . '| update'
+function! Strip(input_string)
+	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
 
-" default
-nnoremap <Leader>R :call Replace(0, 0, input('Replace '.expand('<cword>').' with: '))<CR>
-" wholeword
-nnoremap <Leader>rw :call Replace(0, 1, input('Replace '.expand('<cword>').' with: '))<CR>
-" confirm
-nnoremap <Leader>rc :call Replace(1, 0, input('Replace '.expand('<cword>').' with: '))<CR>
-" wholeword, confirm
-nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
-
-" Save session options
-set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
-" Backup
-map <Leader>ss :mksession! .save.vim<cr> :wviminfo! .save.viminfo<cr>
-" Restore
-map <Leader>rs :source .save.vim<cr> :rviminfo .save.viminfo<cr>
+function! Prompt(promptText)
+	call inputsave()
+	let value = input(a:promptText)
+	call inputrestore()
+	return Strip(value)
+endfunction
 
 if has("gui_running")
 	fun! ToggleFullscreen()
@@ -306,8 +281,54 @@ else
 	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() == '' | checktime | endif
 endif
 
+" confirm
+" wholeword
+" replace
+function! Replace(confirm, wholeword, replace)
+	wa
+	let flag = ''
+	if a:confirm
+		let flag .= 'gec'
+	else
+		let flag .= 'ge'
+	endif
+	let search = ''
+	if a:wholeword
+		let search .= '\<' . escape(expand('<cword>'), '/\.*$^~[') . '\>'
+	else
+		let search .= expand('<cword>')
+	endif
+	let replace = escape(a:replace, '/\&~')
+	execute 'argdo %s/' . search . '/' . replace . '/' . flag . '| update'
+endfunction
+
+" No hightlight search
+nnoremap <Leader>nhl :nohlsearch<CR>
+" default
+nnoremap <Leader>R :call Replace(0, 0, input('Replace '.expand('<cword>').' with: '))<CR>
+" wholeword
+nnoremap <Leader>rw :call Replace(0, 1, input('Replace '.expand('<cword>').' with: '))<CR>
+" confirm
+nnoremap <Leader>rc :call Replace(1, 0, input('Replace '.expand('<cword>').' with: '))<CR>
+" wholeword, confirm
+nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
+
+" Save session options
+set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
+
+" vim-session
+let g:session_lock_enabled = 1
+let g:session_autosave = 'yes'
+let g:session_autoload = 'yes'
+let g:session_default_name = 'session'
+
+" Backup
+map <Leader>ss :execute 'SaveSession' Prompt('Session name: ')<CR>
+" Restore
+map <Leader>rs :execute 'OpenSession' Prompt('Session name: ')<CR>
+
 " Auto set tag file path, when vim start
-autocmd BufNewFile,BufReadPre,FileReadPre * execute !empty(FindRootDirectory()) ? 'setlocal tags=' . FindRootDirectory() . "/.tags," . &tags : 'setlocal tags=./.tags,' . &tags
+autocmd BufNewFile,BufReadPre,FileReadPre * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
