@@ -126,6 +126,9 @@ set shiftwidth=8
 set noexpandtab
 
 autocmd FileType python setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+"autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -t\ markdown\ --reference-links\ --atx-headers
+" Disable autoindent for text file
+autocmd FileType markdown,text setlocal equalprg=cat
 
 set scrolloff=7
 
@@ -345,8 +348,8 @@ endfunction
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
 
-" Disable autoindent
-let g:autoformat_autoindent = 0
+" Enable autoindent
+let g:autoformat_autoindent = 1
 
 " Tagbar width
 let tagbar_width = 32
@@ -461,8 +464,8 @@ let g:rooter_silent_chdir = 1
 " Syntastic
 let g:syntastic_error_symbol = "\xe2\x9c\x97"
 let g:syntastic_style_error_symbol = "\xe2\x9c\x97"
-let g:syntastic_warning_symbol = "!"
-let g:syntastic_style_warning_symbol = "!"
+let g:syntastic_warning_symbol = "\xef\xbc\x81"
+let g:syntastic_style_warning_symbol = "\xef\xbc\x81"
 let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
