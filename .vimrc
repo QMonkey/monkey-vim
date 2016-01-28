@@ -145,7 +145,7 @@ set foldlevel=1
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
 
-" Character width
+" Character width. Should never be enable!
 "set ambiwidth=double
 
 scriptencoding utf-8
