@@ -146,7 +146,7 @@ language message en_US.UTF-8
 set langmenu=en_US.UTF-8
 
 " Character width
-set ambiwidth=double
+"set ambiwidth=double
 
 scriptencoding utf-8
 set encoding=utf-8
@@ -178,9 +178,14 @@ let g:airline_right_sep = ""
 if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
+
+let g:airline_left_sep = "\xee\x82\xb0"
+let g:airline_left_alt_sep = "\xee\x82\xb1"
+let g:airline_right_sep = "\xee\x82\xb2"
+let g:airline_right_alt_sep = "\xee\x82\xb3"
 let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
-let g:airline_symbols.linenr = "LN"
+let g:airline_symbols.linenr = "\xee\x82\xa1"
 
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
@@ -262,7 +267,7 @@ if has("gui_running")
 	autocmd GUIEnter * set vb t_vb=
 
 	" Disable cursor flicker
-	set gcr=a:block-blinkon0
+	set guicursor=a:block-blinkon0
 
 	" Disable scroll bar
 	set guioptions-=l
@@ -483,10 +488,10 @@ let g:easytags_on_cursorhold = 0
 let g:rooter_silent_chdir = 1
 
 " Syntastic
-let g:syntastic_error_symbol = "\xe2\x9c\x97"
-let g:syntastic_style_error_symbol = "\xe2\x9c\x97"
-let g:syntastic_warning_symbol = "\xef\xbc\x81"
-let g:syntastic_style_warning_symbol = "\xef\xbc\x81"
+let g:syntastic_error_symbol = "\xe2\x9c\x96"
+let g:syntastic_style_error_symbol = "\xe2\x9c\x96"
+let g:syntastic_warning_symbol = "!"
+let g:syntastic_style_warning_symbol = "!"
 let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
