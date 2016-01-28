@@ -322,6 +322,7 @@ nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' wi
 set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
 
 " vim-session
+let g:session_default_overwrite = 1
 let g:session_lock_enabled = 1
 let g:session_autosave = 'yes'
 let g:session_autoload = 'yes'
