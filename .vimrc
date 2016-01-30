@@ -16,6 +16,16 @@
 "	fi
 "}
 
+let needSetup = 0
+let vundle_readme = expand('~/.vim/bundle/Vundle.vim/README.md')
+if !filereadable(vundle_readme)
+	echo "Installing Vundle..."
+	echo ""
+	silent !mkdir -p ~/.vim/bundle
+	silent !git clone https://github.com/VundleVim/Vundle.vim ~/.vim/bundle/Vundle.vim
+	let needSetup = 1
+endif
+
 set nocompatible
 filetype off
 
@@ -28,46 +38,56 @@ call vundle#begin()
 " Let Vundle manage Vundle, required
 Plugin 'VundleVim/Vundle.vim'
 
-" Bundle
-Bundle 'scrooloose/nerdtree'
-Bundle 'jistr/vim-nerdtree-tabs'
-Bundle 'majutsushi/tagbar'
-"Bundle 'fholgado/minibufexpl.vim'
-Bundle 'sjl/gundo.vim'
-Bundle 'vim-airline/vim-airline'
-Bundle 'ryanoasis/vim-devicons'
-Bundle 'ctrlpvim/ctrlp.vim'
-Bundle 'easymotion/vim-easymotion'
-Bundle 'mileszs/ack.vim'
-Bundle 'scrooloose/nerdcommenter'
-Bundle 'mhinz/vim-startify'
-Bundle 'Chiel92/vim-autoformat'
-Bundle 'bronson/vim-trailing-whitespace'
-Bundle 'tpope/vim-dispatch'
-Bundle 'airblade/vim-rooter'
-Bundle 'xolox/vim-misc'
-Bundle 'xolox/vim-easytags'
-Bundle 'xolox/vim-session'
-Bundle 'scrooloose/syntastic'
-Bundle 'Valloric/YouCompleteMe'
-Bundle 'SirVer/ultisnips'
-Bundle 'honza/vim-snippets'
-Bundle 'Raimondi/delimitMate'
-Bundle 'tpope/vim-endwise'
-Bundle 'tpope/vim-ragtag'
-Bundle 'docunext/closetag.vim'
-Bundle 'fatih/vim-go'
-Bundle 'pangloss/vim-javascript'
-Bundle 'mattn/emmet-vim'
-Bundle 'godlygeek/tabular'
-Bundle 'plasticboy/vim-markdown'
-Bundle 'suan/vim-instant-markdown'
-Bundle 'sheerun/vim-polyglot'
-Bundle 'tpope/vim-fugitive'
-Bundle 'gregsexton/gitv'
-Bundle 'airblade/vim-gitgutter'
-Bundle 'tomasr/molokai'
-Bundle 'kien/rainbow_parentheses.vim'
+" Plugin
+Plugin 'scrooloose/nerdtree'
+Plugin 'jistr/vim-nerdtree-tabs'
+Plugin 'majutsushi/tagbar'
+Plugin 'fholgado/minibufexpl.vim'
+Plugin 'sjl/gundo.vim'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'ryanoasis/vim-devicons'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'terryma/vim-multiple-cursors'
+Plugin 'easymotion/vim-easymotion'
+Plugin 'mileszs/ack.vim'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'mhinz/vim-startify'
+Plugin 'Chiel92/vim-autoformat'
+Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'wesQ3/vim-windowswap'
+Plugin 'tpope/vim-dispatch'
+Plugin 'airblade/vim-rooter'
+Plugin 'xolox/vim-misc'
+Plugin 'xolox/vim-easytags'
+Plugin 'xolox/vim-session'
+Plugin 'scrooloose/syntastic'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'SirVer/ultisnips'
+Plugin 'honza/vim-snippets'
+Plugin 'tpope/vim-surround'
+Plugin 'Raimondi/delimitMate'
+Plugin 'tpope/vim-endwise'
+Plugin 'tpope/vim-ragtag'
+Plugin 'docunext/closetag.vim'
+Plugin 'fatih/vim-go'
+Plugin 'pangloss/vim-javascript'
+Plugin 'mattn/emmet-vim'
+Plugin 'godlygeek/tabular'
+Plugin 'plasticboy/vim-markdown'
+Plugin 'suan/vim-instant-markdown'
+Plugin 'sheerun/vim-polyglot'
+Plugin 'tpope/vim-fugitive'
+Plugin 'gregsexton/gitv'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'tomasr/molokai'
+Plugin 'kien/rainbow_parentheses.vim'
+
+if needSetup == 1
+	echo "Installing Vundles, please ignore key map error messages."
+	echo ""
+	execute "PluginInstall"
+endif
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -169,10 +189,27 @@ set t_vb=
 " Always show status line
 set laststatus=2
 
+autocmd User AirlineAfterInit execute 'AirlineTheme badwolf'
+
 let g:airline_theme = 'badwolf'
 let g:airline_detect_paste = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#show_buffers = 0
+let g:airline#extensions#tabline#show_tabs = 1
+" Only show tab number
+let g:airline#extensions#tabline#tab_nr_type = 1
+let g:airline#extensions#tabline#show_tab_nr = 1
+let g:airline#extensions#tabline#show_tab_type = 0
+let g:airline#extensions#tabline#buffer_idx_mode = 1
+let g:airline#extensions#tabline#fnamecollapse = 0
+let g:airline#extensions#tabline#show_close_button = 0
+
+let g:airline#extensions#ycm#enabled = 1
+let g:airline#extensions#ycm#error_symbol = 'E:'
+let g:airline#extensions#ycm#warning_symbol = 'W:'
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
+let g:airline#extensions#windowswap#enabled = 1
 let g:airline_left_sep = ""
 let g:airline_right_sep = ""
 if !exists('g:airline_symbols')
@@ -186,6 +223,18 @@ let g:airline_right_alt_sep = "\xee\x82\xb3"
 let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
 let g:airline_symbols.linenr = "\xee\x82\xa1"
+
+nmap <leader>1 <Plug>AirlineSelectTab1
+nmap <leader>2 <Plug>AirlineSelectTab2
+nmap <leader>3 <Plug>AirlineSelectTab3
+nmap <leader>4 <Plug>AirlineSelectTab4
+nmap <leader>5 <Plug>AirlineSelectTab5
+nmap <leader>6 <Plug>AirlineSelectTab6
+nmap <leader>7 <Plug>AirlineSelectTab7
+nmap <leader>8 <Plug>AirlineSelectTab8
+nmap <leader>9 <Plug>AirlineSelectTab9
+nmap <leader>- <Plug>AirlineSelectPrevTab
+nmap <leader>+ <Plug>AirlineSelectNextTab
 
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
@@ -221,7 +270,7 @@ noremap q :q<CR>
 noremap <Leader>sw :w !sudo tee %<CR>
 
 " Tab
-map <C-n> :execute 'tabnew' Prompt('New tab name: ')<CR>
+map <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
 map <S-h> :tabprevious<CR>
 map <S-l> :tabnext<CR>
 map <Leader><S-h> :tabfirst<CR>
@@ -377,6 +426,9 @@ autocmd BufWrite * :Autoformat
 
 " Enable autoindent
 let g:autoformat_autoindent = 1
+
+" vim-better-whitespace
+let g:better_whitespace_filetypes_blacklist = []
 
 " Tagbar width
 let tagbar_width = 32
