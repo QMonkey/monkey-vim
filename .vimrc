@@ -80,6 +80,7 @@ Plugin 'sheerun/vim-polyglot'
 Plugin 'tpope/vim-fugitive'
 Plugin 'gregsexton/gitv'
 Plugin 'airblade/vim-gitgutter'
+Plugin 'tpope/vim-unimpaired'
 Plugin 'tomasr/molokai'
 Plugin 'kien/rainbow_parentheses.vim'
 
@@ -129,6 +130,9 @@ set wildmode=list:longest,full
 set smartindent
 set autoindent
 
+" For regular expressions turn magic on
+set magic
+
 " Share clipboard with system (gvim -v in xterm)
 set clipboard=unnamedplus
 
@@ -160,7 +164,7 @@ set undodir=~/.vim/undofiles/
 " Disable fold on start up
 set nofoldenable
 set foldmethod=syntax
-set foldlevel=1
+set foldlevel=99
 
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
@@ -265,9 +269,19 @@ syntax enable
 set regexpengine=1
 
 " Key map
-noremap <C-c> <ESC>
+" Make Y behave like other capitals
+map Y y$
+
+" Improve up/down movement on wrapped lines
+nnoremap j gj
+nnoremap k gk
+
+" Make Arrow Keys Useful
+nmap <left> :bprevious<CR>
+nmap <right> :bnext<CR>
+
 noremap q :q<CR>
-noremap <Leader>sw :w !sudo tee %<CR>
+noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
 " Tab
 map <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
@@ -287,6 +301,8 @@ map <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
 map <F4> :GundoToggle<CR>
+" Vim lets you toggle any option with
+" :set inv{option}
 map <F5> :set invpaste paste?<CR>
 map <F6> :Dispatch<CR>
 map <F7> :Dispatch!<CR>
@@ -357,7 +373,7 @@ function! Replace(confirm, wholeword, replace)
 endfunction
 
 " No hightlight search
-nnoremap <Leader>nhl :nohlsearch<CR>
+nnoremap <Leader>/ :nohlsearch<CR>
 " default
 nnoremap <Leader>R :call Replace(0, 0, input('Replace '.expand('<cword>').' with: '))<CR>
 " wholeword
@@ -395,11 +411,11 @@ let g:nerdtree_tabs_open_on_gui_startup = 0
 " let g:nerdtree_tabs_open_on_console_startup = 1
 
 " Open NERDTreeTabs automatically when vim starts up if no files were specified
-" autocmd StdinReadPre * let s:std_in = 1
-" autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
+"autocmd StdinReadPre * let s:std_in = 1
+"autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
 
-" Close vim if the only window left open is a NERDTree
-autocmd BufEnter * if (winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()) | q | endif
+" Close vim if the only window left open is a NERDTreeTabs
+let g:nerdtree_tabs_autoclose = 1
 
 " Auto refresh NERDTree
 autocmd CursorHold,CursorHoldI * call ReRender()
@@ -429,6 +445,8 @@ let g:autoformat_autoindent = 1
 
 " vim-better-whitespace
 let g:better_whitespace_filetypes_blacklist = []
+
+map <Leader><Space> :StripWhitespace<CR>
 
 " Tagbar width
 let tagbar_width = 32
