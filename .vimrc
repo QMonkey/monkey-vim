@@ -17,12 +17,12 @@
 "}
 
 let needSetup = 0
-let vundle_readme = expand('~/.vim/bundle/Vundle.vim/README.md')
-if !filereadable(vundle_readme)
+let vundle = $HOME . '/.vim/bundle/Vundle.vim'
+if exists('*mkdir') && !isdirectory(vundle)
 	echo "Installing Vundle..."
 	echo ""
-	silent !mkdir -p ~/.vim/bundle
-	silent !git clone https://github.com/VundleVim/Vundle.vim ~/.vim/bundle/Vundle.vim
+	call mkdir($HOME . '/.vim/bundle', 'p')
+	execute 'silent !git clone https://github.com/VundleVim/Vundle.vim ' . vundle
 	let needSetup = 1
 endif
 
@@ -108,15 +108,15 @@ filetype plugin indent on    " required
 " Put your non-Plugin stuff after this line
 
 set number
-" show the cursor position all the time
+" Show the cursor position all the time
 set ruler
 
 set showmatch
 
-" hightlight current line
+" Hightlight current line
 set cursorline
 
-" search in time
+" Search in time
 set incsearch
 set hlsearch
 set ignorecase
@@ -159,7 +159,12 @@ set scrolloff=7
 " Enable undo file
 set undofile
 " Undo files
-set undodir=~/.vim/undofiles/
+set undodir=$HOME/.vim/undo/
+
+" Create undo directory if directory not exists
+if exists('*mkdir') && !isdirectory($HOME . "/.vim/undo")
+	call mkdir($HOME . '/.vim/undo', 'p')
+endif
 
 " Disable fold on start up
 set nofoldenable
@@ -193,8 +198,6 @@ set t_vb=
 " Always show status line
 set laststatus=2
 
-autocmd User AirlineAfterInit execute 'AirlineTheme badwolf'
-
 let g:airline_theme = 'badwolf'
 let g:airline_detect_paste = 1
 let g:airline#extensions#tabline#enabled = 1
@@ -214,8 +217,6 @@ let g:airline#extensions#ycm#warning_symbol = 'W:'
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline#extensions#windowswap#enabled = 1
-let g:airline_left_sep = ""
-let g:airline_right_sep = ""
 if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
@@ -275,10 +276,6 @@ map Y y$
 " Improve up/down movement on wrapped lines
 nnoremap j gj
 nnoremap k gk
-
-" Make Arrow Keys Useful
-nmap <left> :bprevious<CR>
-nmap <right> :bnext<CR>
 
 noremap q :q<CR>
 noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
