@@ -277,6 +277,14 @@ map Y y$
 nnoremap j gj
 nnoremap k gk
 
+" ESC map
+map <C-c> <ESC>
+map ;; <ESC>
+imap ;; <ESC>
+
+" Command-line mode with the enter key
+nnoremap <CR> :
+
 noremap q :q<CR>
 noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
@@ -294,6 +302,11 @@ map <C-h> <C-w>h
 map <C-l> <C-w>l
 map <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
 map <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
+
+noremap <c-up> <c-w>+
+noremap <c-down> <c-w>-
+noremap <c-left> <c-w>>
+noremap <c-right> <c-w><
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
