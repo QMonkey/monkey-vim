@@ -43,6 +43,7 @@ Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
 Plugin 'majutsushi/tagbar'
 Plugin 'fholgado/minibufexpl.vim'
+Plugin 'moll/vim-bbye'
 Plugin 'sjl/gundo.vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
@@ -286,6 +287,8 @@ imap ;; <ESC>
 nnoremap <CR> :
 
 noremap q :q<CR>
+noremap bd :Bdelete<CR>
+
 noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
 " Tab
