@@ -285,9 +285,6 @@ map <C-c> <ESC>
 map ;; <ESC>
 imap ;; <ESC>
 
-" Command-line mode with the enter key
-nnoremap <CR> :
-
 noremap q :q<CR>
 noremap bd :MBEbd<CR>
 
