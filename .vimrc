@@ -16,14 +16,14 @@
 "	fi
 "}
 
-let needSetup = 0
+let need_setup = 0
 let vundle = $HOME . '/.vim/bundle/Vundle.vim'
 if exists('*mkdir') && !isdirectory(vundle)
 	echo "Installing Vundle..."
 	echo ""
 	call mkdir($HOME . '/.vim/bundle', 'p')
 	execute 'silent !git clone https://github.com/VundleVim/Vundle.vim ' . vundle
-	let needSetup = 1
+	let need_setup = 1
 endif
 
 set nocompatible
@@ -85,7 +85,7 @@ Plugin 'tpope/vim-unimpaired'
 Plugin 'tomasr/molokai'
 Plugin 'kien/rainbow_parentheses.vim'
 
-if needSetup == 1
+if need_setup == 1
 	echo "Installing Vundles, please ignore key map error messages."
 	echo ""
 	execute "PluginInstall"
@@ -152,10 +152,12 @@ autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
+autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 "autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
-" Disable autoindent for text file
-autocmd FileType git,text,markdown setlocal equalprg=cat
+
+let format_filetype = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'ruby', 'sh', 'vim']
+autocmd FileType * if index(format_filetype, &filetype) < 0 | setlocal equalprg=cat | endif
 
 set scrolloff=7
 
@@ -572,6 +574,7 @@ let g:easytags_on_cursorhold = 0
 let g:rooter_silent_chdir = 1
 
 " Syntastic
+let g:syntastic_loc_list_height = 10
 let g:syntastic_error_symbol = "\xe2\x9c\x96"
 let g:syntastic_style_error_symbol = "\xe2\x9c\x96"
 let g:syntastic_warning_symbol = "!"
