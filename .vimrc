@@ -289,7 +289,7 @@ imap ;; <ESC>
 nnoremap <CR> :
 
 noremap q :q<CR>
-noremap bd :Bdelete<CR>
+noremap bd :MBEbd<CR>
 
 noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
@@ -505,7 +505,8 @@ nnoremap <Leader>jim :YcmCompleter GoToImprecise<CR>
 
 " vim-autoformat
 " Generic C, C++, Objective-C style
-let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, Language: Cpp, BreakBeforeBraces: Allman, AllowShortBlocksOnASingleLine: false, AllowShortFunctionsOnASingleLine: false, AllowShortIfStatementsOnASingleLine: false, AllowShortLoopsOnASingleLine: false, IndentCaseLabels: false, DerivePointerAlignment: false, MaxEmptyLinesToKeep: 1, ColumnLimit: 0, PointerAlignment: Left}\"'"
+" A style similar to the Linux Kernel style
+let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
 
 " Golang
 let g:formatdef_goimports = '"goimports"'
