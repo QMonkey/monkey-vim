@@ -129,14 +129,14 @@ set gdefault
 set wildmenu
 set wildmode=list:longest,full
 
-set smartindent
-set autoindent
-
 " For regular expressions turn magic on
 set magic
 
 " Share clipboard with system (gvim -v in xterm)
 set clipboard=unnamedplus
+
+set autoindent
+set smartindent
 
 " Make "tab" insert indents instead of tabs at the beginning of a line
 set smarttab
@@ -167,8 +167,8 @@ autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softt
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 "autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
 
-let format_filetype = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'ruby', 'sh', 'vim']
-autocmd FileType * if index(format_filetype, &filetype) < 0 | setlocal equalprg=cat | endif
+let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'ruby', 'sh', 'vim']
+autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
 
 set scrolloff=7
 
@@ -277,6 +277,9 @@ let g:rbpt_colorpairs = [
 			\ ]
 let g:rbpt_max = 16
 let g:rbpt_loadcmd_toggle = 1
+
+let rainbow_parentheses_filetypes = ['lisp', 'clojure', 'scheme']
+autocmd VimEnter * if index(rainbow_parentheses_filetypes, &filetype) >=0 | execute 'RainbowParenthesesToggle' | endif
 
 " Must execute 'export TERM=xterm-256color' first
 colorscheme molokai
