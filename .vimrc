@@ -55,6 +55,7 @@ Plugin 'mileszs/ack.vim'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'mhinz/vim-startify'
 Plugin 'Chiel92/vim-autoformat'
+Plugin 'Yggdroot/indentLine'
 Plugin 'ntpeters/vim-better-whitespace'
 Plugin 'wesQ3/vim-windowswap'
 Plugin 'tpope/vim-dispatch'
@@ -146,6 +147,16 @@ set softtabstop=8
 set shiftwidth=8
 " Never use space to replace tab
 set noexpandtab
+
+" Show tab and eof
+set list listchars=eol:¬,tab:▸\ ,
+
+" indentLine
+" Disable, or vim will be very slow for the file which has long line
+let g:indentLine_enabled = 0
+let g:indentLine_char = "\xe2\x94\x8a"
+let g:indentLine_leadingSpaceEnabled = 1
+let g:indentLine_leadingSpaceChar = "\xc2\xb7"
 
 " Unrecognized filetype set to text
 autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
