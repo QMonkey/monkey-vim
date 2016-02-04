@@ -49,6 +49,7 @@ Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 Plugin 'ryanoasis/vim-devicons'
 Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'vim-ctrlspace/vim-ctrlspace'
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'easymotion/vim-easymotion'
 Plugin 'mileszs/ack.vim'
@@ -279,7 +280,7 @@ let g:rbpt_max = 16
 let g:rbpt_loadcmd_toggle = 1
 
 let rainbow_parentheses_filetypes = ['lisp', 'clojure', 'scheme']
-autocmd VimEnter * if index(rainbow_parentheses_filetypes, &filetype) >=0 | execute 'RainbowParenthesesToggle' | endif
+autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) >=0 | execute 'RainbowParenthesesToggle' | endif
 
 " Must execute 'export TERM=xterm-256color' first
 colorscheme molokai
@@ -295,6 +296,13 @@ map Y y$
 " Improve up/down movement on wrapped lines
 nnoremap j gj
 nnoremap k gk
+
+" Keep search pattern at the center of the screen.
+nnoremap <silent> n nzz
+nnoremap <silent> N Nzz
+nnoremap <silent> * *zz
+nnoremap <silent> # #zz
+nnoremap <silent> g* g*zz
 
 " ESC map
 map <C-c> <ESC>
@@ -426,8 +434,8 @@ map <Leader>ss :execute 'SaveSession' Prompt('Session name: ')<CR>
 " Restore
 map <Leader>rs :execute 'OpenSession' Prompt('Session name: ')<CR>
 
-" Auto set tag file path, when vim start
-autocmd BufNewFile,BufReadPre,FileReadPre * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
+" Auto set tag file path
+autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
@@ -570,7 +578,7 @@ let g:easytags_async = 1
 " let g:easytags_autorecurse = 1
 
 " Global tag file
-let g:easytags_file = '~/.vim/.tags'
+let g:easytags_file = $HOME . '/.vim/.tags'
 
 let g:easytags_opts = ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v ', '--fields=+liaS', '--extra=+q']
 " Create dynamic tag file if not exists
