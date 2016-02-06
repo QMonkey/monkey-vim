@@ -42,8 +42,6 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
 Plugin 'majutsushi/tagbar'
-"Plugin 'fholgado/minibufexpl.vim'
-Plugin 'weynhamz/vim-plugin-minibufexpl'
 Plugin 'sjl/gundo.vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
@@ -63,7 +61,6 @@ Plugin 'tpope/vim-dispatch'
 Plugin 'airblade/vim-rooter'
 Plugin 'xolox/vim-misc'
 Plugin 'xolox/vim-easytags'
-Plugin 'xolox/vim-session'
 Plugin 'scrooloose/syntastic'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'SirVer/ultisnips'
@@ -422,17 +419,10 @@ nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' wi
 " Save session options
 set sessionoptions="blank,buffers,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
 
-" vim-session
-let g:session_default_overwrite = 1
-let g:session_lock_enabled = 1
-let g:session_autosave = 'yes'
-let g:session_autoload = 'yes'
-let g:session_default_name = 'session'
-
 " Backup
-map <Leader>ss :execute 'SaveSession' Prompt('Session name: ')<CR>
+map <Leader>ss :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
-map <Leader>rs :execute 'OpenSession' Prompt('Session name: ')<CR>
+map <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 
 " Auto set tag file path
 autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
@@ -570,6 +560,11 @@ noremap <S-k> :Man <cword><CR>
 
 " CtrlP runtime path
 set runtimepath^=~/.vim/bundle/ctrlp.vim
+
+" CtrlSpace
+let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
+let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
+let g:CtrlSpaceSaveWorkspaceOnExit = 1
 
 " vim-easytags
 let g:easytags_async = 1
