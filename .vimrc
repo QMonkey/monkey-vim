@@ -15,6 +15,15 @@
 "		echo "No manual entry for $*"
 "	fi
 "}
+"
+"dirdiff() {
+"	if [ $# -ne 2 ]; then
+"		echo "Invalid arguments, please pass two arguments"
+"		return
+"	fi
+"
+"	vim -c "DirDiff $*" ~/.vimrc -c "execute 'bdelete ' . bufnr('~/.vimrc')"
+"}
 
 let need_setup = 0
 let vundle = $HOME . '/.vim/bundle/Vundle.vim'
@@ -80,6 +89,7 @@ Plugin 'sheerun/vim-polyglot'
 Plugin 'tpope/vim-fugitive'
 Plugin 'gregsexton/gitv'
 Plugin 'airblade/vim-gitgutter'
+Plugin 'will133/vim-dirdiff'
 Plugin 'tpope/vim-unimpaired'
 Plugin 'tomasr/molokai'
 Plugin 'kien/rainbow_parentheses.vim'
@@ -327,7 +337,7 @@ cnoremap <C-e> <End>
 map <C-c> <ESC>
 
 noremap q :q<CR>
-noremap bd :MBEbd<CR>
+noremap bd :execute 'bdelete ' . bufnr('%')<CR>
 
 noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
