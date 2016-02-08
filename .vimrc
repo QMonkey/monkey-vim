@@ -147,7 +147,7 @@ set shiftwidth=8
 set noexpandtab
 
 " Show tab and eof
-set list listchars=eol:¬,tab:▸\ ,
+set list listchars=tab:▸\ ,eol:¬,trail:⋅
 
 " indentLine
 " Disable, or vim will be very slow for the file which has long line
@@ -168,7 +168,15 @@ autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softt
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
 
+" Resize splits when the window is resized
+autocmd VimResized * exe "normal! \<c-w>="
+
+" Number of lines from vertical edge to start scrolling
 set scrolloff=7
+" Number of cols from horizontal edge to start scrolling
+set sidescrolloff=15
+" Number of cols to scroll at a time
+set sidescroll=1
 
 " Enable undo file
 set undofile
@@ -295,17 +303,27 @@ map Y y$
 nnoremap j gj
 nnoremap k gk
 
+nnoremap ; :
+
+" Remap U to <C-r> for easier redo
+nnoremap U <C-r>
+
 " Keep search pattern at the center of the screen.
 nnoremap <silent> n nzz
 nnoremap <silent> N Nzz
 nnoremap <silent> * *zz
 nnoremap <silent> # #zz
 nnoremap <silent> g* g*zz
+nnoremap <silent> g# g#zz
+
+" Better comand-line editing
+cnoremap <C-j> <t_kd>
+cnoremap <C-k> <t_ku>
+cnoremap <C-a> <Home>
+cnoremap <C-e> <End>
 
 " ESC map
 map <C-c> <ESC>
-map ;; <ESC>
-imap ;; <ESC>
 
 noremap q :q<CR>
 noremap bd :MBEbd<CR>
