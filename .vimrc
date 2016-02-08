@@ -10,7 +10,7 @@
 "fi
 "
 "vman() {
-"	vim -R -c "Man $*" -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
+"	vim -R -c "Man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
 "	if [ "$?" != "0" ]; then
 "		echo "No manual entry for $*"
 "	fi
@@ -453,7 +453,7 @@ autocmd BufNewFile,BufRead *.tags set filetype=tags
 let NERDTreeWinSize = 32
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
-" let g:nerdtree_tabs_open_on_console_startup = 1
+let g:nerdtree_tabs_open_on_console_startup = 0
 
 " Open NERDTreeTabs automatically when vim starts up if no files were specified
 "autocmd StdinReadPre * let s:std_in = 1
