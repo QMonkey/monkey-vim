@@ -234,12 +234,13 @@ set laststatus=2
 let g:airline_theme = 'badwolf'
 let g:airline_detect_paste = 1
 let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#show_buffers = 0
+let g:airline#extensions#tabline#show_buffers = 1
+let g:airline#extensions#tabline#buffer_min_count = 2
 let g:airline#extensions#tabline#show_tabs = 1
 let g:airline#extensions#tabline#tab_min_count = 2
 " Only show tab number
 let g:airline#extensions#tabline#tab_nr_type = 1
-let g:airline#extensions#tabline#show_tab_nr = 1
+let g:airline#extensions#tabline#show_tab_nr = 0
 let g:airline#extensions#tabline#show_tab_type = 0
 let g:airline#extensions#tabline#buffer_idx_mode = 1
 let g:airline#extensions#tabline#fnamecollapse = 0
@@ -356,10 +357,10 @@ map <C-l> <C-w>l
 map <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
 map <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
-noremap <c-up> <c-w>+
-noremap <c-down> <c-w>-
-noremap <c-left> <c-w>>
-noremap <c-right> <c-w><
+noremap <C-up> <c-w>+
+noremap <C-down> <c-w>-
+noremap <C-left> <c-w>>
+noremap <C-right> <c-w><
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
