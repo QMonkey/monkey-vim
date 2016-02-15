@@ -179,6 +179,24 @@ autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softt
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
 
+autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
+function! AutoInsertFileHead()
+	" Shell
+	if &filetype == 'sh'
+		call setline(1, "\#!/bin/sh")
+	endif
+
+	" Python
+	if &filetype == 'python'
+		call setline(1, "\#!/usr/bin/env python")
+		call append(1, "\# -*- coding: utf-8 -*-")
+	endif
+
+	normal G
+	normal o
+	normal o
+endfunc
+
 " Resize splits when the window is resized
 autocmd VimResized * exe "normal! \<c-w>="
 
@@ -264,17 +282,17 @@ let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
 let g:airline_symbols.linenr = "\xee\x82\xa1"
 
-nmap <leader>1 <Plug>AirlineSelectTab1
-nmap <leader>2 <Plug>AirlineSelectTab2
-nmap <leader>3 <Plug>AirlineSelectTab3
-nmap <leader>4 <Plug>AirlineSelectTab4
-nmap <leader>5 <Plug>AirlineSelectTab5
-nmap <leader>6 <Plug>AirlineSelectTab6
-nmap <leader>7 <Plug>AirlineSelectTab7
-nmap <leader>8 <Plug>AirlineSelectTab8
-nmap <leader>9 <Plug>AirlineSelectTab9
-nmap <leader>- <Plug>AirlineSelectPrevTab
-nmap <leader>+ <Plug>AirlineSelectNextTab
+nmap <Leader>1 <Plug>AirlineSelectTab1
+nmap <Leader>2 <Plug>AirlineSelectTab2
+nmap <Leader>3 <Plug>AirlineSelectTab3
+nmap <Leader>4 <Plug>AirlineSelectTab4
+nmap <Leader>5 <Plug>AirlineSelectTab5
+nmap <Leader>6 <Plug>AirlineSelectTab6
+nmap <Leader>7 <Plug>AirlineSelectTab7
+nmap <Leader>8 <Plug>AirlineSelectTab8
+nmap <Leader>9 <Plug>AirlineSelectTab9
+nmap <Leader>- <Plug>AirlineSelectPrevTab
+nmap <Leader>+ <Plug>AirlineSelectNextTab
 
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
@@ -357,10 +375,10 @@ map <C-l> <C-w>l
 map <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
 map <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
-noremap <C-up> <c-w>+
-noremap <C-down> <c-w>-
-noremap <C-left> <c-w>>
-noremap <C-right> <c-w><
+noremap <C-up> <C-w>+
+noremap <C-down> <C-w>-
+noremap <C-left> <C-w>>
+noremap <C-right> <C-w><
 
 map <F2> :NERDTreeTabsToggle<CR>
 map <F3> :TagbarToggle<CR>
