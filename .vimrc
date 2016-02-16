@@ -176,7 +176,7 @@ autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softt
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 "autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
 
-let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'ruby', 'sh', 'vim']
+let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
 
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
