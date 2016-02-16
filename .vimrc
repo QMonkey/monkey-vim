@@ -198,7 +198,7 @@ function! AutoInsertFileHead()
 endfunc
 
 " Resize splits when the window is resized
-autocmd VimResized * exe "normal! \<c-w>="
+autocmd VimResized * exe "normal! \<C-w>="
 
 " Number of lines from vertical edge to start scrolling
 set scrolloff=7
@@ -270,6 +270,7 @@ let g:airline#extensions#ycm#error_symbol = 'E:'
 let g:airline#extensions#ycm#warning_symbol = 'W:'
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
+let g:airline#extensions#ctrlspace#enabled = 1
 let g:airline#extensions#windowswap#enabled = 1
 
 let g:airline_powerline_fonts = 1
@@ -285,17 +286,16 @@ let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
 let g:airline_symbols.linenr = "\xee\x82\xa1"
 
-nmap <Leader>1 <Plug>AirlineSelectTab1
-nmap <Leader>2 <Plug>AirlineSelectTab2
-nmap <Leader>3 <Plug>AirlineSelectTab3
-nmap <Leader>4 <Plug>AirlineSelectTab4
-nmap <Leader>5 <Plug>AirlineSelectTab5
-nmap <Leader>6 <Plug>AirlineSelectTab6
-nmap <Leader>7 <Plug>AirlineSelectTab7
-nmap <Leader>8 <Plug>AirlineSelectTab8
-nmap <Leader>9 <Plug>AirlineSelectTab9
-nmap <Leader>- <Plug>AirlineSelectPrevTab
-nmap <Leader>+ <Plug>AirlineSelectNextTab
+noremap <Leader>1 1gt
+noremap <Leader>2 2gt
+noremap <Leader>3 3gt
+noremap <Leader>4 4gt
+noremap <Leader>5 5gt
+noremap <Leader>6 6gt
+noremap <Leader>7 7gt
+noremap <Leader>8 8gt
+noremap <Leader>9 9gt
+noremap <Leader>0 :tablast<CR>
 
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
@@ -617,6 +617,7 @@ set runtimepath^=~/.vim/bundle/ctrlp.vim
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
+let g:CtrlSpaceStatuslineFunction = "airline#extensions#ctrlspace#statusline()"
 
 " vim-easytags
 let g:easytags_async = 1
