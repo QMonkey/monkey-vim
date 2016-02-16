@@ -256,6 +256,7 @@ let g:airline#extensions#tabline#show_buffers = 1
 let g:airline#extensions#tabline#buffer_min_count = 2
 let g:airline#extensions#tabline#show_tabs = 1
 let g:airline#extensions#tabline#tab_min_count = 2
+let g:airline#extensions#tabline#exclude_preview = 1
 " Only show tab number
 let g:airline#extensions#tabline#tab_nr_type = 1
 let g:airline#extensions#tabline#show_tab_nr = 0
@@ -270,6 +271,8 @@ let g:airline#extensions#ycm#warning_symbol = 'W:'
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline#extensions#windowswap#enabled = 1
+
+let g:airline_powerline_fonts = 1
 if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
