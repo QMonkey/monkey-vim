@@ -322,21 +322,21 @@ set regexpengine=1
 noremap Y y$
 
 " Improve up/down movement on wrapped lines
-nnoremap j gj
-nnoremap k gk
+noremap j gj
+noremap k gk
 
 nnoremap ; :
 
 " Remap U to <C-r> for easier redo
-nnoremap U <C-r>
+noremap U <C-r>
 
 " Keep search pattern at the center of the screen.
-nnoremap <silent> n nzz
-nnoremap <silent> N Nzz
-nnoremap <silent> * *zz
-nnoremap <silent> # #zz
-nnoremap <silent> g* g*zz
-nnoremap <silent> g# g#zz
+noremap <silent> n nzz
+noremap <silent> N Nzz
+noremap <silent> * *zz
+noremap <silent> # #zz
+noremap <silent> g* g*zz
+noremap <silent> g# g#zz
 
 " Better comand-line editing
 cnoremap <C-j> <t_kd>
@@ -346,6 +346,7 @@ cnoremap <C-e> <End>
 
 " ESC map
 noremap <C-c> <ESC>
+inoremap <C-c> <ESC>
 
 noremap q :q<CR>
 noremap bd :execute 'bdelete ' . bufnr('%')<CR>
