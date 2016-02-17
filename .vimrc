@@ -326,6 +326,10 @@ noremap Y y$
 noremap j gj
 noremap k gk
 
+" Keep text selected after manual indentation
+vnoremap < <gv
+vnoremap > >gv
+
 nnoremap ; :
 
 " Remap U to <C-r> for easier redo
