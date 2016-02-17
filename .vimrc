@@ -348,50 +348,50 @@ cnoremap <C-e> <End>
 noremap <C-c> <ESC>
 inoremap <C-c> <ESC>
 
-noremap q :q<CR>
-noremap bd :execute 'bdelete ' . bufnr('%')<CR>
+nnoremap q :q<CR>
+nnoremap bd :execute 'bdelete ' . bufnr('%')<CR>
 
-noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
+nnoremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
 " Tab
-noremap <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
-noremap <S-h> :tabprevious<CR>
-noremap <S-l> :tabnext<CR>
-noremap <Leader>1 1gt
-noremap <Leader>2 2gt
-noremap <Leader>3 3gt
-noremap <Leader>4 4gt
-noremap <Leader>5 5gt
-noremap <Leader>6 6gt
-noremap <Leader>7 7gt
-noremap <Leader>8 8gt
-noremap <Leader>9 9gt
-noremap <Leader>[ :tabfirst<CR>
-noremap <Leader>] :tablast<CR>
+nnoremap <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
+nnoremap <S-h> :tabprevious<CR>
+nnoremap <S-l> :tabnext<CR>
+nnoremap <Leader>1 1gt
+nnoremap <Leader>2 2gt
+nnoremap <Leader>3 3gt
+nnoremap <Leader>4 4gt
+nnoremap <Leader>5 5gt
+nnoremap <Leader>6 6gt
+nnoremap <Leader>7 7gt
+nnoremap <Leader>8 8gt
+nnoremap <Leader>9 9gt
+nnoremap <Leader>[ :tabfirst<CR>
+nnoremap <Leader>] :tablast<CR>
 
 " Split
-noremap <C-j> <C-w>j
-noremap <C-k> <C-w>k
-noremap <C-h> <C-w>h
-noremap <C-l> <C-w>l
-noremap <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
-noremap <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nnoremap <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
+nnoremap <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
 noremap <C-up> <C-w>+
 noremap <C-down> <C-w>-
 noremap <C-left> <C-w>>
 noremap <C-right> <C-w><
 
-noremap <F2> :NERDTreeTabsToggle<CR>
-noremap <F3> :TagbarToggle<CR>
-noremap <F4> :GundoToggle<CR>
+nnoremap <F2> :NERDTreeTabsToggle<CR>
+nnoremap <F3> :TagbarToggle<CR>
+nnoremap <F4> :GundoToggle<CR>
 " Vim lets you toggle any option with
 " :set inv{option}
-noremap <F5> :set invpaste paste?<CR>
-noremap <F6> :Dispatch<CR>
-noremap <F7> :Dispatch!<CR>
-noremap <F8> :InstantMarkdownPreview<CR>
-noremap <F9> :RainbowParenthesesToggle<CR>
+nnoremap <F5> :set invpaste paste?<CR>
+nnoremap <F6> :Dispatch<CR>
+nnoremap <F7> :Dispatch!<CR>
+nnoremap <F8> :InstantMarkdownPreview<CR>
+nnoremap <F9> :RainbowParenthesesToggle<CR>
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
@@ -405,10 +405,11 @@ function! Prompt(promptText)
 endfunction
 
 if has('gui_running')
-	fun! ToggleFullscreen()
+	function! ToggleFullscreen()
 		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
-	endf
-	noremap <F11> :call ToggleFullscreen()<CR>
+	endfunction
+
+	nnoremap <F11> :call ToggleFullscreen()<CR>
 	" Fullscreen when gvim start up
 	autocmd VimEnter * call ToggleFullscreen()
 
@@ -471,9 +472,9 @@ nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' wi
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
 
 " Backup
-noremap <Leader>ss :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>ss :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
-noremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 
 " Auto set tag file path
 autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
@@ -523,7 +524,7 @@ let g:autoformat_autoindent = 1
 " vim-better-whitespace
 let g:better_whitespace_filetypes_blacklist = []
 
-noremap <Leader><Space> :StripWhitespace<CR>
+nnoremap <Leader><Space> :StripWhitespace<CR>
 
 " Tagbar width
 let tagbar_width = 32
