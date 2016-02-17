@@ -80,6 +80,7 @@ Plugin 'tpope/vim-endwise'
 Plugin 'tpope/vim-ragtag'
 Plugin 'docunext/closetag.vim'
 Plugin 'fatih/vim-go'
+Plugin 'fs111/pydoc.vim'
 Plugin 'pangloss/vim-javascript'
 Plugin 'mattn/emmet-vim'
 Plugin 'godlygeek/tabular'
@@ -171,7 +172,7 @@ autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
-autocmd FileType man set nolist
+autocmd FileType man,godoc,pydoc set nolist
 autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 "autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
@@ -183,13 +184,13 @@ autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
 	" Shell
 	if &filetype == 'sh'
-		call setline(1, '\#!/bin/sh')
+		call setline(1, '#!/bin/sh')
 	endif
 
 	" Python
 	if &filetype == 'python'
-		call setline(1, '\#!/usr/bin/env python')
-		call append(1, '\# -*- coding: utf-8 -*-')
+		call setline(1, '#!/usr/bin/env python')
+		call append(1, '# -*- coding: utf-8 -*-')
 	endif
 
 	normal G
@@ -198,7 +199,7 @@ function! AutoInsertFileHead()
 endfunc
 
 " Resize splits when the window is resized
-autocmd VimResized * exe 'normal! \<C-w>='
+autocmd VimResized * exe "normal! \<C-w>="
 
 " Number of lines from vertical edge to start scrolling
 set scrolloff=7
@@ -308,7 +309,7 @@ let g:rbpt_max = 16
 let g:rbpt_loadcmd_toggle = 1
 
 let rainbow_parentheses_filetypes = ['lisp', 'clojure', 'scheme']
-autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) >=0 | execute 'RainbowParenthesesToggle' | endif
+autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) >= 0 | execute 'RainbowParenthesesToggle' | endif
 
 " Must execute 'export TERM=xterm-256color' first
 colorscheme molokai
@@ -355,8 +356,8 @@ nnoremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
 " Tab
 nnoremap <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
-nnoremap <S-h> :tabprevious<CR>
-nnoremap <S-l> :tabnext<CR>
+nnoremap <silent><S-h> :tabprevious<CR>
+nnoremap <silent><S-l> :tabnext<CR>
 nnoremap <Leader>1 1gt
 nnoremap <Leader>2 2gt
 nnoremap <Leader>3 3gt
@@ -366,8 +367,8 @@ nnoremap <Leader>6 6gt
 nnoremap <Leader>7 7gt
 nnoremap <Leader>8 8gt
 nnoremap <Leader>9 9gt
-nnoremap <Leader>[ :tabfirst<CR>
-nnoremap <Leader>] :tablast<CR>
+nnoremap <silent><Leader>[ :tabfirst<CR>
+nnoremap <silent><Leader>] :tablast<CR>
 
 " Split
 nnoremap <C-j> <C-w>j
@@ -382,16 +383,16 @@ noremap <C-down> <C-w>-
 noremap <C-left> <C-w>>
 noremap <C-right> <C-w><
 
-nnoremap <F2> :NERDTreeTabsToggle<CR>
-nnoremap <F3> :TagbarToggle<CR>
-nnoremap <F4> :GundoToggle<CR>
+nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
+nnoremap <silent><F3> :TagbarToggle<CR>
+nnoremap <silent><F4> :GundoToggle<CR>
 " Vim lets you toggle any option with
 " :set inv{option}
-nnoremap <F5> :set invpaste paste?<CR>
-nnoremap <F6> :Dispatch<CR>
-nnoremap <F7> :Dispatch!<CR>
-nnoremap <F8> :InstantMarkdownPreview<CR>
-nnoremap <F9> :RainbowParenthesesToggle<CR>
+nnoremap <silent><F5> :set invpaste paste?<CR>
+nnoremap <silent><F6> :Dispatch<CR>
+nnoremap <silent><F7> :Dispatch!<CR>
+nnoremap <silent><F8> :InstantMarkdownPreview<CR>
+nnoremap <silent><F9> :RainbowParenthesesToggle<CR>
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
@@ -409,7 +410,7 @@ if has('gui_running')
 		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
 	endfunction
 
-	nnoremap <F11> :call ToggleFullscreen()<CR>
+	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
 	" Fullscreen when gvim start up
 	autocmd VimEnter * call ToggleFullscreen()
 
@@ -458,7 +459,7 @@ function! Replace(confirm, wholeword, replace)
 endfunction
 
 " No hightlight search
-nnoremap <Leader>/ :nohlsearch<CR>
+nnoremap <silent><Leader>/ :nohlsearch<CR>
 " default
 nnoremap <Leader>R :call Replace(0, 0, input('Replace '.expand('<cword>').' with: '))<CR>
 " wholeword
@@ -505,7 +506,7 @@ function! ReRender()
 
 	let winnr = winnr()
 	set switchbuf+=useopen
-	sbuf NERD*
+	sbuffer NERD*
 
 	call b:NERDTree.root.refresh()
 	call NERDTreeRender()
@@ -524,7 +525,7 @@ let g:autoformat_autoindent = 1
 " vim-better-whitespace
 let g:better_whitespace_filetypes_blacklist = []
 
-nnoremap <Leader><Space> :StripWhitespace<CR>
+nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 
 " Tagbar width
 let tagbar_width = 32
@@ -599,14 +600,24 @@ nnoremap <Leader>gf :GoTestFunc<CR>
 nnoremap <Leader>gl :GoLint<CR>
 nnoremap <Leader>gv :GoVet<CR>
 
-autocmd FileType go vnoremap <buffer><silent>K <ESC>:execute 'GoDoc' GetVisualSelection()<CR>
+autocmd FileType go vnoremap <buffer><silent><S-k> <ESC>:execute 'GoDoc' GetVisualSelection()<CR>
 
-" vim-markdown
-let g:vim_markdown_folding_disabled = 1
+" Vim man
+source $VIMRUNTIME/ftplugin/man.vim
 
-" vim-instant_markdown
-let g:instant_markdown_slow = 1
-let g:instant_markdown_autostart = 0
+let has_reference_filetypes = ['c', 'cpp', 'go', 'python', 'sh', 'vim']
+" Default reference: Man
+autocmd FileType * if index(has_reference_filetypes, &filetype) < 0 | nnoremap <silent><S-k> :Man <cword><CR> | endif
+autocmd FileType * if index(has_reference_filetypes, &filetype) < 0 | vnoremap <silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR> | endif
+
+autocmd FileType c,cpp,sh nnoremap <silent><S-k> :Man <cword><CR>
+autocmd FileType c,cpp,sh vnoremap <silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
+autocmd FileType vim nnoremap <silent><S-k> :execute 'help' expand('<cword>')<CR>
+autocmd FileType vim vnoremap <silent><S-k> <ESC>:execute 'help' GetVisualSelection()<CR>
+
+" python_pydoc
+let g:pydoc_window_lines = 0.5
+autocmd FileType python vnoremap <silent><S-k> <ESC>:execute 'Pydoc' GetVisualSelection()<CR>
 
 function! GetVisualSelection()
 	let [lnum1, col1] = getpos("'<")[1:2]
@@ -614,14 +625,15 @@ function! GetVisualSelection()
 	let lines = getline(lnum1, lnum2)
 	let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
 	let lines[0] = lines[0][col1 - 1:]
-	echo join(lines, "\n")
 	return join(lines, "\n")
 endfunction
 
-" Vim man
-source $VIMRUNTIME/ftplugin/man.vim
-nnoremap <S-k> :Man <cword><CR>
-autocmd FileType * if &filetype != 'go' | vnoremap <S-k> <ESC>:execute 'Man' GetVisualSelection()<CR> | endif
+" vim-markdown
+let g:vim_markdown_folding_disabled = 1
+
+" vim-instant_markdown
+let g:instant_markdown_slow = 1
+let g:instant_markdown_autostart = 0
 
 " CtrlP runtime path
 set runtimepath^=~/.vim/bundle/ctrlp.vim
@@ -698,3 +710,17 @@ map <Leader><Leader>l <Plug>(easymotion-lineforward)
 map <Leader><Leader>w <Plug>(easymotion-w)
 map <Leader><Leader>b <Plug>(easymotion-b)
 map <Leader><Leader>s <Plug>(easymotion-sn)
+
+" Zoom/Restore window
+function! ZoomToggle()
+	if exists('t:zoomed') && t:zoomed
+		execute t:zoom_winrestcmd
+		let t:zoomed = 0
+	else
+		let t:zoom_winrestcmd = winrestcmd()
+		resize
+		vertical resize
+		let t:zoomed = 1
+	endif
+endfunction
+nnoremap <silent><Leader>z :call ZoomToggle()<CR>
