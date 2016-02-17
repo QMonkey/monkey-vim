@@ -599,6 +599,8 @@ nnoremap <Leader>gf :GoTestFunc<CR>
 nnoremap <Leader>gl :GoLint<CR>
 nnoremap <Leader>gv :GoVet<CR>
 
+autocmd FileType go vnoremap <buffer><silent>K <ESC>:execute 'GoDoc' GetVisualSelection()<CR>
+
 " vim-markdown
 let g:vim_markdown_folding_disabled = 1
 
@@ -606,9 +608,20 @@ let g:vim_markdown_folding_disabled = 1
 let g:instant_markdown_slow = 1
 let g:instant_markdown_autostart = 0
 
+function! GetVisualSelection()
+	let [lnum1, col1] = getpos("'<")[1:2]
+	let [lnum2, col2] = getpos("'>")[1:2]
+	let lines = getline(lnum1, lnum2)
+	let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
+	let lines[0] = lines[0][col1 - 1:]
+	echo join(lines, "\n")
+	return join(lines, "\n")
+endfunction
+
 " Vim man
 source $VIMRUNTIME/ftplugin/man.vim
-noremap <S-k> :Man <cword><CR>
+nnoremap <S-k> :Man <cword><CR>
+autocmd FileType * if &filetype != 'go' | vnoremap <S-k> <ESC>:execute 'Man' GetVisualSelection()<CR> | endif
 
 " CtrlP runtime path
 set runtimepath^=~/.vim/bundle/ctrlp.vim
