@@ -28,8 +28,8 @@
 let need_setup = 0
 let vundle = $HOME . '/.vim/bundle/Vundle.vim'
 if exists('*mkdir') && !isdirectory(vundle)
-	echo "Installing Vundle..."
-	echo ""
+	echo 'Installing Vundle...'
+	echo ''
 	call mkdir($HOME . '/.vim/bundle', 'p')
 	execute 'silent !git clone https://github.com/VundleVim/Vundle.vim ' . vundle
 	let need_setup = 1
@@ -95,9 +95,9 @@ Plugin 'tomasr/molokai'
 Plugin 'kien/rainbow_parentheses.vim'
 
 if need_setup == 1
-	echo "Installing Vundles, please ignore key map error messages."
-	echo ""
-	execute "PluginInstall"
+	echo 'Installing Vundles, please ignore key map error messages.'
+	echo ''
+	execute 'PluginInstall'
 endif
 
 " All of your Plugins must be added before the following line
@@ -183,13 +183,13 @@ autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
 	" Shell
 	if &filetype == 'sh'
-		call setline(1, "\#!/bin/sh")
+		call setline(1, '\#!/bin/sh')
 	endif
 
 	" Python
 	if &filetype == 'python'
-		call setline(1, "\#!/usr/bin/env python")
-		call append(1, "\# -*- coding: utf-8 -*-")
+		call setline(1, '\#!/usr/bin/env python')
+		call append(1, '\# -*- coding: utf-8 -*-')
 	endif
 
 	normal G
@@ -198,7 +198,7 @@ function! AutoInsertFileHead()
 endfunc
 
 " Resize splits when the window is resized
-autocmd VimResized * exe "normal! \<C-w>="
+autocmd VimResized * exe 'normal! \<C-w>='
 
 " Number of lines from vertical edge to start scrolling
 set scrolloff=7
@@ -286,17 +286,6 @@ let g:airline_symbols.branch = "\ue0a0"
 let g:airline_symbols.readonly = "\ue0a2"
 let g:airline_symbols.linenr = "\xee\x82\xa1"
 
-noremap <Leader>1 1gt
-noremap <Leader>2 2gt
-noremap <Leader>3 3gt
-noremap <Leader>4 4gt
-noremap <Leader>5 5gt
-noremap <Leader>6 6gt
-noremap <Leader>7 7gt
-noremap <Leader>8 8gt
-noremap <Leader>9 9gt
-noremap <Leader>0 :tablast<CR>
-
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
 			\ ['Darkblue',    'SeaGreen3'],
@@ -330,7 +319,7 @@ set regexpengine=1
 
 " Key map
 " Make Y behave like other capitals
-map Y y$
+noremap Y y$
 
 " Improve up/down movement on wrapped lines
 nnoremap j gj
@@ -356,7 +345,7 @@ cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
 " ESC map
-map <C-c> <ESC>
+noremap <C-c> <ESC>
 
 noremap q :q<CR>
 noremap bd :execute 'bdelete ' . bufnr('%')<CR>
@@ -364,35 +353,44 @@ noremap bd :execute 'bdelete ' . bufnr('%')<CR>
 noremap <Leader>sw :w !sudo tee > /dev/null %<CR>
 
 " Tab
-map <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
-map <S-h> :tabprevious<CR>
-map <S-l> :tabnext<CR>
-map <Leader><S-h> :tabfirst<CR>
-map <Leader><S-l> :tablast<CR>
+noremap <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
+noremap <S-h> :tabprevious<CR>
+noremap <S-l> :tabnext<CR>
+noremap <Leader>1 1gt
+noremap <Leader>2 2gt
+noremap <Leader>3 3gt
+noremap <Leader>4 4gt
+noremap <Leader>5 5gt
+noremap <Leader>6 6gt
+noremap <Leader>7 7gt
+noremap <Leader>8 8gt
+noremap <Leader>9 9gt
+noremap <Leader>[ :tabfirst<CR>
+noremap <Leader>] :tablast<CR>
 
 " Split
-map <C-j> <C-w>j
-map <C-k> <C-w>k
-map <C-h> <C-w>h
-map <C-l> <C-w>l
-map <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
-map <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
+noremap <C-j> <C-w>j
+noremap <C-k> <C-w>k
+noremap <C-h> <C-w>h
+noremap <C-l> <C-w>l
+noremap <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
+noremap <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
 noremap <C-up> <C-w>+
 noremap <C-down> <C-w>-
 noremap <C-left> <C-w>>
 noremap <C-right> <C-w><
 
-map <F2> :NERDTreeTabsToggle<CR>
-map <F3> :TagbarToggle<CR>
-map <F4> :GundoToggle<CR>
+noremap <F2> :NERDTreeTabsToggle<CR>
+noremap <F3> :TagbarToggle<CR>
+noremap <F4> :GundoToggle<CR>
 " Vim lets you toggle any option with
 " :set inv{option}
-map <F5> :set invpaste paste?<CR>
-map <F6> :Dispatch<CR>
-map <F7> :Dispatch!<CR>
-map <F8> :InstantMarkdownPreview<CR>
-map <F9> :RainbowParenthesesToggle<CR>
+noremap <F5> :set invpaste paste?<CR>
+noremap <F6> :Dispatch<CR>
+noremap <F7> :Dispatch!<CR>
+noremap <F8> :InstantMarkdownPreview<CR>
+noremap <F9> :RainbowParenthesesToggle<CR>
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
@@ -405,11 +403,11 @@ function! Prompt(promptText)
 	return Strip(value)
 endfunction
 
-if has("gui_running")
+if has('gui_running')
 	fun! ToggleFullscreen()
-		call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")
+		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
 	endf
-	map <F11> :call ToggleFullscreen()<CR>
+	noremap <F11> :call ToggleFullscreen()<CR>
 	" Fullscreen when gvim start up
 	autocmd VimEnter * call ToggleFullscreen()
 
@@ -472,9 +470,9 @@ nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' wi
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
 
 " Backup
-map <Leader>ss :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
+noremap <Leader>ss :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
-map <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+noremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 
 " Auto set tag file path
 autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
@@ -511,7 +509,7 @@ function! ReRender()
 	call NERDTreeRender()
 
 	" Jump back
-	execute winnr . "wincmd w"
+	execute winnr . 'wincmd w'
 	"redraw
 endfunction
 
@@ -524,7 +522,7 @@ let g:autoformat_autoindent = 1
 " vim-better-whitespace
 let g:better_whitespace_filetypes_blacklist = []
 
-map <Leader><Space> :StripWhitespace<CR>
+noremap <Leader><Space> :StripWhitespace<CR>
 
 " Tagbar width
 let tagbar_width = 32
@@ -587,7 +585,7 @@ let g:go_fmt_fail_silently = 1
 let g:go_disable_autoinstall = 1
 " Disable run GoFmt on save, do it by vim-autoformat
 let g:go_fmt_autosave = 0
-let g:go_fmt_command = "goimports"
+let g:go_fmt_command = 'goimports'
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
@@ -617,7 +615,7 @@ set runtimepath^=~/.vim/bundle/ctrlp.vim
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
-let g:CtrlSpaceStatuslineFunction = "airline#extensions#ctrlspace#statusline()"
+let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
 
 " vim-easytags
 let g:easytags_async = 1
@@ -673,7 +671,7 @@ nnoremap <Leader>e :call ToggleErrors()<cr>
 let g:user_emmet_mode = 'a'
 
 " Ultisnips
-let g:UltiSnipsExpandTrigger="<Leader><tab>"
+let g:UltiSnipsExpandTrigger='<Leader><tab>'
 
 " vim-EasyMotion
 let g:EasyMotion_smartcase = 1
