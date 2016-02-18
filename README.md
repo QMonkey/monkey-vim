@@ -154,59 +154,140 @@ vim
 
 ### 1. 正常模式
 
+#### 1.1 按键修改
+
 ```
-# 按键修改
 Y       复制到行尾，相当于“y$”命令
 U       Redo，相当于“Ctrl-r”
 ;       进入命令行模式，相当于“:”键
 q       退出窗口，相当于命令“:q”
 Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
+```
 
-# F2 ~ F10
-F2  打开/关闭NERDTree
-F3  打开/关闭Tagbar
-F4  打开/关闭Gundo
-F5  打开/关闭paste模式
-F6  运行当前项目（可用:Focus注册执行的命令，如:Focus gcc % -o a.out）
-F7  异步运行当前项目
-F8  显示F6或F7运行结果
-F9  预览Markdown
-F10 打开/关闭RainbowParentheses
-F11 全屏切换（仅在gui模式下有效）
+#### 1.2 F2 ~ F10
 
-# 分屏
-Leader+s 输入打开文件的路径，并创建一个水平分屏的窗口
-Leader+v 输入打开文件的路径，并创建一个垂直分屏的窗口
+```
+F2      打开/关闭NERDTree
+F3      打开/关闭Tagbar
+F4      打开/关闭Gundo
+F5      打开/关闭paste模式
+F6      运行当前项目（可用:Focus注册执行的命令，如:Focus gcc % -o a.out）
+F7      异步运行当前项目
+F8      显示F6或F7运行结果
+F9      预览Markdown
+F10     打开/关闭RainbowParentheses
+F11     全屏切换（仅在gui模式下有效）
+```
 
-Ctrl+h 跳转到左窗口
-Ctrl+j 跳转到下窗口
-Ctrl+k 跳转到上窗口
-Ctrl+l 跳转到右窗口
+#### 1.3 分屏
+
+```
+Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
+Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
+
+Ctrl+h      跳转到左窗口
+Ctrl+j      跳转到下窗口
+Ctrl+k      跳转到上窗口
+Ctrl+l      跳转到右窗口
 
 Ctrl+up     窗口垂直方向伸展
 Ctrl+down   窗口垂直方向收缩
 Ctrl+left   窗口水平方向伸展
 Ctrl+right  窗口水平方向收缩
 Leader+z    窗口放大/恢复
+```
 
-# Tab
-C-t 输入打开的文件路径，并创建一个新tab窗口
+#### 1.4 Tab
+
+```
+Ctrl+t      输入打开的文件路径，并创建一个新tab窗口
 
 H           切换到上一个tab窗口
 L           切换到下一个tab窗口
 Leader+1~9  切换到第1~9个tab窗口
 Leader+[    切换到第一个tab窗口
 Leader+]    切换到最后一个tab窗口
+```
 
-# 语言相关
-K 查看光标所在的单词在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
+#### 1.5 替换
 
-# 其它
+```
+Leader+R    替换光标所在的单词（非整词，不需要逐一确认）
+Leader+rw   替换光标所在的单词（整词，不需要逐一确认）
+Leader+rc   替换光标所在的单词（非整词，需要逐一确认）
+Leader+rwc  替换光标所在的单词（整词，需要逐一确认）
+```
+
+#### 1.6 语言相关
+
+```
+K       查看光标所在的单词在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
+
+gd      GoDef
+gi      GoImports
+gt      GoTest，执行当前go文件的单元测试
+gf      GoTestFunc，执行光标所在的单元测试函数
+```
+
+#### 1.7 ctags
+
+```
+Ctrl+]  跳转到符号定义处，如有多处定义，则跳到第一处
+g]      选择一处符号定义并跳转
+```
+
+#### 1.8 代码补全，定义、声明跳转插件[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+
+```
+Leader+jd   跳转到定义，不成功则跳转到声明
+Leader+dc   跳转到声明
+Leader+ji   跳转到头文件
+```
+
+#### 1.9 静态语义语法检查插件[Syntastic](https://github.com/scrooloose/syntastic)
+
+```
+Leader+e    打开/关闭错误信息窗口
+```
+
+#### 1.10 快速移动插件[EasyMotion](https://github.com/easymotion/vim-easymotion)
+
+```
+Leader+Leader+h     跳转到当前行，光标前任何指定单词
+Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
+Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
+Leader+Leader+l     跳转到当前行，光标后任何指定单词
+Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
+Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
+Leader+Leader+s     搜索字符串，并跳转到当前屏幕指定字符串
+```
+
+#### 1.11 buffer、tab切换，保存/恢复workspace插件[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+
+```
+Leader+ss   保存workspace
+Leader+rs   恢复workspace
+```
+
+#### 1.12 项目文件搜索插件[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+
+```
+Ctrl+p      打开CtrlP
+```
+
+#### 1.13 其它
+
+```
+bd              删除当前buffer（NERDTree或Tagbar打开时，会关闭vim，待修复）
+Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符
+Leader+sw       使用root权限写文件
 ```
 
 ### 2. 插入模式
+
+#### 2.1 按键修改
 
 ```
 Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
@@ -214,22 +295,116 @@ Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 
 ### 3. 可视化模式
 
+#### 3.1 按键修改
+
 ```
-# 按键修改
 Y       复制到行尾
 U       Redo
 ;       进入命令行模式，相当于“:”键
 Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
+```
 
-# 语言相关
-K 查看所选字符串在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
+#### 3.2 语言相关
+
+```
+K       查看所选字符串在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
+```
+
+#### 3.3 快速移动插件[EasyMotion](https://github.com/easymotion/vim-easymotion)
+
+```
+Leader+Leader+h     跳转到当前行，光标前任何指定单词
+Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
+Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
+Leader+Leader+l     跳转到当前行，光标后任何指定单词
+Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
+Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
+Leader+Leader+s     搜索字符串，并跳转到当前屏幕指定字符串
 ```
 
 ### 4. 命令行模式
 
 ```
-Ctrl+j 下一条命令
-Ctrl+k 上一条命令
-Ctrl+a 跳到命令行最前
-Ctrl+e 跳到命令行最后
+Ctrl+j  下一条命令
+Ctrl+k  上一条命令
+Ctrl+a  跳到命令行最前
+Ctrl+e  跳到命令行最后
+```
+
+## 注意事项
+
+* monkey-vim默认tab的缩进为8个字符，不使用space替代tab。如果你喜欢tab缩进为4个字符，并且使用space替代tab。你可以将以下vim配置
+
+```
+set tabstop=8
+set softtabstop=8
+set shiftwidth=8
+set noexpandtab
+```
+
+改为
+
+```
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+```
+
+* 为了让运行在xterm上的vim正确渲染主题，请在~/.bashrc中加入以下Shell命令：
+
+```
+export TERM=xterm-256color
+```
+
+* 为了让运行在xterm上的vim可以与系统共享剪贴板，请安装gvim，并在~/.bashrc中加入以下Shell命令：
+
+```
+if [ -x $(which gvim) ]
+then
+    alias vi='gvim -v'
+    alias vim='gvim -v'
+    alias view='gvim -v -R'
+    alias vimdiff='gvim -v -d'
+fi
+```
+
+* 如果你觉得打开/保存go文件需要较长时间，或者你不希望保存go文件时，自动生成可执行文件，你可以将以下vim配置
+
+```
+let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
+```
+
+改为
+
+```
+let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+```
+
+## 推荐设置
+
+### 设置方法：在~/.bashrc中加入以下Shell命令
+
+* 使用vman命令，可在vim中下查看man文档
+
+```
+vman() {
+    vim -R -c "Man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
+    if [ "$?" != "0" ]; then
+        echo "No manual entry for $*"
+    fi
+}
+```
+
+* 使用dirdiff命令，可在vimdiff中查看，比较和编辑两个文件夹
+
+```
+dirdiff() {
+    if [ $# -ne 2 ]; then
+        echo "Invalid arguments, please pass two arguments"
+        return
+    fi
+
+    vim -c "DirDiff $*" ~/.vimrc -c "execute 'bdelete ' . bufnr('~/.vimrc')"
+}
 ```

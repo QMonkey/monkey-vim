@@ -584,7 +584,6 @@ let g:ycm_filepath_completion_use_working_dir = 1
 nnoremap <Leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 nnoremap <Leader>dc :YcmCompleter GoToDeclaration<CR>
 nnoremap <Leader>ji :YcmCompleter GoToInclude<CR>
-nnoremap <Leader>jim :YcmCompleter GoToImprecise<CR>
 
 " vim-autoformat
 " Generic C, C++, Objective-C style
@@ -612,12 +611,9 @@ let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-nnoremap <Leader>gd :GoDef<CR>
-nnoremap <Leader>gi :GoImports<CR>
-nnoremap <Leader>gt :GoTest<CR>
-nnoremap <Leader>gf :GoTestFunc<CR>
-nnoremap <Leader>gl :GoLint<CR>
-nnoremap <Leader>gv :GoVet<CR>
+autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
+autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
+autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
 
 autocmd FileType go vnoremap <buffer><silent><S-k> <ESC>:execute 'GoDoc' GetVisualSelection()<CR>
 
