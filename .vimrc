@@ -330,7 +330,7 @@ noremap k gk
 vnoremap < <gv
 vnoremap > >gv
 
-nnoremap ; :
+noremap ; :
 
 " Remap U to <C-r> for easier redo
 noremap U <C-r>
@@ -382,10 +382,24 @@ nnoremap <C-l> <C-w>l
 nnoremap <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
 nnoremap <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
-noremap <C-up> <C-w>+
-noremap <C-down> <C-w>-
-noremap <C-left> <C-w>>
-noremap <C-right> <C-w><
+nnoremap <C-up> <C-w>+
+nnoremap <C-down> <C-w>-
+nnoremap <C-left> <C-w>>
+nnoremap <C-right> <C-w><
+
+" Zoom/Restore window
+function! ZoomToggle()
+	if exists('t:zoomed') && t:zoomed
+		execute t:zoom_winrestcmd
+		let t:zoomed = 0
+	else
+		let t:zoom_winrestcmd = winrestcmd()
+		resize
+		vertical resize
+		let t:zoomed = 1
+	endif
+endfunction
+nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
@@ -395,8 +409,9 @@ nnoremap <silent><F4> :GundoToggle<CR>
 nnoremap <silent><F5> :set invpaste paste?<CR>
 nnoremap <silent><F6> :Dispatch<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
-nnoremap <silent><F8> :InstantMarkdownPreview<CR>
-nnoremap <silent><F9> :RainbowParenthesesToggle<CR>
+nnoremap <silent><F8> :Copen!<CR>
+nnoremap <silent><F9> :InstantMarkdownPreview<CR>
+nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
@@ -693,7 +708,7 @@ function! ToggleErrors()
 		Errors
 	endif
 endfunction
-nnoremap <Leader>e :call ToggleErrors()<cr>
+nnoremap <Leader>e :call ToggleErrors()<CR>
 " nnoremap <Leader>sn :lnext<cr>
 " nnoremap <Leader>sp :lprevious<cr>
 
@@ -714,17 +729,3 @@ map <Leader><Leader>l <Plug>(easymotion-lineforward)
 map <Leader><Leader>w <Plug>(easymotion-w)
 map <Leader><Leader>b <Plug>(easymotion-b)
 map <Leader><Leader>s <Plug>(easymotion-sn)
-
-" Zoom/Restore window
-function! ZoomToggle()
-	if exists('t:zoomed') && t:zoomed
-		execute t:zoom_winrestcmd
-		let t:zoomed = 0
-	else
-		let t:zoom_winrestcmd = winrestcmd()
-		resize
-		vertical resize
-		let t:zoomed = 1
-	endif
-endfunction
-nnoremap <silent><Leader>z :call ZoomToggle()<CR>
