@@ -236,7 +236,7 @@ Ctrl+]  跳转到符号定义处，如有多处定义，则跳到第一处
 g]      选择一处符号定义并跳转
 ```
 
-#### 1.8 代码补全，定义、声明跳转插件[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.8 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 Leader+jd   跳转到定义，不成功则跳转到声明
@@ -244,13 +244,13 @@ Leader+dc   跳转到声明
 Leader+ji   跳转到头文件
 ```
 
-#### 1.9 静态语义语法检查插件[Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.9 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    打开/关闭错误信息窗口
 ```
 
-#### 1.10 快速移动插件[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.10 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+h     跳转到当前行，光标前任何指定单词
@@ -262,14 +262,14 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符串，并跳转到当前屏幕指定字符串
 ```
 
-#### 1.11 buffer、tab切换，保存/恢复workspace插件[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.11 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Leader+ss   保存workspace
 Leader+rs   恢复workspace
 ```
 
-#### 1.12 项目文件搜索插件[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.12 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      打开CtrlP
@@ -310,7 +310,7 @@ Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 K       查看所选字符串在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
 ```
 
-#### 3.3 快速移动插件[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.3 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+h     跳转到当前行，光标前任何指定单词
