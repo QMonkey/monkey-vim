@@ -155,7 +155,7 @@ vim
 <F3> 打开/关闭Tagbar
 <F4> 打开/关闭Gundo
 <F5> 打开/关闭paste模式
-<F6> 运行当前项目(可用:Focus注册执行的命令，如:Focus gcc % -o a.out）
+<F6> 运行当前项目（可用:Focus注册执行的命令，如:Focus gcc % -o a.out）
 <F7> 异步运行当前项目
 <F8> 预览Markdown
 <F9> 打开/关闭RainbowParentheses

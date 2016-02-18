@@ -254,9 +254,9 @@ let g:airline_theme = 'badwolf'
 let g:airline_detect_paste = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#show_buffers = 1
-let g:airline#extensions#tabline#buffer_min_count = 2
+let g:airline#extensions#tabline#buffer_min_count = 0
 let g:airline#extensions#tabline#show_tabs = 1
-let g:airline#extensions#tabline#tab_min_count = 2
+let g:airline#extensions#tabline#tab_min_count = 0
 let g:airline#extensions#tabline#exclude_preview = 1
 " Only show tab number
 let g:airline#extensions#tabline#tab_nr_type = 1
