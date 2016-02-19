@@ -253,13 +253,11 @@ Leader+e    打开/关闭错误信息窗口
 #### 1.10 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
-Leader+Leader+h     跳转到当前行，光标前任何指定单词
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
 Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
-Leader+Leader+l     跳转到当前行，光标后任何指定单词
 Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
 Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
-Leader+Leader+s     搜索字符串，并跳转到当前屏幕指定字符串
+Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
 #### 1.11 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
@@ -313,13 +311,11 @@ K       查看所选字符串在文档（目前只支持man, godoc, pydoc, vim h
 #### 3.3 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
-Leader+Leader+h     跳转到当前行，光标前任何指定单词
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
 Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
-Leader+Leader+l     跳转到当前行，光标后任何指定单词
 Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
 Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
-Leader+Leader+s     搜索字符串，并跳转到当前屏幕指定字符串
+Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
 ### 4. 命令行模式

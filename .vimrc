@@ -717,11 +717,3 @@ let g:UltiSnipsExpandTrigger='<Leader><tab>'
 
 " vim-EasyMotion
 let g:EasyMotion_smartcase = 1
-
-map <Leader><Leader>h <Plug>(easymotion-linebackward)
-map <Leader><Leader>j <Plug>(easymotion-j)
-map <Leader><Leader>k <Plug>(easymotion-k)
-map <Leader><Leader>l <Plug>(easymotion-lineforward)
-map <Leader><Leader>w <Plug>(easymotion-w)
-map <Leader><Leader>b <Plug>(easymotion-b)
-map <Leader><Leader>s <Plug>(easymotion-sn)
