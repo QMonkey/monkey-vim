@@ -76,6 +76,7 @@ Plugin 'Valloric/YouCompleteMe'
 Plugin 'SirVer/ultisnips'
 Plugin 'honza/vim-snippets'
 Plugin 'tpope/vim-surround'
+Plugin 'tpope/vim-repeat'
 Plugin 'Raimondi/delimitMate'
 Plugin 'tpope/vim-endwise'
 Plugin 'tpope/vim-ragtag'
@@ -139,7 +140,8 @@ set gdefault
 set wildmenu
 set wildmode=list:longest,full
 
-" For regular expressions turn magic on
+" For regular expressions turn magic on, and you don't need to add '\' before
+" some special meaning characters.
 set magic
 
 " Share clipboard with system (gvim -v in xterm)
