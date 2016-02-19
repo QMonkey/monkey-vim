@@ -59,6 +59,7 @@ Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'vim-ctrlspace/vim-ctrlspace'
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'easymotion/vim-easymotion'
+Plugin 'haya14busa/incsearch.vim'
 Plugin 'mileszs/ack.vim'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'mhinz/vim-startify'
@@ -172,7 +173,7 @@ autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
-autocmd FileType man,godoc,pydoc set nolist
+autocmd FileType man,help,godoc,pydoc set nolist
 autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 "autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
@@ -335,14 +336,6 @@ noremap ; :
 " Remap U to <C-r> for easier redo
 noremap U <C-r>
 
-" Keep search pattern at the center of the screen.
-noremap <silent> n nzz
-noremap <silent> N Nzz
-noremap <silent> * *zz
-noremap <silent> # #zz
-noremap <silent> g* g*zz
-noremap <silent> g# g#zz
-
 " Better comand-line editing
 cnoremap <C-j> <t_kd>
 cnoremap <C-k> <t_ku>
@@ -400,6 +393,21 @@ function! ZoomToggle()
 	endif
 endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
+
+" incsearch.vim
+map /  <Plug>(incsearch-forward)
+map ?  <Plug>(incsearch-backward)
+map g/ <Plug>(incsearch-stay)
+
+" Auto nohlsearch
+let g:incsearch#auto_nohlsearch = 1
+" Keep search pattern at the center of the screen.
+map n  <Plug>(incsearch-nohl-n)zz
+map N  <Plug>(incsearch-nohl-N)zz
+map *  <Plug>(incsearch-nohl-*)zz
+map #  <Plug>(incsearch-nohl-#)zz
+map g* <Plug>(incsearch-nohl-g*)zz
+map g# <Plug>(incsearch-nohl-g#)zz
 
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
