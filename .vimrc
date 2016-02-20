@@ -25,100 +25,74 @@
 "	vim -c "DirDiff $*" ~/.vimrc -c "execute 'bdelete ' . bufnr('~/.vimrc')"
 "}
 
-let need_setup = 0
-let vundle = $HOME . '/.vim/bundle/Vundle.vim'
-if exists('*mkdir') && !isdirectory(vundle)
-	echo 'Installing Vundle...'
-	echo ''
-	call mkdir($HOME . '/.vim/bundle', 'p')
-	execute 'silent !git clone https://github.com/VundleVim/Vundle.vim ' . vundle
-	let need_setup = 1
+" Install vim-plug if not present
+if empty(glob($HOME . '/.vim/autoload/plug.vim'))
+	silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+	autocmd VimEnter * PlugInstall
 endif
 
 set nocompatible
 filetype off
 
-" Set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
+call plug#begin($HOME . '/.vim/bundle')
 
-" Let Vundle manage Vundle, required
-Plugin 'VundleVim/Vundle.vim'
+" Plug
+Plug 'scrooloose/nerdtree'
+Plug 'jistr/vim-nerdtree-tabs'
+Plug 'majutsushi/tagbar'
+Plug 'sjl/gundo.vim'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'ryanoasis/vim-devicons'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'vim-ctrlspace/vim-ctrlspace'
+Plug 'terryma/vim-multiple-cursors'
+Plug 'terryma/vim-expand-region'
+Plug 'easymotion/vim-easymotion'
+Plug 'haya14busa/incsearch.vim'
+Plug 'mileszs/ack.vim'
+Plug 'scrooloose/nerdcommenter'
+Plug 'mhinz/vim-startify'
+Plug 'Chiel92/vim-autoformat'
+Plug 'Yggdroot/indentLine'
+Plug 'ntpeters/vim-better-whitespace'
+Plug 'wesQ3/vim-windowswap'
+Plug 'tpope/vim-dispatch'
+Plug 'airblade/vim-rooter'
+Plug 'xolox/vim-misc'
+Plug 'xolox/vim-easytags'
+Plug 'scrooloose/syntastic'
+Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --system-libclang --gocode-completer --tern-completer' }
+Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-repeat'
+Plug 'Raimondi/delimitMate'
+Plug 'vim-scripts/matchit.zip'
+Plug 'tpope/vim-endwise'
+Plug 'docunext/closetag.vim'
+Plug 'fatih/vim-go'
+Plug 'fs111/pydoc.vim'
+Plug 'pangloss/vim-javascript'
+Plug 'mattn/emmet-vim'
+Plug 'godlygeek/tabular'
+Plug 'plasticboy/vim-markdown'
+Plug 'suan/vim-instant-markdown'
+Plug 'sheerun/vim-polyglot'
+Plug 'kshenoy/vim-signature'
+Plug 'tpope/vim-fugitive'
+Plug 'gregsexton/gitv'
+Plug 'airblade/vim-gitgutter'
+Plug 'will133/vim-dirdiff'
+Plug 'tpope/vim-unimpaired'
+Plug 'tomasr/molokai'
+Plug 'kien/rainbow_parentheses.vim'
 
-" Plugin
-Plugin 'scrooloose/nerdtree'
-Plugin 'jistr/vim-nerdtree-tabs'
-Plugin 'majutsushi/tagbar'
-Plugin 'sjl/gundo.vim'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'ryanoasis/vim-devicons'
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'vim-ctrlspace/vim-ctrlspace'
-Plugin 'terryma/vim-multiple-cursors'
-Plugin 'easymotion/vim-easymotion'
-Plugin 'haya14busa/incsearch.vim'
-Plugin 'mileszs/ack.vim'
-Plugin 'scrooloose/nerdcommenter'
-Plugin 'mhinz/vim-startify'
-Plugin 'Chiel92/vim-autoformat'
-Plugin 'Yggdroot/indentLine'
-Plugin 'ntpeters/vim-better-whitespace'
-Plugin 'wesQ3/vim-windowswap'
-Plugin 'tpope/vim-dispatch'
-Plugin 'airblade/vim-rooter'
-Plugin 'xolox/vim-misc'
-Plugin 'xolox/vim-easytags'
-Plugin 'scrooloose/syntastic'
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'SirVer/ultisnips'
-Plugin 'honza/vim-snippets'
-Plugin 'tpope/vim-surround'
-Plugin 'tpope/vim-repeat'
-Plugin 'Raimondi/delimitMate'
-Plugin 'tpope/vim-endwise'
-Plugin 'tpope/vim-ragtag'
-Plugin 'docunext/closetag.vim'
-Plugin 'fatih/vim-go'
-Plugin 'fs111/pydoc.vim'
-Plugin 'pangloss/vim-javascript'
-Plugin 'mattn/emmet-vim'
-Plugin 'godlygeek/tabular'
-Plugin 'plasticboy/vim-markdown'
-Plugin 'suan/vim-instant-markdown'
-Plugin 'sheerun/vim-polyglot'
-Plugin 'tpope/vim-fugitive'
-Plugin 'gregsexton/gitv'
-Plugin 'airblade/vim-gitgutter'
-Plugin 'will133/vim-dirdiff'
-Plugin 'tpope/vim-unimpaired'
-Plugin 'tomasr/molokai'
-Plugin 'kien/rainbow_parentheses.vim'
+" Add plugins to &runtimepath
+call plug#end()
 
-if need_setup == 1
-	echo 'Installing Vundles, please ignore key map error messages.'
-	echo ''
-	execute 'PluginInstall'
-endif
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
 filetype plugin indent on    " required
-" To ignore plugin indent changes, instead use:
-"filetype plugin on
-"
-" Brief help
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just
-" :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to
-" auto-approve removal
-"
-" see :h vundle for more details or wiki for FAQ
-" Put your non-Plugin stuff after this line
 
 set number
 " Show the cursor position all the time
@@ -351,7 +325,8 @@ inoremap <C-c> <ESC>
 nnoremap q :q<CR>
 nnoremap bd :execute 'bdelete ' . bufnr('%')<CR>
 
-nnoremap <Leader>sw :w !sudo tee > /dev/null %<CR>
+" w!! to sudo & write a file
+cnoremap w!! w !sudo tee > /dev/null %
 
 " Tab
 nnoremap <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
@@ -396,6 +371,11 @@ function! ZoomToggle()
 endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 
+" Switch # *
+nnoremap # *
+nnoremap * #
+
+map <Space> /
 " incsearch.vim
 map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
@@ -529,7 +509,7 @@ let g:nerdtree_tabs_autoclose = 1
 autocmd CursorHold,CursorHoldI * call ReRender()
 
 function! ReRender()
-	if !g:NERDTree.IsOpen()
+	if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
 		return
 	endif
 
@@ -715,8 +695,6 @@ function! ToggleErrors()
 	endif
 endfunction
 nnoremap <Leader>e :call ToggleErrors()<CR>
-" nnoremap <Leader>sn :lnext<cr>
-" nnoremap <Leader>sp :lprevious<cr>
 
 " Emmet
 " Enable all function in all mode.

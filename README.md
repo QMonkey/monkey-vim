@@ -195,6 +195,8 @@ Ctrl+down   窗口垂直方向收缩
 Ctrl+left   窗口水平方向伸展
 Ctrl+right  窗口水平方向收缩
 Leader+z    窗口放大/恢复
+
+Leader+ww   交换两个窗口（两个窗口都需要执行该命令）
 ```
 
 #### 1.4 Tab
@@ -234,6 +236,19 @@ gf      GoTestFunc，执行光标所在的单元测试函数
 ```
 Ctrl+]  跳转到符号定义处，如有多处定义，则跳到第一处
 g]      选择一处符号定义并跳转
+```
+
+#### 1.8 marks
+
+```
+m[a-zA-Z]   标记当前行
+dm[a-zA-Z]  删除标记[a-zA-Z]
+
+'[a-zA-Z]   跳转到标记行
+
+m/          在Location List里，查看当前buffer的所有标记
+m-          删除当前行的所有标记
+m<space>    删除当前buffer的所有标记
 ```
 
 #### 1.8 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
@@ -277,10 +292,11 @@ Ctrl+p      打开CtrlP
 
 ```
 bd              删除当前buffer（NERDTree或Tagbar打开时，会关闭vim，待修复）
+'.              最后一次变更的地方
+''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符
-Leader+sw       使用root权限写文件
 ```
 
 ### 2. 插入模式
@@ -325,6 +341,8 @@ Ctrl+j  下一条命令
 Ctrl+k  上一条命令
 Ctrl+a  跳到命令行最前
 Ctrl+e  跳到命令行最后
+
+w!!     使用root权限写文件
 ```
 
 ## 注意事项
