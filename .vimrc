@@ -367,7 +367,6 @@ nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 nnoremap # *
 nnoremap * #
 
-map <Space> /
 " incsearch.vim
 map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
