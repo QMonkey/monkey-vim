@@ -1,5 +1,4 @@
 " Add below code to ~/.bashrc
-"export TERM=xterm-256color
 "
 "if [ -x $(which gvim) ]
 "then
@@ -28,7 +27,7 @@
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 	silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	autocmd VimEnter * PlugInstall
+	autocmd VimEnter * PlugInstall | source $MYVIMRC
 endif
 
 set nocompatible
@@ -37,12 +36,10 @@ filetype off
 call plug#begin($HOME . '/.vim/bundle')
 
 " Plug
-Plug 'scrooloose/nerdtree'
-Plug 'jistr/vim-nerdtree-tabs'
+Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ryanoasis/vim-devicons'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
@@ -59,30 +56,25 @@ Plug 'ntpeters/vim-better-whitespace'
 Plug 'wesQ3/vim-windowswap'
 Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-rooter'
-Plug 'xolox/vim-misc'
-Plug 'xolox/vim-easytags'
+Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
 Plug 'scrooloose/syntastic'
-Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --system-libclang --gocode-completer --tern-completer' }
-Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
+Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --system-libclang --gocode-completer --tern-completer' } | Plug 'rdnetto/YCM-Generator', {'branch': 'stable'}
+Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'Raimondi/delimitMate'
 Plug 'vim-scripts/matchit.zip'
 Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
-Plug 'fatih/vim-go'
-Plug 'fs111/pydoc.vim'
-Plug 'pangloss/vim-javascript'
-Plug 'mattn/emmet-vim'
-Plug 'godlygeek/tabular'
-Plug 'plasticboy/vim-markdown'
-Plug 'suan/vim-instant-markdown'
+Plug 'fatih/vim-go', {'for': 'go'}
+Plug 'fs111/pydoc.vim', {'for': 'python'}
+Plug 'pangloss/vim-javascript', {'for': 'javascript'}
+Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
+Plug 'godlygeek/tabular', {'for': 'markdown'} | Plug 'plasticboy/vim-markdown'
+Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'sheerun/vim-polyglot'
 Plug 'kshenoy/vim-signature'
-Plug 'tpope/vim-fugitive'
-Plug 'gregsexton/gitv'
+Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
 Plug 'will133/vim-dirdiff'
 Plug 'tpope/vim-unimpaired'
@@ -92,7 +84,7 @@ Plug 'kien/rainbow_parentheses.vim'
 " Add plugins to &runtimepath
 call plug#end()
 
-filetype plugin indent on    " required
+filetype plugin indent on
 
 set number
 " Show the cursor position all the time
@@ -288,7 +280,7 @@ let g:rbpt_loadcmd_toggle = 1
 let rainbow_parentheses_filetypes = ['lisp', 'clojure', 'scheme']
 autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) >= 0 | execute 'RainbowParenthesesToggle' | endif
 
-" Must execute 'export TERM=xterm-256color' first
+set t_Co=256
 colorscheme molokai
 let g:molokai_original = 1
 let g:rehash256 = 1
@@ -640,8 +632,8 @@ let g:vim_markdown_folding_disabled = 1
 let g:instant_markdown_slow = 1
 let g:instant_markdown_autostart = 0
 
-" CtrlP runtime path
-set runtimepath^=~/.vim/bundle/ctrlp.vim
+" CtrlP runtime path, vim-plug do it for you
+"set runtimepath^=~/.vim/bundle/ctrlp.vim
 
 " CtrlSpace
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1

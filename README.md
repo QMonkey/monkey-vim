@@ -365,12 +365,6 @@ set shiftwidth=4
 set expandtab
 ```
 
-* 为了让运行在xterm上的vim正确渲染主题，请在~/.bashrc中加入以下Shell命令：
-
-```
-export TERM=xterm-256color
-```
-
 * 为了让运行在xterm上的vim可以与系统共享剪贴板，请安装gvim，并在~/.bashrc中加入以下Shell命令：
 
 ```
