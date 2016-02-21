@@ -43,6 +43,7 @@ Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ryanoasis/vim-devicons'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
+Plug 'moll/vim-bbye'
 Plug 'terryma/vim-multiple-cursors'
 Plug 'terryma/vim-expand-region'
 Plug 'easymotion/vim-easymotion'
@@ -365,7 +366,7 @@ noremap <C-c> <ESC>
 inoremap <C-c> <ESC>
 
 nnoremap q :q<CR>
-nnoremap bd :execute 'bdelete ' . bufnr('%')<CR>
+nnoremap bd :Bdelete<CR>
 
 " w!! to sudo & write a file
 cnoremap w!! w !sudo tee > /dev/null %
