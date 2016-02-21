@@ -93,7 +93,7 @@ set ruler
 
 set showmatch
 
-" Hightlight current line
+" Highlight current line
 set cursorline
 
 " Search in time
@@ -335,7 +335,11 @@ set t_Co=256
 colorscheme molokai
 let g:molokai_original = 1
 let g:rehash256 = 1
+
+" Enable syntax highlight
 syntax enable
+syntax on
+
 set regexpengine=1
 
 " Key map
@@ -365,8 +369,8 @@ cnoremap <C-e> <End>
 noremap <C-c> <ESC>
 inoremap <C-c> <ESC>
 
-nnoremap q :q<CR>
-nnoremap bd :Bdelete<CR>
+nnoremap <silent> q :q<CR>
+nnoremap <silent> bd :Bdelete<CR>
 
 " w!! to sudo & write a file
 cnoremap w!! w !sudo tee > /dev/null %
@@ -517,7 +521,7 @@ function! Replace(mode, confirm, wholeword, replace)
 	execute 'argdo %s/' . search . '/' . replace . '/' . flag . '| update'
 endfunction
 
-" No hightlight search
+" No highlight search
 nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " Replace in normal mode
@@ -555,10 +559,6 @@ let NERDTreeWinSize = 32
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
 let g:nerdtree_tabs_open_on_console_startup = 0
-
-" Open NERDTreeTabs automatically when vim starts up if no files were specified
-"autocmd StdinReadPre * let s:std_in = 1
-"autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | execute ':NERDTreeTabsOpen' | endif
 
 " Close vim if the only window left open is a NERDTreeTabs
 let g:nerdtree_tabs_autoclose = 1
@@ -629,8 +629,8 @@ let g:ycm_goto_buffer_command = 'same-buffer'
 let g:ycm_filepath_completion_use_working_dir = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-nnoremap <Leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
-nnoremap <Leader>dc :YcmCompleter GoToDeclaration<CR>
+nnoremap <Leader>jd :YcmCompleter GoToDefinition<CR>
+nnoremap <Leader>jc :YcmCompleter GoToDeclaration<CR>
 nnoremap <Leader>ji :YcmCompleter GoToInclude<CR>
 
 " vim-autoformat
