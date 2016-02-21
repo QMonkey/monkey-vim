@@ -9,7 +9,7 @@
 "fi
 "
 "vman() {
-"	vim -R -c "Man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
+"	vim -R -c "Ref man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
 "	if [ "$?" != "0" ]; then
 "		echo "No manual entry for $*"
 "	fi
@@ -67,9 +67,12 @@ Plug 'Raimondi/delimitMate'
 Plug 'vim-scripts/matchit.zip'
 Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
+Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
-Plug 'fs111/pydoc.vim', {'for': 'python'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
+Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
+Plug 'tpope/vim-rails', {'for': 'ruby'}
+Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'godlygeek/tabular', {'for': 'markdown'} | Plug 'plasticboy/vim-markdown'
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
@@ -146,7 +149,7 @@ autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
-autocmd FileType man,help,godoc,pydoc set nolist
+autocmd FileType ref-man,ref-pydoc,help,godoc set nolist
 autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 
@@ -171,17 +174,19 @@ function! AutoInsertFileHead()
 	normal o
 endfunc
 
-" Vim man
-source $VIMRUNTIME/ftplugin/man.vim
+function! GetCurrentWord()
+	return expand('<cword>')
+endfunction
 
 autocmd FileType * call SetReferences()
 function! SetReferences()
 	let filetype_references = {
-				\	'c': 'Man',
-				\	'cpp': 'Man',
-				\	'sh': 'Man',
+				\	'c': 'Ref man',
+				\	'cpp': 'Ref man',
+				\	'sh': 'Ref man',
 				\	'go': 'GoDoc',
-				\	'python': 'Pydoc',
+				\	'python': 'Ref pydoc',
+				\	'ruby': 'Ref ri',
 				\	'vim': 'help',
 				\ }
 
@@ -191,10 +196,10 @@ function! SetReferences()
 			continue
 		endif
 
-		" vim-go and python_pydoc have do it for you
-		if ftype != 'go' || ftype != 'python'
+		" vim-go have do it for you
+		if ftype != 'go'
 			let search = expand('<cword>')
-			execute 'nnoremap <buffer><silent><S-k> :' . reference search '<CR>'
+			execute 'nnoremap <buffer><silent><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
 		endif
 
 		" Enable reference in visual-mode
@@ -204,9 +209,9 @@ function! SetReferences()
 	endfor
 
 	if !is_reference_set
-		" Default reference: Man
-		nnoremap <buffer><silent><S-k> :Man <cword><CR>
-		vnoremap <buffer><silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
+		" Default reference: man
+		nnoremap <buffer><silent><S-k> :execute 'Ref man' GetCurrentWord()<CR>
+		vnoremap <buffer><silent><S-k> <ESC>:execute 'Ref man' GetVisualSelection()<CR>
 	endif
 endfunction
 
@@ -663,9 +668,6 @@ let g:godef_same_file_in_same_window = 1
 autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
 autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
 autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
-
-" python_pydoc
-let g:pydoc_window_lines = 0.5
 
 " vim-markdown
 let g:vim_markdown_folding_disabled = 1
