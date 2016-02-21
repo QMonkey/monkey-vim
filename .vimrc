@@ -140,9 +140,9 @@ set list listchars=tab:▸\ ,eol:¬,trail:⋅
 " indentLine
 " Disable, or vim will be very slow for the file which has long line
 let g:indentLine_enabled = 0
-let g:indentLine_char = "\xe2\x94\x8a"
+let g:indentLine_char = '┊'
 let g:indentLine_leadingSpaceEnabled = 1
-let g:indentLine_leadingSpaceChar = "\xc2\xb7"
+let g:indentLine_leadingSpaceChar = '·'
 
 " Unrecognized filetype set to text
 autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
@@ -305,13 +305,13 @@ if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
 
-let g:airline_left_sep = "\xee\x82\xb0"
-let g:airline_left_alt_sep = "\xee\x82\xb1"
-let g:airline_right_sep = "\xee\x82\xb2"
-let g:airline_right_alt_sep = "\xee\x82\xb3"
-let g:airline_symbols.branch = "\ue0a0"
-let g:airline_symbols.readonly = "\ue0a2"
-let g:airline_symbols.linenr = "\xee\x82\xa1"
+let g:airline_left_sep = ''
+let g:airline_left_alt_sep = ''
+let g:airline_right_sep = ''
+let g:airline_right_alt_sep = ''
+let g:airline_symbols.branch = ''
+let g:airline_symbols.readonly = ''
+let g:airline_symbols.linenr = ''
 
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
@@ -711,10 +711,10 @@ let g:rooter_silent_chdir = 1
 
 " Syntastic
 let g:syntastic_loc_list_height = 10
-let g:syntastic_error_symbol = "\xe2\x9c\x96"
-let g:syntastic_style_error_symbol = "\xe2\x9c\x96"
-let g:syntastic_warning_symbol = "!"
-let g:syntastic_style_warning_symbol = "!"
+let g:syntastic_error_symbol = '✖'
+let g:syntastic_style_error_symbol = '✖'
+let g:syntastic_warning_symbol = '!'
+let g:syntastic_style_warning_symbol = '!'
 let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
