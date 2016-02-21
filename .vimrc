@@ -144,7 +144,6 @@ autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=mark
 autocmd FileType man,help,godoc,pydoc set nolist
 autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-"autocmd FileType markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4 equalprg=pandoc\ -f\ markdown_github\ -t\ markdown_github\ --atx-headers
 
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
@@ -256,7 +255,7 @@ set fileencodings=utf-8,gb18030,ucs-bom,big5,euc-jp,euc-kr,latin1
 " Only work in terminal vim
 set termencoding=utf-8
 
-" A buffer becomes hidden when it is abandoned
+" Allow switching away from a changed buffer without saving
 set hidden
 
 " Auto reload file changes outside vim
@@ -449,9 +448,9 @@ function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
 
-function! Prompt(promptText)
+function! Prompt(prompt_text)
 	call inputsave()
-	let value = input(a:promptText)
+	let value = input(a:prompt_text)
 	call inputrestore()
 	return Strip(value)
 endfunction
@@ -488,37 +487,53 @@ else
 	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() == '' | checktime | endif
 endif
 
-" confirm
-" wholeword
-" replace
-function! Replace(confirm, wholeword, replace)
-	wa
+" Replace
+function! Replace(mode, confirm, wholeword, replace)
+	let word = ''
+	let wholeword = a:wholeword
+	if a:mode == 'n' || a:mode == 'normal'
+		let word .= expand('<cword>')
+	elseif a:mode == 'v' || a:mode == 'visual'
+		let word .= GetVisualSelection()
+		let wholeword = 0
+	endif
+
 	let flag = ''
 	if a:confirm
 		let flag .= 'gec'
 	else
 		let flag .= 'ge'
 	endif
+
 	let search = ''
-	if a:wholeword
-		let search .= '\<' . escape(expand('<cword>'), '/\.*$^~[') . '\>'
+	if wholeword
+		let search .= '\<' . escape(word, '/\.*$^~[') . '\>'
 	else
-		let search .= expand('<cword>')
+		let search .= word
 	endif
+
 	let replace = escape(a:replace, '/\&~')
 	execute 'argdo %s/' . search . '/' . replace . '/' . flag . '| update'
 endfunction
 
 " No hightlight search
 nnoremap <silent><Leader>/ :nohlsearch<CR>
-" default
-nnoremap <Leader>R :call Replace(0, 0, input('Replace '.expand('<cword>').' with: '))<CR>
-" wholeword
-nnoremap <Leader>rw :call Replace(0, 1, input('Replace '.expand('<cword>').' with: '))<CR>
-" confirm
-nnoremap <Leader>rc :call Replace(1, 0, input('Replace '.expand('<cword>').' with: '))<CR>
-" wholeword, confirm
-nnoremap <Leader>rwc :call Replace(1, 1, input('Replace '.expand('<cword>').' with: '))<CR>
+
+" Replace in normal mode
+" Default
+nnoremap <Leader>R :call Replace('n', 0, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+" Wholeword
+nnoremap <Leader>rw :call Replace('n', 0, 1, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+" Confirm
+nnoremap <Leader>rc :call Replace('n', 1, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+" Wholeword, confirm
+nnoremap <Leader>rwc :call Replace('n', 1, 1, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+
+" Replace in visual mode
+" Default
+vnoremap <Leader>R :call Replace('v', 0, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+" Confirm
+vnoremap <Leader>rc :call Replace('v', 1, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
 
 " Save session options
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
