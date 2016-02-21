@@ -167,6 +167,57 @@ function! AutoInsertFileHead()
 	normal o
 endfunc
 
+autocmd FileType * call SetReferences()
+function! SetReferences()
+	let filetype_references = {
+				\	'c': 'Man',
+				\	'cpp': 'Man',
+				\	'sh': 'Man',
+				\	'go': 'GoDoc',
+				\	'python': 'Pydoc',
+				\	'vim': 'help',
+				\ }
+
+	let is_reference_set = 0
+	for [ftype, reference] in items(filetype_references)
+		if &filetype != ftype
+			continue
+		endif
+
+		if reference == 'Man'
+			" Vim man
+			source $VIMRUNTIME/ftplugin/man.vim
+		endif
+
+		" vim-go and python_pydoc have do it for you
+		if ftype != 'go' || ftype != 'python'
+			let search = expand('<cword>')
+			execute 'nnoremap <buffer><silent><S-k> :' . reference search '<CR>'
+		endif
+
+		" Enable reference in visual-mode
+		execute 'vnoremap <buffer><silent><S-k> <ESC>:execute "' . reference . '" GetVisualSelection()<CR>'
+
+		let is_reference_set = 1
+	endfor
+
+	if !is_reference_set
+		" Default reference: Man
+		source $VIMRUNTIME/ftplugin/man.vim
+		nnoremap <buffer><silent><S-k> :Man <cword><CR>
+		vnoremap <buffer><silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
+	endif
+endfunction
+
+function! GetVisualSelection()
+	let [lnum1, col1] = getpos("'<")[1:2]
+	let [lnum2, col2] = getpos("'>")[1:2]
+	let lines = getline(lnum1, lnum2)
+	let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
+	let lines[0] = lines[0][col1 - 1:]
+	return join(lines, "\n")
+endfunction
+
 " Resize splits when the window is resized
 autocmd VimResized * exe "normal! \<C-w>="
 
@@ -596,33 +647,8 @@ autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
 autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
 autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
 
-autocmd FileType go vnoremap <buffer><silent><S-k> <ESC>:execute 'GoDoc' GetVisualSelection()<CR>
-
-" Vim man
-source $VIMRUNTIME/ftplugin/man.vim
-
-let has_reference_filetypes = ['c', 'cpp', 'go', 'python', 'sh', 'vim']
-" Default reference: Man
-autocmd FileType * if index(has_reference_filetypes, &filetype) < 0 | nnoremap <silent><S-k> :Man <cword><CR> | endif
-autocmd FileType * if index(has_reference_filetypes, &filetype) < 0 | vnoremap <silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR> | endif
-
-autocmd FileType c,cpp,sh nnoremap <silent><S-k> :Man <cword><CR>
-autocmd FileType c,cpp,sh vnoremap <silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
-autocmd FileType vim nnoremap <silent><S-k> :execute 'help' expand('<cword>')<CR>
-autocmd FileType vim vnoremap <silent><S-k> <ESC>:execute 'help' GetVisualSelection()<CR>
-
 " python_pydoc
 let g:pydoc_window_lines = 0.5
-autocmd FileType python vnoremap <silent><S-k> <ESC>:execute 'Pydoc' GetVisualSelection()<CR>
-
-function! GetVisualSelection()
-	let [lnum1, col1] = getpos("'<")[1:2]
-	let [lnum2, col2] = getpos("'>")[1:2]
-	let lines = getline(lnum1, lnum2)
-	let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
-	let lines[0] = lines[0][col1 - 1:]
-	return join(lines, "\n")
-endfunction
 
 " vim-markdown
 let g:vim_markdown_folding_disabled = 1
