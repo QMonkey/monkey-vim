@@ -32,7 +32,12 @@ sudo yum install ctags
 sudo yum install ack
 ```
 
-#### 2.2 C/C++
+#### 2.2 fonts
+
+* [powerline-font](https://github.com/powerline/fonts)
+* [nerd-font](https://github.com/ryanoasis/nerd-fonts)
+
+#### 2.3 C/C++
 
 ```
 # Ubuntu
@@ -51,7 +56,7 @@ sudo yum install gcc-c++
 sudo yum install clang
 ```
 
-#### 2.2 Javascript
+#### 2.4 Javascript
 
 ```
 sudo npm install -g jslint
@@ -59,25 +64,25 @@ sudo npm install -g js-beautify
 sudo npm install -g tern
 ```
 
-#### 2.3 JSON
+#### 2.5 JSON
 
 ```
 sudo npm install -g jsonlint
 ```
 
-#### 2.4 HTML
+#### 2.6 HTML
 
 ```
 sudo npm install -g jshint
 ```
 
-#### 2.5 CSS
+#### 2.7 CSS
 
 ```
 sudo npm install -g csslint
 ```
 
-#### 2.6 Python
+#### 2.8 Python
 
 ```
 sudo pip install pyflakes
@@ -86,7 +91,7 @@ sudo pip install pep8
 sudo pip install jedi
 ```
 
-#### 2.7 Golang
+#### 2.9 Golang
 
 ```
 # Ubuntu
@@ -102,7 +107,7 @@ sudo zypper install golang
 :GoInstallBinaries
 ```
 
-#### 2.8 Java
+#### 2.10 Java
 
 ```
 # Ubuntu
@@ -118,7 +123,7 @@ sudo yum install astyle
 sudo yum install java-1.7.0-openjdk-headless.x86_64
 ```
 
-#### 2.9 Shell
+#### 2.11 Shell
 
 ```
 # Ubuntu
@@ -131,7 +136,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.10 Markdown
+#### 2.12 Markdown
 
 ```
 sudo npm install -g instant-markdown-d

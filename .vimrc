@@ -81,6 +81,10 @@ Plug 'will133/vim-dirdiff'
 Plug 'tpope/vim-unimpaired'
 Plug 'tomasr/molokai'
 Plug 'kien/rainbow_parentheses.vim'
+Plug 'kana/vim-textobj-user'
+Plug 'kana/vim-textobj-line'
+Plug 'kana/vim-textobj-entire'
+Plug 'kana/vim-textobj-indent'
 
 " Add plugins to &runtimepath
 call plug#end()
@@ -167,6 +171,9 @@ function! AutoInsertFileHead()
 	normal o
 endfunc
 
+" Vim man
+source $VIMRUNTIME/ftplugin/man.vim
+
 autocmd FileType * call SetReferences()
 function! SetReferences()
 	let filetype_references = {
@@ -184,11 +191,6 @@ function! SetReferences()
 			continue
 		endif
 
-		if reference == 'Man'
-			" Vim man
-			source $VIMRUNTIME/ftplugin/man.vim
-		endif
-
 		" vim-go and python_pydoc have do it for you
 		if ftype != 'go' || ftype != 'python'
 			let search = expand('<cword>')
@@ -203,7 +205,6 @@ function! SetReferences()
 
 	if !is_reference_set
 		" Default reference: Man
-		source $VIMRUNTIME/ftplugin/man.vim
 		nnoremap <buffer><silent><S-k> :Man <cword><CR>
 		vnoremap <buffer><silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
 	endif
@@ -727,7 +728,7 @@ function! ToggleErrors()
 		Errors
 	endif
 endfunction
-nnoremap <Leader>e :call ToggleErrors()<CR>
+nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 
 " Emmet
 " Enable all function in all mode.
