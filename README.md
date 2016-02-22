@@ -237,7 +237,7 @@ Leader+rwc  替换光标所在的单词（整词，需要逐一确认）
 #### 1.6 语言相关
 
 ```
-K       查看光标所在的单词在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
+K       查看光标所在的单词在文档（目前只支持man, godoc, pydoc, ri, vim help）中的解释。
 
 gd      GoDef
 gi      GoImports
