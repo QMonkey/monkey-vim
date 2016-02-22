@@ -292,6 +292,8 @@ Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 #### 1.11 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
+Ctrl+Space  打开CtrlSpace
+
 Leader+ss   保存workspace
 Leader+rs   恢复workspace
 ```
@@ -302,7 +304,37 @@ Leader+rs   恢复workspace
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.13 其它
+#### 1.13 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+
+```
+TODO
+```
+
+#### 1.14 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+
+```
+TODO
+```
+
+#### 1.15 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+
+```
+TODO
+```
+
+#### 1.16 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+
+```
+TODO
+```
+
+#### 1.17 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+
+```
+TODO
+```
+
+#### 1.18 其它
 
 ```
 bd              删除当前buffer
@@ -343,7 +375,7 @@ Leader+rc   替换选中的字符串（需要逐一确认）
 #### 3.3 语言相关
 
 ```
-K       查看所选字符串在文档（目前只支持man, godoc, pydoc, vim help）中的解释。
+K       查看所选字符串在文档（目前只支持man, godoc, pydoc, ri, vim help）中的解释。
 ```
 
 #### 3.3 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
@@ -369,7 +401,29 @@ w!!     使用root权限写文件
 
 ## 常用命令
 
-### TODO
+### 1. Ack
+
+```
+TODO
+```
+
+### 2. UpdateTags
+
+```
+TODO
+```
+
+### 3. Gitv
+
+```
+TODO
+```
+
+### 4. DirDiff
+
+```
+TODO
+```
 
 ## 注意事项
 
