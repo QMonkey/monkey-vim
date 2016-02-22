@@ -215,6 +215,7 @@ function! SetReferences()
 	endif
 endfunction
 
+" Inspired by https://github.com/idanarye/vim-vebugger/blob/master/autoload/vebugger/util.vim#L2
 function! GetVisualSelection()
 	let [lnum1, col1] = getpos("'<")[1:2]
 	let [lnum2, col2] = getpos("'>")[1:2]

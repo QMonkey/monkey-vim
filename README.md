@@ -359,6 +359,10 @@ Ctrl+e  跳到命令行最后
 w!!     使用root权限写文件
 ```
 
+## 常用命令
+
+### TODO
+
 ## 注意事项
 
 * monkey-vim默认tab的缩进为8个字符，不使用space替代tab。如果你喜欢tab缩进为4个字符，并且使用space替代tab。你可以将以下vim配置
