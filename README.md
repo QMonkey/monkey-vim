@@ -43,7 +43,8 @@ sudo yum install ack
 # Ubuntu
 sudo apt-get install gcc
 sudo apt-get install g++
-sudo apt-get install llvm
+# x取决于你要安装的版本
+sudo apt-get install clang-3.x
 
 # OpenSUSE
 sudo zypper install gcc
@@ -300,6 +301,7 @@ bd              删除当前buffer
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
+Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符
 ```
@@ -409,7 +411,7 @@ let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 
 ```
 vman() {
-    vim -R -c "Man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
+    vim -R -c "Ref man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable"
     if [ "$?" != "0" ]; then
         echo "No manual entry for $*"
     fi
