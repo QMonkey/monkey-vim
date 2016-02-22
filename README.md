@@ -129,7 +129,7 @@ sudo zypper install java-1_8_0-openjdk-devel
 
 # CentOS
 sudo yum install astyle
-sudo yum install java-1.7.0-openjdk-headless.x86_64
+sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
 #### 2.11 Shell
