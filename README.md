@@ -307,19 +307,23 @@ Ctrl+p      打开CtrlP
 #### 1.13 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
-TODO
+Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
+Ctrl+p      放弃当前选中字符串，回到上次选中的地方（多光标模式下有效）
+Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下有效）
+<ESC>       退出多光标模式
 ```
 
 #### 1.14 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
-TODO
++       扩大选中区域
 ```
 
 #### 1.15 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
-TODO
+Leader+cc       注释光标所在行
+Leader+cu       取消注释
 ```
 
 #### 1.16 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
@@ -378,7 +382,7 @@ Leader+rc   替换选中的字符串（需要逐一确认）
 K       查看所选字符串在文档（目前只支持man, godoc, pydoc, ri, vim help）中的解释。
 ```
 
-#### 3.3 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.4 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -386,6 +390,29 @@ Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
 Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
 Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
+```
+
+#### 3.5 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+
+```
+Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
+Ctrl+p      放弃当前选中字符串，回到上次选中的地方（多光标模式下有效）
+Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下有效）
+<ESC>       退出多光标模式
+```
+
+#### 3.6 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+
+```
++       扩大选中区域
+-       缩小选中区域
+```
+
+#### 3.7 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+
+```
+Leader+cc       注释选中的代码
+Leader+cu       取消选中代码的注释
 ```
 
 ### 4. 命令行模式
@@ -413,13 +440,19 @@ TODO
 TODO
 ```
 
-### 3. Gitv
+### 3. YcmGenerateConfig
 
 ```
 TODO
 ```
 
-### 4. DirDiff
+### 4. Gitv
+
+```
+TODO
+```
+
+### 5. DirDiff
 
 ```
 TODO
