@@ -329,13 +329,16 @@ Leader+cu       取消注释
 #### 1.16 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
-TODO
+ys+textobj+surroundA        在textobj指定的范围增A围绕字符
+yss+surroundA               在当前行增加A围绕字符
+ds+surroundA                删除A围绕字符
+cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
 #### 1.17 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
-TODO
+Ctrl+y+,        展开模板缩写
 ```
 
 #### 1.18 其它
@@ -415,6 +418,18 @@ Leader+cc       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
+#### 3.8 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+
+```
+S+surroundA     选中字符串增加A围绕字符
+```
+
+#### 3.9 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+
+```
+Ctrl+y+,        展开模板缩写
+```
+
 ### 4. 命令行模式
 
 ```
@@ -431,31 +446,45 @@ w!!     使用root权限写文件
 ### 1. Ack
 
 ```
-TODO
+# 递归搜索包含test的代码，并打开第一个搜索结果
+:Ack -r test
+
+# 递归搜索包含test的代码
+:Ack! -r test
 ```
 
 ### 2. UpdateTags
 
 ```
-TODO
+# 为当前文件生成tag
+:UpdateTags
+
+# 为整个工程生成tag
+:UpdateTags -R
 ```
 
 ### 3. YcmGenerateConfig
 
 ```
-TODO
+# 为整个工程生成.ycm_extra_conf.py文件
+:YcmGenerateConfig
 ```
 
 ### 4. Gitv
 
 ```
-TODO
+# 以split的方式打开Gitv
+:Gitv!
+
+# 以tab的方式打开Gitv
+:Gitv
 ```
 
 ### 5. DirDiff
 
 ```
-TODO
+# A, B文件夹进入vimdiff mode
+:DirDiff A B
 ```
 
 ## 注意事项
