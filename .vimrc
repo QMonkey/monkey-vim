@@ -525,7 +525,7 @@ function! Replace(mode, confirm, wholeword, replace)
 	endif
 
 	let replace = escape(a:replace, '/\&~')
-	execute 'argdo %s/' . search . '/' . replace . '/' . flag . '| update'
+	execute '%s/' . search . '/' . replace . '/' . flag . '| update'
 endfunction
 
 " No highlight search
