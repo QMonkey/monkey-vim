@@ -425,10 +425,6 @@ function! ZoomToggle()
 endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 
-" Switch # *
-nnoremap # *
-nnoremap * #
-
 " incsearch.vim
 map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
@@ -439,8 +435,8 @@ let g:incsearch#auto_nohlsearch = 1
 " Keep search pattern at the center of the screen.
 map n  <Plug>(incsearch-nohl-n)zz
 map N  <Plug>(incsearch-nohl-N)zz
-map *  <Plug>(incsearch-nohl-*)zz
-map #  <Plug>(incsearch-nohl-#)zz
+map *  <Plug>(incsearch-nohl-#)zz
+map #  <Plug>(incsearch-nohl-*)zz
 map g* <Plug>(incsearch-nohl-g*)zz
 map g# <Plug>(incsearch-nohl-g#)zz
 
@@ -593,7 +589,7 @@ endfunction
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
 
-" Disable autoindent
+" Disable autoindent, do it by gg=G
 let g:autoformat_autoindent = 0
 
 " vim-better-whitespace
