@@ -643,10 +643,6 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 
 " Golang
 let g:formatdef_goimports = '"goimports"'
-let g:formatters_go = ['goimports']
-
-" Java
-let g:formatdef_astyle_java = '"astyle --mode=java --style=java -pH".(&expandtab ? "s".shiftwidth() : "t")'
 
 " vim-go settings
 let g:go_highlight_functions = 1
