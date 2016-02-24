@@ -89,6 +89,12 @@ Plug 'kana/vim-textobj-line'
 Plug 'kana/vim-textobj-entire'
 Plug 'kana/vim-textobj-indent'
 
+if has('mac') || has('macunix')
+	Plug 'rizzatti/dash.vim'
+else
+	Plug 'KabbAmine/zeavim.vim'
+endif
+
 " Add plugins to &runtimepath
 call plug#end()
 
@@ -224,6 +230,22 @@ function! GetVisualSelection()
 	let lines[0] = lines[0][col1 - 1:]
 	return join(lines, "\n")
 endfunction
+
+" zeavim.vim
+let g:zv_disable_mapping = 1
+" Add what you want to refer
+let g:zv_file_types = {
+			\	'cpp': 'c++,boost',
+			\	'javascript': 'javascript,nodejs',
+			\	'sql': 'mysql',
+			\ }
+
+if has('mac') || has('macunix')
+	" TODO
+	nmap <Leader><Leader>z :Dash
+else
+	nmap <Leader><Leader>z <Plug>ZVKeyDocset
+endif
 
 " Resize splits when the window is resized
 autocmd VimResized * exe "normal! \<C-w>="
