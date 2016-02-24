@@ -593,8 +593,8 @@ endfunction
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
 
-" Enable autoindent
-let g:autoformat_autoindent = 1
+" Disable autoindent
+let g:autoformat_autoindent = 0
 
 " vim-better-whitespace
 let g:better_whitespace_filetypes_blacklist = []
