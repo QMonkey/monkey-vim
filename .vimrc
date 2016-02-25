@@ -151,7 +151,7 @@ let g:indentLine_leadingSpaceEnabled = 1
 let g:indentLine_leadingSpaceChar = '·'
 
 " Unrecognized filetype set to text
-autocmd BufNewFile,BufRead * if &filetype == "" | setfiletype text | endif
+autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
@@ -215,9 +215,14 @@ function! SetReferences()
 	endfor
 
 	if !is_reference_set
-		" Default reference: man
-		nnoremap <buffer><silent><S-k> :execute 'Ref man' GetCurrentWord()<CR>
-		vnoremap <buffer><silent><S-k> <ESC>:execute 'Ref man' GetVisualSelection()<CR>
+		" Default reference: dash or zeal
+		if has('mac') || has('macunix')
+			nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
+			vnoremap <buffer><silent><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
+		else
+			nnoremap <buffer><silent><S-k> :Zeavim<CR>
+			vnoremap <buffer><silent><S-k> <ESC>:ZvV<CR>
+		endif
 	endif
 endfunction
 
@@ -241,14 +246,28 @@ let g:zv_file_types = {
 			\ }
 
 if has('mac') || has('macunix')
-	" TODO
-	nmap <Leader><Leader>z :Dash
+	function! DashPrompt()
+		let dash_command = 'Dash'
+
+		let ftype = Prompt('Docset: ')
+		if empty(ftype)
+			let dash_command = 'Dash!'
+		endif
+		redraw!
+
+		let prompt_text = 'Dash (' . ftype . ")\n" . 'Search for: '
+		let key = Prompt(prompt_text)
+
+		execute dash_command key ftype
+	endfunction
+
+	nmap <silent><Leader><Leader>z :call DashPrompt()<CR>
 else
-	nmap <Leader><Leader>z <Plug>ZVKeyDocset
+	nmap <silent><Leader><Leader>z <Plug>ZVKeyDocset
 endif
 
 " Resize splits when the window is resized
-autocmd VimResized * exe "normal! \<C-w>="
+autocmd VimResized * execute "normal! \<C-w>="
 
 " Number of lines from vertical edge to start scrolling
 set scrolloff=7
@@ -405,7 +424,7 @@ nnoremap <silent> bd :Bdelete<CR>
 cnoremap w!! w !sudo tee > /dev/null %
 
 " Tab
-nnoremap <C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
+nnoremap <silent><C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
 nnoremap <silent><S-h> :tabprevious<CR>
 nnoremap <silent><S-l> :tabnext<CR>
 nnoremap <Leader>1 1gt
@@ -425,8 +444,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
-nnoremap <Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
+nnoremap <silent><Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
+nnoremap <silent><Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
 
 nnoremap <C-up> <C-w>+
 nnoremap <C-down> <C-w>-
