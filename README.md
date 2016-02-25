@@ -268,8 +268,8 @@ m<space>    删除当前buffer的所有标记
 #### 1.8 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
-Leader+jd   跳转到定义
-Leader+jc   跳转到声明
+gd          跳转到定义
+Leader+jd   跳转到声明
 Leader+ji   跳转到头文件
 ```
 

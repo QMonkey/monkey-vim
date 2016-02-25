@@ -654,9 +654,9 @@ let g:ycm_goto_buffer_command = 'same-buffer'
 let g:ycm_filepath_completion_use_working_dir = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-nnoremap <Leader>jd :YcmCompleter GoToDefinition<CR>
-nnoremap <Leader>jc :YcmCompleter GoToDeclaration<CR>
-nnoremap <Leader>ji :YcmCompleter GoToInclude<CR>
+nnoremap <silent>gd :YcmCompleter GoToDefinition<CR>
+nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
+nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
 
 " vim-autoformat
 " Generic C, C++, Objective-C style
