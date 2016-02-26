@@ -611,18 +611,19 @@ let g:nerdtree_tabs_open_on_console_startup = 0
 let g:nerdtree_tabs_autoclose = 1
 
 " Auto refresh NERDTree
-autocmd CursorHold,CursorHoldI * call ReRender()
+autocmd CursorHold,CursorHoldI * call Refresh()
 
-function! ReRender()
+" Inspired by https://github.com/Xuyuanp/nerdtree-git-plugin
+function! Refresh()
 	if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
 		return
 	endif
 
 	let winnr = winnr()
-	set switchbuf+=useopen
-	sbuffer NERD*
 
+	call g:NERDTree.CursorToTreeWin()
 	call b:NERDTree.root.refresh()
+	call b:NERDTree.root.refreshFlags()
 	call NERDTreeRender()
 
 	" Jump back
