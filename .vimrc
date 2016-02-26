@@ -150,6 +150,9 @@ let g:indentLine_char = '┊'
 let g:indentLine_leadingSpaceEnabled = 1
 let g:indentLine_leadingSpaceChar = '·'
 
+" Restore cursor to previous editing position
+autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+
 " Unrecognized filetype set to text
 autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 " Markdown file extensions
