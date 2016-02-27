@@ -9,7 +9,11 @@
 "fi
 "
 "vman() {
-"	vim -R -c "Ref man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable" -c "execute 'bdelete ' . bufnr('~/.vimrc')"
+"	vim -R -c "Ref man $*" ~/.vimrc \
+"		-c "if line('$') == 1 | cquit | endif" \
+"		-c "silent only" \
+"		-c "setlocal nomodifiable" \
+"		-c "execute 'bdelete ' . bufnr('~/.vimrc')"
 "	if [ "$?" != "0" ]; then
 "		echo "No manual entry for $*"
 "	fi
@@ -21,7 +25,8 @@
 "		return
 "	fi
 "
-"	vim -c "DirDiff $*" ~/.vimrc -c "execute 'bdelete ' . bufnr('~/.vimrc')"
+"	vim -c "DirDiff $*" ~/.vimrc \
+"		-c "execute 'bdelete ' . bufnr('~/.vimrc')"
 "}
 
 " Install vim-plug if not present
