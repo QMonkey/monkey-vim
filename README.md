@@ -18,7 +18,7 @@ monkey-vim项目，旨在打造一个强大，快速，并且占用少量系统�
 
 ### 1. clone到本地
 
-```
+```bash
 git clone https://github.com/QMonkey/monkey-vim.git
 ```
 
@@ -26,7 +26,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 #### 2.1 工具依赖
 
-```
+```bash
 # Ubuntu
 sudo apt-get install ctags
 sudo apt-get install ack-grep
@@ -47,7 +47,7 @@ sudo yum install ack
 
 #### 2.3 C/C++
 
-```
+```bash
 # Ubuntu
 sudo apt-get install gcc
 sudo apt-get install g++
@@ -67,7 +67,7 @@ sudo yum install clang
 
 #### 2.4 Javascript
 
-```
+```bash
 sudo npm install -g jslint
 sudo npm install -g js-beautify
 sudo npm install -g tern
@@ -75,25 +75,25 @@ sudo npm install -g tern
 
 #### 2.5 JSON
 
-```
+```bash
 sudo npm install -g jsonlint
 ```
 
 #### 2.6 HTML
 
-```
+```bash
 sudo npm install -g jshint
 ```
 
 #### 2.7 CSS
 
-```
+```bash
 sudo npm install -g csslint
 ```
 
 #### 2.8 Python
 
-```
+```bash
 sudo pip install pyflakes
 sudo pip install autopep8
 sudo pip install pep8
@@ -102,7 +102,7 @@ sudo pip install jedi
 
 #### 2.9 Golang
 
-```
+```bash
 # Ubuntu
 sudo apt-get install golang
 
@@ -118,7 +118,7 @@ sudo zypper install golang
 
 #### 2.10 Java
 
-```
+```bash
 # Ubuntu
 sudo apt-get install astyle
 sudo apt-get install openjdk-8-jdk
@@ -134,7 +134,7 @@ sudo yum install java-1.8.0-openjdk-devel.x86_64
 
 #### 2.11 Shell
 
-```
+```bash
 # Ubuntu
 sudo apt-get install devscripts
 
@@ -147,14 +147,14 @@ sudo yum install rpmdevtools
 
 #### 2.12 Markdown
 
-```
+```bash
 sudo npm install -g instant-markdown-d
 sudo gem install mdl
 ```
 
 ### 3. 安装
 
-```
+```bash
 cd monkey-vim
 cp .vimrc ~/.vimrc
 vim
@@ -345,6 +345,7 @@ Ctrl+y+,        展开模板缩写
 #### 1.18 其它
 
 ```
+%               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
 bd              删除当前buffer
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
@@ -446,53 +447,115 @@ w!!     使用root权限写文件
 
 ### 1. Ack
 
-```
-# 递归搜索包含test的代码，并打开第一个搜索结果
+```vim
+" 递归搜索包含test的代码，并打开第一个搜索结果
 :Ack -r test
 
-# 递归搜索包含test的代码
+" 递归搜索包含test的代码
 :Ack! -r test
 ```
 
 ### 2. UpdateTags
 
-```
-# 为当前文件生成tag
+```vim
+" 为当前文件生成tag
 :UpdateTags
 
-# 为整个工程生成tag
+" 为整个工程生成tag
 :UpdateTags -R
 ```
 
 ### 3. YcmGenerateConfig
 
-```
-# 为整个工程生成.ycm_extra_conf.py文件
+```vim
+" 为整个工程生成.ycm_extra_conf.py文件
 :YcmGenerateConfig
 ```
 
-### 4. Gitv
+### 4. DirDiff
 
+```vim
+" A, B文件夹进入vimdiff mode
+:DirDiff A B
 ```
-# 以split的方式打开Gitv
+
+## 在vim中使用git
+
+### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
+
+```vim
+" 相当于:!git [args]
+:Git [args]
+
+" 相当于git status。“g?”命令查看Gstatus窗口支持的操作
+:Gstatus
+
+" 相当于git commit
+:Gcommit [args]
+
+" 相当于git merge
+:Gmerge [args]
+
+" 相当于git pull
+:Gpull [args]
+
+" 相当于git fetch
+:Gfetch [args]
+
+" 相当于git push
+:Gpush [args]
+
+" 相当于git grep
+:Ggrep [args]
+
+" 在非Gdiff模式下相当于git checkout。args为空的情况下，相当于git checkout %
+:Gread [path]
+
+" 在非Gdiff模式下相当于git add。args为空的情况下，相当于git checkout %
+:Gwrite [path]
+
+" 相当于git mv % {destination}
+:Gmove {destination}
+
+" 相当于git rm %
+:Gremove
+
+" 使用vimdiff展示git diff
+:Gdiff [args]
+
+" TODO
+:Glog [args]
+:{range}Glog [args]
+
+" TODO
+:Gblame
+:{range}Gblame
+
+" 详细教程请参考以下视频
+https://github.com/tpope/vim-fugitive#screencasts
+
+" 或官方文档
+:h fugitive.txt
+```
+
+### 2. gitk for vim: [gitv](https://github.com/gregsexton/gitv)
+
+```vim
+" 以split的方式打开Gitv
 :Gitv!
 
-# 以tab的方式打开Gitv
+" 以tab的方式打开Gitv
 :Gitv
-```
 
-### 5. DirDiff
-
-```
-# A, B文件夹进入vimdiff mode
-:DirDiff A B
+" 详细教程请参考官方文档
+:h gitv.txt
 ```
 
 ## 注意事项
 
 * monkey-vim默认tab的缩进为8个字符，不使用space替代tab。如果你喜欢tab缩进为4个字符，并且使用space替代tab。你可以将以下vim配置
 
-```
+```vim
 set tabstop=8
 set softtabstop=8
 set shiftwidth=8
@@ -501,7 +564,7 @@ set noexpandtab
 
 改为
 
-```
+```vim
 set tabstop=4
 set softtabstop=4
 set shiftwidth=4
@@ -510,7 +573,7 @@ set expandtab
 
 * 为了让运行在xterm上的vim可以与系统共享剪贴板，请安装gvim，并在~/.bashrc中加入以下Shell命令：
 
-```
+```bash
 if [ -x $(which gvim) ]
 then
     alias vi='gvim -v'
@@ -522,13 +585,13 @@ fi
 
 * 如果你觉得打开/保存go文件需要较长时间，或者你不希望保存go文件时，自动生成可执行文件，你可以将以下vim配置
 
-```
+```vim
 let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
 ```
 
 改为
 
-```
+```vim
 let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 ```
 
@@ -538,7 +601,7 @@ let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 
 * 使用vman命令，可在vim中下查看man文档
 
-```
+```bash
 vman() {
     vim -R -c "Ref man $*" ~/.vimrc -c "if line('$') == 1 | cquit | endif" -c "silent only" -c "setlocal nomodifiable" -c "execute 'bdelete ' . bufnr('~/.vimrc')"
     if [ "$?" != "0" ]; then
@@ -549,7 +612,7 @@ vman() {
 
 * 使用dirdiff命令，可在vimdiff中查看，比较和编辑两个文件夹
 
-```
+```bash
 dirdiff() {
     if [ $# -ne 2 ]; then
         echo "Invalid arguments, please pass two arguments"
