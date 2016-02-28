@@ -493,7 +493,7 @@ w!!     使用root权限写文件
 " 相当于git commit
 :Gcommit [args]
 
-" 相当于git merge
+" 相当于git merge，错误和冲突会加载到quickfix list（:copen命令打开）
 :Gmerge [args]
 
 " 相当于git pull
@@ -523,13 +523,18 @@ w!!     使用root权限写文件
 " 使用vimdiff展示git diff
 :Gdiff [args]
 
-" TODO
+" 将当前文件所有历史提交记录加载到quickfix list
+" 若带有“--”参数，则展示某次commit的full-diff，而不是历史版本
 :Glog [args]
+
+" 同:Glog，但只针对指定范围（可在可视化模式下使用）
 :{range}Glog [args]
 
-" TODO
-:Gblame
-:{range}Gblame
+" vsplit打开git blame的结果。“g?”命令查看Gblame窗口支持的操作
+:Gblame [flags]
+
+" 同:Gblame，但只针对指定范围（可在可视化模式下使用）
+:{range}Gblame [flags]
 
 " 详细教程请参考以下视频
 https://github.com/tpope/vim-fugitive#screencasts
