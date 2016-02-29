@@ -448,11 +448,17 @@ w!!     使用root权限写文件
 ### 1. Ack
 
 ```vim
-" 递归搜索包含test的代码，并打开第一个搜索结果
+" 递归搜索包含test的代码，搜索结果加载到quickfix list，并打开第一个搜索结果
 :Ack -r test
 
-" 递归搜索包含test的代码
+" 递归搜索包含test的代码，搜索结果加载到quickfix list
 :Ack! -r test
+
+" 同Ack，但搜索结果加载到location list
+:LAck -r test
+
+" 同Ack!，但搜索结果加载到location list
+:LAck! -r test
 ```
 
 ### 2. UpdateTags
@@ -493,7 +499,7 @@ w!!     使用root权限写文件
 " 相当于git commit
 :Gcommit [args]
 
-" 相当于git merge，错误和冲突会加载到quickfix list（:copen命令打开）
+" 相当于git merge，错误和冲突会加载到quickfix list（:botright copen命令打开）
 :Gmerge [args]
 
 " 相当于git pull
@@ -526,6 +532,9 @@ w!!     使用root权限写文件
 " 将当前文件所有历史提交记录加载到quickfix list
 " 若带有“--”参数，则展示某次commit的full-diff，而不是历史版本
 :Glog [args]
+
+" 同:Glog，把提交记录加载到location list（用:lopen命令打开），而不是quickfix list
+:Gllog [args]
 
 " 同:Glog，但只针对指定范围（可在可视化模式下使用）
 :{range}Glog [args]
