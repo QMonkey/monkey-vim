@@ -555,11 +555,15 @@ https://github.com/tpope/vim-fugitive#screencasts
 ### 2. gitk for vim: [gitv](https://github.com/gregsexton/gitv)
 
 ```vim
-" 以split的方式打开Gitv
-:Gitv!
+" 文件模式，显示当前文件的所有历史版本。以split的方式打开Gitv，只显示与当前文件相关的提交
+" args为git log所支持的参数
+:Gitv! [args]
 
-" 以tab的方式打开Gitv
-:Gitv
+" 同:Gitv!，但只显示与选中行相关的提交（可在可视化模式下使用）
+:{range}Gitv! [args]
+
+" 浏览器模式，显示所有提交的git diff。以tab的方式打开Gitv
+:Gitv [args]
 
 " 详细教程请参考官方文档
 :h gitv.txt

@@ -165,7 +165,7 @@ autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
 autocmd FileType ref-man,ref-pydoc,help,godoc set nolist
-autocmd FileType html,css,liquid setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'sh', 'vim']
@@ -651,6 +651,9 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 
 " Tagbar width
 let tagbar_width = 32
+
+" Gitv
+let g:Gitv_DoNotMapCtrlKey = 1
 
 " vim-startify
 function! s:filter_header(lines) abort
