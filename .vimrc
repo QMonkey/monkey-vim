@@ -77,9 +77,11 @@ Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript'
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
+Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
+Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'godlygeek/tabular', {'for': 'markdown'} | Plug 'plasticboy/vim-markdown'
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
@@ -167,9 +169,13 @@ autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
-autocmd FileType ref-man,ref-pydoc,help,godoc set nolist
+autocmd FileType ref-man,ref-pydoc,ref-pman,help,godoc set nolist
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+
+" Disable conceal in insert-mode
+autocmd FileType markdown,json autocmd InsertEnter <buffer> setlocal conceallevel=2 concealcursor=
+autocmd FileType markdown,json autocmd InsertLeave <buffer> setlocal conceallevel=2 concealcursor=nc
 
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
@@ -205,6 +211,7 @@ function! SetReferences()
 				\	'go': 'GoDoc',
 				\	'python': 'Ref pydoc',
 				\	'ruby': 'Ref ri',
+				\	'php': 'Ref pman',
 				\	'vim': 'help',
 				\ }
 
@@ -494,6 +501,9 @@ map #  <Plug>(incsearch-nohl-*)zz
 map g* <Plug>(incsearch-nohl-g*)zz
 map g# <Plug>(incsearch-nohl-g#)zz
 
+" No highlight search
+nnoremap <silent><Leader>/ :nohlsearch<CR>
+
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F4> :GundoToggle<CR>
@@ -594,9 +604,6 @@ function! Replace(mode, confirm, wholeword)
 	execute '%s/' . search . '/' . replace . '/' . flag . '| update'
 endfunction
 
-" No highlight search
-nnoremap <silent><Leader>/ :nohlsearch<CR>
-
 " Replace in normal mode
 " Default
 nnoremap <Leader>R :call Replace('n', 0, 0)<CR>
@@ -660,7 +667,7 @@ endfunction
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
 
-" Disable autoindent, do it by gg=G
+" Disable autoindent, do it manually by gg=G
 let g:autoformat_autoindent = 0
 
 " vim-better-whitespace
