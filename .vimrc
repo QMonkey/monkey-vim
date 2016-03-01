@@ -87,6 +87,7 @@ Plug 'sheerun/vim-polyglot'
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
+Plug 'Valloric/ListToggle'
 Plug 'will133/vim-dirdiff'
 Plug 'tpope/vim-unimpaired'
 Plug 'tomasr/molokai'
@@ -501,7 +502,7 @@ nnoremap <silent><F4> :GundoToggle<CR>
 nnoremap <silent><F5> :set invpaste paste?<CR>
 nnoremap <silent><F6> :Dispatch<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
-nnoremap <silent><F8> :Copen!<CR>
+nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
 nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
 
@@ -514,6 +515,19 @@ function! Prompt(prompt_text)
 	let value = input(a:prompt_text)
 	call inputrestore()
 	return Strip(value)
+endfunction
+
+function! DispatchQListToggle()
+	let buffer_count_before = BufferCount()
+	silent! cclose
+
+	if BufferCount() == buffer_count_before
+		Copen!
+	endif
+endfunction
+
+function! BufferCount()
+	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
 endfunction
 
 if has('gui_running')

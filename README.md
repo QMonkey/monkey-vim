@@ -187,7 +187,7 @@ F4      打开/关闭Gundo
 F5      打开/关闭paste模式
 F6      运行当前项目（可用:Focus注册执行的命令，如:Focus gcc % -o a.out）
 F7      异步运行当前项目
-F8      显示F6或F7运行结果
+F8      打开/关闭F6或F7运行结果
 F9      预览Markdown
 F10     打开/关闭RainbowParentheses
 F11     全屏切换（仅在gui模式下有效）
@@ -353,6 +353,8 @@ Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳�
 Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符
+Leader+q        打开/关闭quickfix list
+Leader+l        打开/关闭location list
 ```
 
 ### 2. 插入模式
@@ -499,7 +501,7 @@ w!!     使用root权限写文件
 " 相当于git commit
 :Gcommit [args]
 
-" 相当于git merge，错误和冲突会加载到quickfix list（:botright copen命令打开）
+" 相当于git merge，错误和冲突会加载到quickfix list（Leader+q快捷键打开）
 :Gmerge [args]
 
 " 相当于git pull
@@ -533,7 +535,7 @@ w!!     使用root权限写文件
 " 若带有“--”参数，则展示某次commit的full-diff，而不是历史版本
 :Glog [args]
 
-" 同:Glog，把提交记录加载到location list（用:lopen命令打开），而不是quickfix list
+" 同:Glog，把提交记录加载到location list（Leader+l快捷键打开），而不是quickfix list
 :Gllog [args]
 
 " 同:Glog，但只针对指定范围（可在可视化模式下使用）
