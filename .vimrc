@@ -75,7 +75,8 @@ Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
 Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
-Plug 'pangloss/vim-javascript', {'for': 'javascript'}
+Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript'
+Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
@@ -133,8 +134,9 @@ set magic
 " Share clipboard with system (gvim -v in xterm)
 set clipboard=unnamedplus
 
-set autoindent
 set smartindent
+" Indent at the same level of the previous line
+set autoindent
 
 " Make "tab" insert indents instead of tabs at the beginning of a line
 set smarttab
@@ -165,8 +167,8 @@ autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 
 autocmd FileType ref-man,ref-pydoc,help,godoc set nolist
-autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
@@ -720,6 +722,9 @@ let g:godef_same_file_in_same_window = 1
 autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
 autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
 autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
+
+" javascript-libraries-syntax.vim
+let g:used_javascript_libs = 'jquery'
 
 " vim-markdown
 let g:vim_markdown_folding_disabled = 1
