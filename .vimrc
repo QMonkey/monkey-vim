@@ -547,7 +547,7 @@ else
 endif
 
 " Replace
-function! Replace(mode, confirm, wholeword, replace)
+function! Replace(mode, confirm, wholeword)
 	let word = ''
 	let wholeword = a:wholeword
 	if a:mode == 'n' || a:mode == 'normal'
@@ -557,6 +557,17 @@ function! Replace(mode, confirm, wholeword, replace)
 		let wholeword = 0
 	endif
 
+	let search = ''
+	if wholeword
+		let search .= '\<' . escape(word, '/\.*$^~[') . '\>'
+	else
+		let search .= escape(word, '/\.*$^~[')
+	endif
+
+
+	let replace = Prompt('Replace "' . word . '" with: ')
+	let replace = escape(replace, '/\&~')
+
 	let flag = ''
 	if a:confirm
 		let flag .= 'gec'
@@ -564,14 +575,6 @@ function! Replace(mode, confirm, wholeword, replace)
 		let flag .= 'ge'
 	endif
 
-	let search = ''
-	if wholeword
-		let search .= '\<' . escape(word, '/\.*$^~[') . '\>'
-	else
-		let search .= word
-	endif
-
-	let replace = escape(a:replace, '/\&~')
 	execute '%s/' . search . '/' . replace . '/' . flag . '| update'
 endfunction
 
@@ -580,19 +583,19 @@ nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " Replace in normal mode
 " Default
-nnoremap <Leader>R :call Replace('n', 0, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+nnoremap <Leader>R :call Replace('n', 0, 0)<CR>
 " Wholeword
-nnoremap <Leader>rw :call Replace('n', 0, 1, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+nnoremap <Leader>rw :call Replace('n', 0, 1)<CR>
 " Confirm
-nnoremap <Leader>rc :call Replace('n', 1, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+nnoremap <Leader>rc :call Replace('n', 1, 0)<CR>
 " Wholeword, confirm
-nnoremap <Leader>rwc :call Replace('n', 1, 1, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+nnoremap <Leader>rwc :call Replace('n', 1, 1)<CR>
 
 " Replace in visual mode
 " Default
-vnoremap <Leader>R :call Replace('v', 0, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+vnoremap <Leader>R :call Replace('v', 0, 0)<CR>
 " Confirm
-vnoremap <Leader>rc :call Replace('v', 1, 0, input('Replace ' . expand('<cword>') . ' with: '))<CR>
+vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 
 " Save session options
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
@@ -653,6 +656,7 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 let tagbar_width = 32
 
 " Gitv
+" Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
 
 " vim-startify
