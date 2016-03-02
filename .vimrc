@@ -58,6 +58,7 @@ Plug 'mileszs/ack.vim'
 Plug 'scrooloose/nerdcommenter'
 Plug 'mhinz/vim-startify'
 Plug 'Chiel92/vim-autoformat'
+Plug 'junegunn/vim-easy-align'
 Plug 'Yggdroot/indentLine'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'wesQ3/vim-windowswap'
@@ -405,7 +406,7 @@ let g:molokai_original = 1
 let g:rehash256 = 1
 
 " Enable syntax highlight
-syntax enable
+"syntax enable
 syntax on
 
 set regexpengine=1
@@ -676,6 +677,12 @@ autocmd BufWrite * :Autoformat
 
 " Disable autoindent, do it manually by gg=G
 let g:autoformat_autoindent = 0
+
+" vim-easy-align
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
 
 " vim-better-whitespace
 let g:better_whitespace_filetypes_blacklist = []
