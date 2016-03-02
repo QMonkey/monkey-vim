@@ -487,6 +487,18 @@ w!!     使用root权限写文件
 :DirDiff A B
 ```
 
+### 5. Gist
+
+```bash
+# 使用改命令需要先进行以下配置
+git config --global github.user <username>
+```
+
+```vim
+" 将当前buffer，或将选中内容（可视化模式）推送到Gist
+:Gist
+```
+
 ## 在vim中使用git
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
