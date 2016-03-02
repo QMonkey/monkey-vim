@@ -29,15 +29,15 @@ git clone https://github.com/QMonkey/monkey-vim.git
 ```bash
 # Ubuntu
 sudo apt-get install ctags
-sudo apt-get install ack-grep
+sudo apt-get install silversearcher-ag 或 sudo apt-get install ack-grep
 
 # OpenSUSE
 sudo zypper install ctags
-sudo zypper install ack
+sudo zypper install the_silver_searcher 或 sudo zypper install ack
 
 # CentOS
 sudo yum install ctags
-sudo yum install ack
+sudo yum install the_silver_searcher 或 sudo yum install ack
 ```
 
 #### 2.2 fonts
@@ -237,7 +237,7 @@ Leader+rwc  替换光标所在的单词（整词，需要逐一确认）
 #### 1.6 语言相关
 
 ```
-K                   查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
+K                   查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 Leader+Leader+z     输入语言类型和关键字，在dash或zeal中查看相应的解释
 
 gd      GoDef
@@ -386,7 +386,7 @@ Leader+rc   替换选中的字符串（需要逐一确认）
 #### 3.3 语言相关
 
 ```
-K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
+K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 ```
 
 #### 3.4 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)

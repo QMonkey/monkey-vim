@@ -83,6 +83,7 @@ Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
+Plug 'gorodinskiy/vim-coloresque', {'for': 'css'}
 Plug 'godlygeek/tabular', {'for': 'markdown'} | Plug 'plasticboy/vim-markdown'
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'sheerun/vim-polyglot'
@@ -636,6 +637,12 @@ autocmd BufNewFile,BufRead *.tags set filetype=tags
 
 " Set NERDTree window width
 let NERDTreeWinSize = 32
+
+" Show hidden
+let NERDTreeShowHidden = 1
+" Ignore files
+let NERDTreeIgnore=['\.o$', '\.obj$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$']
+
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
 let g:nerdtree_tabs_open_on_console_startup = 0
@@ -762,6 +769,13 @@ let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
 let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
+
+" ack.vim
+if executable('ag')
+	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case'
+elseif executable('ack') || executable('ack-grep')
+	let g:ack_default_options = ' -s -H --nocolor --nogroup --column --smart-case'
+endif
 
 " vim-easytags
 let g:easytags_async = 1
