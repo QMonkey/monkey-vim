@@ -786,7 +786,15 @@ let g:easytags_async = 1
 " Global tag file
 let g:easytags_file = $HOME . '/.vim/.tags'
 
-let g:easytags_opts = ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v ', '--fields=+liaS', '--extra=+q']
+let g:easytags_opts = ['--fields=+liaS', '--extra=+q']
+let g:easytags_languages = {
+			\	'c': {
+			\		'args': ['--c-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
+			\	},
+			\	'cpp': {
+			\		'args': ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
+			\	}
+			\ }
 " Create dynamic tag file if not exists
 let g:easytags_dynamic_files = 2
 " Disable auto update tag files
