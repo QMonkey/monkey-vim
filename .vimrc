@@ -769,7 +769,8 @@ nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
 
 " vim-autoformat
 " Generic C, C++, Objective-C style
-" A style similar to the Linux Kernel style
+" A style similar to the Linux Kernel Coding Style
+" Linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
 
 " Golang
