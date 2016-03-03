@@ -41,7 +41,7 @@ filetype off
 call plug#begin($HOME . '/.vim/bundle')
 
 " Plug
-Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
+Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs' | Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
@@ -364,18 +364,12 @@ let g:airline#extensions#tagbar#enabled = 1
 let g:airline#extensions#ctrlspace#enabled = 1
 let g:airline#extensions#windowswap#enabled = 1
 
+" Use powerline fonts
 let g:airline_powerline_fonts = 1
-if !exists('g:airline_symbols')
-	let g:airline_symbols = {}
-endif
 
-let g:airline_left_sep = ''
-let g:airline_left_alt_sep = ''
-let g:airline_right_sep = ''
-let g:airline_right_alt_sep = ''
-let g:airline_symbols.branch = ''
-let g:airline_symbols.readonly = ''
-let g:airline_symbols.linenr = ''
+" vim-devicons
+let g:WebDevIconsUnicodeDecorateFolderNodes = 1
+let g:DevIconsEnableFoldersOpenClose = 1
 
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
@@ -673,6 +667,7 @@ autocmd BufNewFile,BufRead *.tags set filetype=tags
 
 " Set NERDTree window width
 let NERDTreeWinSize = 32
+let g:NERDTreeAutoDeleteBuffer = 1
 
 " Show hidden
 let NERDTreeShowHidden = 1
@@ -706,6 +701,19 @@ function! Refresh()
 	execute winnr . 'wincmd w'
 	"redraw
 endfunction
+
+" nerdtree-git-plugin
+let g:NERDTreeIndicatorMapCustom = {
+			\ 'Modified'  : '~',
+			\ "Staged"    : '+',
+			\ 'Untracked' : '*',
+			\ 'Renamed'   : '➜',
+			\ 'Unmerged'  : '=',
+			\ 'Deleted'   : '✖',
+			\ 'Dirty'     : '~',
+			\ 'Clean'     : '✔︎',
+			\ 'Unknown'   : '?'
+			\ }
 
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
@@ -822,6 +830,7 @@ endif
 
 " vim-rooter
 let g:rooter_silent_chdir = 1
+"let g:rooter_use_lcd = 1
 " Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
 let g:rooter_manual_only = 1
 
