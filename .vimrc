@@ -541,7 +541,6 @@ nnoremap <silent><F4> :GundoToggle<CR>
 " Vim lets you toggle any option with
 " :set inv{option}
 nnoremap <silent><F5> :set invpaste paste?<CR>
-nnoremap <silent><F6> :Dispatch<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
