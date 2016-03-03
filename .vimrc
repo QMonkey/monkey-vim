@@ -461,7 +461,7 @@ function! CloseWindow()
 			return
 		endif
 
-		let tagbar_winnr = bufwinnr('Tagbar*')
+		let tagbar_winnr = bufwinnr('__Tagbar__')
 		if tagbar_winnr < 0
 			quit
 			return
