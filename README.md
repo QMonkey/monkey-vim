@@ -497,6 +497,9 @@ git config --global github.user <username>
 ```vim
 " 将当前buffer，或将选中内容（可视化模式）推送到Gist
 :Gist
+
+" 更多Gist的用法，请参考
+:h Gist.vim
 ```
 
 ## 在vim中使用git

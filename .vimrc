@@ -643,7 +643,7 @@ let NERDTreeWinSize = 32
 " Show hidden
 let NERDTreeShowHidden = 1
 " Ignore files
-let NERDTreeIgnore=['\.o$', '\.obj$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$']
+let NERDTreeIgnore=['\.o$', '\.obj$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
 
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
