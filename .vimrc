@@ -439,9 +439,38 @@ cnoremap <C-e> <End>
 noremap <C-c> <ESC>
 inoremap <C-c> <ESC>
 
-nnoremap <silent> q :q<CR>
+nnoremap <silent> q :call CloseWindow()<CR>
 "nnoremap <silent> bd :Bdelete<CR>
 nnoremap <silent> bd :Bclose<CR>
+
+function! CloseWindow()
+	let last_winnr = winnr('$')
+	if last_winnr == 1 || last_winnr > 3
+		quit
+		return
+	endif
+
+	if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
+		quit
+		return
+	endif
+
+	if last_winnr == 3
+		if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
+			quit
+			return
+		endif
+
+		let tagbar_winnr = bufwinnr('Tagbar*')
+		if tagbar_winnr < 0
+			quit
+			return
+		endif
+	endif
+
+	" If NERDTreeTabs is opend, only call quitall can save the session
+	quitall
+endfunction
 
 " w!! to sudo & write a file
 cnoremap w!! w !sudo tee > /dev/null %
