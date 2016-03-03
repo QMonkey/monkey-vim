@@ -64,7 +64,7 @@ Plug 'ntpeters/vim-better-whitespace'
 Plug 'wesQ3/vim-windowswap'
 Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-rooter'
-Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags' "| Plug 'xolox/vim-session'
+Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
 Plug 'scrooloose/syntastic'
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --system-libclang --gocode-completer --tern-completer' } | Plug 'rdnetto/YCM-Generator', {'branch': 'stable'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
@@ -851,15 +851,6 @@ let g:easytags_events = ['BufWritePost']
 let g:easytags_on_cursorhold = 0
 " Update interval, default 4s
 " let g:easytags_updatetime_min = 10000
-
-" vim-session
-" TODO
-let g:session_lock_enabled = 1
-let g:session_default_name = 'session'
-let g:session_default_overwrite = 1
-let g:session_autoload = 'yes'
-let g:session_autosave = 'yes'
-let g:session_default_to_last = 1
 
 " Syntastic
 let g:syntastic_loc_list_height = 10
