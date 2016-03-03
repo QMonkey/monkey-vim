@@ -444,6 +444,11 @@ nnoremap <silent> q :call CloseWindow()<CR>
 nnoremap <silent> bd :Bclose<CR>
 
 function! CloseWindow()
+	if tabpagenr('$') > 1
+		quit
+		return
+	endif
+
 	let last_winnr = winnr('$')
 	if last_winnr == 1 || last_winnr > 3
 		quit
