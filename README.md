@@ -351,6 +351,7 @@ bd              删除当前buffer
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
+Leader+cd       切换到当前文件所在项目根路径
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符
 Leader+q        打开/关闭quickfix list
