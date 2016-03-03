@@ -849,7 +849,7 @@ let g:easytags_on_cursorhold = 0
 " vim-session
 " TODO
 let g:session_lock_enabled = 1
-let g:session_default_name = 'session.vim'
+let g:session_default_name = 'session'
 let g:session_default_overwrite = 1
 let g:session_autoload = 'yes'
 let g:session_autosave = 'yes'
