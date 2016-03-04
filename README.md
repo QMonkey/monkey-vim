@@ -266,7 +266,56 @@ m-          删除当前行的所有标记
 m<space>    删除当前buffer的所有标记
 ```
 
-#### 1.8 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.8 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+
+```
+[b                  切换到上一个buffer窗口
+]b                  切换到下一个buffer窗口
+[B                  切换到第一个buffer窗口
+]B                  切换到最后一个buffer窗口
+
+[t                  切换到上一个tab窗口
+]t                  切换到下一个tab窗口
+[T                  切换到第一个tab窗口
+]T                  切换到最后一个tab窗口
+
+[n                  跳到版本管理上一次冲突的地方
+]n                  跳到版本管理下一次冲突的地方
+
+[<Space>            当前行之前增加[count]个空行
+]<Space>            当前行之后增加[count]个空行
+
+cob                 切换'background' (dark/light)
+coc                 切换'cursorline'
+cod                 切换'diff' (:diffthis/:diffoff)
+coh                 切换'hlsearch'
+coi                 切换'ignorecase'
+col                 切换'list'
+con                 切换'number'
+cor                 切换'relativenumber'
+cos                 切换'spell'
+cou                 切换'cursorcolumn'
+cov                 切换'virtualedit'
+cow                 切换'wrap'
+cox                 同时切换'cursorline'和'cursorcolumn'
+
+[x{motion}          对motion选中的字符串进行XML encode
+[xx                 对当前行进行XML encode
+]x{motion}          对motion选中的字符串进行HTML/XML decode
+]xx                 对当前行进行HTML/XML decode
+
+[u{motion}          对motion选中行的字符串进行URL encode
+[uu                 对当前行进行URL encode
+]u{motion}          对motion选中的字符串进行URL decode
+]uu                 对当前行进行URL decode
+
+[y{motion}          对motion选中的字符串进行C String encode
+[yy                 对当前行进行C String encode
+]y{motion}          对motion选中的字符串进行C String decode
+]yy                 对当前行进行C String decode
+```
+
+#### 1.9 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          跳转到定义
@@ -274,13 +323,13 @@ Leader+jd   跳转到声明
 Leader+ji   跳转到头文件
 ```
 
-#### 1.9 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.10 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    打开/关闭错误信息窗口
 ```
 
-#### 1.10 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.11 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -290,7 +339,7 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 1.11 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.12 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  打开CtrlSpace
@@ -299,13 +348,13 @@ Leader+ss   保存workspace
 Leader+rs   恢复workspace
 ```
 
-#### 1.12 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.13 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.13 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 1.14 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
@@ -314,20 +363,20 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 1.14 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 1.15 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
-+       扩大选中区域
++       扩大选中区域，并进入可视化模式
 ```
 
-#### 1.15 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.16 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.16 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.17 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -336,13 +385,13 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.17 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.18 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
 ```
 
-#### 1.18 其它
+#### 1.19 其它
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
@@ -390,7 +439,20 @@ Leader+rc   替换选中的字符串（需要逐一确认）
 K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 ```
 
-#### 3.4 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.4 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+
+```
+[x      对选中字符串进行XML encode
+]x      对选中字符串进行HTML/XML decode
+
+[u      对选中字符串进行URL encode
+]u      对选中字符串进行URL decode
+
+[y      对选中字符串进行C String encode
+]y      对选中字符串进行C string decode
+```
+
+#### 3.5 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -400,7 +462,7 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 3.5 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 3.6 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
@@ -409,27 +471,27 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 3.6 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 3.7 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
 +       扩大选中区域
 -       缩小选中区域
 ```
 
-#### 3.7 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.8 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
-#### 3.8 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 3.9 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.9 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.10 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写

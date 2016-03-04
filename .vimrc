@@ -541,13 +541,14 @@ nnoremap <silent><Leader>/ :nohlsearch<CR>
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F4> :GundoToggle<CR>
-" Vim lets you toggle any option with
-" :set inv{option}
-nnoremap <silent><F5> :set invpaste paste?<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
 nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
+
+set pastetoggle=<F5>
+" Disbale paste mode when leaving insert mode
+autocmd InsertLeave * set nopaste
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
