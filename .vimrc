@@ -133,6 +133,9 @@ set gdefault
 set wildmenu
 set wildmode=list:longest,full
 
+" Show preview window in completion
+"set completeopt-=preview
+
 " For regular expressions turn magic on, and you don't need to add '\' before
 " some special meaning characters.
 set magic

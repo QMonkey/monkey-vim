@@ -631,6 +631,10 @@ let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
 let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 ```
 
+## FAQ
+
+[FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
+
 ## 推荐设置
 
 ### 设置方法：在~/.bashrc中加入以下Shell命令
