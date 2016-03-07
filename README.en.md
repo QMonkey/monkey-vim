@@ -437,20 +437,26 @@ U       Redo
 Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 ```
 
-#### 3.2 Replace
+#### 3.2 Search
+
+```
+//      查找选中的字符串
+```
+
+#### 3.3 Replace
 
 ```
 Leader+R    替换选中的字符串（不需要逐一确认）
 Leader+rc   替换选中的字符串（需要逐一确认）
 ```
 
-#### 3.3 Programming language
+#### 3.4 Programming language
 
 ```
 K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 ```
 
-#### 3.4 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+#### 3.5 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
 ```
 [x      对选中字符串进行XML encode
@@ -463,7 +469,7 @@ K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ru
 ]y      对选中字符串进行C string decode
 ```
 
-#### 3.5 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.6 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -473,7 +479,7 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 3.6 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 3.7 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
@@ -482,27 +488,27 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 3.7 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 3.8 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
 +       扩大选中区域
 -       缩小选中区域
 ```
 
-#### 3.8 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.9 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
-#### 3.9 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 3.10 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.10 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.11 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写

@@ -251,14 +251,17 @@ function! SetReferences()
 	endif
 endfunction
 
-" Inspired by https://github.com/idanarye/vim-vebugger/blob/master/autoload/vebugger/util.vim#L2
+" Inspired by http://stackoverflow.com/questions/1533565/how-to-get-visually-selected-text-in-vimscript
 function! GetVisualSelection()
-	let [lnum1, col1] = getpos("'<")[1:2]
-	let [lnum2, col2] = getpos("'>")[1:2]
-	let lines = getline(lnum1, lnum2)
-	let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
-	let lines[0] = lines[0][col1 - 1:]
-	return join(lines, "\n")
+	let selected = ''
+	try
+		let a_save = @a
+		normal! gv"ay
+		let selected = @a
+	finally
+		let @a = a_save
+	endtry
+	return selected
 endfunction
 
 " zeavim.vim
@@ -534,6 +537,9 @@ map *  <Plug>(incsearch-nohl-#)zz
 map #  <Plug>(incsearch-nohl-*)zz
 map g* <Plug>(incsearch-nohl-g*)zz
 map g# <Plug>(incsearch-nohl-g#)zz
+
+" Search selected text
+vnoremap // y/<C-R>"<CR>
 
 " No highlight search
 nnoremap <silent><Leader>/ :nohlsearch<CR>
