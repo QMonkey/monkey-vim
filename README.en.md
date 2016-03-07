@@ -29,15 +29,15 @@ git clone https://github.com/QMonkey/monkey-vim.git
 ```bash
 # Ubuntu
 sudo apt-get install ctags
-sudo apt-get install silversearcher-ag 或 sudo apt-get install ack-grep
+sudo apt-get install silversearcher-ag or sudo apt-get install ack-grep
 
 # OpenSUSE
 sudo zypper install ctags
-sudo zypper install the_silver_searcher 或 sudo zypper install ack
+sudo zypper install the_silver_searcher or sudo zypper install ack
 
 # CentOS
 sudo yum install ctags
-sudo yum install the_silver_searcher 或 sudo yum install ack
+sudo yum install the_silver_searcher or sudo yum install ack
 ```
 
 #### 2.2 Fonts
@@ -45,7 +45,12 @@ sudo yum install the_silver_searcher 或 sudo yum install ack
 * [powerline-font](https://github.com/powerline/fonts)
 * [nerd-font](https://github.com/ryanoasis/nerd-fonts)
 
-#### 2.3 C/C++
+#### 2.3 Docset
+
+* [Dash](https://kapeli.com/dash/)
+* [Zeal](https://zealdocs.org/)
+
+#### 2.4 C/C++
 
 ```bash
 # Ubuntu
@@ -65,7 +70,7 @@ sudo yum install gcc-c++
 sudo yum install clang
 ```
 
-#### 2.4 Javascript
+#### 2.5 Javascript
 
 ```bash
 sudo npm install -g jslint
@@ -73,25 +78,25 @@ sudo npm install -g js-beautify
 sudo npm install -g tern
 ```
 
-#### 2.5 JSON
+#### 2.6 JSON
 
 ```bash
 sudo npm install -g jsonlint
 ```
 
-#### 2.6 HTML
+#### 2.7 HTML
 
 ```bash
 sudo npm install -g jshint
 ```
 
-#### 2.7 CSS
+#### 2.8 CSS
 
 ```bash
 sudo npm install -g csslint
 ```
 
-#### 2.8 Python
+#### 2.9 Python
 
 ```bash
 sudo pip install pyflakes
@@ -100,7 +105,7 @@ sudo pip install pep8
 sudo pip install jedi
 ```
 
-#### 2.9 Golang
+#### 2.10 Golang
 
 ```bash
 # Ubuntu
@@ -117,7 +122,7 @@ sudo zypper install golang
 :GoInstallBinaries
 ```
 
-#### 2.10 Java
+#### 2.11 Java
 
 ```bash
 # Ubuntu
@@ -133,13 +138,13 @@ sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
-#### 2.11 PHP
+#### 2.12 PHP
 
 ```bash
 pear install doc.php.net/pman
 ```
 
-#### 2.12 Shell
+#### 2.13 Shell
 
 ```bash
 # Ubuntu
@@ -152,7 +157,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.13 Markdown
+#### 2.14 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
@@ -202,140 +207,140 @@ F11     Toggle fullscreen, only available in GUI mode
 #### 1.3 Split
 
 ```
-Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
-Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
+Leader+s    Open a horizontal split with given file path in current window
+Leader+v    Open a vertical split with given file path in current window
 
 Ctrl+h      Jump to the left split
 Ctrl+j      Jump to the below split
 Ctrl+k      Jump to the above split
 Ctrl+l      Jump to the right split
 
-Ctrl+up     窗口垂直方向伸展
-Ctrl+down   窗口垂直方向收缩
-Ctrl+left   窗口水平方向伸展
-Ctrl+right  窗口水平方向收缩
+Ctrl+up     Stretch the window vertically
+Ctrl+down   Shrink the window vertically
+Ctrl+left   Stretch the window horizontally
+Ctrl+right  Shrink the window horizontally
 Leader+z    Toggle zoom
 
-Leader+ww   Swap two splits. You need to execute the command in that splits.
+Leader+ww   Swap two splits. You need to execute the command in that splits
 ```
 
 #### 1.4 Tab
 
 ```
-Ctrl+t      输入打开的文件路径，并创建一个新tab窗口
+Ctrl+t      Open a tab with given file path in current window
 
-H           切换到上一个tab窗口
-L           切换到下一个tab窗口
-Leader+1~9  切换到第1~9个tab窗口
-Leader+[    切换到第一个tab窗口
-Leader+]    切换到最后一个tab窗口
+H           Jump to previous tab
+L           Jump to next tab
+Leader+1~9  Jump to the 1~9 tab
+Leader+[    Jump to first tab
+Leader+]    Jump to last tab
 ```
 
 #### 1.5 Replace
 
 ```
-Leader+R    替换光标所在的单词（非整词，不需要逐一确认）
-Leader+rw   替换光标所在的单词（整词，不需要逐一确认）
-Leader+rc   替换光标所在的单词（非整词，需要逐一确认）
-Leader+rwc  替换光标所在的单词（整词，需要逐一确认）
+Leader+R    Replace current word. Not whole word, and don't need to confirm
+Leader+rw   Replace current word. Whole word, but don't need to confirm
+Leader+rc   Replace current word. Not whole word, but need to confirm
+Leader+rwc  Replace current word. Whole word and need to confirm
 ```
 
 #### 1.6 Programming language
 
 ```
-K                   查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
-Leader+Leader+z     输入语言类型和关键字，在dash或zeal中查看相应的解释
+K                   Refer current word in doc
+Leader+Leader+z     Refer doc in dash or zeal
 
 gd      GoDef
 gi      GoImports
-gt      GoTest，执行当前go文件的单元测试
-gf      GoTestFunc，执行光标所在的单元测试函数
+gt      GoTest, execute go test for current go source
+gf      GoTestFunc, execute go test for current go test function
 ```
 
 #### 1.7 Ctags
 
 ```
-Ctrl+]  跳转到符号定义处，如有多处定义，则跳到第一处
-g]      选择一处符号定义并跳转
+Ctrl+]  Jump to the definition of the keyword under the cursor
+g]      Like "Ctrl+]", but need to choose one tag to jump
 ```
 
 #### 1.8 Marks
 
 ```
-m[a-zA-Z]   标记当前行
-dm[a-zA-Z]  删除标记[a-zA-Z]
+m[a-zA-Z]   Mark current row
+dm[a-zA-Z]  Delete mark[a-zA-Z]
 
-'[a-zA-Z]   跳转到标记行
+'[a-zA-Z]   Jump to the mark
 
-m/          在Location List里，查看当前buffer的所有标记
-m-          删除当前行的所有标记
-m<space>    删除当前buffer的所有标记
+m/          View all marks in Location List
+m-          Delete all marks in current line
+m<space>    Delete all marks in current buffer
 ```
 
-#### 1.8 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+#### 1.9 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
 ```
-[b                  切换到上一个buffer窗口
-]b                  切换到下一个buffer窗口
-[B                  切换到第一个buffer窗口
-]B                  切换到最后一个buffer窗口
+[b                  Jump to previous buffer
+]b                  Jump to next buffer
+[B                  Jump to first buffer
+]B                  Jump to last buffer
 
-[t                  切换到上一个tab窗口
-]t                  切换到下一个tab窗口
-[T                  切换到第一个tab窗口
-]T                  切换到最后一个tab窗口
+[t                  Jump to previous tab
+]t                  Jump to next tab
+[T                  Jump to first tab
+]T                  Jump to last tab
 
-[n                  跳到版本管理上一次冲突的地方
-]n                  跳到版本管理下一次冲突的地方
+[n                  Go to the previous SCM conflict marker or diff/patch hunk
+]n                  Go to the next SCM conflict marker or diff/patch hunk
 
-[<Space>            当前行之前增加[count]个空行
-]<Space>            当前行之后增加[count]个空行
+[<Space>            Add [count] blank lines above the cursor
+]<Space>            Add [count] blank lines below the cursor
 
-cob                 切换'background' (dark/light)
-coc                 切换'cursorline'
-cod                 切换'diff' (:diffthis/:diffoff)
-coh                 切换'hlsearch'
-coi                 切换'ignorecase'
-col                 切换'list'
-con                 切换'number'
-cor                 切换'relativenumber'
-cos                 切换'spell'
-cou                 切换'cursorcolumn'
-cov                 切换'virtualedit'
-cow                 切换'wrap'
-cox                 同时切换'cursorline'和'cursorcolumn'
+cob                 Toggle 'background' (dark/light)
+coc                 Toggle 'cursorline'
+cod                 Toggle 'diff' (:diffthis/:diffoff)
+coh                 Toggle 'hlsearch'
+coi                 Toggle 'ignorecase'
+col                 Toggle 'list'
+con                 Toggle 'number'
+cor                 Toggle 'relativenumber'
+cos                 Toggle 'spell'
+cou                 Toggle 'cursorcolumn'
+cov                 Toggle 'virtualedit'
+cow                 Toggle 'wrap'
+cox                 Toggle 'cursorline' or 'cursorcolumn'
 
-[x{motion}          对motion选中的字符串进行XML encode
-[xx                 对当前行进行XML encode
-]x{motion}          对motion选中的字符串进行HTML/XML decode
-]xx                 对当前行进行HTML/XML decode
+[x{motion}          XML encode
+[xx                 XML encode for current line
+]x{motion}          HTML/XML decode
+]xx                 HTML/XML decode for current line
 
-[u{motion}          对motion选中行的字符串进行URL encode
-[uu                 对当前行进行URL encode
-]u{motion}          对motion选中的字符串进行URL decode
-]uu                 对当前行进行URL decode
+[u{motion}          URL encode
+[uu                 URL encode for current line
+]u{motion}          URL decode
+]uu                 URL decode for current line
 
-[y{motion}          对motion选中的字符串进行C String encode
-[yy                 对当前行进行C String encode
-]y{motion}          对motion选中的字符串进行C String decode
-]yy                 对当前行进行C String decode
+[y{motion}          C String encode
+[yy                 C String encode for current line
+]y{motion}          C String decode
+]yy                 C String decode for current line
 ```
 
-#### 1.9 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.10 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
-gd          跳转到定义
-Leader+jd   跳转到声明
-Leader+ji   跳转到头文件
+gd          Go to definition
+Leader+jd   Go to declaration
+Leader+ji   Go to header file
 ```
 
-#### 1.10 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.11 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
-Leader+e    打开/关闭错误信息窗口
+Leader+e    Toggle error window
 ```
 
-#### 1.11 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.12 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -345,7 +350,7 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 1.12 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.13 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  打开CtrlSpace
@@ -354,13 +359,13 @@ Leader+ss   保存workspace
 Leader+rs   恢复workspace
 ```
 
-#### 1.13 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.14 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.14 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 1.15 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
@@ -369,20 +374,20 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 1.15 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 1.16 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
 +       扩大选中区域，并进入可视化模式
 ```
 
-#### 1.16 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.17 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -391,13 +396,13 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.18 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.19 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
 ```
 
-#### 1.19 Others
+#### 1.20 Others
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
