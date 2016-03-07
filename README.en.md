@@ -8,23 +8,23 @@
 
 ![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
 
-## 简介
+## Introduction
 
-也许你也有这样的经历：IDE不够强大，于是你给你的IDE装上各种各样的插件。随着插件增多，你发现IDE变得越来越卡，占用越来越多系统资源（我的Atom曾经占用了2G内存！！！）。最后，你不得不在强大和轻量之间权衡。
+Maybe you feel like your IDE is not powerful or convenient. Therefore, you may install lots of plugins. After that, you may find your IDE is too slow! That is unbearable! Finally, you have to choose between powerful and lightweight. Perhaps you can also install an IDE for a specific programming language.
 
-monkey-vim项目，旨在打造一个强大，快速，并且占用少量系统资源的IDE。
+The project monkey-vim, aims to make a convenient, powerful but still lightweight and fast IDE.
 
-## 安装步骤
+## How to install
 
-### 1. clone到本地
+### 1. Git clone
 
 ```bash
 git clone https://github.com/QMonkey/monkey-vim.git
 ```
 
-### 2. 安装依赖
+### 2. Install dependences
 
-#### 2.1 工具依赖
+#### 2.1 Dependent tools
 
 ```bash
 # Ubuntu
@@ -51,7 +51,7 @@ sudo yum install the_silver_searcher 或 sudo yum install ack
 # Ubuntu
 sudo apt-get install gcc
 sudo apt-get install g++
-# x取决于你要安装的版本
+# "x" depends on your clang version
 sudo apt-get install clang-3.x
 
 # OpenSUSE
@@ -112,7 +112,8 @@ sudo zypper install go
 # CentOS
 sudo zypper install golang
 
-# monkey-vim 安装成功后，执行以下vim命令
+# Other golang dependences
+# Execute vim command below after successfully install monkey-vim
 :GoInstallBinaries
 ```
 
@@ -158,7 +159,7 @@ sudo npm install -g instant-markdown-d
 sudo gem install mdl
 ```
 
-### 3. 安装
+### 3. Install monkey-vim
 
 ```bash
 cd monkey-vim
@@ -166,57 +167,56 @@ cp .vimrc ~/.vimrc
 vim
 ```
 
-## 快捷键
+## Keyboard shortcut
 
 ```
-以下所有“Leader”键，都代表“\”键
+The "Leader" key below means backslash key.
 ```
 
-### 1. 正常模式
+### 1. Normal mode
 
-#### 1.1 按键修改
+#### 1.1 Remap
 
 ```
-Y       复制到行尾，相当于“y$”命令
-U       Redo，相当于“Ctrl-r”
-;       进入命令行模式，相当于“:”键
-q       退出窗口，相当于命令“:q”
-Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
+Y       Delete from the cursor position to the end of the line, same as y$
+U       Redo, same as Ctrl-r
+;       Enter command line mode, same as :
+q       Quit current window, same as :q
+Ctrl+c  Switch to normal mode, same as <ESC>
 ```
 
 #### 1.2 F2 ~ F10
 
 ```
-F2      打开/关闭NERDTree
-F3      打开/关闭Tagbar
-F4      打开/关闭Gundo
-F5      打开/关闭paste模式
-F6      运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
-F7      异步运行当前项目
-F8      打开/关闭F6或F7运行结果
-F9      预览Markdown
-F10     打开/关闭RainbowParentheses
-F11     全屏切换（仅在gui模式下有效）
+F2      Toggle NERDTree
+F3      Toggle Tagbar
+F4      Toggle Gundo
+F5      Toggle paste mode
+F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
+F8      Toggle output window of F7
+F9      Markdown preview in browser
+F10     Toggle RainbowParentheses
+F11     Toggle fullscreen, only available in GUI mode
 ```
 
-#### 1.3 分屏
+#### 1.3 Split
 
 ```
 Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
 Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
 
-Ctrl+h      跳转到左窗口
-Ctrl+j      跳转到下窗口
-Ctrl+k      跳转到上窗口
-Ctrl+l      跳转到右窗口
+Ctrl+h      Jump to the left split
+Ctrl+j      Jump to the below split
+Ctrl+k      Jump to the above split
+Ctrl+l      Jump to the right split
 
 Ctrl+up     窗口垂直方向伸展
 Ctrl+down   窗口垂直方向收缩
 Ctrl+left   窗口水平方向伸展
 Ctrl+right  窗口水平方向收缩
-Leader+z    窗口放大/恢复
+Leader+z    Toggle zoom
 
-Leader+ww   交换两个窗口（两个窗口都需要执行该命令）
+Leader+ww   Swap two splits. You need to execute the command in that splits.
 ```
 
 #### 1.4 Tab
@@ -231,7 +231,7 @@ Leader+[    切换到第一个tab窗口
 Leader+]    切换到最后一个tab窗口
 ```
 
-#### 1.5 替换
+#### 1.5 Replace
 
 ```
 Leader+R    替换光标所在的单词（非整词，不需要逐一确认）
@@ -240,7 +240,7 @@ Leader+rc   替换光标所在的单词（非整词，需要逐一确认）
 Leader+rwc  替换光标所在的单词（整词，需要逐一确认）
 ```
 
-#### 1.6 语言相关
+#### 1.6 Programming language
 
 ```
 K                   查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
@@ -397,7 +397,7 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 Ctrl+y+,        展开模板缩写
 ```
 
-#### 1.19 其它
+#### 1.19 Others
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
@@ -413,17 +413,17 @@ Leader+q        打开/关闭quickfix list
 Leader+l        打开/关闭location list
 ```
 
-### 2. 插入模式
+### 2. Insert mode
 
-#### 2.1 按键修改
+#### 2.1 Remap
 
 ```
 Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 ```
 
-### 3. 可视化模式
+### 3. Visual mode
 
-#### 3.1 按键修改
+#### 3.1 Remap
 
 ```
 Y       复制到行尾
@@ -432,14 +432,14 @@ U       Redo
 Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 ```
 
-#### 3.2 替换
+#### 3.2 Replace
 
 ```
 Leader+R    替换选中的字符串（不需要逐一确认）
 Leader+rc   替换选中的字符串（需要逐一确认）
 ```
 
-#### 3.3 语言相关
+#### 3.3 Programming language
 
 ```
 K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
@@ -503,7 +503,7 @@ S+surroundA     选中字符串增加A围绕字符
 Ctrl+y+,        展开模板缩写
 ```
 
-### 4. 命令行模式
+### 4. Command line mode
 
 ```
 Ctrl+j  下一条命令
@@ -514,7 +514,7 @@ Ctrl+e  跳到命令行最后
 w!!     使用root权限写文件
 ```
 
-## 常用命令
+## Useful command
 
 ### 1. Ack
 
@@ -571,7 +571,7 @@ git config --global github.user <username>
 :h Gist.vim
 ```
 
-## 在vim中使用git
+## Use git in vim
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
 
@@ -655,7 +655,7 @@ https://github.com/tpope/vim-fugitive#screencasts
 :h gitv.txt
 ```
 
-## 注意事项
+## Precautions
 
 * monkey-vim默认tab的缩进为8个字符，不使用space替代tab。如果你喜欢tab缩进为4个字符，并且使用space替代tab。你可以将以下vim配置
 
@@ -703,9 +703,9 @@ let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 
 [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
 
-## 推荐设置
+## Recommended settings
 
-### 设置方法：在~/.bashrc中加入以下Shell命令
+### How to: Add shell code below to your "~/.bashrc" file
 
 * 使用vman命令，可在vim中下查看man文档
 
