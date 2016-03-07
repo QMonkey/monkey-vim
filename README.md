@@ -132,7 +132,13 @@ sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
-#### 2.11 Shell
+#### 2.11 PHP
+
+```bash
+pear install doc.php.net/pman
+```
+
+#### 2.12 Shell
 
 ```bash
 # Ubuntu
@@ -145,7 +151,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.12 Markdown
+#### 2.13 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
