@@ -76,7 +76,7 @@ Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
 Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
-Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript'
+Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
@@ -85,7 +85,7 @@ Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'gorodinskiy/vim-coloresque', {'for': 'css'}
-Plug 'godlygeek/tabular', {'for': 'markdown'} | Plug 'plasticboy/vim-markdown'
+Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'sheerun/vim-polyglot'
 Plug 'kshenoy/vim-signature'

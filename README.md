@@ -1,5 +1,15 @@
 # monkey-vim
 
+其他语言版本：[English](README.md)
+
+## 简介
+
+也许你也有这样的经历：IDE不够强大，于是你给你的IDE装上各种各样的插件。随着插件增多，你发现IDE变得越来越卡，占用越来越多系统资源（我的Atom曾经占用了2G内存！！！）。最后，你不得不在强大和轻量之间权衡。
+
+monkey-vim项目，旨在打造一个强大，快速，并且占用少量系统资源的IDE。
+
+## 截图
+
 * **xterm vim**
 
 ![xterm vim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/xterm_vim.png "xterm vim")
@@ -7,12 +17,6 @@
 * **gvim**
 
 ![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
-
-## 简介
-
-也许你也有这样的经历：IDE不够强大，于是你给你的IDE装上各种各样的插件。随着插件增多，你发现IDE变得越来越卡，占用越来越多系统资源（我的Atom曾经占用了2G内存！！！）。最后，你不得不在强大和轻量之间权衡。
-
-monkey-vim项目，旨在打造一个强大，快速，并且占用少量系统资源的IDE。
 
 ## 安装步骤
 
@@ -117,6 +121,7 @@ sudo zypper install go
 # CentOS
 sudo zypper install golang
 
+# 其他golang依赖工具
 # monkey-vim 安装成功后，执行以下vim命令
 :GoInstallBinaries
 ```
@@ -367,7 +372,7 @@ Ctrl+p      打开CtrlP
 #### 1.15 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
-Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
+Ctrl+n      选中当前单词（若未进入多光标模式，则进入）
 Ctrl+p      放弃当前选中字符串，回到上次选中的地方（多光标模式下有效）
 Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下有效）
 <ESC>       退出多光标模式
@@ -401,7 +406,12 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 Ctrl+y+,        展开模板缩写
 ```
 
-#### 1.20 其它
+```vim
+" 更多emmet帮助，请参考：
+:h emmet
+```
+
+#### 1.20 其他
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
@@ -513,6 +523,11 @@ S+surroundA     选中字符串增加A围绕字符
 Ctrl+y+,        展开模板缩写
 ```
 
+```vim
+" 更多emmet帮助，请参考：
+:h emmet
+```
+
 ### 4. 命令行模式
 
 ```
@@ -530,16 +545,16 @@ w!!     使用root权限写文件
 
 ```vim
 " 递归搜索包含test的代码，搜索结果加载到quickfix list，并打开第一个搜索结果
-:Ack -r test
+:Ack test
 
 " 递归搜索包含test的代码，搜索结果加载到quickfix list
-:Ack! -r test
+:Ack! test
 
 " 同Ack，但搜索结果加载到location list
-:LAck -r test
+:LAck test
 
 " 同Ack!，但搜索结果加载到location list
-:LAck! -r test
+:LAck! test
 ```
 
 ### 2. UpdateTags
@@ -613,7 +628,7 @@ git config --global github.user <username>
 " 在非Gdiff模式下相当于git checkout。args为空的情况下，相当于git checkout %
 :Gread [path]
 
-" 在非Gdiff模式下相当于git add。args为空的情况下，相当于git checkout %
+" 在非Gdiff模式下相当于git add。args为空的情况下，相当于git add %
 :Gwrite [path]
 
 " 相当于git mv % {destination}
@@ -697,7 +712,7 @@ then
 fi
 ```
 
-* 如果你觉得打开/保存go文件需要较长时间，或者你不希望保存go文件时，自动生成可执行文件，你可以将以下vim配置
+* 如果你觉得打开/保存go文件需要较长时间，你可以将以下vim配置
 
 ```vim
 let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
