@@ -744,6 +744,10 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " Tagbar width
 let tagbar_width = 32
 
+" Gundo
+let g:gundo_map_move_older = "<C-n>"
+let g:gundo_map_move_newer = "<C-p>"
+
 " Gitv
 " Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
