@@ -46,6 +46,7 @@ Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ryanoasis/vim-devicons'
+Plug 'sheerun/vim-polyglot'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 "Plug 'moll/vim-bbye'
@@ -76,7 +77,7 @@ Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
 Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
-Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', {'for': 'javascript'}
+Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
@@ -87,7 +88,6 @@ Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'gorodinskiy/vim-coloresque', {'for': 'css'}
 Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
-Plug 'sheerun/vim-polyglot'
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
