@@ -54,6 +54,10 @@ sudo yum install the_silver_searcher or sudo yum install ack
 * [Dash](https://kapeli.com/dash/)
 * [Zeal](https://zealdocs.org/)
 
+#### 2.4 Eclim
+
+Java, Ruby, PHP code-completion plugin: [Eclim](http://eclim.org/)
+
 #### 2.4 C/C++
 
 ```bash
@@ -761,3 +765,7 @@ dirdiff() {
         -c "execute 'bdelete ' . bufnr('~/.vimrc')"
 }
 ```
+
+## Configuration
+
+If you have any problem or suggestion with monkey-vim, welcome to give me an [issue](https://github.com/QMonkey/monkey-vim/issues)

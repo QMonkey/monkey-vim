@@ -768,8 +768,18 @@ if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_
 	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
 
-" Support Java and Ruby
+" Eclim
+" YouCompleteMe use Eclim's omnifuncs for completions
 let g:EclimCompletionMethod = 'omnifunc'
+" Do it by syntastic
+let g:EclimCValidate = 0
+let g:EclimJavaValidate = 0
+let g:EclimJavascriptValidate = 0
+let g:EclimPythonValidate = 0
+let g:EclimRubyValidate = 0
+let g:EclimPhpValidate = 0
+let g:EclimHtmlValidate = 0
+let g:EclimCssValidate = 0
 
 " Do not use syntastic to check C, C++ and Objective-C, do it by syntastic
 let g:ycm_show_diagnostics_ui = 0
