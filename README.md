@@ -58,7 +58,7 @@ sudo yum install the_silver_searcher or sudo yum install ack
 
 Java, Ruby, PHP code-completion plugin: [Eclim](http://eclim.org/)
 
-#### 2.4 C/C++
+#### 2.5 C/C++
 
 ```bash
 # Ubuntu
@@ -78,7 +78,7 @@ sudo yum install gcc-c++
 sudo yum install clang
 ```
 
-#### 2.5 Javascript
+#### 2.6 Javascript
 
 ```bash
 sudo npm install -g jslint
@@ -86,25 +86,25 @@ sudo npm install -g js-beautify
 sudo npm install -g tern
 ```
 
-#### 2.6 JSON
+#### 2.7 JSON
 
 ```bash
 sudo npm install -g jsonlint
 ```
 
-#### 2.7 HTML
+#### 2.8 HTML
 
 ```bash
 sudo npm install -g jshint
 ```
 
-#### 2.8 CSS
+#### 2.9 CSS
 
 ```bash
 sudo npm install -g csslint
 ```
 
-#### 2.9 Python
+#### 2.10 Python
 
 ```bash
 sudo pip install pyflakes
@@ -113,7 +113,7 @@ sudo pip install pep8
 sudo pip install jedi
 ```
 
-#### 2.10 Golang
+#### 2.11 Golang
 
 ```bash
 # Ubuntu
@@ -130,7 +130,7 @@ sudo zypper install golang
 :GoInstallBinaries
 ```
 
-#### 2.11 Java
+#### 2.12 Java
 
 ```bash
 # Ubuntu
@@ -146,13 +146,13 @@ sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
-#### 2.12 PHP
+#### 2.13 PHP
 
 ```bash
 pear install doc.php.net/pman
 ```
 
-#### 2.13 Shell
+#### 2.14 Shell
 
 ```bash
 # Ubuntu
@@ -165,7 +165,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.14 Markdown
+#### 2.15 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
