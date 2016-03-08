@@ -528,6 +528,9 @@ map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
 map g/ <Plug>(incsearch-stay)
 
+" Search selected text
+vmap // y<Plug>(incsearch-forward)<C-R>"<CR>
+
 " Auto nohlsearch
 let g:incsearch#auto_nohlsearch = 1
 " Keep search pattern at the center of the screen.
@@ -537,9 +540,6 @@ map *  <Plug>(incsearch-nohl-#)zz
 map #  <Plug>(incsearch-nohl-*)zz
 map g* <Plug>(incsearch-nohl-g*)zz
 map g# <Plug>(incsearch-nohl-g#)zz
-
-" Search selected text
-vnoremap // y/<C-R>"<CR>
 
 " No highlight search
 nnoremap <silent><Leader>/ :nohlsearch<CR>
