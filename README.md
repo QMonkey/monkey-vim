@@ -692,6 +692,16 @@ https://github.com/tpope/vim-fugitive#screencasts
 :h gitv.txt
 ```
 
+## Eclipse project management by Eclim commands
+
+* Eclipse project management [commands](http://eclim.org/vim/core/project.html)
+
+* Java project management [commands](http://eclim.org/vim/java/index.html)
+
+* Ruby project management [commands](http://eclim.org/vim/ruby/index.html)
+
+* PHP project management [commands](http://eclim.org/vim/php/index.html)
+
 ## Precautions
 
 * I perfer 8 size indentation, and use hard tab instead of space. Therefore, monkey-vim uses 8 size tab. If you perfer 4 size indentation, and use space instead of tab. You can change the config below

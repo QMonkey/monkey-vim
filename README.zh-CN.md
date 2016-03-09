@@ -689,6 +689,16 @@ https://github.com/tpope/vim-fugitive#screencasts
 :h gitv.txt
 ```
 
+## 用Eclim命令管理eclipse项目
+
+* Eclipse项目管理命令，请参考[这里](http://eclim.org/vim/core/project.html)
+
+* Java项目管理命令，请参考[这里](http://eclim.org/vim/java/index.html)
+
+* Ruby项目管理命令，请参考[这里](http://eclim.org/vim/ruby/index.html)
+
+* PHP项目管理命令，请参考[这里](http://eclim.org/vim/php/index.html)
+
 ## 注意事项
 
 * monkey-vim默认tab的缩进为8个字符，不使用space替代tab。如果你喜欢tab缩进为4个字符，并且使用space替代tab。你可以将以下vim配置
