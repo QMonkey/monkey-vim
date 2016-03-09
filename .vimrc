@@ -82,6 +82,7 @@ Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
+Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
