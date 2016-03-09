@@ -545,7 +545,14 @@ W       Use root permission to write file
 
 ## Useful command
 
-### 1. Ack
+### 1. W
+
+```vim
+" Use root permission to write file
+:W
+```
+
+### 2. Ack
 
 ```vim
 " Search recursively in current directory for the pattern "test", and then open the quickfix list for you and jump to the first occurence
@@ -561,7 +568,7 @@ W       Use root permission to write file
 :LAck! test
 ```
 
-### 2. UpdateTags
+### 3. UpdateTags
 
 ```vim
 " Generate tags for current file
@@ -571,21 +578,21 @@ W       Use root permission to write file
 :UpdateTags -R
 ```
 
-### 3. YcmGenerateConfig
+### 4. YcmGenerateConfig
 
 ```vim
 " Generate ".ycm_extra_conf.py" file for current project
 :YcmGenerateConfig
 ```
 
-### 4. DirDiff
+### 5. DirDiff
 
 ```vim
 " vimdiff mode for A and B directory
 :DirDiff A B
 ```
 
-### 5. Gist
+### 6. Gist
 
 ```bash
 # You need to config below before use Gist

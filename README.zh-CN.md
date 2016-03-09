@@ -539,13 +539,18 @@ Ctrl+j  下一条命令
 Ctrl+k  上一条命令
 Ctrl+a  跳到命令行最前
 Ctrl+e  跳到命令行最后
-
-W       使用root权限写文件
 ```
 
 ## 常用命令
 
-### 1. Ack
+### 1. W
+
+```vim
+" 使用root权限写文件
+:W
+```
+
+### 2. Ack
 
 ```vim
 " 递归搜索包含test的代码，搜索结果加载到quickfix list，并打开第一个搜索结果
@@ -561,7 +566,7 @@ W       使用root权限写文件
 :LAck! test
 ```
 
-### 2. UpdateTags
+### 3. UpdateTags
 
 ```vim
 " 为当前文件生成tag
@@ -571,21 +576,21 @@ W       使用root权限写文件
 :UpdateTags -R
 ```
 
-### 3. YcmGenerateConfig
+### 4. YcmGenerateConfig
 
 ```vim
 " 为整个工程生成.ycm_extra_conf.py文件
 :YcmGenerateConfig
 ```
 
-### 4. DirDiff
+### 5. DirDiff
 
 ```vim
 " A, B文件夹进入vimdiff mode
 :DirDiff A B
 ```
 
-### 5. Gist
+### 6. Gist
 
 ```bash
 # 使用改命令需要先进行以下配置
