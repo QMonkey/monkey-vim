@@ -756,10 +756,10 @@ let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 ```bash
 vman() {
     vim -R -c "Ref man $*" ~/.vimrc \
-        -c "if line('$') == 1 | cquit | endif" \
-        -c "silent only" \
-        -c "setlocal nomodifiable" \
-        -c "execute 'bdelete ' . bufnr('~/.vimrc')"
+           -c "if line('$') == 1 | cquit | endif" \
+           -c "silent only" \
+           -c "setlocal nomodifiable" \
+           -c "execute 'bdelete ' . bufnr('~/.vimrc')"
     if [ "$?" != "0" ]; then
         echo "No manual entry for $*"
     fi
