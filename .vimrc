@@ -477,8 +477,8 @@ function! CloseWindow()
 	quitall
 endfunction
 
-" w!! to sudo & write a file
-cnoremap w!! w !sudo tee > /dev/null %
+" :W to sudo & write a file
+command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
 
 " Tab
 nnoremap <silent><C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>

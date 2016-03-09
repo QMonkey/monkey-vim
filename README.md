@@ -540,7 +540,7 @@ Ctrl+k  Previous command
 Ctrl+a  Jump to the begin of the command line
 Ctrl+e  Jump to the end of the command line
 
-w!!     Use root permission to write file
+W       Use root permission to write file
 ```
 
 ## Useful command
