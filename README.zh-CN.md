@@ -745,7 +745,7 @@ let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 
 ## FAQ
 
-[FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
+[FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ.zh_CN)
 
 ## 推荐设置
 
