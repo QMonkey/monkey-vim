@@ -503,8 +503,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :execute 'split' Prompt('New buffer name: ')<CR>
-nnoremap <silent><Leader>v :execute 'vsplit' Prompt('New buffer name: ')<CR>
+nnoremap <silent><Leader>s :execute 'new' Prompt('New buffer name: ')<CR>
+nnoremap <silent><Leader>v :execute 'vnew' Prompt('New buffer name: ')<CR>
 
 nnoremap <C-up> <C-w>+
 nnoremap <C-down> <C-w>-
