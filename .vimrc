@@ -549,6 +549,7 @@ nnoremap <silent><Leader>/ :nohlsearch<CR>
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F4> :GundoToggle<CR>
+nnoremap <silent><F6> :Dispatch<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>

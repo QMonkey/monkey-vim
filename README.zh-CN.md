@@ -205,7 +205,8 @@ F2      打开/关闭NERDTree
 F3      打开/关闭Tagbar
 F4      打开/关闭Gundo
 F5      打开/关闭paste模式
-F7      异步运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
+F6      运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
+F7      异步运行当前项目
 F8      打开/关闭F6或F7运行结果
 F9      预览Markdown
 F10     打开/关闭RainbowParentheses
