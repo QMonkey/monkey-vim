@@ -328,7 +328,7 @@ set langmenu=en_US.UTF-8
 
 scriptencoding utf-8
 set encoding=utf-8
-set fileencodings=utf-8,gb18030,ucs-bom,big5,euc-jp,euc-kr,latin1
+set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
 
 " Only work in terminal vim
 set termencoding=utf-8
