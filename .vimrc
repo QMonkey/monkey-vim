@@ -14,18 +14,20 @@
 "     }
 " }
 
+" Init {
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 	silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 	autocmd VimEnter * PlugInstall | source $MYVIMRC
 endif
+" }
 
 set nocompatible
 filetype off
 
 call plug#begin($HOME . '/.vim/bundle')
 
-" Plug
+" Plugins {
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs' | Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
@@ -93,6 +95,7 @@ if has('mac') || has('macunix')
 else
 	Plug 'KabbAmine/zeavim.vim'
 endif
+" }
 
 " Add plugins to &runtimepath
 call plug#end()
@@ -146,28 +149,23 @@ set noexpandtab
 " Show tab and eof
 set list listchars=tab:▸\ ,eol:¬,trail:⋅
 
-" indentLine
+" indentLine {
 " Disable, or vim will be very slow for the file which has long line
 let g:indentLine_enabled = 0
-let g:indentLine_char = '┊'
 let g:indentLine_leadingSpaceEnabled = 1
 let g:indentLine_leadingSpaceChar = '·'
+" }
 
 " Restore cursor to previous editing position
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
+" FileType {
 " Unrecognized filetype set to text
 autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
-
-autocmd FileType ref-man,ref-pydoc,ref-pman,help,godoc set nolist
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
-
-" Disable conceal in insert-mode
-autocmd FileType markdown,json autocmd InsertEnter <buffer> setlocal conceallevel=2 concealcursor=
-autocmd FileType markdown,json autocmd InsertLeave <buffer> setlocal conceallevel=2 concealcursor=nc
 
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'sh', 'vim']
 autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
@@ -189,6 +187,16 @@ function! AutoInsertFileHead()
 	normal o
 	normal o
 endfunc
+" }
+
+" Conceal {
+" Disable conceal in insert-mode
+autocmd FileType markdown,json autocmd InsertEnter <buffer> setlocal conceallevel=2 concealcursor=
+autocmd FileType markdown,json autocmd InsertLeave <buffer> setlocal conceallevel=2 concealcursor=nc
+" }
+
+" Docset {
+autocmd FileType ref-man,ref-pydoc,ref-pman,help,godoc set nolist
 
 function! GetCurrentWord()
 	return expand('<cword>')
@@ -236,6 +244,7 @@ function! SetReferences()
 		endif
 	endif
 endfunction
+" }
 
 " Inspired by http://stackoverflow.com/questions/1533565/how-to-get-visually-selected-text-in-vimscript
 function! GetVisualSelection()
@@ -250,7 +259,7 @@ function! GetVisualSelection()
 	return selected
 endfunction
 
-" zeavim.vim
+" zeavim.vim {
 let g:zv_disable_mapping = 1
 " Add what you want to refer
 let g:zv_file_types = {
@@ -258,7 +267,9 @@ let g:zv_file_types = {
 			\	'javascript': 'javascript,nodejs',
 			\	'sql': 'mysql',
 			\ }
+" }
 
+" dash.vim {
 if has('mac') || has('macunix')
 	function! DashPrompt()
 		let dash_command = 'Dash'
@@ -279,6 +290,7 @@ if has('mac') || has('macunix')
 else
 	nmap <silent><Leader><Leader>z <Plug>ZVKeyDocset
 endif
+" }
 
 " Resize splits when the window is resized
 autocmd VimResized * execute "normal! \<C-w>="
@@ -332,6 +344,7 @@ set t_vb=
 " Always show status line
 set laststatus=2
 
+" vim-airline {
 let g:airline_theme = 'badwolf'
 let g:airline_detect_paste = 1
 let g:airline#extensions#tabline#enabled = 1
@@ -358,11 +371,14 @@ let g:airline#extensions#windowswap#enabled = 1
 
 " Use powerline fonts
 let g:airline_powerline_fonts = 1
+" }
 
-" vim-devicons
+" vim-devicons {
 let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let g:DevIconsEnableFoldersOpenClose = 1
+" }
 
+" rainbow_parentheses.vim {
 let g:rbpt_colorpairs = [
 			\ ['brown',       'RoyalBlue3'],
 			\ ['Darkblue',    'SeaGreen3'],
@@ -386,20 +402,23 @@ let g:rbpt_loadcmd_toggle = 1
 
 let rainbow_parentheses_filetypes = ['lisp', 'clojure', 'scheme']
 autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) >= 0 | execute 'RainbowParenthesesToggle' | endif
+" }
 
 " Enable 256 color for vim
 set t_Co=256
 
+" molokai {
 colorscheme molokai
 let g:molokai_original = 1
 let g:rehash256 = 1
+" }
 
 " Enable syntax highlight
 syntax on
 
 set regexpengine=1
 
-" Key map
+" Key map {
 let mapleader = ','
 
 " Make Y behave like other capitals
@@ -472,7 +491,7 @@ endfunction
 " :W to sudo & write a file
 command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
 
-" Tab
+" Tab {
 nnoremap <silent><C-t> :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
 nnoremap <silent><S-h> :tabprevious<CR>
 nnoremap <silent><S-l> :tabnext<CR>
@@ -487,8 +506,9 @@ nnoremap <Leader>8 8gt
 nnoremap <Leader>9 9gt
 nnoremap <silent><Leader>[ :tabfirst<CR>
 nnoremap <silent><Leader>] :tablast<CR>
+" }
 
-" Split
+" Split {
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
@@ -500,7 +520,25 @@ nnoremap <C-up> <C-w>+
 nnoremap <C-down> <C-w>-
 nnoremap <C-left> <C-w>>
 nnoremap <C-right> <C-w><
+" }
 
+" F2 ~ F10 {
+nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
+nnoremap <silent><F3> :TagbarToggle<CR>
+nnoremap <silent><F4> :GundoToggle<CR>
+nnoremap <silent><F6> :Dispatch<CR>
+nnoremap <silent><F7> :Dispatch!<CR>
+nnoremap <silent><F8> :call DispatchQListToggle()<CR>
+nnoremap <silent><F9> :InstantMarkdownPreview<CR>
+nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
+
+set pastetoggle=<F5>
+" Disbale paste mode when leaving insert mode
+autocmd InsertLeave * set nopaste
+" }
+" }
+
+" Zoom {
 " Zoom/Restore window
 function! ZoomToggle()
 	if exists('t:zoomed') && t:zoomed
@@ -513,9 +551,11 @@ function! ZoomToggle()
 		let t:zoomed = 1
 	endif
 endfunction
-nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 
-" incsearch.vim
+nnoremap <silent><Leader>z :call ZoomToggle()<CR>
+" }
+
+" incsearch.vim {
 map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
 map g/ <Plug>(incsearch-stay)
@@ -532,22 +572,10 @@ map *  <Plug>(incsearch-nohl-#)zz
 map #  <Plug>(incsearch-nohl-*)zz
 map g* <Plug>(incsearch-nohl-g*)zz
 map g# <Plug>(incsearch-nohl-g#)zz
+" }
 
 " No highlight search
 nnoremap <silent><Leader>/ :nohlsearch<CR>
-
-nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
-nnoremap <silent><F3> :TagbarToggle<CR>
-nnoremap <silent><F4> :GundoToggle<CR>
-nnoremap <silent><F6> :Dispatch<CR>
-nnoremap <silent><F7> :Dispatch!<CR>
-nnoremap <silent><F8> :call DispatchQListToggle()<CR>
-nnoremap <silent><F9> :InstantMarkdownPreview<CR>
-nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
-
-set pastetoggle=<F5>
-" Disbale paste mode when leaving insert mode
-autocmd InsertLeave * set nopaste
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
@@ -582,6 +610,7 @@ function! BufferCount()
 	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
 endfunction
 
+" GUI {
 if has('gui_running')
 	function! ToggleFullscreen()
 		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
@@ -613,8 +642,9 @@ else
 	" Check file changes outside vim when in xterm
 	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
 endif
+" }
 
-" Replace
+" Replace {
 function! Replace(mode, confirm, wholeword)
 	let word = ''
 	let wholeword = a:wholeword
@@ -661,7 +691,9 @@ nnoremap <Leader>rcw :call Replace('n', 1, 1)<CR>
 vnoremap <Leader>R :call Replace('v', 0, 0)<CR>
 " Confirm
 vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
+" }
 
+" Session {
 " Save session options
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
 
@@ -669,13 +701,17 @@ set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize
 nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
 nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+" }
 
+" Ctags {
 " Auto set tag file path
 autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
+" }
 
+" NERDTree {
 " Set NERDTree window width
 let NERDTreeWinSize = 32
 let g:NERDTreeAutoDeleteBuffer = 1
@@ -712,8 +748,9 @@ function! Refresh()
 	execute winnr . 'wincmd w'
 	"redraw
 endfunction
+" }
 
-" nerdtree-git-plugin
+" nerdtree-git-plugin {
 let g:NERDTreeIndicatorMapCustom = {
 			\ 'Modified'  : '~',
 			\ "Staged"    : '+',
@@ -725,36 +762,37 @@ let g:NERDTreeIndicatorMapCustom = {
 			\ 'Clean'     : '✔︎',
 			\ 'Unknown'   : '?'
 			\ }
+" }
 
-" Execute Autoformat onsave
-autocmd BufWrite * :Autoformat
-
-" Disable autoindent, do it manually by gg=G
-let g:autoformat_autoindent = 0
-
-" vim-easy-align
+" vim-easy-align {
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
+" }
 
-" vim-better-whitespace
+" vim-better-whitespace {
 let g:better_whitespace_filetypes_blacklist = []
 
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
+" }
 
+" Tagbar {
 " Tagbar width
 let tagbar_width = 32
+" }
 
-" Gundo
+" Gundo {
 let g:gundo_map_move_older = "<C-n>"
 let g:gundo_map_move_newer = "<C-p>"
+" }
 
-" Gitv
+" Gitv {
 " Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
+" }
 
-" vim-startify
+" vim-startify {
 function! s:filter_header(lines) abort
 	let longest_line   = max(map(copy(a:lines), 'len(v:val)'))
 	let centered_lines = map(copy(a:lines),
@@ -764,24 +802,12 @@ endfunction
 
 let g:startify_custom_header = s:filter_header(split(system('fortune | cowsay'), '\n'))
 let g:startify_bookmarks = ['~/.vimrc', '~/.bashrc']
+" }
 
-" YouCompleteMe
+" YouCompleteMe {
 if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
 	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
-
-" Eclim
-" YouCompleteMe use Eclim's omnifuncs for completions
-let g:EclimCompletionMethod = 'omnifunc'
-" Do it by syntastic
-let g:EclimCValidate = 0
-let g:EclimJavaValidate = 0
-let g:EclimJavascriptValidate = 0
-let g:EclimPythonValidate = 0
-let g:EclimRubyValidate = 0
-let g:EclimPhpValidate = 0
-let g:EclimHtmlValidate = 0
-let g:EclimCssValidate = 0
 
 " Do not use syntastic to check C, C++ and Objective-C, do it by syntastic
 let g:ycm_show_diagnostics_ui = 0
@@ -799,8 +825,29 @@ let g:ycm_filepath_completion_use_working_dir = 1
 nnoremap <silent>gd :YcmCompleter GoToDefinition<CR>
 nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
 nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
+" }
 
-" vim-autoformat
+" Eclim {
+" YouCompleteMe use Eclim's omnifuncs for completions
+let g:EclimCompletionMethod = 'omnifunc'
+" Do it by syntastic
+let g:EclimCValidate = 0
+let g:EclimJavaValidate = 0
+let g:EclimJavascriptValidate = 0
+let g:EclimPythonValidate = 0
+let g:EclimRubyValidate = 0
+let g:EclimPhpValidate = 0
+let g:EclimHtmlValidate = 0
+let g:EclimCssValidate = 0
+" }
+
+" vim-autoformat {
+" Execute Autoformat onsave
+autocmd BufWrite * :Autoformat
+
+" Disable autoindent, do it manually by gg=G
+let g:autoformat_autoindent = 0
+
 " Generic C, C++, Objective-C style
 " A style similar to the Linux Kernel Coding Style
 " Linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
@@ -808,8 +855,9 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 
 " Golang
 let g:formatdef_goimports = '"goimports"'
+" }
 
-" vim-go settings
+" vim-go {
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
 let g:go_highlight_structs = 1
@@ -826,40 +874,44 @@ let g:godef_same_file_in_same_window = 1
 autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
 autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
 autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
+" }
 
-" javascript-libraries-syntax.vim
+" javascript-libraries-syntax.vim {
 let g:used_javascript_libs = 'jquery'
+" }
 
-" vim-markdown
+" vim-markdown {
 let g:vim_markdown_folding_disabled = 1
+" }
 
-" vim-instant_markdown
+" vim-instant_markdown {
 let g:instant_markdown_slow = 1
 let g:instant_markdown_autostart = 0
+" }
 
-" CtrlP runtime path, vim-plug do it for you
-"set runtimepath^=~/.vim/bundle/ctrlp.vim
-
-" CtrlSpace
+" CtrlSpace {
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
 let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
+" }
 
-" ack.vim
+" ack.vim {
 if executable('ag')
 	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case'
 elseif executable('ack') || executable('ack-grep')
 	let g:ack_default_options = ' -s -H --nocolor --nogroup --column --smart-case'
 endif
+" }
 
-" vim-rooter
+" vim-rooter {
 let g:rooter_silent_chdir = 1
 "let g:rooter_use_lcd = 1
 " Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
 let g:rooter_manual_only = 1
+" }
 
-" vim-easytags
+" vim-easytags {
 let g:easytags_async = 1
 
 " Disable recurse, do it manually by :UpdateTags -R
@@ -887,8 +939,9 @@ let g:easytags_events = ['BufWritePost']
 let g:easytags_on_cursorhold = 0
 " Update interval, default 4s
 " let g:easytags_updatetime_min = 10000
+" }
 
-" Syntastic
+" Syntastic {
 let g:syntastic_loc_list_height = 10
 let g:syntastic_error_symbol = '✖'
 let g:syntastic_style_error_symbol = '✖'
@@ -909,14 +962,19 @@ function! ToggleErrors()
 		Errors
 	endif
 endfunction
-nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 
-" Emmet
+nnoremap <silent><Leader>e :call ToggleErrors()<CR>
+" }
+
+" Emmet {
 " Enable all function in all mode.
 let g:user_emmet_mode = 'a'
+" }
 
-" Ultisnips
+" Ultisnips {
 let g:UltiSnipsExpandTrigger='<Leader><tab>'
+" }
 
-" vim-EasyMotion
+" vim-EasyMotion {
 let g:EasyMotion_smartcase = 1
+" }
