@@ -183,7 +183,7 @@ vim
 ## Keyboard shortcut
 
 ```
-The "Leader" key below means backslash key.
+The "Leader" key below means comma key.
 ```
 
 ### 1. Normal mode
@@ -438,6 +438,7 @@ Leader+l        Toggle location list
 
 ```
 Ctrl+c  Switch to normal mode, same as <ESC>
+Ctrl+d  Delete current row
 ```
 
 ### 3. Visual mode

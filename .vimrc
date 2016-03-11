@@ -415,6 +415,8 @@ syntax on
 set regexpengine=1
 
 " Key map
+let mapleader = ','
+
 " Make Y behave like other capitals
 noremap Y y$
 
@@ -440,6 +442,9 @@ cnoremap <C-e> <End>
 " ESC map
 noremap <C-c> <ESC>
 inoremap <C-c> <ESC>
+
+" Delete current row
+inoremap <C-d> <ESC>ddi
 
 nnoremap <silent> q :call CloseWindow()<CR>
 "nnoremap <silent> bd :Bdelete<CR>
