@@ -251,7 +251,7 @@ Leader+]    Jump to last tab
 Leader+R    Replace current word. Not whole word, and don't need to confirm
 Leader+rw   Same as "Leader+R", but search for whole world
 Leader+rc   Same as "Leader+R", but need to confirm
-Leader+rwc  Same as "Leader+R", but search for whole world and need to confirm
+Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
 ```
 
 #### 1.6 Programming language
@@ -364,7 +364,7 @@ Leader+Leader+s     Search one character and jump to specific word
 ```
 Ctrl+Space  Open CtrlSpace
 
-Leader+ss   Save workspace
+Leader+bs   Save workspace
 Leader+rs   Restore workspace
 ```
 

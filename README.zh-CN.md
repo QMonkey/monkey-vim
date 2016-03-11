@@ -251,7 +251,7 @@ Leader+]    切换到最后一个tab窗口
 Leader+R    替换光标所在的单词（非整词，不需要逐一确认）
 Leader+rw   替换光标所在的单词（整词，不需要逐一确认）
 Leader+rc   替换光标所在的单词（非整词，需要逐一确认）
-Leader+rwc  替换光标所在的单词（整词，需要逐一确认）
+Leader+rcw  替换光标所在的单词（整词，需要逐一确认）
 ```
 
 #### 1.6 语言相关
@@ -364,7 +364,7 @@ Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 Ctrl+Space  打开CtrlSpace
 
-Leader+ss   保存workspace
+Leader+bs   保存workspace
 Leader+rs   恢复workspace
 ```
 

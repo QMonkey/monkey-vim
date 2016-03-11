@@ -278,7 +278,7 @@ if has('mac') || has('macunix')
 	function! DashPrompt()
 		let dash_command = 'Dash'
 
-		let ftype = Prompt('Docset: ')
+		let ftype = Prompt('Docset: ', &filetype)
 		if empty(ftype)
 			let dash_command = 'Dash!'
 		endif
@@ -483,7 +483,7 @@ endfunction
 command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
 
 " Tab
-nnoremap <silent><C-t> :execute 'tabnew' Prompt('New tab name: ')<CR>
+nnoremap <silent><C-t> :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
 nnoremap <silent><S-h> :tabprevious<CR>
 nnoremap <silent><S-l> :tabnext<CR>
 nnoremap <Leader>1 1gt
@@ -503,8 +503,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :execute 'new' Prompt('New buffer name: ')<CR>
-nnoremap <silent><Leader>v :execute 'vnew' Prompt('New buffer name: ')<CR>
+nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', expand('%'), 'file')<CR>
 
 nnoremap <C-up> <C-w>+
 nnoremap <C-down> <C-w>-
@@ -563,9 +563,18 @@ function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
 
-function! Prompt(prompt_text)
+" Prompt({prompt_text} [, {default_value} [, {completion_type}]])
+" More completion_type, please refer :h command-completion
+function! Prompt(prompt_text, ...)
 	call inputsave()
-	let value = input(a:prompt_text)
+	let value = ''
+	if a:0 == 0
+		let value = input(a:prompt_text)
+	elseif a:0 == 1
+		let value = input(a:prompt_text, a:1)
+	else
+		let value = input(a:prompt_text, a:1, a:2)
+	endif
 	call inputrestore()
 	return Strip(value)
 endfunction
@@ -655,7 +664,7 @@ nnoremap <Leader>rw :call Replace('n', 0, 1)<CR>
 " Confirm
 nnoremap <Leader>rc :call Replace('n', 1, 0)<CR>
 " Wholeword, confirm
-nnoremap <Leader>rwc :call Replace('n', 1, 1)<CR>
+nnoremap <Leader>rcw :call Replace('n', 1, 1)<CR>
 
 " Replace in visual mode
 " Default
@@ -667,7 +676,7 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
 
 " Backup
-nnoremap <Leader>ss :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
 nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 
