@@ -1,33 +1,18 @@
-" Add below code to ~/.bashrc
+" Notes {
+" vim: set nofoldenable foldmethod=marker foldmarker={,} foldlevel=0:
 "
-"if [ -x $(which gvim) ]
-"then
-"	alias vi='gvim -v'
-"	alias vim='gvim -v'
-"	alias view='gvim -v -R'
-"	alias vimdiff='gvim -v -d'
-"fi
+"                                _
+"          _ __ ___   ___  _ __ | | _____ _   _     __   _(_)_ __ ___
+"         | '_ ` _ \ / _ \| '_ \| |/ / _ \ | | |____\ \ / / | '_ ` _ \
+"         | | | | | | (_) | | | |   <  __/ |_| |_____\ V /| | | | | | |
+"         |_| |_| |_|\___/|_| |_|_|\_\___|\__, |      \_/ |_|_| |_| |_|
+"                                         |___/
 "
-"vman() {
-"	vim -R -c "Ref man $*" ~/.vimrc \
-"		-c "if line('$') == 1 | cquit | endif" \
-"		-c "silent only" \
-"		-c "setlocal nomodifiable" \
-"		-c "execute 'bdelete ' . bufnr('~/.vimrc')"
-"	if [ "$?" != "0" ]; then
-"		echo "No manual entry for $*"
-"	fi
-"}
-"
-"dirdiff() {
-"	if [ $# -ne 2 ]; then
-"		echo "Invalid arguments, please pass two arguments"
-"		return
-"	fi
-"
-"	vim -c "DirDiff $*" ~/.vimrc \
-"		-c "execute 'bdelete ' . bufnr('~/.vimrc')"
-"}
+"     Author: Charles Qiu
+"     Email: Thinking.QMonkey@GMail.com
+"     Sections: {
+"     }
+" }
 
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
@@ -190,12 +175,12 @@ autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
 	" Shell
-	if &filetype == 'sh'
+	if &filetype ==# 'sh'
 		call setline(1, '#!/bin/sh')
 	endif
 
 	" Python
-	if &filetype == 'python'
+	if &filetype ==# 'python'
 		call setline(1, '#!/usr/bin/env python')
 		call append(1, '# -*- coding: utf-8 -*-')
 	endif
@@ -364,8 +349,8 @@ let g:airline#extensions#tabline#fnamecollapse = 0
 let g:airline#extensions#tabline#show_close_button = 0
 
 let g:airline#extensions#ycm#enabled = 1
-let g:airline#extensions#ycm#error_symbol = 'E:'
-let g:airline#extensions#ycm#warning_symbol = 'W:'
+let g:airline#extensions#ycm#error_symbol = 'Error:'
+let g:airline#extensions#ycm#warning_symbol = 'Warning:'
 let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline#extensions#ctrlspace#enabled = 1
@@ -626,16 +611,16 @@ if has('gui_running')
 	set guifont=Monospace\ 9
 else
 	" Check file changes outside vim when in xterm
-	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() == '' | checktime | endif
+	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
 endif
 
 " Replace
 function! Replace(mode, confirm, wholeword)
 	let word = ''
 	let wholeword = a:wholeword
-	if a:mode == 'n' || a:mode == 'normal'
+	if a:mode ==# 'n' || a:mode ==# 'normal'
 		let word .= expand('<cword>')
-	elseif a:mode == 'v' || a:mode == 'visual'
+	elseif a:mode ==# 'v' || a:mode ==# 'visual'
 		let word .= GetVisualSelection()
 		let wholeword = 0
 	endif
