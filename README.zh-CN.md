@@ -305,6 +305,9 @@ m<space>    删除当前buffer的所有标记
 [<Space>            当前行之前增加[count]个空行
 ]<Space>            当前行之后增加[count]个空行
 
+[e                  交换当前行和前[count]行
+]e                  交换当前行和后[count]行
+
 cob                 切换'background' (dark/light)
 coc                 切换'cursorline'
 cod                 切换'diff' (:diffthis/:diffoff)

@@ -305,6 +305,9 @@ m<space>    Delete all marks in current buffer
 [<Space>            Add [count] blank lines above the cursor
 ]<Space>            Add [count] blank lines below the cursor
 
+[e                  Exchange the current line with [count] lines above it
+]e                  Exchange the current line with [count] lines below it
+
 cob                 Toggle 'background' (dark/light)
 coc                 Toggle 'cursorline'
 cod                 Toggle 'diff' (:diffthis/:diffoff)

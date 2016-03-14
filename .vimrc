@@ -129,8 +129,14 @@ set wildmode=list:longest,full
 " some special meaning characters.
 set magic
 
-" Share clipboard with system (gvim -v in xterm)
-set clipboard=unnamedplus
+" Share vim clipboard with system clipboard (gvim -v in xterm)
+if has('unnamedplus')
+	" When possible use + register for copy-paste
+	set clipboard=unnamed,unnamedplus
+else
+	" On Mac and Windows, use * register for copy-paste
+	set clipboard=unnamed
+endif
 
 set smartindent
 " Indent at the same level of the previous line
@@ -157,7 +163,7 @@ let g:indentLine_leadingSpaceChar = '·'
 " }
 
 " Restore cursor to previous editing position
-autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
 
 " FileType {
 " Unrecognized filetype set to text
@@ -330,6 +336,12 @@ set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
 " Only work in terminal vim
 set termencoding=utf-8
 
+" Use both Unix, DOS and Mac file formats, but favor the Unix one for new files
+set fileformats=unix,dos,mac
+
+" Configure backspace so it acts as it should act
+set backspace=indent,eol,start
+
 " Allow switching away from a changed buffer without saving
 set hidden
 
@@ -416,8 +428,6 @@ let g:rehash256 = 1
 " Enable syntax highlight
 syntax on
 
-set regexpengine=1
-
 " Key map {
 let mapleader = ','
 
@@ -438,8 +448,8 @@ noremap ; :
 noremap U <C-r>
 
 " Better comand-line editing
-cnoremap <C-j> <t_kd>
-cnoremap <C-k> <t_ku>
+cnoremap <C-j> <Down>
+cnoremap <C-k> <Up>
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
@@ -765,6 +775,7 @@ let g:NERDTreeIndicatorMapCustom = {
 " }
 
 " vim-easy-align {
+
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
