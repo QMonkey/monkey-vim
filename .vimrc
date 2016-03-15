@@ -830,6 +830,12 @@ autocmd BufWrite * :Autoformat
 " Disable autoindent, do it manually by gg=G
 let g:autoformat_autoindent = 0
 
+" Enable auto retab
+let g:autoformat_retab = 1
+
+" Enable auto remove trailing spaces
+let g:autoformat_remove_trailing_spaces = 1
+
 " Generic C, C++, Objective-C style
 " A style similar to the Linux Kernel Coding Style
 " Linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
