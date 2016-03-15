@@ -125,8 +125,7 @@ set wildmode=list:longest,full
 " Show preview window in completion
 "set completeopt-=preview
 
-" For regular expressions turn magic on, and you don't need to add '\' before
-" some special meaning characters.
+" For regular expressions turn magic on, and you don't need to add '\' before some special meaning characters.
 set magic
 
 " Share vim clipboard with system clipboard (gvim -v in xterm)
@@ -962,6 +961,13 @@ let g:UltiSnipsExpandTrigger='<Leader><tab>'
 let g:EasyMotion_smartcase = 1
 " }
 
+" Terminal {
+if !has('gui_running')
+	" Check file changes outside vim when in xterm
+	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
+endif
+" }
+
 " GUI {
 if has('gui_running')
 	function! ToggleFullscreen()
@@ -990,8 +996,5 @@ if has('gui_running')
 
 	" Set gui font
 	set guifont=Monospace\ 9
-else
-	" Check file changes outside vim when in xterm
-	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
 endif
 " }

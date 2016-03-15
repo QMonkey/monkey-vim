@@ -596,14 +596,24 @@ W       Use root permission to write file
 :YcmGenerateConfig
 ```
 
-### 5. DirDiff
+### 5. Tabularize
+
+```vim
+" Automatically choose the lines need to be aligned. And then align non-delimiter parts of the line with space. You can tell how to align by format. You can choose which lines need to be aligned, too
+:Tabularize /{delimiter}/{format}
+
+" More help, please refer the official doc
+:h tabular
+```
+
+### 6. DirDiff
 
 ```vim
 " vimdiff mode for A and B directory
 :DirDiff A B
 ```
 
-### 6. Gist
+### 7. Gist
 
 ```bash
 # You need to config below before use Gist
