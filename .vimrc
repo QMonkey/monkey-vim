@@ -10,8 +10,6 @@
 "
 "     Author: Charles Qiu
 "     Email: Thinking.QMonkey@GMail.com
-"     Sections: {
-"     }
 " }
 
 " Init {
@@ -116,6 +114,7 @@ set incsearch
 set hlsearch
 set ignorecase
 set smartcase
+
 " By default add g flag to search/replace.
 set gdefault
 
@@ -138,16 +137,20 @@ else
 endif
 
 set smartindent
+
 " Indent at the same level of the previous line
 set autoindent
 
 " Make "tab" insert indents instead of tabs at the beginning of a line
 set smarttab
+
 " Size of a hard tabstop
 set tabstop=8
 set softtabstop=8
+
 " Size of an "indent"
 set shiftwidth=8
+
 " Never use space to replace tab
 set noexpandtab
 
@@ -167,6 +170,7 @@ autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "
 " FileType {
 " Unrecognized filetype set to text
 autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
+
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
@@ -266,6 +270,7 @@ endfunction
 
 " zeavim.vim {
 let g:zv_disable_mapping = 1
+
 " Add what you want to refer
 let g:zv_file_types = {
 			\	'cpp': 'c++,boost',
@@ -302,8 +307,10 @@ autocmd VimResized * execute "normal! \<C-w>="
 
 " Number of lines from vertical edge to start scrolling
 set scrolloff=7
+
 " Number of cols from horizontal edge to start scrolling
 set sidescrolloff=15
+
 " Number of cols to scroll at a time
 set sidescroll=1
 
@@ -364,6 +371,7 @@ let g:airline#extensions#tabline#buffer_min_count = 0
 let g:airline#extensions#tabline#show_tabs = 1
 let g:airline#extensions#tabline#tab_min_count = 0
 let g:airline#extensions#tabline#exclude_preview = 1
+
 " Only show tab number
 let g:airline#extensions#tabline#tab_nr_type = 1
 let g:airline#extensions#tabline#show_tab_nr = 0
@@ -548,6 +556,7 @@ nnoremap <silent><F9> :InstantMarkdownPreview<CR>
 nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
 
 set pastetoggle=<F5>
+
 " Disbale paste mode when leaving insert mode
 autocmd InsertLeave * set nopaste
 " }
@@ -580,7 +589,8 @@ vmap // y<Plug>(incsearch-forward)<C-R>"<CR>
 
 " Auto nohlsearch
 let g:incsearch#auto_nohlsearch = 1
-" Keep search pattern at the center of the screen.
+
+" Keep search pattern at the center of the screen
 map n  <Plug>(incsearch-nohl-n)zz
 map N  <Plug>(incsearch-nohl-N)zz
 map *  <Plug>(incsearch-nohl-#)zz
@@ -746,7 +756,6 @@ let g:NERDTreeIndicatorMapCustom = {
 " }
 
 " vim-easy-align {
-
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -812,6 +821,7 @@ nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
 " Eclim {
 " YouCompleteMe use Eclim's omnifuncs for completions
 let g:EclimCompletionMethod = 'omnifunc'
+
 " Do it by syntastic
 let g:EclimCValidate = 0
 let g:EclimJavaValidate = 0
@@ -895,6 +905,7 @@ endif
 " vim-rooter {
 let g:rooter_silent_chdir = 1
 "let g:rooter_use_lcd = 1
+
 " Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
 let g:rooter_manual_only = 1
 " }
@@ -919,12 +930,14 @@ let g:easytags_languages = {
 			\ }
 " Create dynamic tag file if not exists
 let g:easytags_dynamic_files = 2
+
 " Disable auto update tag files
 let g:easytags_auto_update = 1
 
 " Only update tag file on write
 let g:easytags_events = ['BufWritePost']
 let g:easytags_on_cursorhold = 0
+
 " Update interval, default 4s
 " let g:easytags_updatetime_min = 10000
 " }
