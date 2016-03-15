@@ -34,14 +34,20 @@ git clone https://github.com/QMonkey/monkey-vim.git
 # Ubuntu
 sudo apt-get install ctags
 sudo apt-get install silversearcher-ag or sudo apt-get install ack-grep
+sudo apt-get install fortune
+sudo apt-get install cowsay
 
 # OpenSUSE
 sudo zypper install ctags
 sudo zypper install the_silver_searcher or sudo zypper install ack
+sudo zypper install fortune
+sudo zypper install cowsay
 
 # CentOS
 sudo yum install ctags
 sudo yum install the_silver_searcher or sudo yum install ack
+sudo yum install fortune-mod
+sudo yum install cowsay
 ```
 
 #### 2.2 Fonts
