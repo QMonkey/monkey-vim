@@ -420,13 +420,15 @@ autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) 
 set t_Co=256
 
 " molokai {
-colorscheme molokai
+" Should before colorscheme
+syntax on
+
+" Should before colorscheme, too
 let g:molokai_original = 1
 let g:rehash256 = 1
-" }
 
-" Enable syntax highlight
-syntax on
+colorscheme molokai
+" }
 
 " Key map {
 let mapleader = ','
@@ -453,6 +455,9 @@ cnoremap <C-k> <Up>
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
+" :W to sudo & write a file
+command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
+
 " ESC map
 noremap <C-c> <ESC>
 inoremap <C-c> <ESC>
@@ -461,8 +466,6 @@ inoremap <C-c> <ESC>
 inoremap <C-d> <ESC>ddi
 
 nnoremap <silent> q :call CloseWindow()<CR>
-"nnoremap <silent> bd :Bdelete<CR>
-nnoremap <silent> bd :Bclose<CR>
 
 function! CloseWindow()
 	if tabpagenr('$') > 1
@@ -498,11 +501,14 @@ function! CloseWindow()
 	quitall
 endfunction
 
-" :W to sudo & write a file
-command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
+" Buffer {
+"nnoremap <silent> bd :Bdelete<CR>
+nnoremap <silent> bd :Bclose<CR>
+nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
+" }
 
 " Tab {
-nnoremap <silent><C-t> :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
 nnoremap <silent><S-h> :tabprevious<CR>
 nnoremap <silent><S-l> :tabnext<CR>
 nnoremap <Leader>1 1gt
@@ -619,40 +625,6 @@ endfunction
 function! BufferCount()
 	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
 endfunction
-
-" GUI {
-if has('gui_running')
-	function! ToggleFullscreen()
-		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
-	endfunction
-
-	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
-	" Fullscreen when gvim start up
-	autocmd VimEnter * call ToggleFullscreen()
-
-	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
-	autocmd GUIEnter * set vb t_vb=
-
-	" Disable cursor flicker
-	set guicursor=a:block-blinkon0
-
-	" Disable scroll bar
-	set guioptions-=l
-	set guioptions-=L
-	set guioptions-=r
-	set guioptions-=R
-
-	" Disable menu and tool bar
-	set guioptions-=m
-	set guioptions-=T
-
-	" Set gui font
-	set guifont=Monospace\ 9
-else
-	" Check file changes outside vim when in xterm
-	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
-endif
-" }
 
 " Replace {
 function! Replace(mode, confirm, wholeword)
@@ -988,4 +960,38 @@ let g:UltiSnipsExpandTrigger='<Leader><tab>'
 
 " vim-EasyMotion {
 let g:EasyMotion_smartcase = 1
+" }
+
+" GUI {
+if has('gui_running')
+	function! ToggleFullscreen()
+		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
+	endfunction
+
+	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
+	" Fullscreen when gvim start up
+	autocmd VimEnter * call ToggleFullscreen()
+
+	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
+	autocmd GUIEnter * set vb t_vb=
+
+	" Disable cursor flicker
+	set guicursor=a:block-blinkon0
+
+	" Disable scroll bar
+	set guioptions-=l
+	set guioptions-=L
+	set guioptions-=r
+	set guioptions-=R
+
+	" Disable menu and tool bar
+	set guioptions-=m
+	set guioptions-=T
+
+	" Set gui font
+	set guifont=Monospace\ 9
+else
+	" Check file changes outside vim when in xterm
+	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
+endif
 " }

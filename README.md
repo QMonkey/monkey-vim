@@ -213,7 +213,14 @@ F10     Toggle RainbowParentheses
 F11     Toggle fullscreen, only available in GUI mode
 ```
 
-#### 1.3 Split
+#### 1.3 Buffer
+
+```
+Leader+o    Open a new buffer with given file path in current window
+bd          Delete current buffer
+```
+
+#### 1.4 Split
 
 ```
 Leader+s    Open a horizontal split with given file path in current window
@@ -233,10 +240,10 @@ Leader+z    Toggle zoom
 Leader+ww   Swap two splits. You need to execute the command in that splits
 ```
 
-#### 1.4 Tab
+#### 1.5 Tab
 
 ```
-Ctrl+t      Open a tab with given file path in current window
+Leader+t    Open a tab with given file path in current window
 
 H           Jump to previous tab
 L           Jump to next tab
@@ -245,7 +252,7 @@ Leader+[    Jump to first tab
 Leader+]    Jump to last tab
 ```
 
-#### 1.5 Replace
+#### 1.6 Replace
 
 ```
 Leader+R    Replace current word. Not whole word, and don't need to confirm
@@ -254,7 +261,7 @@ Leader+rc   Same as "Leader+R", but need to confirm
 Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
 ```
 
-#### 1.6 Programming language
+#### 1.7 Programming language
 
 ```
 K                   Refer current word in doc
@@ -266,14 +273,14 @@ gt      GoTest, execute go test for current go source
 gf      GoTestFunc, execute go test for current go test function
 ```
 
-#### 1.7 Ctags
+#### 1.8 Ctags
 
 ```
 Ctrl+]  Jump to the definition of the keyword under the cursor
 g]      Like "Ctrl+]", but need to choose one tag to jump
 ```
 
-#### 1.8 Marks
+#### 1.9 Marks
 
 ```
 m[a-zA-Z]   Mark current row
@@ -286,7 +293,7 @@ m-          Delete all marks in current line
 m<space>    Delete all marks in current buffer
 ```
 
-#### 1.9 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+#### 1.10 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
 ```
 [b                  Jump to previous buffer
@@ -338,7 +345,7 @@ cox                 Toggle 'cursorline' or 'cursorcolumn'
 ]yy                 C String decode for current line
 ```
 
-#### 1.10 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.11 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          Go to definition
@@ -346,13 +353,13 @@ Leader+jd   Go to declaration
 Leader+ji   Go to header file
 ```
 
-#### 1.11 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.12 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    Toggle error window
 ```
 
-#### 1.12 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.13 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     Jump to specific line after the cursor
@@ -362,7 +369,7 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 1.13 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.14 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  Open CtrlSpace
@@ -371,13 +378,13 @@ Leader+bs   Save workspace
 Leader+rs   Restore workspace
 ```
 
-#### 1.14 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.15 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      Open CtrlP
 ```
 
-#### 1.15 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 1.16 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      Select current word and enter multiple cursor mode
@@ -386,20 +393,20 @@ Ctrl+x      Skip current word and select next matched word. Only available in mu
 <ESC>       Exit multiple-cursor-mode
 ```
 
-#### 1.16 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 1.17 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
 +       Expand the visual selection, and enter the visual mode
 ```
 
-#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -408,7 +415,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.19 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.20 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        Expand abbreviation
@@ -419,11 +426,10 @@ Ctrl+y+,        Expand abbreviation
 :h emmet
 ```
 
-#### 1.20 Others
+#### 1.21 Others
 
 ```
 %               Cycle forward through matching groups, such as "if", "else", "endif"
-bd              Delete current buffer
 '.              Jump to last changes
 ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list

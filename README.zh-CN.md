@@ -213,7 +213,14 @@ F10     打开/关闭RainbowParentheses
 F11     全屏切换（仅在gui模式下有效）
 ```
 
-#### 1.3 分屏
+#### 1.3 缓冲
+
+```
+Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
+bd          删除当前buffer
+```
+
+#### 1.4 分屏
 
 ```
 Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
@@ -233,10 +240,10 @@ Leader+z    窗口放大/恢复
 Leader+ww   交换两个窗口（两个窗口都需要执行该命令）
 ```
 
-#### 1.4 Tab
+#### 1.5 Tab
 
 ```
-Ctrl+t      输入打开的文件路径，并创建一个新tab窗口
+Leader+t      输入打开的文件路径，并创建一个新tab窗口
 
 H           切换到上一个tab窗口
 L           切换到下一个tab窗口
@@ -245,7 +252,7 @@ Leader+[    切换到第一个tab窗口
 Leader+]    切换到最后一个tab窗口
 ```
 
-#### 1.5 替换
+#### 1.6 替换
 
 ```
 Leader+R    替换光标所在的单词（非整词，不需要逐一确认）
@@ -254,7 +261,7 @@ Leader+rc   替换光标所在的单词（非整词，需要逐一确认）
 Leader+rcw  替换光标所在的单词（整词，需要逐一确认）
 ```
 
-#### 1.6 语言相关
+#### 1.7 语言相关
 
 ```
 K                   查看光标所在的单词在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
@@ -266,14 +273,14 @@ gt      GoTest，执行当前go文件的单元测试
 gf      GoTestFunc，执行光标所在的单元测试函数
 ```
 
-#### 1.7 Ctags
+#### 1.8 Ctags
 
 ```
 Ctrl+]  跳转到符号定义处，如有多处定义，则跳到第一处
 g]      选择一处符号定义并跳转
 ```
 
-#### 1.8 Marks
+#### 1.9 Marks
 
 ```
 m[a-zA-Z]   标记当前行
@@ -286,7 +293,7 @@ m-          删除当前行的所有标记
 m<space>    删除当前buffer的所有标记
 ```
 
-#### 1.9 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+#### 1.10 包含实用快捷键的插件：[vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
 ```
 [b                  切换到上一个buffer窗口
@@ -338,7 +345,7 @@ cox                 同时切换'cursorline'和'cursorcolumn'
 ]yy                 对当前行进行C String decode
 ```
 
-#### 1.10 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.11 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          跳转到定义
@@ -346,13 +353,13 @@ Leader+jd   跳转到声明
 Leader+ji   跳转到头文件
 ```
 
-#### 1.11 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.12 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    打开/关闭错误信息窗口
 ```
 
-#### 1.12 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.13 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -362,7 +369,7 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 1.13 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.14 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  打开CtrlSpace
@@ -371,13 +378,13 @@ Leader+bs   保存workspace
 Leader+rs   恢复workspace
 ```
 
-#### 1.14 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.15 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.15 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 1.16 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      选中当前单词（若未进入多光标模式，则进入）
@@ -386,20 +393,20 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 1.16 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 1.17 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
 +       扩大选中区域，并进入可视化模式
 ```
 
-#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -408,7 +415,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.19 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.20 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -419,11 +426,10 @@ Ctrl+y+,        展开模板缩写
 :h emmet
 ```
 
-#### 1.20 其他
+#### 1.21 其他
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
-bd              删除当前buffer
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
