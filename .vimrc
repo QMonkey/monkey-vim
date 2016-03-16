@@ -464,7 +464,7 @@ cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
 " :W to sudo & write a file
-command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
+command! W :execute ':silent w !sudo tee % > /dev/null' | :edit!
 
 " ESC map
 noremap <C-c> <ESC>
