@@ -177,8 +177,8 @@ autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softt
 autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 " Only format noexpandtab filetype
-let format_filetypes = ['c', 'cpp', 'go', 'java', 'lua', 'sh', 'vim']
-autocmd FileType * if index(format_filetypes, &filetype) < 0 | setlocal equalprg=cat | endif
+let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'php', 'sh', 'vim']
+autocmd FileType * if index(format_filetypes, &filetype) < 0 || &expandtab | setlocal equalprg=cat | endif
 
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
