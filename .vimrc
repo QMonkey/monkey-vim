@@ -654,7 +654,6 @@ function! Replace(mode, confirm, wholeword)
 		let search .= escape(word, '/\.*$^~[')
 	endif
 
-
 	let replace = Prompt('Replace "' . word . '" with: ')
 	let replace = escape(replace, '/\&~')
 
