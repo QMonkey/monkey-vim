@@ -394,6 +394,7 @@ let g:airline_powerline_fonts = 1
 " }
 
 " vim-devicons {
+let g:WebDevIconsNerdTreeGitPluginForceVAlign = 1
 let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let g:DevIconsEnableFoldersOpenClose = 1
 " }
