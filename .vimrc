@@ -39,7 +39,7 @@ Plug 'chrismccord/bclose.vim'
 Plug 'terryma/vim-multiple-cursors'
 Plug 'terryma/vim-expand-region'
 Plug 'easymotion/vim-easymotion'
-Plug 'haya14busa/incsearch.vim'
+Plug 'junegunn/vim-pseudocl' | Plug 'junegunn/vim-oblique'
 Plug 'mileszs/ack.vim'
 Plug 'scrooloose/nerdcommenter'
 Plug 'mhinz/vim-startify'
@@ -162,6 +162,7 @@ set list listchars=tab:▸\ ,eol:¬,trail:⋅
 let g:indentLine_enabled = 0
 let g:indentLine_leadingSpaceEnabled = 1
 let g:indentLine_leadingSpaceChar = '·'
+let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*']
 " }
 
 " Restore cursor to previous editing position
@@ -581,24 +582,17 @@ endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 " }
 
-" incsearch.vim {
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+" vim-oblique {
+let g:oblique#incsearch_highlight_all = 1
 
-" Search selected text
-vmap // y<Plug>(incsearch-forward)<C-R>"<CR>
+" Swap # and *
+map # <Plug>(Oblique-*)
+map * <Plug>(Oblique-#)
 
-" Auto nohlsearch
-let g:incsearch#auto_nohlsearch = 1
-
-" Keep search pattern at the center of the screen
-map n  <Plug>(incsearch-nohl-n)zz
-map N  <Plug>(incsearch-nohl-N)zz
-map *  <Plug>(incsearch-nohl-#)zz
-map #  <Plug>(incsearch-nohl-*)zz
-map g* <Plug>(incsearch-nohl-g*)zz
-map g# <Plug>(incsearch-nohl-g#)zz
+" Move your cursor line to the middle of the screen after search
+autocmd! User Oblique       normal! zz
+autocmd! User ObliqueStar   normal! zz
+autocmd! User ObliqueRepeat normal! zz
 " }
 
 " No highlight search

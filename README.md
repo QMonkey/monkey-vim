@@ -470,7 +470,8 @@ Ctrl+c  Switch to normal mode, same as <ESC>
 #### 3.2 Search
 
 ```
-//      Search selected text
+#       Search selected text
+*       Search selected text
 ```
 
 #### 3.3 Replace
