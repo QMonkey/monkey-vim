@@ -56,6 +56,8 @@ Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --system-
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-unimpaired'
+Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
 Plug 'vim-scripts/matchit.zip'
 Plug 'tpope/vim-endwise'
@@ -80,7 +82,6 @@ Plug 'airblade/vim-gitgutter'
 Plug 'mattn/webapi-vim' | Plug 'mattn/gist-vim'
 Plug 'Valloric/ListToggle'
 Plug 'will133/vim-dirdiff'
-Plug 'tpope/vim-unimpaired'
 Plug 'tomasr/molokai'
 Plug 'kien/rainbow_parentheses.vim'
 Plug 'kana/vim-textobj-user'
@@ -100,7 +101,18 @@ call plug#end()
 
 filetype plugin indent on
 
-set number
+" Number {
+set relativenumber number
+
+" Only work for the GUI version and a few console versions
+autocmd FocusLost * :set norelativenumber number
+autocmd FocusGained * :set relativenumber
+
+" Use absolute line number in insert mode
+autocmd InsertEnter * :set norelativenumber number
+autocmd InsertLeave * :set relativenumber
+" }
+
 " Show the cursor position all the time
 set ruler
 
@@ -175,7 +187,7 @@ autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-autocmd FileType javascript,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+autocmd FileType javascript,json,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 " Only format noexpandtab filetype
 let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'php', 'sh', 'vim']
@@ -464,9 +476,6 @@ cnoremap <C-j> <Down>
 cnoremap <C-k> <Up>
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
-
-" :W to sudo & write a file
-command! W :execute ':silent w !sudo tee % > /dev/null' | :edit!
 
 " ESC map
 noremap <C-c> <ESC>

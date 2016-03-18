@@ -258,7 +258,14 @@ Leader+[    Jump to first tab
 Leader+]    Jump to last tab
 ```
 
-#### 1.6 Replace
+#### 1.6 Search
+
+```
+#       Search current word forward
+*       Search current word backward
+```
+
+#### 1.7 Replace
 
 ```
 Leader+R    Replace current word. Not whole word, and don't need to confirm
@@ -267,7 +274,7 @@ Leader+rc   Same as "Leader+R", but need to confirm
 Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
 ```
 
-#### 1.7 Programming language
+#### 1.8 Programming language
 
 ```
 K                   Refer current word in doc
@@ -279,14 +286,14 @@ gt      GoTest, execute go test for current go source
 gf      GoTestFunc, execute go test for current go test function
 ```
 
-#### 1.8 Ctags
+#### 1.9 Ctags
 
 ```
 Ctrl+]  Jump to the definition of the keyword under the cursor
 g]      Like "Ctrl+]", but need to choose one tag to jump
 ```
 
-#### 1.9 Marks
+#### 1.10 Marks
 
 ```
 m[a-zA-Z]   Mark current row
@@ -299,7 +306,7 @@ m-          Delete all marks in current line
 m<space>    Delete all marks in current buffer
 ```
 
-#### 1.10 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
+#### 1.11 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
 ```
 [b                  Jump to previous buffer
@@ -351,7 +358,7 @@ cox                 Toggle 'cursorline' or 'cursorcolumn'
 ]yy                 C String decode for current line
 ```
 
-#### 1.11 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.12 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          Go to definition
@@ -359,13 +366,13 @@ Leader+jd   Go to declaration
 Leader+ji   Go to header file
 ```
 
-#### 1.12 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    Toggle error window
 ```
 
-#### 1.13 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.14 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     Jump to specific line after the cursor
@@ -375,7 +382,7 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 1.14 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  Open CtrlSpace
@@ -384,13 +391,13 @@ Leader+bs   Save workspace
 Leader+rs   Restore workspace
 ```
 
-#### 1.15 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      Open CtrlP
 ```
 
-#### 1.16 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
+#### 1.17 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
 ```
 Ctrl+n      Select current word and enter multiple cursor mode
@@ -399,20 +406,20 @@ Ctrl+x      Skip current word and select next matched word. Only available in mu
 <ESC>       Exit multiple-cursor-mode
 ```
 
-#### 1.17 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
+#### 1.18 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
 
 ```
 +       Expand the visual selection, and enter the visual mode
 ```
 
-#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.19 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.20 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -421,7 +428,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.20 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.21 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        Expand abbreviation
@@ -432,7 +439,7 @@ Ctrl+y+,        Expand abbreviation
 :h emmet
 ```
 
-#### 1.21 Others
+#### 1.22 Others
 
 ```
 %               Cycle forward through matching groups, such as "if", "else", "endif"
@@ -470,8 +477,8 @@ Ctrl+c  Switch to normal mode, same as <ESC>
 #### 3.2 Search
 
 ```
-#       Search selected text
-*       Search selected text
+#       Search selected text forward
+*       Search selected text backward
 ```
 
 #### 3.3 Replace
@@ -563,11 +570,11 @@ W       Use root permission to write file
 
 ## Useful command
 
-### 1. W
+### 1. SudoWrite
 
 ```vim
 " Use root permission to write file
-:W
+:SudoWrite
 ```
 
 ### 2. Ack
