@@ -657,10 +657,14 @@ function! Replace(mode, confirm, wholeword)
 	let replace = Prompt('Replace "' . word . '" with: ')
 
 	if empty(replace)
-		redraw!
+		let choice = confirm('Delete "' . word . '"?', "&Yes\n&No", 2)
 
-		echo 'Replace: Canceled'
-		return
+		if choice == 2
+			redraw!
+
+			echo 'Replace: Canceled'
+			return
+		endif
 	endif
 
 	let replace = escape(replace, '/\&~')
