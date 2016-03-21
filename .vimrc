@@ -133,8 +133,8 @@ set gdefault
 set wildmenu
 set wildmode=list:longest,full
 
-" Show preview window in completion
-"set completeopt-=preview
+" Do not show preview window in completion
+set completeopt-=preview
 
 " For regular expressions turn magic on, and you don't need to add '\' before some special meaning characters.
 set magic
@@ -174,7 +174,7 @@ set list listchars=tab:▸\ ,eol:¬,trail:⋅
 let g:indentLine_enabled = 0
 let g:indentLine_leadingSpaceEnabled = 1
 let g:indentLine_leadingSpaceChar = '·'
-let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*']
+let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*', 'startify']
 " }
 
 " Restore cursor to previous editing position
