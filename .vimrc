@@ -907,9 +907,11 @@ let g:instant_markdown_autostart = 0
 " }
 
 " CtrlSpace {
+" Only work after saving workspace
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
+
 let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
 " }
 
