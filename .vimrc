@@ -127,7 +127,10 @@ set hlsearch
 set ignorecase
 set smartcase
 
-" By default add g flag to search/replace.
+" The ":substitute" flag 'g' is default on. This means that
+" all matches in a line are substituted instead of one. When a 'g' flag
+" is given to a ":substitute" command, this will toggle the substitution
+" of all or one match
 set gdefault
 
 set wildmenu
@@ -675,9 +678,9 @@ function! Replace(mode, confirm, wholeword)
 
 	let flag = ''
 	if a:confirm
-		let flag .= 'gec'
+		let flag .= 'ec'
 	else
-		let flag .= 'ge'
+		let flag .= 'e'
 	endif
 
 	execute '%s/' . search . '/' . replace . '/' . flag . '| update'
@@ -969,7 +972,7 @@ let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting = 1
-let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
+let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 
 function! ToggleErrors()
 	let old_last_winnr = winnr('$')

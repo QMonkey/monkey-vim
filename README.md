@@ -769,16 +769,16 @@ then
 fi
 ```
 
-* If you feel too slow to open or save go file, you can change the config below
+* If you want to check the compile error for go on save, you can change the config below
 
 ```vim
-let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
+let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 ```
 
 to
 
 ```vim
-let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
 ```
 
 ## FAQ
