@@ -661,18 +661,16 @@ function! Replace(mode, confirm, wholeword)
 		let search .= escape(word, '/\.*$^~[')
 	endif
 
-	let replace = Prompt('Replace "' . word . '" with: ')
+	let replace = ''
 
-	if empty(replace)
-		let choice = confirm('Delete "' . word . '"?', "&Yes\n&No", 2)
-
-		if choice == 2
-			redraw!
-
-			echo 'Replace: Canceled'
-			return
-		endif
-	endif
+	try
+		let options = {'prompt': 'Replace "' . word . '" with: '}
+		let replace = pseudocl#start(options)
+	catch 'exit'
+		call pseudocl#render#clear()
+		echon 'Replace: Canceled'
+		return
+	endtry
 
 	let replace = escape(replace, '/\&~')
 
