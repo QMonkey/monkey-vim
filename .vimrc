@@ -662,7 +662,6 @@ function! Replace(mode, confirm, wholeword)
 	endif
 
 	let replace = ''
-
 	try
 		let options = {'prompt': 'Replace "' . word . '" with: '}
 		let replace = pseudocl#start(options)
