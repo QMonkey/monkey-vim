@@ -700,6 +700,14 @@ vnoremap <Leader>R :call Replace('v', 0, 0)<CR>
 vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 " }
 
+" ack.vim {
+if executable('ag')
+	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case'
+elseif executable('ack') || executable('ack-grep')
+	let g:ack_default_options = ' -s -H --nocolor --nogroup --column --smart-case'
+endif
+" }
+
 " Session {
 " Save session options
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
@@ -710,12 +718,61 @@ nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<C
 nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 " }
 
+" CtrlSpace {
+" Only work after saving workspace
+let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
+let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
+let g:CtrlSpaceSaveWorkspaceOnExit = 1
+
+let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
+" }
+
+" vim-rooter {
+let g:rooter_silent_chdir = 1
+"let g:rooter_use_lcd = 1
+
+" Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
+let g:rooter_manual_only = 1
+" }
+
 " Ctags {
 " Auto set tag file path
 autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
 
 " Highlight .tags file as tags file
 autocmd BufNewFile,BufRead *.tags set filetype=tags
+" }
+
+" vim-easytags {
+let g:easytags_async = 1
+
+" Disable recurse, do it manually by :UpdateTags -R
+" let g:easytags_autorecurse = 1
+
+" Global tag file
+let g:easytags_file = $HOME . '/.vim/.tags'
+
+let g:easytags_opts = ['--fields=+liaS', '--extra=+q']
+let g:easytags_languages = {
+			\	'c': {
+			\		'args': ['--c-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
+			\	},
+			\	'cpp': {
+			\		'args': ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
+			\	}
+			\ }
+" Create dynamic tag file if not exists
+let g:easytags_dynamic_files = 2
+
+" Disable auto update tag files
+let g:easytags_auto_update = 1
+
+" Only update tag file on write
+let g:easytags_events = ['BufWritePost']
+let g:easytags_on_cursorhold = 0
+
+" Update interval, default 4s
+" let g:easytags_updatetime_min = 10000
 " }
 
 " NERDTree {
@@ -849,115 +906,8 @@ let g:EclimHtmlValidate = 0
 let g:EclimCssValidate = 0
 " }
 
-" vim-autoformat {
-" Execute Autoformat onsave
-autocmd BufWrite * :Autoformat
-
-" Enable autoindent
-let g:autoformat_autoindent = 1
-
-" Enable auto retab
-let g:autoformat_retab = 1
-
-" Enable auto remove trailing spaces
-let g:autoformat_remove_trailing_spaces = 1
-
-" Generic C, C++, Objective-C style
-" A style similar to the Linux Kernel Coding Style
-" Linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
-let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
-
-" Golang
-let g:formatdef_goimports = '"goimports"'
-" }
-
-" vim-go {
-let g:go_highlight_functions = 1
-let g:go_highlight_methods = 1
-let g:go_highlight_structs = 1
-let g:go_highlight_build_constraints = 1
-let g:go_fmt_fail_silently = 1
-let g:go_disable_autoinstall = 1
-" Disable run GoFmt on save, do it by vim-autoformat
-let g:go_fmt_autosave = 0
-let g:go_fmt_command = 'goimports'
-let g:godef_split = 2
-let g:godef_same_file_in_same_window = 1
-
-" Use Ctrl-o to jump back, see :help jumplist
-autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
-autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
-autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
-" }
-
-" javascript-libraries-syntax.vim {
-let g:used_javascript_libs = 'jquery'
-" }
-
-" vim-markdown {
-let g:vim_markdown_folding_disabled = 1
-" }
-
-" vim-instant_markdown {
-let g:instant_markdown_slow = 1
-let g:instant_markdown_autostart = 0
-" }
-
-" CtrlSpace {
-" Only work after saving workspace
-let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
-let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
-let g:CtrlSpaceSaveWorkspaceOnExit = 1
-
-let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
-" }
-
-" ack.vim {
-if executable('ag')
-	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case'
-elseif executable('ack') || executable('ack-grep')
-	let g:ack_default_options = ' -s -H --nocolor --nogroup --column --smart-case'
-endif
-" }
-
-" vim-rooter {
-let g:rooter_silent_chdir = 1
-"let g:rooter_use_lcd = 1
-
-" Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
-let g:rooter_manual_only = 1
-" }
-
-" vim-easytags {
-let g:easytags_async = 1
-
-" Disable recurse, do it manually by :UpdateTags -R
-" let g:easytags_autorecurse = 1
-
-" Global tag file
-let g:easytags_file = $HOME . '/.vim/.tags'
-
-let g:easytags_opts = ['--fields=+liaS', '--extra=+q']
-let g:easytags_languages = {
-			\	'c': {
-			\		'args': ['--c-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
-			\	},
-			\	'cpp': {
-			\		'args': ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
-			\	}
-			\ }
-" Create dynamic tag file if not exists
-let g:easytags_dynamic_files = 2
-
-" Disable auto update tag files
-let g:easytags_auto_update = 1
-
-" Only update tag file on write
-let g:easytags_events = ['BufWritePost']
-let g:easytags_on_cursorhold = 0
-
-" Update interval, default 4s
-" let g:easytags_updatetime_min = 10000
+" Ultisnips {
+let g:UltiSnipsExpandTrigger='<Leader><tab>'
 " }
 
 " Syntastic {
@@ -985,17 +935,70 @@ endfunction
 nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 " }
 
+" vim-autoformat {
+" Execute Autoformat onsave
+autocmd BufWrite * :Autoformat
+
+" Enable autoindent
+let g:autoformat_autoindent = 1
+
+" Enable auto retab
+let g:autoformat_retab = 1
+
+" Enable auto remove trailing spaces
+let g:autoformat_remove_trailing_spaces = 1
+
+" Generic C, C++, Objective-C style
+" A style similar to the Linux Kernel Coding Style
+" Linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
+let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
+
+" Golang
+let g:formatdef_goimports = '"goimports"'
+
+" Markdown
+let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'listItemIndent: \\\"1\\\"'\""
+" }
+
+" vim-go {
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_build_constraints = 1
+let g:go_fmt_fail_silently = 1
+let g:go_disable_autoinstall = 1
+" Disable run GoFmt on save, do it by vim-autoformat
+let g:go_fmt_autosave = 0
+let g:go_fmt_command = 'goimports'
+let g:godef_split = 2
+let g:godef_same_file_in_same_window = 1
+
+" Use Ctrl-o to jump back, see :help jumplist
+autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
+autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
+autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
+" }
+
+" javascript-libraries-syntax.vim {
+let g:used_javascript_libs = 'jquery'
+" }
+
 " Emmet {
 " Enable all function in all mode.
 let g:user_emmet_mode = 'a'
 " }
 
-" Ultisnips {
-let g:UltiSnipsExpandTrigger='<Leader><tab>'
-" }
-
 " vim-EasyMotion {
 let g:EasyMotion_smartcase = 1
+" }
+
+" vim-markdown {
+let g:vim_markdown_folding_disabled = 1
+" }
+
+" vim-instant_markdown {
+let g:instant_markdown_slow = 1
+let g:instant_markdown_autostart = 0
 " }
 
 " Terminal {
