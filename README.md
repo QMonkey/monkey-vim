@@ -189,207 +189,251 @@ vim
 
 ## Keyboard shortcut
 
-    The "Leader" key below means comma key.
+```
+The "Leader" key below means comma key.
+```
 
 ### 1. Normal mode
 
 #### 1.1 Remap
 
-    Y       Copy from the cursor position to the end of the line, same as y$
-    U       Redo, same as Ctrl-r
-    ;       Enter command line mode, same as :
-    q       Quit current window, same as :q
-    Ctrl+c  Switch to normal mode, same as <ESC>
+```
+Y       Copy from the cursor position to the end of the line, same as y$
+U       Redo, same as Ctrl-r
+;       Enter command line mode, same as :
+q       Quit current window, same as :q
+Ctrl+c  Switch to normal mode, same as <ESC>
+```
 
 #### 1.2 F2 ~ F10
 
-    F2      Toggle NERDTree
-    F3      Toggle Tagbar
-    F4      Toggle Gundo
-    F5      Toggle paste mode
-    F6      Run current project. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
-    F7      Same as F6, but run current project asynchronously
-    F8      Toggle output window of F6 or F7
-    F9      Markdown preview in browser
-    F10     Toggle RainbowParentheses
-    F11     Toggle fullscreen, only available in GUI mode
+```
+F2      Toggle NERDTree
+F3      Toggle Tagbar
+F4      Toggle Gundo
+F5      Toggle paste mode
+F6      Run current project. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
+F7      Same as F6, but run current project asynchronously
+F8      Toggle output window of F6 or F7
+F9      Markdown preview in browser
+F10     Toggle RainbowParentheses
+F11     Toggle fullscreen, only available in GUI mode
+```
 
 #### 1.3 Buffer
 
-    Leader+o    Open a new buffer with given file path in current window
-    bd          Delete current buffer
+```
+Leader+o    Open a new buffer with given file path in current window
+bd          Delete current buffer
+```
 
 #### 1.4 Split
 
-    Leader+s    Open a horizontal split with given file path in current window
-    Leader+v    Open a vertical split with given file path in current window
+```
+Leader+s    Open a horizontal split with given file path in current window
+Leader+v    Open a vertical split with given file path in current window
 
-    Ctrl+h      Jump to the left split
-    Ctrl+j      Jump to the below split
-    Ctrl+k      Jump to the above split
-    Ctrl+l      Jump to the right split
+Ctrl+h      Jump to the left split
+Ctrl+j      Jump to the below split
+Ctrl+k      Jump to the above split
+Ctrl+l      Jump to the right split
 
-    Ctrl+up     Stretch the window vertically
-    Ctrl+down   Shrink the window vertically
-    Ctrl+left   Stretch the window horizontally
-    Ctrl+right  Shrink the window horizontally
-    Leader+z    Toggle zoom
+Ctrl+up     Stretch the window vertically
+Ctrl+down   Shrink the window vertically
+Ctrl+left   Stretch the window horizontally
+Ctrl+right  Shrink the window horizontally
+Leader+z    Toggle zoom
 
-    Leader+ww   Swap two splits. You need to execute the command in that splits
+Leader+ww   Swap two splits. You need to execute the command in that splits
+```
 
 #### 1.5 Tab
 
-    Leader+t    Open a tab with given file path in current window
+```
+Leader+t    Open a tab with given file path in current window
 
-    H           Jump to previous tab
-    L           Jump to next tab
-    Leader+1~9  Jump to the 1~9 tab
-    Leader+[    Jump to first tab
-    Leader+]    Jump to last tab
+H           Jump to previous tab
+L           Jump to next tab
+Leader+1~9  Jump to the 1~9 tab
+Leader+[    Jump to first tab
+Leader+]    Jump to last tab
+```
 
 #### 1.6 Search
 
-    #       Search current word forward
-    *       Search current word backward
+```
+#       Search current word forward
+*       Search current word backward
+```
 
 #### 1.7 Replace
 
-    Leader+R    Replace current word. Not whole word, and don't need to confirm
-    Leader+rw   Same as "Leader+R", but search for whole world
-    Leader+rc   Same as "Leader+R", but need to confirm
-    Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
+```
+Leader+R    Replace current word. Not whole word, and don't need to confirm
+Leader+rw   Same as "Leader+R", but search for whole world
+Leader+rc   Same as "Leader+R", but need to confirm
+Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
+```
 
 #### 1.8 Programming language
 
-    K                   Refer current word in doc
-    Leader+Leader+z     Refer doc in dash or zeal
+```
+K                   Refer current word in doc
+Leader+Leader+z     Refer doc in dash or zeal
 
-    gd      GoDef
-    gi      GoImports
-    gt      GoTest, execute go test for current go source
-    gf      GoTestFunc, execute go test for current go test function
+gd      GoDef
+gi      GoImports
+gt      GoTest, execute go test for current go source
+gf      GoTestFunc, execute go test for current go test function
+```
 
 #### 1.9 Ctags
 
-    Ctrl+]  Jump to the definition of the keyword under the cursor
-    g]      Like "Ctrl+]", but need to choose one tag to jump
+```
+Ctrl+]  Jump to the definition of the keyword under the cursor
+g]      Like "Ctrl+]", but need to choose one tag to jump
+```
 
 #### 1.10 Marks
 
-    m[a-zA-Z]   Mark current row
-    dm[a-zA-Z]  Delete mark[a-zA-Z]
+```
+m[a-zA-Z]   Mark current row
+dm[a-zA-Z]  Delete mark[a-zA-Z]
 
-    '[a-zA-Z]   Jump to the mark
+'[a-zA-Z]   Jump to the mark
 
-    m/          View all marks in Location List
-    m-          Delete all marks in current line
-    m<space>    Delete all marks in current buffer
+m/          View all marks in Location List
+m-          Delete all marks in current line
+m<space>    Delete all marks in current buffer
+```
 
 #### 1.11 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
-    [b                  Jump to previous buffer
-    ]b                  Jump to next buffer
-    [B                  Jump to first buffer
-    ]B                  Jump to last buffer
+```
+[b                  Jump to previous buffer
+]b                  Jump to next buffer
+[B                  Jump to first buffer
+]B                  Jump to last buffer
 
-    [t                  Jump to previous tab
-    ]t                  Jump to next tab
-    [T                  Jump to first tab
-    ]T                  Jump to last tab
+[t                  Jump to previous tab
+]t                  Jump to next tab
+[T                  Jump to first tab
+]T                  Jump to last tab
 
-    [n                  Go to the previous SCM conflict marker or diff/patch hunk
-    ]n                  Go to the next SCM conflict marker or diff/patch hunk
+[n                  Go to the previous SCM conflict marker or diff/patch hunk
+]n                  Go to the next SCM conflict marker or diff/patch hunk
 
-    [<Space>            Add [count] blank lines above the cursor
-    ]<Space>            Add [count] blank lines below the cursor
+[<Space>            Add [count] blank lines above the cursor
+]<Space>            Add [count] blank lines below the cursor
 
-    [e                  Exchange the current line with [count] lines above it
-    ]e                  Exchange the current line with [count] lines below it
+[e                  Exchange the current line with [count] lines above it
+]e                  Exchange the current line with [count] lines below it
 
-    cob                 Toggle 'background' (dark/light)
-    coc                 Toggle 'cursorline'
-    cod                 Toggle 'diff' (:diffthis/:diffoff)
-    coh                 Toggle 'hlsearch'
-    coi                 Toggle 'ignorecase'
-    col                 Toggle 'list'
-    con                 Toggle 'number'
-    cor                 Toggle 'relativenumber'
-    cos                 Toggle 'spell'
-    cou                 Toggle 'cursorcolumn'
-    cov                 Toggle 'virtualedit'
-    cow                 Toggle 'wrap'
-    cox                 Toggle 'cursorline' or 'cursorcolumn'
+cob                 Toggle 'background' (dark/light)
+coc                 Toggle 'cursorline'
+cod                 Toggle 'diff' (:diffthis/:diffoff)
+coh                 Toggle 'hlsearch'
+coi                 Toggle 'ignorecase'
+col                 Toggle 'list'
+con                 Toggle 'number'
+cor                 Toggle 'relativenumber'
+cos                 Toggle 'spell'
+cou                 Toggle 'cursorcolumn'
+cov                 Toggle 'virtualedit'
+cow                 Toggle 'wrap'
+cox                 Toggle 'cursorline' or 'cursorcolumn'
 
-    [x{motion}          XML encode
-    [xx                 XML encode for current line
-    ]x{motion}          HTML/XML decode
-    ]xx                 HTML/XML decode for current line
+[x{motion}          XML encode
+[xx                 XML encode for current line
+]x{motion}          HTML/XML decode
+]xx                 HTML/XML decode for current line
 
-    [u{motion}          URL encode
-    [uu                 URL encode for current line
-    ]u{motion}          URL decode
-    ]uu                 URL decode for current line
+[u{motion}          URL encode
+[uu                 URL encode for current line
+]u{motion}          URL decode
+]uu                 URL decode for current line
 
-    [y{motion}          C String encode
-    [yy                 C String encode for current line
-    ]y{motion}          C String decode
-    ]yy                 C String decode for current line
+[y{motion}          C String encode
+[yy                 C String encode for current line
+]y{motion}          C String decode
+]yy                 C String decode for current line
+```
 
 #### 1.12 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
-    gd          Go to definition
-    Leader+jd   Go to declaration
-    Leader+ji   Go to header file
+```
+gd          Go to definition
+Leader+jd   Go to declaration
+Leader+ji   Go to header file
+```
 
 #### 1.13 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
 
-    Leader+e    Toggle error window
+```
+Leader+e    Toggle error window
+```
 
 #### 1.14 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
-    Leader+Leader+j     Jump to specific line after the cursor
-    Leader+Leader+k     Jump to specific line before the cursor
-    Leader+Leader+w     Jump to specific word after the cursor
-    Leader+Leader+b     Jump to specific word before the cursor
-    Leader+Leader+s     Search one character and jump to specific word
+```
+Leader+Leader+j     Jump to specific line after the cursor
+Leader+Leader+k     Jump to specific line before the cursor
+Leader+Leader+w     Jump to specific word after the cursor
+Leader+Leader+b     Jump to specific word before the cursor
+Leader+Leader+s     Search one character and jump to specific word
+```
 
 #### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
-    Ctrl+Space  Open CtrlSpace
+```
+Ctrl+Space  Open CtrlSpace
 
-    Leader+bs   Save workspace
-    Leader+rs   Restore workspace
+Leader+bs   Save workspace
+Leader+rs   Restore workspace
+```
 
 #### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
-    Ctrl+p      Open CtrlP
+```
+Ctrl+p      Open CtrlP
+```
 
 #### 1.17 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
-    Ctrl+n      Select current word and enter multiple cursor mode
-    Ctrl+p      Unselect current word and jump back to previous matched word. Only available in multiple-cursor-mode
-    Ctrl+x      Skip current word and select next matched word. Only available in multiple-cursor-mode
-    <ESC>       Exit multiple-cursor-mode
+```
+Ctrl+n      Select current word and enter multiple cursor mode
+Ctrl+p      Unselect current word and jump back to previous matched word. Only available in multiple-cursor-mode
+Ctrl+x      Skip current word and select next matched word. Only available in multiple-cursor-mode
+<ESC>       Exit multiple-cursor-mode
+```
 
 #### 1.18 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
 
-    +       Expand the visual selection, and enter the visual mode
+```
++       Expand the visual selection, and enter the visual mode
+```
 
 #### 1.19 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
-    Leader+cc       Comment out the current line
-    Leader+cu       Uncomments the current line
+```
+Leader+cc       Comment out the current line
+Leader+cu       Uncomments the current line
+```
 
 #### 1.20 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
-    ys+textobj+surroundA        Add surround A for the region of textobj
-    yss+surroundA               Add surround A for current line
-    ds+surroundA                Delete surround A
-    cs+surroundA+surroundB      Change surround A to B
+```
+ys+textobj+surroundA        Add surround A for the region of textobj
+yss+surroundA               Add surround A for current line
+ds+surroundA                Delete surround A
+cs+surroundA+surroundB      Change surround A to B
+```
 
 #### 1.21 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
-    Ctrl+y+,        Expand abbreviation
+```
+Ctrl+y+,        Expand abbreviation
+```
 
 ```vim
 " More help, please refer the official doc
@@ -398,90 +442,116 @@ vim
 
 #### 1.22 Others
 
-    %               Cycle forward through matching groups, such as "if", "else", "endif"
-    '.              Jump to last changes
-    ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
-    Ctrl+o          Go to [count] Older cursor position in jump list
-    Ctrl+i          Go to [count] newer cursor position in jump list
-    Leader+cd       Change project root
-    Leader+/        No highlight search
-    Leader+space    Strip whitespace
-    Leader+q        Toggle quickfix list
-    Leader+l        Toggle location list
+```
+%               Cycle forward through matching groups, such as "if", "else", "endif"
+'.              Jump to last changes
+''              To the position before the latest jump, or where the last "m'" or "m`" command was given
+Ctrl+o          Go to [count] Older cursor position in jump list
+Ctrl+i          Go to [count] newer cursor position in jump list
+Leader+cd       Change project root
+Leader+/        No highlight search
+Leader+space    Strip whitespace
+Leader+q        Toggle quickfix list
+Leader+l        Toggle location list
+```
 
 ### 2. Insert mode
 
 #### 2.1 Remap
 
-    Ctrl+c  Switch to normal mode, same as <ESC>
-    Ctrl+d  Delete current row
+```
+Ctrl+c  Switch to normal mode, same as <ESC>
+Ctrl+d  Delete current row
+```
 
 ### 3. Visual mode
 
 #### 3.1 Remap
 
-    Y       Copy from the cursor position to the end of the line, same as y$
-    U       Redo
-    ;       Enter command line mode, same as :
-    Ctrl+c  Switch to normal mode, same as <ESC>
+```
+Y       Copy from the cursor position to the end of the line, same as y$
+U       Redo
+;       Enter command line mode, same as :
+Ctrl+c  Switch to normal mode, same as <ESC>
+```
 
 #### 3.2 Search
 
-    #       Search selected text forward
-    *       Search selected text backward
+```
+#       Search selected text forward
+*       Search selected text backward
+```
 
 #### 3.3 Replace
 
-    Leader+R    Replace selected text
-    Leader+rc   Same as "Leader+R", but need to confirm
+```
+Leader+R    Replace selected text
+Leader+rc   Same as "Leader+R", but need to confirm
+```
 
 #### 3.4 Programming language
 
-    K       Refer selected text in doc
+```
+K       Refer selected text in doc
+```
 
 #### 3.5 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
 
-    [x      XML encode for selected text
-    ]x      HTML/XML decode for selected text
+```
+[x      XML encode for selected text
+]x      HTML/XML decode for selected text
 
-    [u      URL encode for selected text
-    ]u      URL decode for selected text
+[u      URL encode for selected text
+]u      URL decode for selected text
 
-    [y      C String encode for selected text
-    ]y      C string decode for selected text
+[y      C String encode for selected text
+]y      C string decode for selected text
+```
 
 #### 3.6 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
-    Leader+Leader+j     Jump to specific line after the cursor
-    Leader+Leader+k     Jump to specific line before the cursor
-    Leader+Leader+w     Jump to specific word after the cursor
-    Leader+Leader+b     Jump to specific word before the cursor
-    Leader+Leader+s     Search one character and jump to specific word
+```
+Leader+Leader+j     Jump to specific line after the cursor
+Leader+Leader+k     Jump to specific line before the cursor
+Leader+Leader+w     Jump to specific word after the cursor
+Leader+Leader+b     Jump to specific word before the cursor
+Leader+Leader+s     Search one character and jump to specific word
+```
 
 #### 3.7 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
 
-    Ctrl+n      Enter multiple-cursor-mode
-    Ctrl+p      Unselect current word and jump back to previous matched word. Only available in multiple-cursor-mode
-    Ctrl+x      Skip current word and select next matched word. Only available in multiple-cursor-mode
-    <ESC>       Exit multiple-cursor-mode
+```
+Ctrl+n      Enter multiple-cursor-mode
+Ctrl+p      Unselect current word and jump back to previous matched word. Only available in multiple-cursor-mode
+Ctrl+x      Skip current word and select next matched word. Only available in multiple-cursor-mode
+<ESC>       Exit multiple-cursor-mode
+```
 
 #### 3.8 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
 
-    +       Expand the visual selection
-    -       Shrink the visual selection
+```
++       Expand the visual selection
+-       Shrink the visual selection
+```
 
 #### 3.9 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
-    Leader+cc       Comment out the text selected in visual mode
-    Leader+cu       Uncomments the selected line(s)
+```
+Leader+cc       Comment out the text selected in visual mode
+Leader+cu       Uncomments the selected line(s)
+```
 
 #### 3.10 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
-    S+surroundA     Add surround A for selected text
+```
+S+surroundA     Add surround A for selected text
+```
 
 #### 3.11 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
-    Ctrl+y+,        Expand abbreviation
+```
+Ctrl+y+,        Expand abbreviation
+```
 
 ```vim
 " More help, please refer the official doc
@@ -490,10 +560,12 @@ vim
 
 ### 4. Command line mode
 
-    Ctrl+j  Next command
-    Ctrl+k  Previous command
-    Ctrl+a  Jump to the begin of the command line
-    Ctrl+e  Jump to the end of the command line
+```
+Ctrl+j  Next command
+Ctrl+k  Previous command
+Ctrl+a  Jump to the begin of the command line
+Ctrl+e  Jump to the end of the command line
+```
 
 ## Useful command
 

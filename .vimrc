@@ -66,7 +66,7 @@ Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
-Plug 'elzr/vim-json', {'for': 'json'}
+"Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
@@ -217,8 +217,8 @@ endfunc
 
 " Conceal {
 " Disable conceal in insert-mode
-autocmd FileType markdown,json autocmd InsertEnter <buffer> setlocal conceallevel=2 concealcursor=
-autocmd FileType markdown,json autocmd InsertLeave <buffer> setlocal conceallevel=2 concealcursor=nc
+"autocmd FileType markdown,json autocmd InsertEnter <buffer> setlocal conceallevel=2 concealcursor=
+"autocmd FileType markdown,json autocmd InsertLeave <buffer> setlocal conceallevel=2 concealcursor=nc
 " }
 
 " Docset {
@@ -957,7 +957,7 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 let g:formatdef_goimports = '"goimports"'
 
 " Markdown
-let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'listItemIndent: \\\"1\\\"'\""
+let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
 " }
 
 " vim-go {
@@ -994,6 +994,7 @@ let g:EasyMotion_smartcase = 1
 
 " vim-markdown {
 let g:vim_markdown_folding_disabled = 1
+let g:vim_markdown_conceal = 0
 " }
 
 " vim-instant_markdown {
