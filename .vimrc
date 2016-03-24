@@ -31,7 +31,6 @@ Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ryanoasis/vim-devicons'
-Plug 'sheerun/vim-polyglot'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 "Plug 'moll/vim-bbye'
@@ -64,18 +63,24 @@ Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
 Plug 'thinca/vim-ref'
 Plug 'fatih/vim-go', {'for': 'go'}
-Plug 'pangloss/vim-javascript', {'for': 'javascript'}
+Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
+Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', {'for': 'javascript'} | Plug 'othree/es.next.syntax.vim', {'for': 'javascript'}
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
-"Plug 'elzr/vim-json', {'for': 'json'}
+Plug 'elzr/vim-json', {'for': 'json'}
+Plug 'hdima/python-syntax', {'for': 'python'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'soh335/vim-ref-pman', {'for': 'php'}
+Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
-Plug 'gorodinskiy/vim-coloresque', {'for': 'css'}
+Plug 'othree/html5.vim', {'for': 'html'}
+Plug 'JulesWang/css.vim', {'for': 'css'}
 Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
+Plug 'cespare/vim-toml', {'for': 'toml'}
+Plug 'tejr/vim-tmux', {'for': 'tmux'}
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
@@ -177,6 +182,7 @@ set list listchars=tab:▸\ ,eol:¬,trail:⋅
 let g:indentLine_enabled = 0
 let g:indentLine_leadingSpaceEnabled = 1
 let g:indentLine_leadingSpaceChar = '·'
+let g:indentLine_fileTypeExclude = ['git']
 let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*', 'startify']
 " }
 
@@ -981,6 +987,14 @@ autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
 
 " javascript-libraries-syntax.vim {
 let g:used_javascript_libs = 'jquery'
+" }
+
+" vim-json {
+let g:vim_json_syntax_conceal = 0
+" }
+
+" python-syntax {
+let python_highlight_all = 1
 " }
 
 " Emmet {
