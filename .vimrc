@@ -62,12 +62,13 @@ Plug 'vim-scripts/matchit.zip'
 Plug 'tpope/vim-endwise'
 Plug 'docunext/closetag.vim'
 Plug 'thinca/vim-ref'
-Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
+Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', {'for': 'javascript'} | Plug 'othree/es.next.syntax.vim', {'for': 'javascript'}
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'hdima/python-syntax', {'for': 'python'}
+Plug 'hynek/vim-python-pep8-indent', {'for': 'python'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
@@ -81,6 +82,7 @@ Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'tejr/vim-tmux', {'for': 'tmux'}
+Plug 'evanmiller/nginx-vim-syntax', {'for': 'nginx'}
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
