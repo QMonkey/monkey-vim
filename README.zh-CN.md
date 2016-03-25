@@ -609,24 +609,14 @@ Ctrl+e  跳到命令行最后
 :YcmGenerateConfig
 ```
 
-### 5. Tabularize
-
-```vim
-" 自动选择（或手动选择）需要对齐的行，并对齐。可以通过format来指定如何对齐
-:Tabularize /{delimiter}/{format}
-
-" 更多Gist的用法，请参考
-:h tabular
-```
-
-### 6. DirDiff
+### 5. DirDiff
 
 ```vim
 " A, B文件夹进入vimdiff mode
 :DirDiff A B
 ```
 
-### 7. Gist
+### 6. Gist
 
 ```bash
 # 使用改命令需要先进行以下配置
