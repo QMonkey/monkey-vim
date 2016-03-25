@@ -77,7 +77,7 @@ Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'othree/html5.vim', {'for': 'html'}
-Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
+"Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'tejr/vim-tmux', {'for': 'tmux'}
@@ -1010,6 +1010,12 @@ let g:EasyMotion_smartcase = 1
 " vim-markdown {
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
+" }
+
+" vim-markdown {
+" tpope/vim-markdown
+" Don't need to install these if you are running a recent version of Vim
+let g:markdown_fenced_languages = ['c', 'cpp', 'java', 'javascript', 'python', 'ruby', 'php', 'html', 'css', 'vim', 'bash=sh']
 " }
 
 " vim-instant_markdown {
