@@ -198,10 +198,6 @@ autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=mark
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,json,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
-" Only format noexpandtab filetype
-let format_filetypes = ['c', 'cpp', 'go', 'java', 'javascript', 'python', 'lua', 'ruby', 'php', 'sh', 'vim']
-autocmd FileType * if index(format_filetypes, &filetype) < 0 || &expandtab | setlocal equalprg=cat | endif
-
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
 	" Shell
@@ -945,8 +941,8 @@ nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 " Execute Autoformat onsave
 autocmd BufWrite * :Autoformat
 
-" Enable autoindent
-let g:autoformat_autoindent = 1
+" Disable autoindent
+let g:autoformat_autoindent = 0
 
 " Enable auto retab
 let g:autoformat_retab = 1
