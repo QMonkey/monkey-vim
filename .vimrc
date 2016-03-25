@@ -77,7 +77,6 @@ Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'othree/html5.vim', {'for': 'html'}
-Plug 'JulesWang/css.vim', {'for': 'css'}
 Plug 'godlygeek/tabular' | Plug 'plasticboy/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
