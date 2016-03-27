@@ -939,10 +939,10 @@ nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 
 " vim-autoformat {
 " Execute Autoformat onsave
-autocmd BufWrite * :Autoformat
+autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,html,css,sh,vim autocmd BufWrite <buffer> :Autoformat
 
-" Disable autoindent
-let g:autoformat_autoindent = 0
+" Enable autoindent
+let g:autoformat_autoindent = 1
 
 " Enable auto retab
 let g:autoformat_retab = 1
