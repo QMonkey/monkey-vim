@@ -436,11 +436,22 @@ Ctrl+y+,        Expand abbreviation
 ```
 
 ```vim
-" More help, please refer the official doc
+" Please refer the official doc for more help
 :h emmet
 ```
 
-#### 1.22 Others
+#### 1.22 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+
+```
+ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
+```
+
+```vim
+" Please refer the official doc for more help
+:h vim-easy-align
+```
+
+#### 1.23 Others
 
 ```
 %               Cycle forward through matching groups, such as "if", "else", "endif"
@@ -554,8 +565,19 @@ Ctrl+y+,        Expand abbreviation
 ```
 
 ```vim
-" More help, please refer the official doc
+" Please refer the official doc for more help
 :h emmet
+```
+
+#### 3.12 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+
+```
+ga              Start interactive EasyAlign in visual mode (e.g. vipga)
+```
+
+```vim
+" Please refer the official doc for more help
+:h vim-easy-align
 ```
 
 ### 4. Command line mode
@@ -627,7 +649,7 @@ git config --global github.user <username>
 " Push current buffer or selected text to Gist
 :Gist
 
-" More help, please refer the official doc
+" Please refer the official doc for more help
 :h Gist.vim
 ```
 
@@ -712,7 +734,7 @@ https://github.com/tpope/vim-fugitive#screencasts
 " Like :Gitv!, but open in browser mode
 :Gitv [args]
 
-" More help, please refer the official doc
+" Please refer the official doc for more help
 :h gitv.txt
 ```
 

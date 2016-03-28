@@ -429,7 +429,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.21 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.21 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -440,7 +440,18 @@ Ctrl+y+,        展开模板缩写
 :h emmet
 ```
 
-#### 1.22 其他
+#### 1.22 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+
+```
+ga              开始对齐模式
+```
+
+```vim
+" 更多vim-easy-align帮助，请参考：
+:h vim-easy-align
+```
+
+#### 1.23 其他
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
@@ -547,7 +558,7 @@ Leader+cu       取消选中代码的注释
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.11 HTML, CSS神器：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.11 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -556,6 +567,17 @@ Ctrl+y+,        展开模板缩写
 ```vim
 " 更多emmet帮助，请参考：
 :h emmet
+```
+
+#### 3.12 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+
+```
+ga              开始对齐模式
+```
+
+```vim
+" 更多vim-easy-align帮助，请参考：
+:h vim-easy-align
 ```
 
 ### 4. 命令行模式
