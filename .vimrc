@@ -192,9 +192,6 @@ let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*', 'startify']
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
 
 " FileType {
-" Unrecognized filetype set to text
-autocmd BufNewFile,BufRead * if empty(&filetype) | setfiletype text | endif
-
 " Markdown file extensions
 autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
