@@ -229,6 +229,13 @@ function! GetCurrentWord()
 	return expand('<cword>')
 endfunction
 
+" Use man as docset for unrecognized filetype
+autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
+function! SetUnrecognizedFileTypeReferences()
+	nnoremap <buffer><silent><S-k> :execute 'Ref man' GetCurrentWord()<CR>
+	vnoremap <buffer><silent><S-k> <ESC>:execute 'Ref man' GetVisualSelection()<CR>
+endfunction
+
 autocmd FileType * call SetReferences()
 function! SetReferences()
 	let filetype_references = {
