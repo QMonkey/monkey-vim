@@ -64,6 +64,7 @@ Plug 'docunext/closetag.vim'
 Plug 'thinca/vim-ref'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
+Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
 Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', {'for': 'javascript'} | Plug 'othree/es.next.syntax.vim', {'for': 'javascript'}
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
@@ -75,6 +76,7 @@ Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
+Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
 Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
 Plug 'othree/html5.vim', {'for': 'html'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
@@ -899,19 +901,19 @@ nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
 nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
 " }
 
-" Eclim {
-" YouCompleteMe use Eclim's omnifuncs for completions
-let g:EclimCompletionMethod = 'omnifunc'
+" Enable omni completion
+autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
+autocmd FileType sql setlocal omnifunc=sqlcomplete#Complete
+autocmd FileType java setlocal omnifunc=javacomplete#Complete
 
-" Do it by syntastic
-let g:EclimCValidate = 0
-let g:EclimJavaValidate = 0
-let g:EclimJavascriptValidate = 0
-let g:EclimPythonValidate = 0
-let g:EclimRubyValidate = 0
-let g:EclimPhpValidate = 0
-let g:EclimHtmlValidate = 0
-let g:EclimCssValidate = 0
+" vim-javacomplete2 {
+autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
 " }
 
 " Ultisnips {

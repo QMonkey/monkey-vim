@@ -60,11 +60,7 @@ sudo yum install cowsay
 - [Dash](https://kapeli.com/dash/)
 - [Zeal](https://zealdocs.org/)
 
-#### 2.4 Eclim
-
-Java, Ruby, PHP代码补全插件：[Eclim](http://eclim.org/)
-
-#### 2.5 C/C++
+#### 2.4 C/C++
 
 ```bash
 # Ubuntu
@@ -84,7 +80,7 @@ sudo yum install gcc-c++
 sudo yum install clang
 ```
 
-#### 2.6 Javascript
+#### 2.5 Javascript
 
 ```bash
 sudo npm install -g jslint
@@ -92,25 +88,25 @@ sudo npm install -g js-beautify
 sudo npm install -g tern
 ```
 
-#### 2.7 JSON
+#### 2.6 JSON
 
 ```bash
 sudo npm install -g jsonlint
 ```
 
-#### 2.8 HTML
+#### 2.7 HTML
 
 ```bash
 sudo npm install -g jshint
 ```
 
-#### 2.9 CSS
+#### 2.8 CSS
 
 ```bash
 sudo npm install -g csslint
 ```
 
-#### 2.10 Python
+#### 2.9 Python
 
 ```bash
 sudo pip install pyflakes
@@ -119,7 +115,7 @@ sudo pip install pep8
 sudo pip install jedi
 ```
 
-#### 2.11 Golang
+#### 2.10 Golang
 
 ```bash
 # Ubuntu
@@ -136,7 +132,7 @@ sudo zypper install golang
 :GoInstallBinaries
 ```
 
-#### 2.12 Java
+#### 2.11 Java
 
 ```bash
 # Ubuntu
@@ -152,13 +148,13 @@ sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
-#### 2.13 PHP
+#### 2.12 PHP
 
 ```bash
 pear install doc.php.net/pman
 ```
 
-#### 2.14 Shell
+#### 2.13 Shell
 
 ```bash
 # Ubuntu
@@ -171,7 +167,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.15 Markdown
+#### 2.14 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
@@ -736,16 +732,6 @@ https://github.com/tpope/vim-fugitive#screencasts
 " 详细教程请参考官方文档
 :h gitv.txt
 ```
-
-## 用Eclim命令管理eclipse项目
-
-- Eclipse项目管理命令，请参考[这里](http://eclim.org/vim/core/project.html)
-
-- Java项目管理命令，请参考[这里](http://eclim.org/vim/java/index.html)
-
-- Ruby项目管理命令，请参考[这里](http://eclim.org/vim/ruby/index.html)
-
-- PHP项目管理命令，请参考[这里](http://eclim.org/vim/php/index.html)
 
 ## 注意事项
 
