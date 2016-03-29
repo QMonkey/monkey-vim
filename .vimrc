@@ -348,6 +348,9 @@ set nofoldenable
 set foldmethod=syntax
 set foldlevel=99
 
+" Use indent style fold for python
+autocmd FileType python setlocal foldmethod=indent
+
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
 
@@ -377,6 +380,9 @@ set autoread
 set noerrorbells
 set novisualbell
 set t_vb=
+
+" Disable mouse
+set mouse=
 
 " Always show status line
 set laststatus=2
