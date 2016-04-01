@@ -36,7 +36,6 @@ Plug 'vim-ctrlspace/vim-ctrlspace'
 "Plug 'moll/vim-bbye'
 Plug 'chrismccord/bclose.vim'
 Plug 'terryma/vim-multiple-cursors'
-Plug 'terryma/vim-expand-region'
 Plug 'easymotion/vim-easymotion'
 Plug 'junegunn/vim-pseudocl' | Plug 'junegunn/vim-oblique'
 Plug 'mileszs/ack.vim'
@@ -46,12 +45,11 @@ Plug 'Chiel92/vim-autoformat'
 Plug 'junegunn/vim-easy-align'
 Plug 'Yggdroot/indentLine'
 Plug 'ntpeters/vim-better-whitespace'
-Plug 'wesQ3/vim-windowswap'
 Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-rooter'
 Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
 Plug 'scrooloose/syntastic'
-Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --system-libclang --gocode-completer --tern-completer' } | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp']}
+Plug 'Valloric/YouCompleteMe', {'do': './install.py --clang-completer --system-libclang --gocode-completer --tern-completer' } | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp']}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
@@ -69,7 +67,6 @@ Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', 
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'hdima/python-syntax', {'for': 'python'}
-Plug 'hynek/vim-python-pep8-indent', {'for': 'python'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
@@ -88,6 +85,7 @@ Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
 Plug 'mattn/webapi-vim' | Plug 'mattn/gist-vim'
 Plug 'Valloric/ListToggle'
+Plug 'wesQ3/vim-windowswap'
 Plug 'will133/vim-dirdiff'
 Plug 'tomasr/molokai'
 Plug 'kien/rainbow_parentheses.vim'
@@ -969,6 +967,9 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 
 " Golang
 let g:formatdef_goimports = '"goimports"'
+
+" Python
+let g:formatdef_autopep8 = '"autopep8 - ".(&textwidth ? "--max-line-length=".&textwidth : "")'
 
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""

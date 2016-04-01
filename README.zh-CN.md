@@ -403,20 +403,14 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 1.18 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
-
-```
-+       扩大选中区域，并进入可视化模式
-```
-
-#### 1.19 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.20 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -425,7 +419,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.21 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.20 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -436,7 +430,7 @@ Ctrl+y+,        展开模板缩写
 :h emmet
 ```
 
-#### 1.22 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.21 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式
@@ -447,7 +441,7 @@ ga              开始对齐模式
 :h vim-easy-align
 ```
 
-#### 1.23 其他
+#### 1.22 其他
 
 ```
 %               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
@@ -534,27 +528,20 @@ Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下�
 <ESC>       退出多光标模式
 ```
 
-#### 3.8 区域选中插件：[vim-expand-region](https://github.com/terryma/vim-expand-region)
-
-```
-+       扩大选中区域
--       缩小选中区域
-```
-
-#### 3.9 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.8 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
-#### 3.10 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 3.9 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.11 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.10 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -565,7 +552,7 @@ Ctrl+y+,        展开模板缩写
 :h emmet
 ```
 
-#### 3.12 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.11 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式

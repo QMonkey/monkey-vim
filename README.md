@@ -403,20 +403,14 @@ Ctrl+x      Skip current word and select next matched word. Only available in mu
 <ESC>       Exit multiple-cursor-mode
 ```
 
-#### 1.18 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
-
-```
-+       Expand the visual selection, and enter the visual mode
-```
-
-#### 1.19 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.20 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -425,7 +419,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.21 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.20 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        Expand abbreviation
@@ -436,7 +430,7 @@ Ctrl+y+,        Expand abbreviation
 :h emmet
 ```
 
-#### 1.22 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.21 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -447,7 +441,7 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.23 Others
+#### 1.22 Others
 
 ```
 %               Cycle forward through matching groups, such as "if", "else", "endif"
@@ -534,27 +528,20 @@ Ctrl+x      Skip current word and select next matched word. Only available in mu
 <ESC>       Exit multiple-cursor-mode
 ```
 
-#### 3.8 Region select: [vim-expand-region](https://github.com/terryma/vim-expand-region)
-
-```
-+       Expand the visual selection
--       Shrink the visual selection
-```
-
-#### 3.9 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.8 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the text selected in visual mode
 Leader+cu       Uncomments the selected line(s)
 ```
 
-#### 3.10 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 3.9 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     Add surround A for selected text
 ```
 
-#### 3.11 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.10 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        Expand abbreviation
@@ -565,7 +552,7 @@ Ctrl+y+,        Expand abbreviation
 :h emmet
 ```
 
-#### 3.12 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.11 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign in visual mode (e.g. vipga)
