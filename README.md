@@ -208,9 +208,8 @@ F2      Toggle NERDTree
 F3      Toggle Tagbar
 F4      Toggle Gundo
 F5      Toggle paste mode
-F6      Run current project. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
-F7      Same as F6, but run current project asynchronously
-F8      Toggle output window of F6 or F7
+F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
+F8      Toggle output window of F7
 F9      Markdown preview in browser
 F10     Toggle RainbowParentheses
 F11     Toggle fullscreen, only available in GUI mode
