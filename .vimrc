@@ -106,6 +106,10 @@ call plug#end()
 
 filetype plugin indent on
 
+" Leader {
+let mapleader = ','
+" }
+
 " Number {
 set relativenumber number
 
@@ -300,6 +304,10 @@ let g:zv_file_types = {
 			\	'javascript': 'javascript,nodejs',
 			\	'sql': 'mysql',
 			\ }
+
+if !has('mac') && !has('macunix')
+	nmap <unique><Leader><Leader>z <Plug>ZVKeyDocset
+endif
 " }
 
 " dash.vim {
@@ -320,8 +328,6 @@ if has('mac') || has('macunix')
 	endfunction
 
 	nmap <silent><Leader><Leader>z :call DashPrompt()<CR>
-else
-	nmap <silent><Leader><Leader>z <Plug>ZVKeyDocset
 endif
 " }
 
@@ -456,6 +462,14 @@ autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) 
 " Enable 256 color for vim
 set t_Co=256
 
+" Inspired by http://sunaku.github.io/vim-256color-bce.html
+if &term =~ '256color'
+	" Disable Background Color Erase (BCE) so that color schemes
+	" render properly when inside 256-color tmux and GNU screen.
+	" See also http://snk.tuxfamily.org/log/vim-256color-bce.html
+	set t_ut=
+endif
+
 " molokai {
 " Should before colorscheme
 syntax on
@@ -468,8 +482,6 @@ colorscheme molokai
 " }
 
 " Key map {
-let mapleader = ','
-
 " Make Y behave like other capitals
 noremap Y y$
 
