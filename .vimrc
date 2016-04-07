@@ -979,9 +979,6 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 " Golang
 let g:formatdef_goimports = '"goimports"'
 
-" Python
-let g:formatdef_autopep8 = '"autopep8 - ".(&textwidth ? "--max-line-length=".&textwidth : "")'
-
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
 " }
