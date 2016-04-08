@@ -67,6 +67,8 @@ Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', 
 Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'hdima/python-syntax', {'for': 'python'}
+Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
+Plug 'vim-scripts/luarefvim', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
@@ -257,7 +259,7 @@ function! SetReferences()
 			continue
 		endif
 
-		" vim-go have do it for you
+		" vim-go has do it for you
 		if ftype != 'go'
 			let search = expand('<cword>')
 			execute 'nnoremap <buffer><silent><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
@@ -272,10 +274,17 @@ function! SetReferences()
 	if !is_reference_set
 		" Default reference: dash or zeal
 		if has('mac') || has('macunix')
-			nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
+			" vim-lua-ftplugin has do it for you
+			if &filetype != 'lua'
+				nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
+			endif
 			vnoremap <buffer><silent><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
 		else
-			nnoremap <buffer><silent><S-k> :Zeavim<CR>
+			" vim-lua-ftplugin has do it for you
+			if &filetype != 'lua'
+				nnoremap <buffer><silent><S-k> :Zeavim<CR>
+			endif
+
 			vnoremap <buffer><silent><S-k> <ESC>:ZvV<CR>
 		endif
 	endif
@@ -1012,6 +1021,17 @@ let g:vim_json_syntax_conceal = 0
 
 " python-syntax {
 let python_highlight_all = 1
+" }
+
+" vim-lua-ftplugin {
+let g:lua_check_syntax = 0
+let g:lua_check_globals = 0
+let g:lua_complete_keywords = 1
+let g:lua_complete_globals = 1
+let g:lua_complete_library = 1
+let g:lua_complete_dynamic = 1
+let g:lua_complete_omni = 1
+let g:lua_define_completion_mappings = 0
 " }
 
 " Emmet {
