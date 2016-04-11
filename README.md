@@ -482,8 +482,6 @@ Ctrl+d  Delete current row
 #### 3.1 Remap
 
 ```
-Y       Copy from the cursor position to the end of the line, same as y$
-U       Redo
 ;       Enter command line mode, same as :
 Ctrl+c  Switch to normal mode, same as <ESC>
 ```

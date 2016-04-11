@@ -492,7 +492,7 @@ colorscheme molokai
 
 " Key map {
 " Make Y behave like other capitals
-noremap Y y$
+nnoremap Y y$
 
 " Improve up/down movement on wrapped lines
 noremap j gj
@@ -505,7 +505,7 @@ vnoremap > >gv
 noremap ; :
 
 " Remap U to <C-r> for easier redo
-noremap U <C-r>
+nnoremap U <C-r>
 
 " Better comand-line editing
 cnoremap <C-j> <Down>
