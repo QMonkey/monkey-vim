@@ -35,7 +35,6 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 "Plug 'moll/vim-bbye'
 Plug 'chrismccord/bclose.vim'
-Plug 'terryma/vim-multiple-cursors'
 Plug 'easymotion/vim-easymotion'
 Plug 'junegunn/vim-pseudocl' | Plug 'junegunn/vim-oblique'
 Plug 'mileszs/ack.vim'
@@ -43,7 +42,6 @@ Plug 'scrooloose/nerdcommenter'
 Plug 'mhinz/vim-startify'
 Plug 'Chiel92/vim-autoformat'
 Plug 'junegunn/vim-easy-align'
-Plug 'Yggdroot/indentLine'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-rooter'
@@ -182,15 +180,6 @@ set noexpandtab
 
 " Show tab and eof
 set list listchars=tab:▸\ ,eol:¬,trail:⋅
-
-" indentLine {
-" Disable, or vim will be very slow for the file which has long line
-let g:indentLine_enabled = 0
-let g:indentLine_leadingSpaceEnabled = 1
-let g:indentLine_leadingSpaceChar = '·'
-let g:indentLine_fileTypeExclude = ['git']
-let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*', 'startify']
-" }
 
 " Restore cursor to previous editing position
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
@@ -512,10 +501,6 @@ cnoremap <C-j> <Down>
 cnoremap <C-k> <Up>
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
-
-" ESC map
-noremap <C-c> <ESC>
-inoremap <C-c> <ESC>
 
 " Delete current row
 inoremap <C-d> <ESC>ddi

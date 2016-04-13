@@ -211,7 +211,6 @@ Y       复制到行尾，相当于“y$”命令
 U       Redo，相当于“Ctrl-r”
 ;       进入命令行模式，相当于“:”键
 q       退出窗口，相当于命令“:q”
-Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 ```
 
 #### 1.2 F2 ~ F10
@@ -406,23 +405,14 @@ Leader+rs   恢复workspace
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.17 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
-
-```
-Ctrl+n      选中当前单词（若未进入多光标模式，则进入）
-Ctrl+p      放弃当前选中字符串，回到上次选中的地方（多光标模式下有效）
-Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下有效）
-<ESC>       退出多光标模式
-```
-
-#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -431,7 +421,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.20 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.19 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -442,7 +432,7 @@ Ctrl+y+,        展开模板缩写
 :h emmet
 ```
 
-#### 1.21 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.20 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式
@@ -473,7 +463,6 @@ Leader+l        打开/关闭location list
 #### 2.1 按键修改
 
 ```
-Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 Ctrl+d  删除当前行
 ```
 
@@ -483,7 +472,6 @@ Ctrl+d  删除当前行
 
 ```
 ;       进入命令行模式，相当于“:”键
-Ctrl+c  退出当前模式，并返回到正常模式，相当于<ESC>键
 ```
 
 #### 3.2 查找
@@ -529,29 +517,20 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 3.7 多光标操作插件：[vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
-
-```
-Ctrl+n      选中一个字符串（若未进入多光标模式，则进入）
-Ctrl+p      放弃当前选中字符串，回到上次选中的地方（多光标模式下有效）
-Ctrl+x      跳过当前选中字符串，选中下一个（多光标模式下有效）
-<ESC>       退出多光标模式
-```
-
-#### 3.8 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.7 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
-#### 3.9 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 3.8 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.10 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.9 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        展开模板缩写
@@ -562,7 +541,7 @@ Ctrl+y+,        展开模板缩写
 :h emmet
 ```
 
-#### 3.11 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.10 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式

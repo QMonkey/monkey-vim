@@ -211,7 +211,6 @@ Y       Copy from the cursor position to the end of the line, same as y$
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
 q       Quit current window, same as :q
-Ctrl+c  Switch to normal mode, same as <ESC>
 ```
 
 #### 1.2 F2 ~ F10
@@ -406,23 +405,14 @@ Leader+rs   Restore workspace
 Ctrl+p      Open CtrlP
 ```
 
-#### 1.17 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
-
-```
-Ctrl+n      Select current word and enter multiple cursor mode
-Ctrl+p      Unselect current word and jump back to previous matched word. Only available in multiple-cursor-mode
-Ctrl+x      Skip current word and select next matched word. Only available in multiple-cursor-mode
-<ESC>       Exit multiple-cursor-mode
-```
-
-#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -431,7 +421,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.20 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
+#### 1.19 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        Expand abbreviation
@@ -442,7 +432,7 @@ Ctrl+y+,        Expand abbreviation
 :h emmet
 ```
 
-#### 1.21 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.20 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -453,7 +443,7 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.22 Others
+#### 1.21 Others
 
 ```
 %               Cycle forward through matching groups, such as "if", "else", "endif"
@@ -473,7 +463,6 @@ Leader+l        Toggle location list
 #### 2.1 Remap
 
 ```
-Ctrl+c  Switch to normal mode, same as <ESC>
 Ctrl+d  Delete current row
 ```
 
@@ -483,7 +472,6 @@ Ctrl+d  Delete current row
 
 ```
 ;       Enter command line mode, same as :
-Ctrl+c  Switch to normal mode, same as <ESC>
 ```
 
 #### 3.2 Search
@@ -529,29 +517,20 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 3.7 Multiple cursors: [vim-multiple-cursors](https://github.com/terryma/vim-multiple-cursors)
-
-```
-Ctrl+n      Enter multiple-cursor-mode
-Ctrl+p      Unselect current word and jump back to previous matched word. Only available in multiple-cursor-mode
-Ctrl+x      Skip current word and select next matched word. Only available in multiple-cursor-mode
-<ESC>       Exit multiple-cursor-mode
-```
-
-#### 3.8 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.7 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the text selected in visual mode
 Leader+cu       Uncomments the selected line(s)
 ```
 
-#### 3.9 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 3.8 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     Add surround A for selected text
 ```
 
-#### 3.10 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
+#### 3.9 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
 
 ```
 Ctrl+y+,        Expand abbreviation
@@ -562,7 +541,7 @@ Ctrl+y+,        Expand abbreviation
 :h emmet
 ```
 
-#### 3.11 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.10 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign in visual mode (e.g. vipga)
