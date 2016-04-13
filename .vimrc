@@ -181,8 +181,6 @@ set list listchars=tab:▸\ ,eol:¬,trail:⋅
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
 
 " FileType {
-" Markdown file extensions
-autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,json,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
@@ -203,12 +201,6 @@ function! AutoInsertFileHead()
 	normal o
 	normal o
 endfunc
-" }
-
-" Conceal {
-" Disable conceal in insert-mode
-"autocmd FileType markdown,json autocmd InsertEnter <buffer> setlocal conceallevel=2 concealcursor=
-"autocmd FileType markdown,json autocmd InsertLeave <buffer> setlocal conceallevel=2 concealcursor=nc
 " }
 
 " Docset {
@@ -774,6 +766,7 @@ let g:easytags_languages = {
 			\		'args': ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
 			\	}
 			\ }
+
 " Create dynamic tag file if not exists
 let g:easytags_dynamic_files = 2
 
