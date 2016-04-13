@@ -777,20 +777,6 @@ vman() {
 }
 ```
 
-- Compare two directory in shell by "dirdiff" command
-
-```bash
-dirdiff() {
-    if [ $# -ne 2 ]; then
-        echo "Invalid arguments, please pass two arguments"
-        return
-    fi
-
-    vim -c "DirDiff $*" ~/.vimrc \
-        -c "execute 'bdelete ' . bufnr('~/.vimrc')"
-}
-```
-
 ## Configuration
 
 If you have any problem or suggestion with monkey-vim, welcome to give me an [issue](https://github.com/QMonkey/monkey-vim/issues)

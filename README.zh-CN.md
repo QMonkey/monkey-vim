@@ -776,20 +776,6 @@ vman() {
 }
 ```
 
-- 使用dirdiff命令，可在vimdiff中查看，比较和编辑两个文件夹
-
-```bash
-dirdiff() {
-    if [ $# -ne 2 ]; then
-        echo "Invalid arguments, please pass two arguments"
-        return
-    fi
-
-    vim -c "DirDiff $*" ~/.vimrc \
-        -c "execute 'bdelete ' . bufnr('~/.vimrc')"
-}
-```
-
 ## 意见或建议
 
 如果你对monkey-vim项目有什么意见或建议，欢迎给我个[issue](https://github.com/QMonkey/monkey-vim/issues)
