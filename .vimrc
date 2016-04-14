@@ -88,7 +88,7 @@ Plug 'Valloric/ListToggle'
 Plug 'wesQ3/vim-windowswap'
 Plug 'tomasr/molokai'
 Plug 'kien/rainbow_parentheses.vim'
-Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
+Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent' | Plug 'beloglazov/vim-textobj-quotes'
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
