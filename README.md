@@ -231,7 +231,7 @@ F11     Toggle fullscreen, only available in GUI mode
 
 ```
 Leader+o    Open a new buffer with given file path in current window
-bd          Delete current buffer
+Leader+d    Delete current buffer
 ```
 
 #### 1.4 Split

@@ -181,6 +181,8 @@ set list listchars=tab:▸\ ,eol:¬,trail:⋅
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
 
 " FileType {
+" Markdown file extensions
+autocmd BufNewFile,BufRead *.{md,mdown,mkd,mkdn,markdown,mdwn} set filetype=markdown
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,json,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
@@ -530,8 +532,8 @@ function! CloseWindow()
 endfunction
 
 " Buffer {
-"nnoremap <silent> bd :Bdelete<CR>
-nnoremap <silent> bd :Bclose<CR>
+"nnoremap <silent> <Leader>d :Bdelete<CR>
+nnoremap <silent> <Leader>d :Bclose<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
 " }
 
