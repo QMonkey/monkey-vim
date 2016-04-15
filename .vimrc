@@ -89,7 +89,7 @@ Plug 'Valloric/ListToggle'
 Plug 'wesQ3/vim-windowswap'
 Plug 'tomasr/molokai'
 Plug 'kien/rainbow_parentheses.vim'
-Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent' | Plug 'beloglazov/vim-textobj-quotes'
+Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
@@ -961,7 +961,7 @@ let g:autoformat_remove_trailing_spaces = 1
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
 
 " Golang
-let g:formatdef_goimports = '"goimports"'
+let g:formatters_go = ['goimports']
 
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
@@ -971,19 +971,25 @@ let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fence
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
 let g:go_highlight_structs = 1
+let g:go_highlight_interfaces = 1
 let g:go_highlight_build_constraints = 1
 let g:go_fmt_fail_silently = 1
 let g:go_disable_autoinstall = 1
 " Disable run GoFmt on save, do it by vim-autoformat
 let g:go_fmt_autosave = 0
+let g:go_dispatch_enabled = 1
 let g:go_fmt_command = 'goimports'
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-autocmd FileType go nnoremap <silent><Leader>gi :GoImports<CR>
-autocmd FileType go nnoremap <silent><Leader>gt :GoTest<CR>
-autocmd FileType go nnoremap <silent><Leader>gf :GoTestFunc<CR>
+autocmd FileType go nmap <silent><Leader>gc :GoRun %<CR>
+autocmd FileType go nmap <silent><Leader>gb <Plug>(go-build)
+autocmd FileType go nmap <silent><Leader>gi <Plug>(go-install)
+autocmd FileType go nmap <silent><Leader>gr <Plug>(go-referrers)
+autocmd FileType go nmap <silent><Leader>gt <Plug>(go-test)
+autocmd FileType go nmap <silent><Leader>gf <Plug>(go-test-func)
+autocmd FileType go nmap <silent><Leader>ga <Plug>(go-alternate-edit)
 " }
 
 " javascript-libraries-syntax.vim {

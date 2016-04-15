@@ -288,10 +288,14 @@ Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
 K                   Refer current word in doc
 Leader+Leader+z     Refer doc in dash or zeal
 
-gd      GoDef
-gi      GoImports
-gt      GoTest, execute go test for current go source
-gf      GoTestFunc, execute go test for current go test function
+gd              GoDef
+Leader+gc       GoRun %, run current go source
+Leader+gb       GoBuild, build current package
+Leader+gi       GoInstall, build and install current package
+Leader+gr       GoReferrers
+Leader+gt       GoTest, execute go test for current go source
+Leader+gf       GoTestFunc, execute go test for current go test function
+Leader+ga       GoAlternate, alternate between implementation and test code
 ```
 
 #### 1.9 Ctags

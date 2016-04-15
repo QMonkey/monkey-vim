@@ -288,10 +288,14 @@ Leader+rcw  替换光标所在的单词（整词，需要逐一确认）
 K                   查看光标所在的单词在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 Leader+Leader+z     输入语言类型和关键字，在dash或zeal中查看相应的解释
 
-gd      GoDef
-gi      GoImports
-gt      GoTest，执行当前go文件的单元测试
-gf      GoTestFunc，执行光标所在的单元测试函数
+gd              GoDef
+Leader+gc       GoRun %，运行当前go源文件
+Leader+gb       GoBuild，构建当前包
+Leader+gi       GoInstall，构建并且安装当前包
+Leader+gr       GoReferrers
+Leader+gt       GoTest，执行当前go文件的单元测试
+Leader+gf       GoTestFunc，执行光标所在的单元测试函数
+Leader+ga       GoAlternate，在源文件和单元测试间切换
 ```
 
 #### 1.9 Ctags
