@@ -26,7 +26,7 @@ filetype off
 call plug#begin($HOME . '/.vim/bundle')
 
 " Plugins {
-Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs' | Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
@@ -39,7 +39,6 @@ Plug 'easymotion/vim-easymotion'
 Plug 'junegunn/vim-pseudocl' | Plug 'junegunn/vim-oblique'
 Plug 'mileszs/ack.vim'
 Plug 'scrooloose/nerdcommenter'
-Plug 'mhinz/vim-startify'
 Plug 'Chiel92/vim-autoformat'
 Plug 'junegunn/vim-easy-align'
 Plug 'ntpeters/vim-better-whitespace'
@@ -88,7 +87,6 @@ Plug 'mattn/webapi-vim' | Plug 'mattn/gist-vim'
 Plug 'Valloric/ListToggle'
 Plug 'wesQ3/vim-windowswap'
 Plug 'tomasr/molokai'
-Plug 'kien/rainbow_parentheses.vim'
 Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
 
 if has('mac') || has('macunix')
@@ -418,32 +416,6 @@ let g:airline_powerline_fonts = 1
 let g:WebDevIconsNerdTreeGitPluginForceVAlign = 1
 let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let g:DevIconsEnableFoldersOpenClose = 1
-" }
-
-" rainbow_parentheses.vim {
-let g:rbpt_colorpairs = [
-			\ ['brown',       'RoyalBlue3'],
-			\ ['Darkblue',    'SeaGreen3'],
-			\ ['darkgray',    'DarkOrchid3'],
-			\ ['darkgreen',   'firebrick3'],
-			\ ['darkcyan',    'RoyalBlue3'],
-			\ ['darkred',     'SeaGreen3'],
-			\ ['darkmagenta', 'DarkOrchid3'],
-			\ ['brown',       'firebrick3'],
-			\ ['gray',        'RoyalBlue3'],
-			\ ['black',       'SeaGreen3'],
-			\ ['darkmagenta', 'DarkOrchid3'],
-			\ ['Darkblue',    'firebrick3'],
-			\ ['darkgreen',   'RoyalBlue3'],
-			\ ['darkcyan',    'SeaGreen3'],
-			\ ['darkred',     'DarkOrchid3'],
-			\ ['red',         'firebrick3'],
-			\ ]
-let g:rbpt_max = 16
-let g:rbpt_loadcmd_toggle = 1
-
-let rainbow_parentheses_filetypes = ['lisp', 'clojure', 'scheme']
-autocmd BufNewFile,BufRead * if index(rainbow_parentheses_filetypes, &filetype) >= 0 | execute 'RainbowParenthesesToggle' | endif
 " }
 
 " Enable 256 color for vim
@@ -821,20 +793,6 @@ function! Refresh()
 endfunction
 " }
 
-" nerdtree-git-plugin {
-let g:NERDTreeIndicatorMapCustom = {
-			\ 'Modified'  : '~',
-			\ "Staged"    : '+',
-			\ 'Untracked' : '*',
-			\ 'Renamed'   : '➜',
-			\ 'Unmerged'  : '=',
-			\ 'Deleted'   : '✖',
-			\ 'Dirty'     : '~',
-			\ 'Clean'     : '✔︎',
-			\ 'Unknown'   : '?'
-			\ }
-" }
-
 " vim-easy-align {
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)
@@ -861,18 +819,6 @@ let g:gundo_map_move_newer = "<C-p>"
 " Gitv {
 " Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
-" }
-
-" vim-startify {
-function! s:filter_header(lines) abort
-	let longest_line   = max(map(copy(a:lines), 'len(v:val)'))
-	let centered_lines = map(copy(a:lines),
-				\ 'repeat(" ", (&columns / 2) - (longest_line / 2)) . v:val')
-	return centered_lines
-endfunction
-
-let g:startify_custom_header = s:filter_header(split(system('fortune | cowsay'), '\n'))
-let g:startify_bookmarks = ['~/.vimrc', '~/.bashrc']
 " }
 
 " YouCompleteMe {
