@@ -140,8 +140,8 @@ set gdefault
 set wildmenu
 set wildmode=list:longest,full
 
-" Do not show preview window in completion
-set completeopt-=preview
+" Complete options (disable preview scratch window, longest removed to aways show menu)
+set completeopt=menu,menuone
 
 " For regular expressions turn magic on, and you don't need to add '\' before some special meaning characters.
 set magic
