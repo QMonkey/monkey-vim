@@ -53,15 +53,12 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
-Plug 'vim-scripts/matchit.zip'
-Plug 'tpope/vim-endwise'
-Plug 'docunext/closetag.vim'
+"Plug 'tpope/vim-endwise'
 Plug 'thinca/vim-ref'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
-Plug 'othree/yajs.vim', {'for': 'javascript'} | Plug 'pangloss/vim-javascript', {'for': 'javascript'} | Plug 'othree/es.next.syntax.vim', {'for': 'javascript'}
-Plug 'othree/javascript-libraries-syntax.vim', {'for': 'javascript'}
+Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'hdima/python-syntax', {'for': 'python'}
 Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
@@ -73,8 +70,6 @@ Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
-Plug 'mattn/emmet-vim', {'for': ['html', 'css']}
-Plug 'othree/html5.vim', {'for': 'html'}
 Plug 'tpope/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
@@ -181,7 +176,7 @@ autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "
 
 " FileType {
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-autocmd FileType javascript,json,ruby,html,css,liquid,xml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
@@ -845,8 +840,6 @@ nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
 " }
 
 " Enable omni completion
-autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
@@ -891,7 +884,7 @@ nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 
 " vim-autoformat {
 " Execute Autoformat onsave
-autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,html,css,sh,vim autocmd BufWrite <buffer> :Autoformat
+autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
 
 " Enable autoindent
 let g:autoformat_autoindent = 1
@@ -939,10 +932,6 @@ autocmd FileType go nmap <silent><Leader>gf <Plug>(go-test-func)
 autocmd FileType go nmap <silent><Leader>ga <Plug>(go-alternate-edit)
 " }
 
-" javascript-libraries-syntax.vim {
-let g:used_javascript_libs = 'jquery'
-" }
-
 " vim-json {
 let g:vim_json_syntax_conceal = 0
 " }
@@ -960,11 +949,6 @@ let g:lua_complete_library = 1
 let g:lua_complete_dynamic = 1
 let g:lua_complete_omni = 1
 let g:lua_define_completion_mappings = 0
-" }
-
-" Emmet {
-" Enable all function in all mode.
-let g:user_emmet_mode = 'a'
 " }
 
 " vim-EasyMotion {

@@ -88,19 +88,7 @@ sudo npm install -g tern
 sudo npm install -g jsonlint
 ```
 
-#### 2.7 HTML
-
-```bash
-sudo npm install -g jshint
-```
-
-#### 2.8 CSS
-
-```bash
-sudo npm install -g csslint
-```
-
-#### 2.9 Python
+#### 2.7 Python
 
 ```bash
 sudo pip install pyflakes
@@ -109,7 +97,7 @@ sudo pip install pep8
 sudo pip install jedi
 ```
 
-#### 2.10 Golang
+#### 2.8 Golang
 
 ```bash
 # Ubuntu
@@ -126,7 +114,7 @@ sudo zypper install golang
 :GoInstallBinaries
 ```
 
-#### 2.11 Java
+#### 2.9 Java
 
 ```bash
 # Ubuntu
@@ -142,11 +130,11 @@ sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
-#### 2.12 Lua
+#### 2.10 Lua
 
 ```bash
 # Ubuntu
-sudo apt-get install lua5.2
+sudo apt-get install lua
 
 # OpenSUSE
 sudo zypper install lua
@@ -155,13 +143,13 @@ sudo zypper install lua
 sudo yum install lua
 ```
 
-#### 2.13 PHP
+#### 2.11 PHP
 
 ```bash
 pear install doc.php.net/pman
 ```
 
-#### 2.14 Shell
+#### 2.12 Shell
 
 ```bash
 # Ubuntu
@@ -174,7 +162,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.15 Markdown
+#### 2.13 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
@@ -419,18 +407,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.19 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
-
-```
-Ctrl+y+,        展开模板缩写
-```
-
-```vim
-" 更多emmet帮助，请参考：
-:h emmet
-```
-
-#### 1.20 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.19 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式
@@ -441,10 +418,9 @@ ga              开始对齐模式
 :h vim-easy-align
 ```
 
-#### 1.22 其他
+#### 1.20 其他
 
 ```
-%               成对标签跳转（(),[],{},<>,html xml标签,if,else,endif等）
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
@@ -528,18 +504,7 @@ Leader+cu       取消选中代码的注释
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.9 Emmet：[emmet-vim](https://github.com/mattn/emmet-vim)
-
-```
-Ctrl+y+,        展开模板缩写
-```
-
-```vim
-" 更多emmet帮助，请参考：
-:h emmet
-```
-
-#### 3.10 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.9 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式

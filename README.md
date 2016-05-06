@@ -88,19 +88,7 @@ sudo npm install -g tern
 sudo npm install -g jsonlint
 ```
 
-#### 2.7 HTML
-
-```bash
-sudo npm install -g jshint
-```
-
-#### 2.8 CSS
-
-```bash
-sudo npm install -g csslint
-```
-
-#### 2.9 Python
+#### 2.7 Python
 
 ```bash
 sudo pip install pyflakes
@@ -109,7 +97,7 @@ sudo pip install pep8
 sudo pip install jedi
 ```
 
-#### 2.10 Golang
+#### 2.8 Golang
 
 ```bash
 # Ubuntu
@@ -126,7 +114,7 @@ sudo zypper install golang
 :GoInstallBinaries
 ```
 
-#### 2.11 Java
+#### 2.9 Java
 
 ```bash
 # Ubuntu
@@ -142,11 +130,11 @@ sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
 ```
 
-#### 2.12 Lua
+#### 2.10 Lua
 
 ```bash
 # Ubuntu
-sudo apt-get install lua5.2
+sudo apt-get install lua
 
 # OpenSUSE
 sudo zypper install lua
@@ -155,13 +143,13 @@ sudo zypper install lua
 sudo yum install lua
 ```
 
-#### 2.13 PHP
+#### 2.11 PHP
 
 ```bash
 pear install doc.php.net/pman
 ```
 
-#### 2.14 Shell
+#### 2.12 Shell
 
 ```bash
 # Ubuntu
@@ -174,7 +162,7 @@ sudo zypper install checkbashisms
 sudo yum install rpmdevtools
 ```
 
-#### 2.15 Markdown
+#### 2.13 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
@@ -419,18 +407,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.19 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
-
-```
-Ctrl+y+,        Expand abbreviation
-```
-
-```vim
-" Please refer the official doc for more help
-:h emmet
-```
-
-#### 1.20 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.19 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -441,10 +418,9 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.21 Others
+#### 1.20 Others
 
 ```
-%               Cycle forward through matching groups, such as "if", "else", "endif"
 '.              Jump to last changes
 ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
@@ -528,18 +504,7 @@ Leader+cu       Uncomments the selected line(s)
 S+surroundA     Add surround A for selected text
 ```
 
-#### 3.9 Emmet: [emmet-vim](https://github.com/mattn/emmet-vim)
-
-```
-Ctrl+y+,        Expand abbreviation
-```
-
-```vim
-" Please refer the official doc for more help
-:h emmet
-```
-
-#### 3.10 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.9 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign in visual mode (e.g. vipga)
