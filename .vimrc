@@ -680,9 +680,9 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 
 " ack.vim {
 if executable('ag')
-	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case'
+	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir .git --ignore-dir .hg --ignore-dir .svn --ignore-dir .bzr'
 elseif executable('ack') || executable('ack-grep')
-	let g:ack_default_options = ' -s -H --nocolor --nogroup --column --smart-case'
+	let g:ack_default_options = ' -s -H --nocolor --nogroup --column --smart-case --ignore-dir .git --ignore-dir .hg --ignore-dir .svn --ignore-dir .bzr'
 endif
 " }
 
