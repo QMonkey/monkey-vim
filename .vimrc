@@ -26,6 +26,7 @@ filetype off
 call plug#begin($HOME . '/.vim/bundle')
 
 " Plugins {
+Plug 'tomasr/molokai'
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
@@ -48,6 +49,9 @@ Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
 Plug 'scrooloose/syntastic'
 Plug 'Valloric/YouCompleteMe', {'do': './install.py --clang-completer --gocode-completer --tern-completer' } | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp']}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
+Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
+Plug 'airblade/vim-gitgutter'
+Plug 'mattn/webapi-vim' | Plug 'mattn/gist-vim'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-unimpaired'
@@ -67,21 +71,17 @@ Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
-Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
+Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'tpope/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
 Plug 'zaiste/tmux.vim', {'for': 'tmux'}
 Plug 'kshenoy/vim-signature'
-Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
-Plug 'airblade/vim-gitgutter'
-Plug 'mattn/webapi-vim' | Plug 'mattn/gist-vim'
 Plug 'Valloric/ListToggle'
 Plug 'wesQ3/vim-windowswap'
-Plug 'tomasr/molokai'
 Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
 
 if has('mac') || has('macunix')
