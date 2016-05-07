@@ -73,8 +73,8 @@ Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
 Plug 'tpope/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
-Plug 'tejr/vim-tmux', {'for': 'tmux'}
-Plug 'evanmiller/nginx-vim-syntax', {'for': 'nginx'}
+Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
+Plug 'zaiste/tmux.vim', {'for': 'tmux'}
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
