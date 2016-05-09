@@ -674,7 +674,7 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 " }
 
 " ack.vim {
-let g:ack_use_dispatch = 1
+"let g:ack_use_dispatch = 1
 
 if executable('ag')
 	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir .git --ignore-dir .hg --ignore-dir .svn --ignore-dir .bzr'
