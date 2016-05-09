@@ -705,18 +705,6 @@ then
 fi
 ```
 
-- If you want to check the compile error for go on save, you can change the config below
-
-```vim
-let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
-```
-
-to
-
-```vim
-let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
-```
-
 ## FAQ
 
 [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)

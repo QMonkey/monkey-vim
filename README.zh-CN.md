@@ -704,18 +704,6 @@ then
 fi
 ```
 
-- 如果你想在保存的时候，检查go代码的编译错误，你可以将以下vim配置
-
-```vim
-let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
-```
-
-改为
-
-```vim
-let g:syntastic_go_checkers = ['go', 'golint', 'govet', 'errcheck']
-```
-
 ## FAQ
 
 [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ.zh_CN)
