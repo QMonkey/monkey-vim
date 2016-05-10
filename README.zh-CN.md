@@ -12,11 +12,11 @@ monkey-vim项目，旨在打造一个强大，快速，并且占用少量系统�
 
 - **xterm vim**
 
-[xterm vim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/xterm_vim.png "xterm vim")
+![xterm vim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/xterm_vim.png "xterm vim")
 
 - **gvim**
 
-[gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
+![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
 
 ## 安装步骤
 
