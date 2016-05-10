@@ -959,7 +959,7 @@ let g:EasyMotion_smartcase = 1
 
 " vim-markdown {
 let g:vim_markdown_folding_disabled = 1
-let g:vim_markdown_conceal = 0
+let g:markdown_syntax_conceal = 0
 " }
 
 " vim-markdown {
