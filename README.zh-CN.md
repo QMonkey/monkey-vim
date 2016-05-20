@@ -566,14 +566,7 @@ Ctrl+e  跳到命令行最后
 :YcmGenerateConfig
 ```
 
-### 5. DirDiff
-
-```vim
-" A, B文件夹进入vimdiff mode
-:DirDiff A B
-```
-
-### 6. Gist
+### 5. Gist
 
 ```bash
 # 使用改命令需要先进行以下配置

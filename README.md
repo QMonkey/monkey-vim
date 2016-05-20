@@ -566,14 +566,7 @@ Ctrl+e  Jump to the end of the command line
 :YcmGenerateConfig
 ```
 
-### 5. DirDiff
-
-```vim
-" vimdiff mode for A and B directory
-:DirDiff A B
-```
-
-### 6. Gist
+### 5. Gist
 
 ```bash
 # You need to config below before use Gist
