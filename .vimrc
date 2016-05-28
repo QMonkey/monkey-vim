@@ -576,13 +576,10 @@ let g:incsearch#auto_nohlsearch = 1
 
 map n <Plug>(incsearch-nohl-n)
 map N <Plug>(incsearch-nohl-N)
-nmap # <Plug>(incsearch-nohl-*)
-nmap * <Plug>(incsearch-nohl-#)
+map # <Plug>(incsearch-nohl-*)
+map * <Plug>(incsearch-nohl-#)
 map g* <Plug>(incsearch-nohl-g*)
 map g# <Plug>(incsearch-nohl-g#)
-
-vmap # y<Plug>(incsearch-forward)<C-R>"<CR>
-vmap * y<Plug>(incsearch-backward)<C-R>"<CR>
 " }
 
 " No highlight search
