@@ -91,10 +91,10 @@ sudo npm install -g jsonlint
 #### 2.7 Python
 
 ```bash
-sudo pip install pyflakes
-sudo pip install autopep8
-sudo pip install pep8
 sudo pip install jedi
+sudo pip install yapf
+sudo pip install pyflakes
+sudo pip install pep8
 ```
 
 #### 2.8 Golang

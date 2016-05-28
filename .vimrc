@@ -34,10 +34,10 @@ Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ryanoasis/vim-devicons'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
-"Plug 'moll/vim-bbye'
-Plug 'chrismccord/bclose.vim'
+Plug 'moll/vim-bbye'
+"Plug 'chrismccord/bclose.vim'
 Plug 'easymotion/vim-easymotion'
-Plug 'junegunn/vim-pseudocl' | Plug 'junegunn/vim-oblique'
+Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim'
 Plug 'scrooloose/nerdcommenter'
 Plug 'Chiel92/vim-autoformat'
@@ -498,8 +498,8 @@ function! CloseWindow()
 endfunction
 
 " Buffer {
-"nnoremap <silent> <Leader>d :Bdelete<CR>
-nnoremap <silent> <Leader>d :Bclose<CR>
+nnoremap <silent> <Leader>d :Bdelete<CR>
+"nnoremap <silent> <Leader>d :Bclose<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
 " }
 
@@ -567,17 +567,22 @@ endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 " }
 
-" vim-oblique {
-let g:oblique#incsearch_highlight_all = 1
+" incsearch.vim {
+map / <Plug>(incsearch-forward)
+map ? <Plug>(incsearch-backward)
+map g/ <Plug>(incsearch-stay)
 
-" Swap # and *
-map # <Plug>(Oblique-*)
-map * <Plug>(Oblique-#)
+let g:incsearch#auto_nohlsearch = 1
 
-" Move your cursor line to the middle of the screen after search
-autocmd! User Oblique       normal! zz
-autocmd! User ObliqueStar   normal! zz
-autocmd! User ObliqueRepeat normal! zz
+map n <Plug>(incsearch-nohl-n)
+map N <Plug>(incsearch-nohl-N)
+nmap # <Plug>(incsearch-nohl-*)
+nmap * <Plug>(incsearch-nohl-#)
+map g* <Plug>(incsearch-nohl-g*)
+map g# <Plug>(incsearch-nohl-g#)
+
+vmap # y<Plug>(incsearch-forward)<C-R>"<CR>
+vmap * y<Plug>(incsearch-backward)<C-R>"<CR>
 " }
 
 " No highlight search
@@ -616,6 +621,32 @@ function! BufferCount()
 	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
 endfunction
 
+function! Clear()
+	echon "\r\r"
+	echon ''
+endfunction
+
+function! GetString(prompt_text)
+	call Clear()
+	echon a:prompt_text
+
+	let str = ''
+	try
+		while 1
+			let n = getchar()
+			if n == 13
+				break
+			endif
+
+			let str .= nr2char(n)
+		endwhile
+	catch /^Vim:Interrupt$/
+		throw 'exit'
+	endtry
+
+	return str
+endfunction
+
 " Replace {
 function! Replace(mode, confirm, wholeword)
 	let word = ''
@@ -636,10 +667,10 @@ function! Replace(mode, confirm, wholeword)
 
 	let replace = ''
 	try
-		let options = {'prompt': 'Replace "' . word . '" with: '}
-		let replace = pseudocl#start(options)
+		let prompt_text = 'Replace "' . word . '" with: '
+		let replace = GetString(prompt_text)
 	catch 'exit'
-		call pseudocl#render#clear()
+		call Clear()
 		echon 'Replace: Canceled'
 		return
 	endtry
