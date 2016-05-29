@@ -42,6 +42,10 @@ sudo zypper install the_silver_searcher 或 sudo zypper install ack
 # CentOS
 sudo yum install ctags
 sudo yum install the_silver_searcher 或 sudo yum install ack
+
+# Mac
+brew install ctags
+brew install the_silver_searcher 或 brew install ack
 ```
 
 #### 2.2 Fonts
@@ -72,6 +76,11 @@ sudo zypper install llvm-clang
 sudo yum install gcc
 sudo yum install gcc-c++
 sudo yum install clang
+
+# Mac
+brew install gcc
+brew install g++
+brew install clang
 ```
 
 #### 2.5 Javascript
@@ -107,7 +116,10 @@ sudo apt-get install golang
 sudo zypper install go
 
 # CentOS
-sudo zypper install golang
+sudo yum install golang
+
+# Mac
+brew install go
 
 # 其他golang依赖工具
 # monkey-vim 安装成功后，执行以下vim命令
@@ -141,6 +153,9 @@ sudo zypper install lua
 
 # CentOS
 sudo yum install lua
+
+# Mac
+brew install lua
 ```
 
 #### 2.11 PHP
@@ -160,6 +175,9 @@ sudo zypper install checkbashisms
 
 # CentOS
 sudo yum install rpmdevtools
+
+# Mac
+brew install checkbashisms
 ```
 
 #### 2.13 Markdown
