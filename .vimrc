@@ -57,7 +57,6 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
-"Plug 'tpope/vim-endwise'
 Plug 'thinca/vim-ref'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
@@ -631,11 +630,24 @@ function! GetString(prompt_text)
 	try
 		while 1
 			let n = getchar()
+			if n == 27
+				throw 'exit'
+			endif
+
 			if n == 13
 				break
 			endif
 
-			let str .= nr2char(n)
+			let c = ''
+			if n is# "\<BS>" || n == 8
+				let str = strpart(str, 0, strlen(str)-1)
+				call Clear()
+				echon a:prompt_text . str
+			else
+				let c = nr2char(n)
+				let str .= c
+				echon c
+			endif
 		endwhile
 	catch /^Vim:Interrupt$/
 		throw 'exit'
@@ -681,7 +693,7 @@ function! Replace(mode, confirm, wholeword)
 		let flag .= 'e'
 	endif
 
-	execute '%s/' . search . '/' . replace . '/' . flag . '| update'
+	execute ',$s/' . search . '/' . replace . '/' . flag . "|1,'' -&& | update"
 endfunction
 
 " Replace in normal mode
