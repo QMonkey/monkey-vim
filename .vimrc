@@ -31,7 +31,6 @@ Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'majutsushi/tagbar'
 Plug 'sjl/gundo.vim'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
-Plug 'ryanoasis/vim-devicons'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'moll/vim-bbye'
@@ -404,12 +403,6 @@ let g:airline#extensions#windowswap#enabled = 1
 
 " Use powerline fonts
 let g:airline_powerline_fonts = 1
-" }
-
-" vim-devicons {
-let g:WebDevIconsNerdTreeGitPluginForceVAlign = 1
-let g:WebDevIconsUnicodeDecorateFolderNodes = 1
-let g:DevIconsEnableFoldersOpenClose = 1
 " }
 
 " Enable 256 color for vim

@@ -51,7 +51,6 @@ brew install the_silver_searcher or brew install ack
 #### 2.2 Fonts
 
 - [powerline-font](https://github.com/powerline/fonts)
-- [nerd-font](https://github.com/ryanoasis/nerd-fonts)
 
 #### 2.3 Docset
 
