@@ -33,18 +33,22 @@ git clone https://github.com/QMonkey/monkey-vim.git
 ```bash
 # Ubuntu
 sudo apt-get install ctags
+sudo apt-get install cmake
 sudo apt-get install silversearcher-ag or sudo apt-get install ack-grep
 
 # OpenSUSE
 sudo zypper install ctags
+sudo zypper install cmake
 sudo zypper install the_silver_searcher or sudo zypper install ack
 
 # CentOS
 sudo yum install ctags
+sudo yum install cmake
 sudo yum install the_silver_searcher or sudo yum install ack
 
 # Mac
 brew install ctags
+brew install cmake
 brew install the_silver_searcher or brew install ack
 ```
 
