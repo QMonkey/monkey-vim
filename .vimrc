@@ -968,6 +968,9 @@ autocmd FileType go nmap <silent><Leader>gr <Plug>(go-referrers)
 autocmd FileType go nmap <silent><Leader>gt <Plug>(go-test)
 autocmd FileType go nmap <silent><Leader>gf <Plug>(go-test-func)
 autocmd FileType go nmap <silent><Leader>ga <Plug>(go-alternate-edit)
+
+" Wait to redraw
+autocmd FileType go setlocal lazyredraw
 " }
 
 " vim-json {
