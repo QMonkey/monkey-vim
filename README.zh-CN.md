@@ -143,6 +143,10 @@ sudo zypper install java-1_8_0-openjdk-devel
 # CentOS
 sudo yum install astyle
 sudo yum install java-1.8.0-openjdk-devel.x86_64
+
+# Mac
+brew install astyle
+# 请安装oracle jdk
 ```
 
 #### 2.10 Lua
@@ -164,6 +168,24 @@ brew install lua
 #### 2.11 PHP
 
 ```bash
+# Ubuntu
+sudo apt-get install php
+sudo apt-get install php-pear
+pear install doc.php.net/pman
+
+# CentOS
+sudo yum install php
+sudo yum install php-pear
+pear install doc.php.net/pman
+
+# OpenSUSE
+sudo zypper install php
+sudo zypper install php-pear
+pear install doc.php.net/pman
+
+# Mac
+brew install php
+brew install php-pear
 pear install doc.php.net/pman
 ```
 
