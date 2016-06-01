@@ -175,6 +175,9 @@ autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "
 " FileType {
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+autocmd FileType php set matchpairs-=<:>
+" Wait to redraw
+autocmd FileType go set lazyredraw
 
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
@@ -968,9 +971,6 @@ autocmd FileType go nmap <silent><Leader>gr <Plug>(go-referrers)
 autocmd FileType go nmap <silent><Leader>gt <Plug>(go-test)
 autocmd FileType go nmap <silent><Leader>gf <Plug>(go-test-func)
 autocmd FileType go nmap <silent><Leader>ga <Plug>(go-alternate-edit)
-
-" Wait to redraw
-autocmd FileType go setlocal lazyredraw
 " }
 
 " vim-json {
