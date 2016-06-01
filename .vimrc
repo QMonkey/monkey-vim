@@ -67,7 +67,7 @@ Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-scripts/luarefvim', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
-Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
+"Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
@@ -79,8 +79,8 @@ Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
 Plug 'zaiste/tmux.vim', {'for': 'tmux'}
 Plug 'kshenoy/vim-signature'
 Plug 'Valloric/ListToggle'
-Plug 'wesQ3/vim-windowswap'
-Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
+"Plug 'wesQ3/vim-windowswap'
+"Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
@@ -278,7 +278,6 @@ let g:zv_disable_mapping = 1
 
 " Add what you want to refer
 let g:zv_file_types = {
-			\	'cpp': 'c++,boost',
 			\	'javascript': 'javascript,nodejs',
 			\	'sql': 'mysql',
 			\ }

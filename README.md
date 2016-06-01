@@ -249,8 +249,6 @@ Ctrl+down   Shrink the window vertically
 Ctrl+left   Stretch the window horizontally
 Ctrl+right  Shrink the window horizontally
 Leader+z    Toggle zoom
-
-Leader+ww   Swap two splits. You need to execute the command in that splits
 ```
 
 #### 1.5 Tab

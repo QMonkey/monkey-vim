@@ -249,8 +249,6 @@ Ctrl+down   窗口垂直方向收缩
 Ctrl+left   窗口水平方向伸展
 Ctrl+right  窗口水平方向收缩
 Leader+z    窗口放大/恢复
-
-Leader+ww   交换两个窗口（两个窗口都需要执行该命令）
 ```
 
 #### 1.5 Tab
