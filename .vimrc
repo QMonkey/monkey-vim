@@ -67,7 +67,6 @@ Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-scripts/luarefvim', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
-"Plug 'nelstrom/vim-textobj-rubyblock', {'for': 'ruby'}
 Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
@@ -79,8 +78,6 @@ Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
 Plug 'zaiste/tmux.vim', {'for': 'tmux'}
 Plug 'kshenoy/vim-signature'
 Plug 'Valloric/ListToggle'
-"Plug 'wesQ3/vim-windowswap'
-"Plug 'kana/vim-textobj-user' | Plug 'kana/vim-textobj-line' | Plug 'kana/vim-textobj-indent'
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
@@ -394,14 +391,6 @@ let g:airline#extensions#tabline#show_tab_type = 0
 let g:airline#extensions#tabline#buffer_idx_mode = 1
 let g:airline#extensions#tabline#fnamecollapse = 0
 let g:airline#extensions#tabline#show_close_button = 0
-
-let g:airline#extensions#ycm#enabled = 1
-let g:airline#extensions#ycm#error_symbol = 'Error:'
-let g:airline#extensions#ycm#warning_symbol = 'Warning:'
-let g:airline#extensions#syntastic#enabled = 1
-let g:airline#extensions#tagbar#enabled = 1
-let g:airline#extensions#ctrlspace#enabled = 1
-let g:airline#extensions#windowswap#enabled = 1
 
 " Use powerline fonts
 let g:airline_powerline_fonts = 1
