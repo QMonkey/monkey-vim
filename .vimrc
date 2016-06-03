@@ -75,7 +75,6 @@ Plug 'tpope/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
-Plug 'zaiste/tmux.vim', {'for': 'tmux'}
 Plug 'kshenoy/vim-signature'
 Plug 'Valloric/ListToggle'
 
