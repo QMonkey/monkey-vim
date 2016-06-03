@@ -523,7 +523,6 @@ nnoremap <silent><F4> :GundoToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
-nnoremap <silent><F10> :RainbowParenthesesToggle<CR>
 
 set pastetoggle=<F5>
 

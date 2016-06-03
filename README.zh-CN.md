@@ -248,7 +248,6 @@ F5      打开/关闭paste模式
 F7      异步运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
 F8      打开/关闭F7运行结果
 F9      预览Markdown
-F10     打开/关闭RainbowParentheses
 F11     全屏切换（仅在gui模式下有效）
 ```
 
