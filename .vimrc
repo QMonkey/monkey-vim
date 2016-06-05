@@ -56,6 +56,8 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
+Plug 'kshenoy/vim-signature'
+Plug 'Valloric/ListToggle'
 Plug 'thinca/vim-ref'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
@@ -75,8 +77,6 @@ Plug 'tpope/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
-Plug 'kshenoy/vim-signature'
-Plug 'Valloric/ListToggle'
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
@@ -699,9 +699,9 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 "let g:ack_use_dispatch = 1
 
 if executable('ag')
-	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir .git --ignore-dir .hg --ignore-dir .svn --ignore-dir .bzr'
+	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
 elseif executable('ack') || executable('ack-grep')
-	let g:ack_default_options = ' -s -H --nocolor --nogroup --nopager --column --smart-case --ignore-dir .git --ignore-dir .hg --ignore-dir .svn --ignore-dir .bzr'
+	let g:ack_default_options = ' -s -H --nocolor --nogroup --nopager --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
 endif
 " }
 
@@ -713,6 +713,20 @@ set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize
 nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
 nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+" }
+
+" CtrlP {
+let g:ctrlp_follow_symlinks = 1
+let g:ctrlp_custom_ignore = {
+			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
+			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp)$',
+			\ }
+if executable( 'ag' )
+	" Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+	let g:ctrlp_user_command = 'ag %s -l --nogroup --nocolor --smart-case -g ""'
+	" ag is fast enough that CtrlP doesn't need to cache
+	let g:ctrlp_use_caching = 0
+endif
 " }
 
 " CtrlSpace {
@@ -781,7 +795,7 @@ let g:NERDTreeAutoDeleteBuffer = 1
 " Show hidden
 let NERDTreeShowHidden = 1
 " Ignore files
-let NERDTreeIgnore=['\.o$', '\.obj$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+let NERDTreeIgnore=['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
 
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
