@@ -36,6 +36,7 @@ Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'moll/vim-bbye'
 "Plug 'chrismccord/bclose.vim'
 Plug 'easymotion/vim-easymotion'
+Plug 'svermeulen/vim-easyclip'
 Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim'
 Plug 'scrooloose/nerdcommenter'
@@ -822,7 +823,6 @@ function! Refresh()
 
 	" Jump back
 	execute winnr . 'wincmd w'
-	"redraw
 endfunction
 " }
 
@@ -996,6 +996,15 @@ let g:lua_define_completion_mappings = 0
 " vim-EasyMotion {
 let g:EasyMotion_smartcase = 1
 " }
+
+" vim-easyclip {
+let g:EasyClipUseYankDefaults = 0
+let g:EasyClipUseCutDefaults = 0
+let g:EasyClipUsePasteDefaults = 0
+let g:EasyClipEnableBlackHoleRedirect = 0
+let g:EasyClipUsePasteToggleDefaults = 0
+let g:EasyClipUseSubstituteDefaults = 1
+"
 
 " vim-markdown {
 let g:vim_markdown_folding_disabled = 1

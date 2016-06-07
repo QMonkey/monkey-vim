@@ -232,6 +232,7 @@ The "Leader" key below means comma key.
 #### 1.1 Remap
 
 ```
+s       Replace a motion/text object with clipboard content
 Y       Copy from the cursor position to the end of the line, same as y$
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
@@ -485,6 +486,7 @@ Ctrl+d  Delete current row
 #### 3.1 Remap
 
 ```
+s       Replace selected text with clipboard content
 ;       Enter command line mode, same as :
 ```
 
