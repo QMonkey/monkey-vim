@@ -51,7 +51,6 @@ Plug 'Valloric/YouCompleteMe', {'do': './install.py --clang-completer --gocode-c
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
-Plug 'mattn/webapi-vim' | Plug 'mattn/gist-vim'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-unimpaired'

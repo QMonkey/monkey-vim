@@ -605,21 +605,6 @@ Ctrl+e  Jump to the end of the command line
 :YcmGenerateConfig
 ```
 
-### 5. Gist
-
-```bash
-# You need to config below before use Gist
-git config --global github.user <username>
-```
-
-```vim
-" Push current buffer or selected text to Gist
-:Gist
-
-" Please refer the official doc for more help
-:h Gist.vim
-```
-
 ## Use git in vim
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
