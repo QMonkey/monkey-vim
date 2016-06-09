@@ -478,6 +478,7 @@ function! CloseWindow()
 	" If NERDTreeTabs is opend, only call quitall can save the session
 	quitall
 endfunction
+" }
 
 " Buffer {
 nnoremap <silent> <Leader>d :Bdelete<CR>
@@ -528,7 +529,6 @@ set pastetoggle=<F5>
 
 " Disbale paste mode when leaving insert mode
 autocmd InsertLeave * set nopaste
-" }
 " }
 
 " Zoom {
