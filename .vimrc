@@ -34,8 +34,8 @@ Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'moll/vim-bbye'
-"Plug 'chrismccord/bclose.vim'
 Plug 'easymotion/vim-easymotion'
+Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-easyclip'
 Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim'
@@ -482,7 +482,6 @@ endfunction
 
 " Buffer {
 nnoremap <silent> <Leader>d :Bdelete<CR>
-"nnoremap <silent> <Leader>d :Bclose<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
 " }
 
