@@ -737,6 +737,19 @@ let g:CtrlSpaceSaveWorkspaceOnExit = 1
 let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
 " }
 
+" vim-EasyMotion {
+let g:EasyMotion_smartcase = 1
+" }
+
+" vim-easyclip {
+let g:EasyClipUseYankDefaults = 0
+let g:EasyClipUseCutDefaults = 0
+let g:EasyClipUsePasteDefaults = 0
+let g:EasyClipEnableBlackHoleRedirect = 0
+let g:EasyClipUsePasteToggleDefaults = 0
+let g:EasyClipUseSubstituteDefaults = 1
+" }
+
 " vim-rooter {
 let g:rooter_silent_chdir = 1
 "let g:rooter_use_lcd = 1
@@ -824,19 +837,6 @@ function! Refresh()
 endfunction
 " }
 
-" vim-easy-align {
-" Start interactive EasyAlign in visual mode (e.g. vipga)
-xmap ga <Plug>(EasyAlign)
-" Start interactive EasyAlign for a motion/text object (e.g. gaip)
-nmap ga <Plug>(EasyAlign)
-" }
-
-" vim-better-whitespace {
-let g:better_whitespace_filetypes_blacklist = []
-
-nnoremap <silent><Leader><Space> :StripWhitespace<CR>
-" }
-
 " Tagbar {
 " Tagbar width
 let tagbar_width = 32
@@ -883,10 +883,6 @@ autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
 autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
 autocmd FileType sql setlocal omnifunc=sqlcomplete#Complete
 autocmd FileType java setlocal omnifunc=javacomplete#Complete
-
-" vim-javacomplete2 {
-autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
-" }
 
 " Ultisnips {
 let g:UltiSnipsExpandTrigger='<Leader><tab>'
@@ -947,6 +943,19 @@ let g:formatters_python = ['yapf']
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
 " }
 
+" vim-easy-align {
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
+" }
+
+" vim-better-whitespace {
+let g:better_whitespace_filetypes_blacklist = []
+
+nnoremap <silent><Leader><Space> :StripWhitespace<CR>
+" }
+
 " vim-go {
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
@@ -972,6 +981,10 @@ autocmd FileType go nmap <silent><Leader>gf <Plug>(go-test-func)
 autocmd FileType go nmap <silent><Leader>ga <Plug>(go-alternate-edit)
 " }
 
+" vim-javacomplete2 {
+autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
+" }
+
 " vim-json {
 let g:vim_json_syntax_conceal = 0
 " }
@@ -990,19 +1003,6 @@ let g:lua_complete_dynamic = 1
 let g:lua_complete_omni = 1
 let g:lua_define_completion_mappings = 0
 " }
-
-" vim-EasyMotion {
-let g:EasyMotion_smartcase = 1
-" }
-
-" vim-easyclip {
-let g:EasyClipUseYankDefaults = 0
-let g:EasyClipUseCutDefaults = 0
-let g:EasyClipUsePasteDefaults = 0
-let g:EasyClipEnableBlackHoleRedirect = 0
-let g:EasyClipUsePasteToggleDefaults = 0
-let g:EasyClipUseSubstituteDefaults = 1
-"
 
 " vim-markdown {
 let g:vim_markdown_folding_disabled = 1
