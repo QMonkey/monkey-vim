@@ -201,8 +201,8 @@ endfunction
 " Use man as docset for unrecognized filetype
 autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
 function! SetUnrecognizedFileTypeReferences()
-	nnoremap <buffer><silent><S-k> :execute 'Ref man' GetCurrentWord()<CR>
-	vnoremap <buffer><silent><S-k> <ESC>:execute 'Ref man' GetVisualSelection()<CR>
+	nnoremap <buffer><silent><S-k> :execute 'Man' GetCurrentWord()<CR>
+	vnoremap <buffer><silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
 endfunction
 
 autocmd FileType * call SetReferences()
@@ -934,6 +934,7 @@ let g:go_disable_autoinstall = 1
 let g:go_fmt_autosave = 0
 let g:go_dispatch_enabled = 1
 let g:go_fmt_command = 'goimports'
+let g:go_doc_keywordprg_enabled = 0
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 

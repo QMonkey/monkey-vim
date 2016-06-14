@@ -81,8 +81,6 @@ sudo yum install gcc-c++
 sudo yum install clang
 
 # Mac
-brew install gcc
-brew install g++
 brew install clang
 ```
 
@@ -166,23 +164,17 @@ brew install lua
 #### 2.11 PHP
 
 ```bash
-pear install doc.php.net/pman
-
 # Ubuntu
 sudo apt-get install php
-sudo apt-get install php-pear
 
 # CentOS
 sudo yum install php
-sudo yum install php-pear
 
 # OpenSUSE
 sudo zypper install php
-sudo zypper install php-pear
 
 # Mac
 brew install php
-brew install php-pear
 ```
 
 #### 2.12 Shell
