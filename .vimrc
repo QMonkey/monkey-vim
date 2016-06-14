@@ -277,7 +277,7 @@ if has('mac') || has('macunix')
 		if empty(ftype)
 			let dash_command = 'Dash!'
 		endif
-		redraw!
+		call Clear()
 
 		let prompt_text = 'Dash (' . ftype . ")\n" . 'Search for: '
 		let key = Prompt(prompt_text)
