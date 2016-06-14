@@ -296,7 +296,7 @@ Leader+rcw  替换光标所在的单词（整词，需要逐一确认）
 #### 1.8 语言相关
 
 ```
-K                   查看光标所在的单词在文档中的解释。（若文件类型为c,c++,sh,vim，则打开split查看。否则打开dash或zeal查看。）
+K                   查看光标所在的单词在文档中的解释。（若文件类型为c,sh,vim，则打开split查看。否则打开dash或zeal查看。）
 Leader+Leader+z     输入语言类型和关键字，在dash或zeal中查看相应的解释
 
 gd              GoDef
