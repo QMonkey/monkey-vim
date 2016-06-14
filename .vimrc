@@ -29,7 +29,6 @@ call plug#begin($HOME . '/.vim/bundle')
 Plug 'tomasr/molokai'
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'majutsushi/tagbar'
-Plug 'sjl/gundo.vim'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
@@ -53,12 +52,10 @@ Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'Valloric/ListToggle'
-Plug 'thinca/vim-ref'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
@@ -66,13 +63,10 @@ Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'hdima/python-syntax', {'for': 'python'}
 Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
-Plug 'vim-scripts/luarefvim', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
-Plug 'yuku-t/vim-ref-ri', {'for': 'ruby'}
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
-Plug 'soh335/vim-ref-pman', {'for': 'php'}
 Plug 'tpope/vim-markdown', {'for': 'markdown'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
@@ -195,7 +189,10 @@ endfunc
 " }
 
 " Docset {
-autocmd FileType ref-man,ref-pydoc,ref-pman,help,godoc set nolist
+autocmd FileType man,help set nolist
+
+" Enable 'Man' command
+source $VIMRUNTIME/ftplugin/man.vim
 
 function! GetCurrentWord()
 	return expand('<cword>')
@@ -211,13 +208,8 @@ endfunction
 autocmd FileType * call SetReferences()
 function! SetReferences()
 	let filetype_references = {
-				\	'c': 'Ref man',
-				\	'cpp': 'Ref man',
-				\	'sh': 'Ref man',
-				\	'go': 'GoDoc',
-				\	'python': 'Ref pydoc',
-				\	'ruby': 'Ref ri',
-				\	'php': 'Ref pman',
+				\	'c': 'Man',
+				\	'sh': 'Man',
 				\	'vim': 'help',
 				\ }
 
@@ -227,11 +219,8 @@ function! SetReferences()
 			continue
 		endif
 
-		" vim-go has do it for you
-		if ftype != 'go'
-			let search = expand('<cword>')
-			execute 'nnoremap <buffer><silent><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
-		endif
+		let search = expand('<cword>')
+		execute 'nnoremap <buffer><silent><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
 
 		" Enable reference in visual-mode
 		execute 'vnoremap <buffer><silent><S-k> <ESC>:execute "' . reference . '" GetVisualSelection()<CR>'
@@ -242,17 +231,10 @@ function! SetReferences()
 	if !is_reference_set
 		" Default reference: dash or zeal
 		if has('mac') || has('macunix')
-			" vim-lua-ftplugin has do it for you
-			if &filetype != 'lua'
-				nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
-			endif
+			nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
 			vnoremap <buffer><silent><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
 		else
-			" vim-lua-ftplugin has do it for you
-			if &filetype != 'lua'
-				nnoremap <buffer><silent><S-k> :Zeavim<CR>
-			endif
-
+			nnoremap <buffer><silent><S-k> :Zeavim<CR>
 			vnoremap <buffer><silent><S-k> <ESC>:ZvV<CR>
 		endif
 	endif
@@ -318,16 +300,6 @@ set sidescrolloff=15
 
 " Number of cols to scroll at a time
 set sidescroll=1
-
-" Enable undo file
-set undofile
-" Undo files
-set undodir=$HOME/.vim/undo/
-
-" Create undo directory if directory not exists
-if exists('*mkdir') && !isdirectory($HOME . "/.vim/undo")
-	call mkdir($HOME . '/.vim/undo', 'p')
-endif
 
 " Disable fold on start up
 set nofoldenable
@@ -519,7 +491,6 @@ nnoremap <C-right> <C-w><
 " F2 ~ F10 {
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
-nnoremap <silent><F4> :GundoToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
@@ -840,11 +811,6 @@ endfunction
 " Tagbar {
 " Tagbar width
 let tagbar_width = 32
-" }
-
-" Gundo {
-let g:gundo_map_move_older = "<C-n>"
-let g:gundo_map_move_newer = "<C-p>"
 " }
 
 " Gitv {

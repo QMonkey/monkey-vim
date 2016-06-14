@@ -241,7 +241,6 @@ q       Quit current window, same as :q
 ```
 F2      Toggle NERDTree
 F3      Toggle Tagbar
-F4      Toggle Gundo
 F5      Toggle paste mode
 F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
 F8      Toggle output window of F7
@@ -338,59 +337,7 @@ m-          Delete all marks in current line
 m<space>    Delete all marks in current buffer
 ```
 
-#### 1.11 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
-
-```
-[b                  Jump to previous buffer
-]b                  Jump to next buffer
-[B                  Jump to first buffer
-]B                  Jump to last buffer
-
-[t                  Jump to previous tab
-]t                  Jump to next tab
-[T                  Jump to first tab
-]T                  Jump to last tab
-
-[n                  Go to the previous SCM conflict marker or diff/patch hunk
-]n                  Go to the next SCM conflict marker or diff/patch hunk
-
-[<Space>            Add [count] blank lines above the cursor
-]<Space>            Add [count] blank lines below the cursor
-
-[e                  Exchange the current line with [count] lines above it
-]e                  Exchange the current line with [count] lines below it
-
-cob                 Toggle 'background' (dark/light)
-coc                 Toggle 'cursorline'
-cod                 Toggle 'diff' (:diffthis/:diffoff)
-coh                 Toggle 'hlsearch'
-coi                 Toggle 'ignorecase'
-col                 Toggle 'list'
-con                 Toggle 'number'
-cor                 Toggle 'relativenumber'
-cos                 Toggle 'spell'
-cou                 Toggle 'cursorcolumn'
-cov                 Toggle 'virtualedit'
-cow                 Toggle 'wrap'
-cox                 Toggle 'cursorline' or 'cursorcolumn'
-
-[x{motion}          XML encode
-[xx                 XML encode for current line
-]x{motion}          HTML/XML decode
-]xx                 HTML/XML decode for current line
-
-[u{motion}          URL encode
-[uu                 URL encode for current line
-]u{motion}          URL decode
-]uu                 URL decode for current line
-
-[y{motion}          C String encode
-[yy                 C String encode for current line
-]y{motion}          C String decode
-]yy                 C String decode for current line
-```
-
-#### 1.12 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.11 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          Go to definition
@@ -398,13 +345,13 @@ Leader+jd   Go to declaration
 Leader+ji   Go to header file
 ```
 
-#### 1.13 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.12 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    Toggle error window
 ```
 
-#### 1.14 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.13 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     Jump to specific line after the cursor
@@ -414,7 +361,7 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.14 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  Open CtrlSpace
@@ -423,20 +370,20 @@ Leader+bs   Save workspace
 Leader+rs   Restore workspace
 ```
 
-#### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.15 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      Open CtrlP
 ```
 
-#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.16 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.17 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -445,7 +392,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.19 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.18 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -456,7 +403,7 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.20 Others
+#### 1.19 Others
 
 ```
 '.              Jump to last changes
@@ -507,20 +454,7 @@ Leader+rc   Same as "Leader+R", but need to confirm
 K       Refer selected text in doc
 ```
 
-#### 3.5 Pairs of handy bracket mappings: [vim-unimpaired](https://github.com/tpope/vim-unimpaired)
-
-```
-[x      XML encode for selected text
-]x      HTML/XML decode for selected text
-
-[u      URL encode for selected text
-]u      URL decode for selected text
-
-[y      C String encode for selected text
-]y      C string decode for selected text
-```
-
-#### 3.6 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.5 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     Jump to specific line after the cursor
@@ -530,20 +464,20 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 3.7 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.6 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the text selected in visual mode
 Leader+cu       Uncomments the selected line(s)
 ```
 
-#### 3.8 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 3.7 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     Add surround A for selected text
 ```
 
-#### 3.9 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.8 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign in visual mode (e.g. vipga)
@@ -734,7 +668,7 @@ fi
 
 ```bash
 vman() {
-    vim -R -c "Ref man $*" ~/.vimrc \
+    vim -R -c "Man $*" ~/.vimrc \
            -c "if line('$') == 1 | cquit | endif" \
            -c "silent only" \
            -c "setlocal nomodifiable" \
