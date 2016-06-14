@@ -223,6 +223,8 @@ The "Leader" key below means comma key.
 s       Replace a motion/text object with clipboard content
 S       Replace the text from cursor position to the end of the line with clipboard content
 Y       Copy from the cursor position to the end of the line, same as y$
+H       To the first non-blank character of the line, same as ^
+L       To the last non-blank character of the line, same as $
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
 q       Quit current window, same as :q
@@ -270,8 +272,8 @@ Leader+z    Toggle zoom
 ```
 Leader+t    Open a tab with given file path in current window
 
-H           Jump to previous tab
-L           Jump to next tab
+[+t         Jump to previous tab
+]+t         Jump to next tab
 Leader+1~9  Jump to the 1~9 tab
 Leader+[    Jump to first tab
 Leader+]    Jump to last tab

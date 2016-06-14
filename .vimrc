@@ -36,6 +36,7 @@ Plug 'moll/vim-bbye'
 Plug 'easymotion/vim-easymotion'
 Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-easyclip'
+Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim'
 Plug 'scrooloose/nerdcommenter'
@@ -105,8 +106,14 @@ set ruler
 
 set showmatch
 
+" Cursorline {
 " Highlight current line
 set cursorline
+
+" Only have cursorline in current window
+autocmd WinLeave * set nocursorline
+autocmd WinEnter * set cursorline
+" }
 
 " Search in time
 set incsearch
@@ -397,6 +404,10 @@ nnoremap Y y$
 noremap j gj
 noremap k gk
 
+" Jump to start and end of line using the home row keys
+noremap H ^
+noremap L $
+
 " Keep text selected after manual indentation
 vnoremap < <gv
 vnoremap > >gv
@@ -459,8 +470,8 @@ nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%
 
 " Tab {
 nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
-nnoremap <silent><S-h> :tabprevious<CR>
-nnoremap <silent><S-l> :tabnext<CR>
+nnoremap <silent>[t :tabprevious<CR>
+nnoremap <silent>]t :tabnext<CR>
 nnoremap <Leader>1 1gt
 nnoremap <Leader>2 2gt
 nnoremap <Leader>3 3gt
@@ -719,6 +730,12 @@ let g:EasyClipUsePasteDefaults = 0
 let g:EasyClipEnableBlackHoleRedirect = 0
 let g:EasyClipUsePasteToggleDefaults = 0
 let g:EasyClipUseSubstituteDefaults = 1
+" }
+
+" FastFold {
+" Only update fold after type zx or zX
+let g:fastfold_fold_command_suffixes = ['x', 'X', 'a', 'A']
+let g:fastfold_fold_movement_commands = []
 " }
 
 " vim-rooter {
