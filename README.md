@@ -318,20 +318,26 @@ Ctrl+]  Jump to the definition of the keyword under the cursor
 g]      Like "Ctrl+]", but need to choose one tag to jump
 ```
 
-#### 1.10 Marks
+#### 1.10 Fold
 
 ```
-m[a-zA-Z]   Mark current row
-dm[a-zA-Z]  Delete mark[a-zA-Z]
-
-'[a-zA-Z]   Jump to the mark
-
-m/          View all marks in Location List
-m-          Delete all marks in current line
-m<space>    Delete all marks in current buffer
+TODO
 ```
 
-#### 1.11 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.11 Marks
+
+```
+m+[a-zA-Z]   Mark current row
+dm+[a-zA-Z]  Delete mark[a-zA-Z]
+
+'+[a-zA-Z]   Jump to the mark
+
+m+/          View all marks in Location List
+m+-          Delete all marks in current line
+m+<Space>    Delete all marks in current buffer
+```
+
+#### 1.12 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          Go to definition
@@ -339,13 +345,13 @@ Leader+jd   Go to declaration
 Leader+ji   Go to header file
 ```
 
-#### 1.12 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    Toggle error window
 ```
 
-#### 1.13 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.14 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     Jump to specific line after the cursor
@@ -355,7 +361,7 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 1.14 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  Open CtrlSpace
@@ -364,20 +370,20 @@ Leader+bs   Save workspace
 Leader+rs   Restore workspace
 ```
 
-#### 1.15 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      Open CtrlP
 ```
 
-#### 1.16 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.17 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -386,7 +392,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.18 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.19 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -397,13 +403,15 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.19 Others
+#### 1.20 Others
 
 ```
 '.              Jump to last changes
 ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
+[+<Space>       Add [count] blank lines above the cursor
+]+<Space>       Add [count] blank lines below the cursor
 Leader+cd       Change project root
 Leader+/        No highlight search
 Leader+space    Strip whitespace

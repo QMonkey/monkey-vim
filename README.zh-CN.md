@@ -318,20 +318,26 @@ Ctrl+]  跳转到符号定义处，如有多处定义，则跳到第一处
 g]      选择一处符号定义并跳转
 ```
 
-#### 1.10 Marks
+#### 1.10 Fold
 
 ```
-m[a-zA-Z]   标记当前行
-dm[a-zA-Z]  删除标记[a-zA-Z]
-
-'[a-zA-Z]   跳转到标记行
-
-m/          在Location List里，查看当前buffer的所有标记
-m-          删除当前行的所有标记
-m<space>    删除当前buffer的所有标记
+TODO
 ```
 
-#### 1.11 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.11 Marks
+
+```
+m+[a-zA-Z]   标记当前行
+dm+[a-zA-Z]  删除标记[a-zA-Z]
+
+'+[a-zA-Z]   跳转到标记行
+
+m+/          在Location List里，查看当前buffer的所有标记
+m+-          删除当前行的所有标记
+m+<Space>    删除当前buffer的所有标记
+```
+
+#### 1.12 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          跳转到定义
@@ -339,13 +345,13 @@ Leader+jd   跳转到声明
 Leader+ji   跳转到头文件
 ```
 
-#### 1.12 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    打开/关闭错误信息窗口
 ```
 
-#### 1.13 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.14 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
 
 ```
 Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
@@ -355,7 +361,7 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 1.14 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.15 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  打开CtrlSpace
@@ -364,20 +370,20 @@ Leader+bs   保存workspace
 Leader+rs   恢复workspace
 ```
 
-#### 1.15 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.16 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.16 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.17 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -386,7 +392,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.18 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.19 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式
@@ -397,13 +403,15 @@ ga              开始对齐模式
 :h vim-easy-align
 ```
 
-#### 1.19 其他
+#### 1.20 其他
 
 ```
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
+[+<Space>       在光标之上添加n个空行
+]+<Space>       在光标之下添加n个空行
 Leader+cd       切换到当前文件所在项目根路径
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符

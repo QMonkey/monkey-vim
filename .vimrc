@@ -111,8 +111,8 @@ set showmatch
 set cursorline
 
 " Only have cursorline in current window
-autocmd WinLeave * set nocursorline
-autocmd WinEnter * set cursorline
+autocmd InsertEnter,WinLeave * set nocursorline
+autocmd InsertLeave,WinEnter * set cursorline
 " }
 
 " Search in time
@@ -163,11 +163,19 @@ set shiftwidth=8
 " Never use space to replace tab
 set noexpandtab
 
+set ttimeout
+set ttimeoutlen=100
+
 " Show tab and eof
 set list listchars=tab:▸\ ,eol:¬,trail:⋅
 
 " Restore cursor to previous editing position
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+
+" Load matchit.vim, but only if the user hasn't installed a newer version.
+if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
+	runtime! macros/matchit.vim
+endif
 
 " FileType {
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
@@ -416,6 +424,10 @@ noremap ; :
 
 " Remap U to <C-r> for easier redo
 nnoremap U <C-r>
+
+" Quickly add empty lines
+nnoremap [<Space> :<C-u>put! =repeat(nr2char(10), v:count1)<CR>'[
+nnoremap ]<Space> :<C-u>put =repeat(nr2char(10), v:count1)<CR>
 
 " Better comand-line editing
 cnoremap <C-j> <Down>
@@ -688,7 +700,7 @@ endif
 
 " Session {
 " Save session options
-set sessionoptions="blank,buffers,folds,globals,help,localoptions,options,resize,sesdir,tabpages,winpos,winsize"
+set sessionoptions="blank,buffers,folds,globals,help,localoptions,resize,sesdir,tabpages,winpos,winsize"
 
 " Backup
 nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
