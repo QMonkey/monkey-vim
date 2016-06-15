@@ -111,8 +111,8 @@ set showmatch
 set cursorline
 
 " Only have cursorline in current window
-autocmd InsertEnter,WinLeave * set nocursorline
-autocmd InsertLeave,WinEnter * set cursorline
+autocmd InsertEnter,BufWinLeave,WinLeave * set nocursorline
+autocmd InsertLeave,BufWinEnter,WinEnter * set cursorline
 " }
 
 " Search in time
