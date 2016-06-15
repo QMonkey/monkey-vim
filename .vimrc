@@ -419,7 +419,8 @@ function! LightLineFilename()
 endfunction
 
 function! LightLineGitGutter()
-	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
+	let fname = expand('%:t')
+	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive') || fname == '[Plugins]'
 		return ''
 	endif
 
