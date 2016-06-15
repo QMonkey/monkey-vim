@@ -29,7 +29,7 @@ call plug#begin($HOME . '/.vim/bundle')
 Plug 'tomasr/molokai'
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'majutsushi/tagbar'
-Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
+Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'moll/vim-bbye'
@@ -357,29 +357,168 @@ set t_vb=
 " Disable mouse
 set mouse=
 
+" Only if there are at least two tab pages
+set showtabline=1
+
 " Always show status line
 set laststatus=2
 
-" vim-airline {
-let g:airline_theme = 'badwolf'
-let g:airline_detect_paste = 1
-let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#show_buffers = 1
-let g:airline#extensions#tabline#buffer_min_count = 0
-let g:airline#extensions#tabline#show_tabs = 1
-let g:airline#extensions#tabline#tab_min_count = 0
-let g:airline#extensions#tabline#exclude_preview = 1
+" lightline.vim {
+let g:lightline = {
+			\ 'active': {
+			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ], ['ctrlpmark'] ],
+			\   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
+			\ },
+			\ 'component_function': {
+			\   'gitgutter': 'LightLineGitGutter',
+			\   'fugitive': 'LightLineFugitive',
+			\   'filename': 'LightLineFilename',
+			\   'fileformat': 'LightLineFileformat',
+			\   'filetype': 'LightLineFiletype',
+			\   'fileencoding': 'LightLineFileencoding',
+			\   'mode': 'LightLineMode',
+			\   'ctrlpmark': 'CtrlPMark',
+			\ },
+			\ 'component_expand': {
+			\   'tabs': 'lightline#tabs',
+			\   'syntastic': 'SyntasticStatuslineFlag',
+			\ },
+			\ 'component_type': {
+			\   'syntastic': 'error',
+			\ },
+			\ 'separator': { 'left': '', 'right': '' },
+			\ 'subseparator': { 'left': '', 'right': '' },
+			\ 'tab': {
+			\   'active': [ 'filename' ],
+			\   'inactive': [ 'filename' ],
+			\ },
+			\ 'tabline': {
+			\   'left': [ [ 'tabs' ] ],
+			\   'right': [ [] ]
+			\ },
+			\ 'tabline_separator': { 'left': '', 'right': '' },
+			\ 'tabline_subseparator': { 'left': '', 'right': '' },
+			\ }
 
-" Only show tab number
-let g:airline#extensions#tabline#tab_nr_type = 1
-let g:airline#extensions#tabline#show_tab_nr = 0
-let g:airline#extensions#tabline#show_tab_type = 0
-let g:airline#extensions#tabline#buffer_idx_mode = 1
-let g:airline#extensions#tabline#fnamecollapse = 0
-let g:airline#extensions#tabline#show_close_button = 0
+function! LightLineModified()
+	return &filetype =~ 'help' ? '' : &modified ? '~' : &modifiable ? '' : '-'
+endfunction
 
-" Use powerline fonts
-let g:airline_powerline_fonts = 1
+function! LightLineReadonly()
+	return &filetype !~? 'help' && &readonly ? '' : ''
+endfunction
+
+function! LightLineFilename()
+	let fname = expand('%:t')
+	return fname == 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
+				\ fname == '__Tagbar__' ? '' :
+				\ fname =~ 'NERD_tree' ? '' :
+				\ ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+				\ ('' != fname ? fname : '[No Name]') .
+				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
+endfunction
+
+function! LightLineGitGutter()
+	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
+		return ''
+	endif
+
+	let git_dir = fugitive#extract_git_dir(expand('%'))
+	if git_dir ==# ''
+		return ''
+	endif
+
+	if expand('%:t') !~? 'Tagbar\|NERD'
+		let summary = GitGutterGetHunkSummary()
+		return '+' . summary[0] . ' ~' . summary[1] . ' -' . summary[2]
+	endif
+	return ''
+endfunction
+
+function! LightLineFugitive()
+	if !exists('g:loaded_fugitive')
+		return ''
+	endif
+
+	let git_dir = fugitive#extract_git_dir(expand('%'))
+	if git_dir ==# ''
+		return ''
+	endif
+
+	try
+		if expand('%:t') !~? 'Tagbar\|NERD'
+			let mark = ' '
+			let branch = fugitive#head()
+			return branch !=# '' ? mark.branch : ''
+		endif
+	catch
+	endtry
+	return ''
+endfunction
+
+function! LightLineFileformat()
+	return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+
+function! LightLineFiletype()
+	return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'unknown') : ''
+endfunction
+
+function! LightLineFileencoding()
+	return winwidth(0) > 70 ? (&fileencoding !=# '' ? &fileencoding : &encoding) : ''
+endfunction
+
+function! LightLineMode()
+	let fname = expand('%:t')
+	return fname == '__Tagbar__' ? 'Tagbar' :
+				\ fname == 'ControlP' ? 'CtrlP' :
+				\ fname =~ 'NERD_tree' ? 'NERDTree' :
+				\ winwidth(0) > 60 ? lightline#mode() : ''
+endfunction
+
+function! CtrlPMark()
+	if expand('%:t') =~ 'ControlP' && has_key(g:lightline, 'ctrlp_item')
+		call lightline#link('iR'[g:lightline.ctrlp_regex])
+		return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
+					\ , g:lightline.ctrlp_next], 0)
+	else
+		return ''
+	endif
+endfunction
+
+let g:ctrlp_status_func = {
+			\ 'main': 'CtrlPStatusFunc_1',
+			\ 'prog': 'CtrlPStatusFunc_2',
+			\ }
+
+function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
+	let g:lightline.ctrlp_regex = a:regex
+	let g:lightline.ctrlp_prev = a:prev
+	let g:lightline.ctrlp_item = a:item
+	let g:lightline.ctrlp_next = a:next
+	return lightline#statusline(0)
+endfunction
+
+function! CtrlPStatusFunc_2(str)
+	return lightline#statusline(0)
+endfunction
+
+let g:tagbar_status_func = 'TagbarStatusFunc'
+
+function! TagbarStatusFunc(current, sort, fname, ...) abort
+	let g:lightline.fname = a:fname
+	return lightline#statusline(0)
+endfunction
+
+augroup AutoSyntastic
+	autocmd!
+	autocmd BufWritePost * call s:syntastic()
+augroup END
+
+function! s:syntastic()
+	SyntasticCheck
+	call lightline#update()
+endfunction
 " }
 
 " Enable 256 color for vim
@@ -727,8 +866,6 @@ endif
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
-
-let g:CtrlSpaceStatuslineFunction = 'airline#extensions#ctrlspace#statusline()'
 " }
 
 " vim-EasyMotion {
