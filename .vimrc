@@ -370,6 +370,9 @@ let g:lightline = {
 			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ], ['ctrlpmark'] ],
 			\   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
 			\ },
+			\ 'inactive': {
+			\   'left': [ [ 'mode', 'filename' ] ],
+			\ },
 			\ 'component_function': {
 			\   'gitgutter': 'LightLineGitGutter',
 			\   'fugitive': 'LightLineFugitive',
@@ -397,7 +400,7 @@ let g:lightline = {
 			\ },
 			\ 'tabline': {
 			\   'left': [ [ 'tabs' ] ],
-			\   'right': [ [] ]
+			\   'right': []
 			\ },
 			\ 'tabline_separator': { 'left': '', 'right': '' },
 			\ 'tabline_subseparator': { 'left': '', 'right': '' },
@@ -412,6 +415,10 @@ function! LightLineReadonly()
 endfunction
 
 function! LightLineFilename()
+	if GetWindowType() != 0
+		return ''
+	endif
+
 	let fname = expand('%:t')
 	return fname == 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
 				\ fname == '__Tagbar__' ? '' :
@@ -420,6 +427,22 @@ function! LightLineFilename()
 				\ ('' != fname ? fname : '[No Name]') .
 				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
+
+function! GetWindowType()
+	if &previewwindow
+		return 3
+	endif
+
+	if &filetype is# 'qf'
+		if empty(getwinvar(winnr(), 'quickfix_title', ''))
+			return 2
+		endif
+
+		return 1
+	endif
+
+	return 0
+endfun
 
 function! IsGitFile()
 	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
@@ -448,15 +471,23 @@ function! IsGitFile()
 endfunction
 
 function! LightLineGitGutter()
+	if GetWindowType() != 0
+		return ''
+	endif
+
 	if !IsGitFile()
 		return ''
 	endif
 
 	let summary = GitGutterGetHunkSummary()
-	return '+' . summary[0] . ' ~' . summary[1] . ' -' . summary[2]
+	return printf('+%d ~%d -%d', summary[0], summary[1], summary[2])
 endfunction
 
 function! LightLineFugitive()
+	if GetWindowType() != 0
+		return ''
+	endif
+
 	if !IsGitFile()
 		return ''
 	endif
@@ -491,6 +522,13 @@ function! LightLineLineInfo()
 endfunction
 
 function! LightLineMode()
+	let window_type = GetWindowType()
+	if window_type != 0
+		return window_type == 3 ? 'Preview' :
+					\ window_type == 2 ? 'Quickfix' :
+					\ window_type == 1 ? 'Location' : ''
+	endif
+
 	let fname = expand('%:t')
 	return fname == '__Tagbar__' ? 'Tagbar' :
 				\ fname == 'ControlP' ? 'CtrlP' :
