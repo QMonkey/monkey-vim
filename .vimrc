@@ -737,11 +737,10 @@ nnoremap <C-right> <C-w><
 " F2 ~ F10 {
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
+nnoremap <silent><F5> :set invpaste<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
-
-set pastetoggle=<F5>
 
 " Disbale paste mode when leaving insert mode
 autocmd InsertLeave * set nopaste
