@@ -1118,7 +1118,7 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting = 1
 let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
-let g:syntastic_mode_map = {'mode': 'active', 'passive_filetypes': ['go']}
+let g:syntastic_mode_map = {'mode': 'passive'}
 
 function! ToggleErrors()
 	let old_last_winnr = winnr('$')
