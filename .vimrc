@@ -111,8 +111,8 @@ set showmatch
 set cursorline
 
 " Only have cursorline in current window
-autocmd InsertEnter,BufWinLeave,WinLeave * set nocursorline
-autocmd InsertLeave,BufWinEnter,WinEnter * set cursorline
+autocmd InsertEnter,BufLeave,WinLeave * set nocursorline
+autocmd InsertLeave,BufEnter,WinEnter * set cursorline
 " }
 
 " Search in time
@@ -365,6 +365,7 @@ set laststatus=2
 
 " lightline.vim {
 let g:lightline = {
+			\ 'colorscheme': 'powerline',
 			\ 'active': {
 			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ], ['ctrlpmark'] ],
 			\   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
@@ -418,40 +419,50 @@ function! LightLineFilename()
 				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
 
-function! LightLineGitGutter()
-	let fname = expand('%:t')
-	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive') || fname == '[Plugins]'
-		return ''
+function! IsGitFile()
+	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
+		return 0
 	endif
+
+	let fname = expand('%:t')
+	let plugins = ['\[Plugins\]', 'NERD_tree', 'Tagbar', 'ControlP', 'CtrlSpace']
+
+	if fname ==# ''
+		return 0
+	endif
+
+	for plugin in plugins
+		if fname =~ plugin
+			return 0
+		endif
+	endfor
 
 	let git_dir = fugitive#extract_git_dir(expand('%'))
 	if git_dir ==# ''
+		return 0
+	endif
+
+	return 1
+endfunction
+
+function! LightLineGitGutter()
+	if !IsGitFile()
 		return ''
 	endif
 
-	if expand('%:t') !~? 'Tagbar\|NERD'
-		let summary = GitGutterGetHunkSummary()
-		return '+' . summary[0] . ' ~' . summary[1] . ' -' . summary[2]
-	endif
-	return ''
+	let summary = GitGutterGetHunkSummary()
+	return '+' . summary[0] . ' ~' . summary[1] . ' -' . summary[2]
 endfunction
 
 function! LightLineFugitive()
-	if !exists('g:loaded_fugitive')
-		return ''
-	endif
-
-	let git_dir = fugitive#extract_git_dir(expand('%'))
-	if git_dir ==# ''
+	if !IsGitFile()
 		return ''
 	endif
 
 	try
-		if expand('%:t') !~? 'Tagbar\|NERD'
-			let mark = ' '
-			let branch = fugitive#head()
-			return branch !=# '' ? mark.branch : ''
-		endif
+		let mark = ' '
+		let branch = fugitive#head()
+		return branch !=# '' ? mark.branch : ''
 	catch
 	endtry
 	return ''
