@@ -377,6 +377,8 @@ let g:lightline = {
 			\   'fileformat': 'LightLineFileformat',
 			\   'filetype': 'LightLineFiletype',
 			\   'fileencoding': 'LightLineFileencoding',
+			\   'percent': 'LightLinePercent',
+			\   'lineinfo': 'LightLineLineInfo',
 			\   'mode': 'LightLineMode',
 			\   'ctrlpmark': 'CtrlPMark',
 			\ },
@@ -478,6 +480,14 @@ endfunction
 
 function! LightLineFileencoding()
 	return winwidth(0) > 70 ? (&fileencoding !=# '' ? &fileencoding : &encoding) : ''
+endfunction
+
+function! LightLinePercent()
+	return winwidth(0) > 70 ? printf("%3d%%", (100 * line('.') / line('$'))) : ''
+endfunction
+
+function! LightLineLineInfo()
+	return winwidth(0) > 70 ? printf("%3d/%-d :%-2d", line('.'), line('$'), col('.')) : ''
 endfunction
 
 function! LightLineMode()
@@ -878,6 +888,8 @@ endif
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
+
+let g:CtrlSpaceStatuslineFunction = ""
 " }
 
 " vim-EasyMotion {
