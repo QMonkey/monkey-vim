@@ -428,13 +428,37 @@ function! LightLineFilename()
 				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
 
+function! GetBufferListOutputAsOneString()
+	let buffer_list = ''
+	redir =>> buffer_list
+	ls
+	redir END
+	return buffer_list
+endfunction
+
+function! IsLocationListBuffer()
+	if &ft != 'qf'
+		return 0
+	endif
+
+	silent let buffer_list = GetBufferListOutputAsOneString()
+
+	let l:quickfix_match = matchlist(buffer_list,
+				\ '\n\s*\(\d\+\)[^\n]*Quickfix List')
+	if empty(l:quickfix_match)
+		return 1
+	endif
+	let quickfix_bufnr = l:quickfix_match[1]
+	return quickfix_bufnr == bufnr('%') ? 0 : 1
+endfunction
+
 function! GetWindowType()
 	if &previewwindow
 		return 3
 	endif
 
 	if &filetype is# 'qf'
-		if empty(getwinvar(winnr(), 'quickfix_title', ''))
+		if !IsLocationListBuffer()
 			return 2
 		endif
 
@@ -442,7 +466,7 @@ function! GetWindowType()
 	endif
 
 	return 0
-endfun
+endfunction
 
 function! IsGitFile()
 	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
@@ -572,7 +596,7 @@ endfunction
 
 augroup AutoSyntastic
 	autocmd!
-	autocmd BufWritePost * call s:syntastic()
+	autocmd BufWritePost * if &filetype isnot# 'go' | call s:syntastic() | endif
 augroup END
 
 function! s:syntastic()
