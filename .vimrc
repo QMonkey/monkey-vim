@@ -1084,7 +1084,7 @@ if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_
 	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
 
-" Do not use syntastic to check C, C++ and Objective-C, do it by syntastic
+" Do not use YouCompleteMe to check C, C++ and Objective-C, do it by syntastic
 let g:ycm_show_diagnostics_ui = 0
 let g:ycm_complete_in_comments = 1
 let g:ycm_complete_in_strings = 1
