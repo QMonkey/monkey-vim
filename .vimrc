@@ -1236,7 +1236,7 @@ let g:markdown_syntax_conceal = 0
 " vim-markdown {
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
-let g:markdown_fenced_languages = ['c', 'cpp', 'java', 'javascript', 'python', 'ruby', 'php', 'html', 'css', 'vim', 'bash=sh']
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'java', 'javascript', 'json', 'python', 'lua', 'ruby', 'php', 'bash=sh', 'vim', 'html', 'css']
 " }
 
 " vim-instant_markdown {
