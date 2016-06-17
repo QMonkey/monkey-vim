@@ -6,7 +6,7 @@ Read this in other languages: [简体中文](README.zh-CN.md)
 
 Maybe you feel like your IDE is not powerful or convenient. Therefore, you may install lots of plugins. After that, you may find your IDE is too slow! That is unbearable! Finally, you have to choose between powerful and lightweight. Perhaps you can also install an IDE for a specific programming language.
 
-The project monkey-vim, aims to make a convenient, powerful but still lightweight and fast IDE.
+The project monkey-vim, aims to make a powerful and fast IDE.
 
 ## Screenshot
 
@@ -248,6 +248,9 @@ F11     Toggle fullscreen, only available in GUI mode
 ```
 Leader+o    Open a new buffer with given file path in current window
 Leader+d    Delete current buffer
+
+-           Open file directory in current window
+~           Open project root or file directory in current window
 ```
 
 #### 1.4 Split

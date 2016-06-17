@@ -702,6 +702,18 @@ endfunction
 " Buffer {
 nnoremap <silent> <Leader>d :Bdelete<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
+
+" Netrw style
+nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
+nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
+
+function! GetRootPath()
+	let root_path = FindRootDirectory()
+	if root_path ==# ''
+		let root_path = expand('%:p:h')
+	endif
+	return root_path
+endfunction
 " }
 
 " Tab {
@@ -1033,13 +1045,15 @@ let g:easytags_on_cursorhold = 0
 
 " NERDTree {
 " Set NERDTree window width
-let NERDTreeWinSize = 32
-let g:NERDTreeAutoDeleteBuffer = 1
+let g:NERDTreeWinSize = 32
+let g:NERDTreeHijackNetrw = 1
+let NERDTreeAutoDeleteBuffer = 1
+let NERDTreeMinimalUI = 1
 
 " Show hidden
 let NERDTreeShowHidden = 1
 " Ignore files
-let NERDTreeIgnore=['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+let NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
 
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
@@ -1071,7 +1085,8 @@ endfunction
 
 " Tagbar {
 " Tagbar width
-let tagbar_width = 32
+let g:tagbar_width = 32
+let g:tagbar_compact = 1
 " }
 
 " Gitv {
