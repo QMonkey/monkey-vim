@@ -228,6 +228,7 @@ L       跳到当前行最后一个非空字符,相当于“$”命令
 U       Redo，相当于“Ctrl-r”
 ;       进入命令行模式，相当于“:”键
 q       退出窗口，相当于命令“:q”
+Q       退出vim，相当于命令“:qa”
 ```
 
 #### 1.2 F2 ~ F10
@@ -376,14 +377,20 @@ Leader+rs   恢复workspace
 Ctrl+p      打开CtrlP
 ```
 
-#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)
+
+```
+Leader+a        当前目录搜索光标所在的词
+```
+
+#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -392,7 +399,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.19 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.20 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式
@@ -403,7 +410,7 @@ ga              开始对齐模式
 :h vim-easy-align
 ```
 
-#### 1.20 其他
+#### 1.21 其他
 
 ```
 '.              最后一次变更的地方
@@ -466,20 +473,26 @@ Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
 Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
 ```
 
-#### 3.6 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.6 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)
+
+```
+Leader+a        当前目录搜索选中字符串
+```
+
+#### 3.7 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
-#### 3.7 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 3.8 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     选中字符串增加A围绕字符
 ```
 
-#### 3.8 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.9 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              开始对齐模式

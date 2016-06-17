@@ -228,6 +228,7 @@ L       To the last non-blank character of the line, same as $
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
 q       Quit current window, same as :q
+Q       Quit vim, same as :qa
 ```
 
 #### 1.2 F2 ~ F10
@@ -376,14 +377,20 @@ Leader+rs   Restore workspace
 Ctrl+p      Open CtrlP
 ```
 
-#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)
+
+```
+Leader+a        Search current word in current directory
+```
+
+#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cc       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -392,7 +399,7 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.19 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.20 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -403,7 +410,7 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.20 Others
+#### 1.21 Others
 
 ```
 '.              Jump to last changes
@@ -466,20 +473,26 @@ Leader+Leader+b     Jump to specific word before the cursor
 Leader+Leader+s     Search one character and jump to specific word
 ```
 
-#### 3.6 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.6 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
-Leader+cc       Comment out the text selected in visual mode
+Leader+a        Search selected text in current directory
+```
+
+#### 3.7 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+
+```
+Leader+cc       Comment out the selected text
 Leader+cu       Uncomments the selected line(s)
 ```
 
-#### 3.7 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 3.8 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 S+surroundA     Add surround A for selected text
 ```
 
-#### 3.8 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.9 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign in visual mode (e.g. vipga)

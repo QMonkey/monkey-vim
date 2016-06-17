@@ -662,6 +662,7 @@ cnoremap <C-e> <End>
 inoremap <C-d> <ESC>ddi
 
 nnoremap <silent> q :call CloseWindow()<CR>
+nnoremap <silent> <S-q> :quitall<CR>
 
 function! CloseWindow()
 	if tabpagenr('$') > 1
@@ -918,6 +919,15 @@ if executable('ag')
 elseif executable('ack') || executable('ack-grep')
 	let g:ack_default_options = ' -s -H --nocolor --nogroup --nopager --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
 endif
+
+nnoremap <silent><Leader>a :execute 'Ack!' GetCurrentWord()<CR>
+vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
+
+function! GetAckSelection()
+	let selection = printf('"%s"', GetVisualSelection())
+	let selection = escape(selection, '#')
+	return selection
+endfunction
 " }
 
 " Session {
