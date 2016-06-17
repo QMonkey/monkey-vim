@@ -1162,10 +1162,6 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 " Golang
 let g:formatters_go = ['goimports']
 
-" Python
-let g:formatter_yapf_style = 'pep8'
-let g:formatters_python = ['yapf']
-
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
 " }

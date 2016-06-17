@@ -102,7 +102,7 @@ sudo npm install -g jsonlint
 
 ```bash
 sudo pip install jedi
-sudo pip install yapf
+sudo pip install autopep8 or sudo pip install yapf
 sudo pip install pyflakes
 sudo pip install pep8
 ```
