@@ -415,11 +415,15 @@ function! LightLineReadonly()
 endfunction
 
 function! LightLineFilename()
+	let fname = expand('%:t')
+	if fname ==# 'CtrlSpace'
+		return ctrlspace#api#StatuslineModeSegment('')
+	endif
+
 	if GetWindowType() != 0
 		return ''
 	endif
 
-	let fname = expand('%:t')
 	return fname == 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
 				\ fname == '__Tagbar__' ? '' :
 				\ fname =~ 'NERD_tree' ? '' :
@@ -546,16 +550,17 @@ function! LightLineLineInfo()
 endfunction
 
 function! LightLineMode()
+	let fname = expand('%:t')
 	let window_type = GetWindowType()
-	if window_type != 0
+	if fname !=# 'CtrlSpace' && window_type != 0
 		return window_type == 3 ? 'Preview' :
 					\ window_type == 2 ? 'Quickfix' :
 					\ window_type == 1 ? 'Location' : ''
 	endif
 
-	let fname = expand('%:t')
 	return fname == '__Tagbar__' ? 'Tagbar' :
 				\ fname == 'ControlP' ? 'CtrlP' :
+				\ fname == 'CtrlSpace' ? 'CtrlSpace' :
 				\ fname =~ 'NERD_tree' ? 'NERDTree' :
 				\ winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
@@ -925,6 +930,13 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 
 " ack.vim {
 "let g:ack_use_dispatch = 1
+"
+" Split rightward so as not to displace a left NERDTree
+let g:ack_mappings = {
+			\  'v':  '<C-W><CR><C-W>L<C-W>p<C-W>J<C-W>p',
+			\ 'gv': '<C-W><CR><C-W>L<C-W>p<C-W>J',
+			\ '<cr>': '<C-W><CR>:cclose<CR><C-W>T:copen<CR>'
+			\ }
 
 if executable('ag')
 	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
@@ -966,13 +978,13 @@ if executable( 'ag' )
 endif
 " }
 
-" CtrlSpace {
+" vim-ctrlspace {
 " Only work after saving workspace
 let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
 
-let g:CtrlSpaceStatuslineFunction = ""
+let g:CtrlSpaceStatuslineFunction = "lightline#statusline(0)"
 " }
 
 " vim-EasyMotion {
