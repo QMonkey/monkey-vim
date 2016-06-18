@@ -1201,7 +1201,7 @@ nmap ga <Plug>(EasyAlign)
 " }
 
 " vim-better-whitespace {
-let g:better_whitespace_filetypes_blacklist = []
+let g:better_whitespace_filetypes_blacklist = ['diff', 'gitcommit', 'qf', 'help']
 
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
