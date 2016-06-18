@@ -395,8 +395,8 @@ let g:lightline = {
 			\ 'separator': { 'left': '', 'right': '' },
 			\ 'subseparator': { 'left': '', 'right': '' },
 			\ 'tab': {
-			\   'active': [ 'filename' ],
-			\   'inactive': [ 'filename' ],
+			\   'active': [ 'filename', 'modified' ],
+			\   'inactive': [ 'filename', 'modified' ],
 			\ },
 			\ 'tabline': {
 			\   'left': [ [ 'tabs' ] ],
@@ -407,7 +407,7 @@ let g:lightline = {
 			\ }
 
 function! LightLineModified()
-	return &filetype =~ 'help' ? '' : &modified ? '~' : &modifiable ? '' : '-'
+	return &filetype =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
 endfunction
 
 function! LightLineReadonly()
@@ -984,7 +984,7 @@ let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
 let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
 
-let g:CtrlSpaceStatuslineFunction = "lightline#statusline(0)"
+let g:CtrlSpaceStatuslineFunction = 'lightline#statusline(0)'
 " }
 
 " vim-EasyMotion {
