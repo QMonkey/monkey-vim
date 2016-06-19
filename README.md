@@ -236,7 +236,6 @@ Q       Quit vim, same as :qa
 ```
 F2      Toggle NERDTree
 F3      Toggle Tagbar
-F5      Toggle paste mode
 F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
 F8      Toggle output window of F7
 F9      Markdown preview in browser
@@ -326,6 +325,11 @@ g]      Like "Ctrl+]", but need to choose one tag to jump
 
 ```
 TODO
+za
+zc
+zo
+zR
+zM
 ```
 
 #### 1.11 Marks
@@ -420,6 +424,8 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
+cod             Toggle diff
+cop             Toggle paste
 [+<Space>       Add [count] blank lines above the cursor
 ]+<Space>       Add [count] blank lines below the cursor
 Leader+cd       Change project root
@@ -520,8 +526,8 @@ Ctrl+e  Jump to the end of the command line
 ### 1. SudoWrite
 
 ```vim
-" Use root permission to write file
-:SudoWrite
+" Save file with root permission
+:W
 ```
 
 ### 2. Ack

@@ -236,7 +236,6 @@ Q       退出vim，相当于命令“:qa”
 ```
 F2      打开/关闭NERDTree
 F3      打开/关闭Tagbar
-F5      打开/关闭paste模式
 F7      异步运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
 F8      打开/关闭F7运行结果
 F9      预览Markdown
@@ -326,6 +325,11 @@ g]      选择一处符号定义并跳转
 
 ```
 TODO
+za
+zo
+zc
+zR
+zM
 ```
 
 #### 1.11 Marks
@@ -420,6 +424,8 @@ ga              开始对齐模式
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
+cod             切换diff模式
+cop             切换paste模式
 [+<Space>       在光标之上添加n个空行
 ]+<Space>       在光标之下添加n个空行
 Leader+cd       切换到当前文件所在项目根路径
@@ -520,8 +526,8 @@ Ctrl+e  跳到命令行最后
 ### 1. SudoWrite
 
 ```vim
-" 使用root权限写文件
-:SudoWrite
+" 使用root权限保存文件
+:W
 ```
 
 ### 2. Ack

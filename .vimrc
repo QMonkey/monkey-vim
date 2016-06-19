@@ -35,6 +35,7 @@ Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'moll/vim-bbye'
 Plug 'easymotion/vim-easymotion'
 Plug 'wellle/targets.vim'
+Plug 'michaeljsmith/vim-indent-object'
 Plug 'svermeulen/vim-easyclip'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
@@ -653,6 +654,9 @@ noremap ; :
 " Remap U to <C-r> for easier redo
 nnoremap U <C-r>
 
+" Save file with root permission
+cnoreabbrev W SudoWrite
+
 " Quickly add empty lines
 nnoremap [<Space> :<C-u>put! =repeat(nr2char(10), v:count1)<CR>'[
 nnoremap ]<Space> :<C-u>put =repeat(nr2char(10), v:count1)<CR>
@@ -755,10 +759,14 @@ nnoremap <C-right> <C-w><
 " F2 ~ F10 {
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
-nnoremap <silent><F5> :set invpaste<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
+" }
+
+" Toggle {
+nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
+nnoremap <silent>cop :set invpaste<CR>
 
 " Disbale paste mode when leaving insert mode
 autocmd InsertLeave * set nopaste
