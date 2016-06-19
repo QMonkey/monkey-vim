@@ -732,7 +732,7 @@ endfunction
 " }
 
 " Tab {
-nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', '', 'file')<CR>
 nnoremap <silent>[t :tabprevious<CR>
 nnoremap <silent>]t :tabnext<CR>
 nnoremap <Leader>1 1gt
@@ -753,8 +753,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', expand('%'), 'file')<CR>
-nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', '', 'file')<CR>
+nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', '', 'file')<CR>
 
 nnoremap <Up> <C-w>+
 nnoremap <Down> <C-w>-
@@ -1112,7 +1112,6 @@ endfunction
 " }
 
 " Tagbar {
-" Tagbar width
 let g:tagbar_width = 32
 let g:tagbar_compact = 1
 " }
@@ -1147,12 +1146,10 @@ nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
 
 " Enable omni completion
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+autocmd FileType java setlocal omnifunc=javacomplete#Complete
 autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
 autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
-autocmd FileType sql setlocal omnifunc=sqlcomplete#Complete
-autocmd FileType java setlocal omnifunc=javacomplete#Complete
 
 " Ultisnips {
 let g:UltiSnipsExpandTrigger='<Leader><tab>'
@@ -1277,13 +1274,9 @@ let g:lua_define_completion_mappings = 0
 " }
 
 " vim-markdown {
-let g:vim_markdown_folding_disabled = 1
-let g:markdown_syntax_conceal = 0
-" }
-
-" vim-markdown {
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
+let g:markdown_syntax_conceal = 0
 let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'java', 'javascript', 'json', 'python', 'lua', 'ruby', 'php', 'bash=sh', 'vim', 'html', 'css']
 " }
 
