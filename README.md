@@ -326,12 +326,11 @@ g]      Like "Ctrl+]", but need to choose one tag to jump
 #### 1.10 Fold
 
 ```
-TODO
-za
-zc
-zo
-zR
-zM
+za      When on a closed fold, open it. When on an open fold, close it and set 'foldenable'
+zc      Close one fold under the cursor
+zo      Open one fold under the cursor
+zR      Open all folds
+zM      Close all folds
 ```
 
 #### 1.11 Marks
