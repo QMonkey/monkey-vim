@@ -266,10 +266,10 @@ Ctrl+j      跳转到下窗口
 Ctrl+k      跳转到上窗口
 Ctrl+l      跳转到右窗口
 
-Ctrl+up     窗口垂直方向伸展
-Ctrl+down   窗口垂直方向收缩
-Ctrl+left   窗口水平方向伸展
-Ctrl+right  窗口水平方向收缩
+up          窗口垂直方向伸展
+down        窗口垂直方向收缩
+left        窗口水平方向伸展
+right       窗口水平方向收缩
 Leader+z    窗口放大/恢复
 ```
 

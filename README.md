@@ -266,10 +266,10 @@ Ctrl+j      Jump to the below split
 Ctrl+k      Jump to the above split
 Ctrl+l      Jump to the right split
 
-Ctrl+up     Stretch the window vertically
-Ctrl+down   Shrink the window vertically
-Ctrl+left   Stretch the window horizontally
-Ctrl+right  Shrink the window horizontally
+up          Stretch the window vertically
+down        Shrink the window vertically
+left        Stretch the window horizontally
+right       Shrink the window horizontally
 Leader+z    Toggle zoom
 ```
 

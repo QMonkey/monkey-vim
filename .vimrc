@@ -756,10 +756,10 @@ nnoremap <C-l> <C-w>l
 nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', expand('%'), 'file')<CR>
 nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', expand('%'), 'file')<CR>
 
-nnoremap <C-up> <C-w>+
-nnoremap <C-down> <C-w>-
-nnoremap <C-left> <C-w>>
-nnoremap <C-right> <C-w><
+nnoremap <Up> <C-w>+
+nnoremap <Down> <C-w>-
+nnoremap <Left> <C-w>>
+nnoremap <Right> <C-w><
 " }
 
 " F2 ~ F10 {
