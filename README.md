@@ -239,6 +239,7 @@ F3      Toggle Tagbar
 F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
 F8      Toggle output window of F7
 F9      Markdown preview in browser
+F10     Run current file
 F11     Toggle fullscreen, only available in GUI mode
 ```
 
@@ -247,6 +248,8 @@ F11     Toggle fullscreen, only available in GUI mode
 ```
 Leader+o    Open a new buffer with given file path in current window
 Leader+d    Delete current buffer
+[+b         Jump to previous buffer
+]+b         Jump to next buffer
 
 -           Open file directory in current window
 ~           Open project root or file directory in current window
@@ -305,7 +308,6 @@ K                   Refer current word in doc
 Leader+Leader+z     Refer doc in dash or zeal
 
 gd              GoDef
-Leader+gc       GoRun %, run current go source
 Leader+gb       GoBuild, build current package
 Leader+gi       GoInstall, build and install current package
 Leader+gr       GoReferrers
@@ -374,8 +376,8 @@ Leader+Leader+s     Search one character and jump to specific word
 ```
 Ctrl+Space  Open CtrlSpace
 
-Leader+bs   Save workspace
-Leader+rs   Restore workspace
+Leader+b    Backup workspace
+Leader+r    Restore workspace
 ```
 
 #### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
@@ -406,7 +408,13 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.20 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 1.20 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
+
+```
+Leader+c        Run current file
+```
+
+#### 1.21 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -417,7 +425,7 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 :h vim-easy-align
 ```
 
-#### 1.21 Others
+#### 1.22 Others
 
 ```
 '.              Jump to last changes
@@ -426,6 +434,7 @@ Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
 cod             Toggle diff
 cop             Toggle paste
+col             Toggle list
 [+<Space>       Add [count] blank lines above the cursor
 ]+<Space>       Add [count] blank lines below the cursor
 Leader+cd       Change project root
@@ -501,7 +510,13 @@ Leader+cu       Uncomments the selected line(s)
 S+surroundA     Add surround A for selected text
 ```
 
-#### 3.9 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
+#### 3.9 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
+
+```
+Leader+c    Run selected code
+```
+
+#### 3.10 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
 
 ```
 ga              Start interactive EasyAlign in visual mode (e.g. vipga)

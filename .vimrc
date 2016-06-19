@@ -45,6 +45,7 @@ Plug 'Chiel92/vim-autoformat'
 Plug 'junegunn/vim-easy-align'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'tpope/vim-dispatch'
+Plug 'thinca/vim-quickrun'
 Plug 'airblade/vim-rooter'
 Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
 Plug 'scrooloose/syntastic'
@@ -163,6 +164,8 @@ set shiftwidth=8
 
 " Never use space to replace tab
 set noexpandtab
+
+set splitright
 
 set ttimeout
 set ttimeoutlen=100
@@ -709,8 +712,11 @@ endfunction
 " }
 
 " Buffer {
-nnoremap <silent> <Leader>d :Bdelete<CR>
+nnoremap <silent><Leader>d :Bdelete<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
+
+nnoremap <silent>[b :bprevious<CR>
+nnoremap <silent>]b :bnext<CR>
 
 " Netrw style
 nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
@@ -762,11 +768,13 @@ nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
 nnoremap <silent><F9> :InstantMarkdownPreview<CR>
+nnoremap <silent><F10> :QuickRun<CR>
 " }
 
 " Toggle {
 nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
 nnoremap <silent>cop :set invpaste<CR>
+nnoremap <silent>col :set invlist<CR>
 
 " Disbale paste mode when leaving insert mode
 autocmd InsertLeave * set nopaste
@@ -967,9 +975,9 @@ endfunction
 set sessionoptions="blank,buffers,folds,globals,help,localoptions,resize,sesdir,tabpages,winpos,winsize"
 
 " Backup
-nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>b :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
-nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>r :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 " }
 
 " CtrlP {
@@ -1214,6 +1222,12 @@ let g:better_whitespace_filetypes_blacklist = ['diff', 'gitcommit', 'qf', 'help'
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
 
+" vim-quickrun {
+let g:quickrun_no_default_key_mappings = 1
+
+map <Leader>c <Plug>(quickrun)
+" }
+
 " vim-go {
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
@@ -1231,7 +1245,6 @@ let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-autocmd FileType go nmap <silent><Leader>gc :GoRun %<CR>
 autocmd FileType go nmap <silent><Leader>gb <Plug>(go-build)
 autocmd FileType go nmap <silent><Leader>gi <Plug>(go-install)
 autocmd FileType go nmap <silent><Leader>gr <Plug>(go-referrers)
