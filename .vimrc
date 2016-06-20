@@ -924,7 +924,7 @@ function! Replace(mode, confirm, wholeword)
 		let flag .= 'e'
 	endif
 
-	execute ',$s/' . search . '/' . replace . '/' . flag . "|1,'' -&& | update"
+	execute ',$s/' . search . '/' . replace . '/' . flag . "| silent 1,'' -&& | update"
 endfunction
 
 " Replace in normal mode
@@ -946,7 +946,7 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 
 " ack.vim {
 "let g:ack_use_dispatch = 1
-"
+
 " Split rightward so as not to displace a left NERDTree
 let g:ack_mappings = {
 			\  'v':  '<C-W><CR><C-W>L<C-W>p<C-W>J<C-W>p',
