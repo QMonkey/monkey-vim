@@ -184,9 +184,9 @@ endif
 " FileType {
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
-autocmd FileType php set matchpairs-=<:>
+autocmd FileType php setlocal matchpairs-=<:>
 " Wait to redraw
-autocmd FileType go set lazyredraw
+autocmd FileType go setlocal lazyredraw
 
 autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 function! AutoInsertFileHead()
@@ -208,7 +208,7 @@ endfunc
 " }
 
 " Docset {
-autocmd FileType man,help set nolist
+autocmd FileType man,help setlocal nolist
 
 " Enable 'Man' command
 source $VIMRUNTIME/ftplugin/man.vim
@@ -220,8 +220,8 @@ endfunction
 " Use man as docset for unrecognized filetype
 autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
 function! SetUnrecognizedFileTypeReferences()
-	nnoremap <buffer><silent><S-k> :execute 'Man' GetCurrentWord()<CR>
-	vnoremap <buffer><silent><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
+	nnoremap <silent><buffer><S-k> :execute 'Man' GetCurrentWord()<CR>
+	vnoremap <silent><buffer><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
 endfunction
 
 autocmd FileType * call SetReferences()
@@ -239,10 +239,10 @@ function! SetReferences()
 		endif
 
 		let search = expand('<cword>')
-		execute 'nnoremap <buffer><silent><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
+		execute 'nnoremap <silent><buffer><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
 
 		" Enable reference in visual-mode
-		execute 'vnoremap <buffer><silent><S-k> <ESC>:execute "' . reference . '" GetVisualSelection()<CR>'
+		execute 'vnoremap <silent><buffer><S-k> <ESC>:execute "' . reference . '" GetVisualSelection()<CR>'
 
 		let is_reference_set = 1
 	endfor
@@ -250,11 +250,11 @@ function! SetReferences()
 	if !is_reference_set
 		" Default reference: dash or zeal
 		if has('mac') || has('macunix')
-			nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
-			vnoremap <buffer><silent><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
+			nnoremap <silent><buffer><S-k> :execute 'Dash' GetCurrentWord()<CR>
+			vnoremap <silent><buffer><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
 		else
-			nnoremap <buffer><silent><S-k> :Zeavim<CR>
-			vnoremap <buffer><silent><S-k> <ESC>:ZvV<CR>
+			nnoremap <silent><buffer><S-k> :Zeavim<CR>
+			vnoremap <silent><buffer><S-k> <ESC>:ZvV<CR>
 		endif
 	endif
 endfunction
@@ -283,7 +283,7 @@ let g:zv_file_types = {
 			\ }
 
 if !has('mac') && !has('macunix')
-	nmap <unique><Leader><Leader>z <Plug>ZVKeyDocset
+	nmap <silent><Leader><Leader>z <Plug>ZVKeyDocset
 endif
 " }
 
@@ -661,8 +661,8 @@ nnoremap U <C-r>
 cnoreabbrev W SudoWrite
 
 " Quickly add empty lines
-nnoremap [<Space> :<C-u>put! =repeat(nr2char(10), v:count1)<CR>'[
-nnoremap ]<Space> :<C-u>put =repeat(nr2char(10), v:count1)<CR>
+nnoremap <silent>[<Space> :<C-u>put! =repeat(nr2char(10), v:count1)<CR>'[
+nnoremap <silent>]<Space> :<C-u>put =repeat(nr2char(10), v:count1)<CR>
 
 " Better comand-line editing
 cnoremap <C-j> <Down>
@@ -673,8 +673,8 @@ cnoremap <C-e> <End>
 " Delete current row
 inoremap <C-d> <ESC>ddi
 
-nnoremap <silent> q :call CloseWindow()<CR>
-nnoremap <silent> <S-q> :quitall<CR>
+nnoremap <silent>q :call CloseWindow()<CR>
+nnoremap <silent><S-q> :quitall<CR>
 
 function! CloseWindow()
 	if tabpagenr('$') > 1
@@ -713,7 +713,7 @@ endfunction
 
 " Buffer {
 nnoremap <silent><Leader>d :Bdelete<CR>
-nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', '', 'file')<CR>
 
 nnoremap <silent>[b :bprevious<CR>
 nnoremap <silent>]b :bnext<CR>
@@ -744,8 +744,8 @@ nnoremap <Leader>6 6gt
 nnoremap <Leader>7 7gt
 nnoremap <Leader>8 8gt
 nnoremap <Leader>9 9gt
-nnoremap <silent><Leader>[ :tabfirst<CR>
-nnoremap <silent><Leader>] :tablast<CR>
+nnoremap <Leader>[ :tabfirst<CR>
+nnoremap <Leader>] :tablast<CR>
 " }
 
 " Split {
@@ -777,7 +777,7 @@ nnoremap <silent>cop :set invpaste<CR>
 nnoremap <silent>col :set invlist<CR>
 
 " Disbale paste mode when leaving insert mode
-autocmd InsertLeave * set nopaste
+autocmd InsertLeave * setlocal nopaste
 " }
 
 " Zoom {
@@ -1141,7 +1141,7 @@ let g:ycm_filepath_completion_use_working_dir = 1
 " Use Ctrl-o to jump back, see :help jumplist
 nnoremap <silent>gd :YcmCompleter GoToDefinition<CR>
 nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
-nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
+autocmd FileType c,cpp nnoremap <silent><buffer><Leader>ji :YcmCompleter GoToInclude<CR>
 " }
 
 " Enable omni completion
@@ -1207,10 +1207,11 @@ let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fence
 " }
 
 " vim-easy-align {
-" Start interactive EasyAlign in visual mode (e.g. vipga)
-xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
+
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
 " }
 
 " vim-better-whitespace {
@@ -1242,12 +1243,12 @@ let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
 " Use Ctrl-o to jump back, see :help jumplist
-autocmd FileType go nmap <silent><Leader>gb <Plug>(go-build)
-autocmd FileType go nmap <silent><Leader>gi <Plug>(go-install)
-autocmd FileType go nmap <silent><Leader>gr <Plug>(go-referrers)
-autocmd FileType go nmap <silent><Leader>gt <Plug>(go-test)
-autocmd FileType go nmap <silent><Leader>gf <Plug>(go-test-func)
-autocmd FileType go nmap <silent><Leader>ga <Plug>(go-alternate-edit)
+autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
+autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-install)
+autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
+autocmd FileType go nmap <silent><buffer><Leader>gt <Plug>(go-test)
+autocmd FileType go nmap <silent><buffer><Leader>gf <Plug>(go-test-func)
+autocmd FileType go nmap <silent><buffer><Leader>ga <Plug>(go-alternate-edit)
 " }
 
 " vim-javacomplete2 {
