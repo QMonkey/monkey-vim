@@ -767,8 +767,8 @@ nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call DispatchQListToggle()<CR>
-nnoremap <silent><F9> :InstantMarkdownPreview<CR>
-nnoremap <silent><F10> :QuickRun<CR>
+nnoremap <silent><F9> :QuickRun<CR>
+nnoremap <silent><F10> :InstantMarkdownPreview<CR>
 " }
 
 " Toggle {
@@ -1221,7 +1221,7 @@ xmap ga <Plug>(EasyAlign)
 " }
 
 " vim-better-whitespace {
-let g:better_whitespace_filetypes_blacklist = ['diff', 'gitcommit', 'qf', 'help']
+let g:better_whitespace_filetypes_blacklist = ['diff', 'git', 'gitcommit', 'qf', 'help']
 
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
