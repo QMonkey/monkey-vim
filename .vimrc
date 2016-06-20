@@ -806,10 +806,18 @@ let g:incsearch#auto_nohlsearch = 1
 
 map n <Plug>(incsearch-nohl-n)
 map N <Plug>(incsearch-nohl-N)
-map # <Plug>(incsearch-nohl-*)
-map * <Plug>(incsearch-nohl-#)
-map g* <Plug>(incsearch-nohl-g*)
-map g# <Plug>(incsearch-nohl-g#)
+nmap # <Plug>(incsearch-nohl-*)
+nmap * <Plug>(incsearch-nohl-#)
+map g* <Plug>(incsearch-nohl-g#)
+map g# <Plug>(incsearch-nohl-g*)
+
+vmap # :<C-u>call VisualSetSearchContent()<CR>//<CR>
+vmap * :<C-u>call VisualSetSearchContent()<CR>??<CR>
+
+function! VisualSetSearchContent()
+	let selected = GetVisualSelection()
+	let @/ = '\V' . substitute(escape(selected, '\'), '\n', '\\n', 'g')
+endfunction
 " }
 
 " No highlight search
@@ -898,11 +906,9 @@ function! Replace(mode, confirm, wholeword)
 		let wholeword = 0
 	endif
 
-	let search = ''
+	let search = substitute(escape(word, '/\.*$^~['), '\n', '\\n', 'g')
 	if wholeword
-		let search .= '\<' . escape(word, '/\.*$^~[') . '\>'
-	else
-		let search .= escape(word, '/\.*$^~[')
+		let search .= '\<' . search . '\>'
 	endif
 
 	let replace = ''
@@ -964,9 +970,9 @@ nnoremap <silent><Leader>a :execute 'Ack!' GetCurrentWord()<CR>
 vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
 
 function! GetAckSelection()
-	let selection = printf('"%s"', GetVisualSelection())
-	let selection = escape(selection, '#')
-	return selection
+	let selected = printf('"%s"', GetVisualSelection())
+	let selected = escape(selected, '#')
+	return selected
 endfunction
 " }
 
