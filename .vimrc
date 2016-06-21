@@ -909,6 +909,8 @@ function! Replace(mode, confirm, wholeword)
 	let search = substitute(escape(word, '/\.*$^~['), '\n', '\\n', 'g')
 	if wholeword
 		let search .= '\<' . search . '\>'
+	else
+		let search .= search
 	endif
 
 	let replace = ''
