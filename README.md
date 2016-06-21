@@ -439,7 +439,7 @@ col             Toggle list
 Leader+cd       Change project root
 Leader+/        No highlight search
 Leader+space    Strip whitespace
-Leader+q        Toggle quickfix list
+Leader+q        Toggle quickfix
 Leader+l        Toggle location list
 ```
 
@@ -537,7 +537,7 @@ Ctrl+e  Jump to the end of the command line
 
 ## Useful command
 
-### 1. SudoWrite
+### 1. W
 
 ```vim
 " Save file with root permission
@@ -547,17 +547,12 @@ Ctrl+e  Jump to the end of the command line
 ### 2. Ack
 
 ```vim
-" Search recursively in current directory for the pattern "test", and then open the quickfix list for you and jump to the first occurence
-:Ack test
-
-" Same as :Ack, but will not jump to the first occurence
-:Ack! test
+" Search recursively in current directory for the pattern, and then open the quickfix for you.
+" Jump to the first result unless ! is given.
+:Ack[!] {pattern}
 
 " Same as :Ack, but load the result into location list
-:LAck test
-
-" Same as :Ack!, but load the result into location list
-:LAck! test
+:LAck[!] {pattern}
 ```
 
 ### 3. UpdateTags
@@ -577,6 +572,13 @@ Ctrl+e  Jump to the end of the command line
 :YcmGenerateConfig
 ```
 
+### 5. Locate
+
+```vim
+" Run 'locate' and load the results into the quickfix. Jump to the first result unless ! is given.
+:Locate[!] {args}
+```
+
 ## Use git in vim
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
@@ -591,7 +593,7 @@ Ctrl+e  Jump to the end of the command line
 " A wrapper around git-commit.  If there is nothing to commit, :Gstatus is called instead.
 :Gcommit [args]
 
-" Calls git-merge and loads errors and conflicted files into the quickfix list
+" Calls git-merge and loads errors and conflicted files into the quickfix
 :Gmerge [args]
 
 " Like :Gmerge, but for git-pull
@@ -600,7 +602,7 @@ Ctrl+e  Jump to the end of the command line
 " Like :Gpush, but for git-fetch
 :Gfetch [args]
 
-" Invoke git-push, load the results into the quickfix list
+" Invoke git-push, load the results into the quickfix
 :Gpush [args]
 
 " Same as git grep
@@ -621,14 +623,14 @@ Ctrl+e  Jump to the end of the command line
 " Perform a vimdiff against the current file in the given revision
 :Gdiff [args]
 
-" Load all previous revisions of the current file into the quickfix list.  Additional git-log arguments can be given (for example, --reverse).
+" Load all previous revisions of the current file into the quickfix.  Additional git-log arguments can be given (for example, --reverse).
 " If "--" appears as an argument, no file specific filtering is done, and previous commits rather than previous file revisions are loaded
 :Glog [args]
 
-" Like |:Glog|, but use the location list instead of the quickfix list
+" Like |:Glog|, but use the location list instead of the quickfix
 :Gllog [args]
 
-" Use git-log -L to load previous revisions of the given range of the current file into the quickfix list
+" Use git-log -L to load previous revisions of the given range of the current file into the quickfix
 :{range}Glog [args]
 
 " Run git-blame on the file and open the results in a scroll bound vertical split. "g?" command for more help

@@ -439,7 +439,7 @@ col             切换list模式
 Leader+cd       切换到当前文件所在项目根路径
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符
-Leader+q        打开/关闭quickfix list
+Leader+q        打开/关闭quickfix
 Leader+l        打开/关闭location list
 ```
 
@@ -537,7 +537,7 @@ Ctrl+e  跳到命令行最后
 
 ## 常用命令
 
-### 1. SudoWrite
+### 1. W
 
 ```vim
 " 使用root权限保存文件
@@ -547,17 +547,11 @@ Ctrl+e  跳到命令行最后
 ### 2. Ack
 
 ```vim
-" 递归搜索包含test的代码，搜索结果加载到quickfix list，并打开第一个搜索结果
-:Ack test
-
-" 递归搜索包含test的代码，搜索结果加载到quickfix list
-:Ack! test
+" 递归搜索包含test的代码，搜索结果加载到quickfix。":Ack"命令会打开第一个搜索结果
+:Ack[!] {pattern}
 
 " 同Ack，但搜索结果加载到location list
-:LAck test
-
-" 同Ack!，但搜索结果加载到location list
-:LAck! test
+:LAck[!] {pattern}
 ```
 
 ### 3. UpdateTags
@@ -577,6 +571,13 @@ Ctrl+e  跳到命令行最后
 :YcmGenerateConfig
 ```
 
+### 5. Locate
+
+```vim
+" 使用"locate"命令搜索文件，搜索结果加载到quickfix。":Locate"命令会打开第一个搜索结果
+:Locate[!] {args}
+```
+
 ## 在vim中使用git
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
@@ -591,7 +592,7 @@ Ctrl+e  跳到命令行最后
 " 相当于git commit
 :Gcommit [args]
 
-" 相当于git merge，错误和冲突会加载到quickfix list（Leader+q快捷键打开）
+" 相当于git merge，错误和冲突会加载到quickfix（Leader+q快捷键打开）
 :Gmerge [args]
 
 " 相当于git pull
@@ -621,11 +622,11 @@ Ctrl+e  跳到命令行最后
 " 使用vimdiff展示git diff
 :Gdiff [args]
 
-" 将当前文件所有历史提交记录加载到quickfix list
+" 将当前文件所有历史提交记录加载到quickfix
 " 若带有“--”参数，则展示某次commit的full-diff，而不是历史版本
 :Glog [args]
 
-" 同:Glog，把提交记录加载到location list（Leader+l快捷键打开），而不是quickfix list
+" 同:Glog，把提交记录加载到location list（Leader+l快捷键打开），而不是quickfix
 :Gllog [args]
 
 " 同:Glog，但只针对指定范围（可在可视化模式下使用）
