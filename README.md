@@ -209,6 +209,20 @@ cp .vimrc ~/.vimrc
 vim
 ```
 
+## Update project
+
+```bash
+cd monkey-vim
+git pull
+cp .vimrc ~/.vimrc
+```
+
+```vim
+:PlugInstall
+:PlugUpdate
+:PlugClean
+```
+
 ## Keyboard shortcut
 
 ```

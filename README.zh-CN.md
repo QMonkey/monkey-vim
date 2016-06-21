@@ -209,6 +209,20 @@ cp .vimrc ~/.vimrc
 vim
 ```
 
+## 更新
+
+```bash
+cd monkey-vim
+git pull
+cp .vimrc ~/.vimrc
+```
+
+```vim
+:PlugInstall
+:PlugUpdate
+:PlugClean
+```
+
 ## 快捷键
 
 ```
