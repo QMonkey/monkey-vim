@@ -34,6 +34,7 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'moll/vim-bbye'
 Plug 'easymotion/vim-easymotion'
+Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
 Plug 'svermeulen/vim-easyclip'
@@ -1011,6 +1012,13 @@ let g:CtrlSpaceStatuslineFunction = 'lightline#statusline(0)'
 
 " vim-EasyMotion {
 let g:EasyMotion_smartcase = 1
+" }
+
+" vim-sneak {
+let g:sneak#use_ic_scs = 1
+
+map f <Plug>(SneakStreak)
+map F <Plug>(SneakStreakBackward)
 " }
 
 " vim-easyclip {
