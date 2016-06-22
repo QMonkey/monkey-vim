@@ -445,6 +445,7 @@ ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
 ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
+Leader+f        Show current file in NERDTree
 cod             Toggle diff
 cop             Toggle paste
 col             Toggle list

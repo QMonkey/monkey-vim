@@ -908,9 +908,7 @@ function! Replace(mode, confirm, wholeword)
 
 	let search = substitute(escape(word, '/\.*$^~['), '\n', '\\n', 'g')
 	if wholeword
-		let search .= '\<' . search . '\>'
-	else
-		let search .= search
+		let search = '\<' . search . '\>'
 	endif
 
 	let replace = ''
@@ -1097,6 +1095,9 @@ let g:nerdtree_tabs_open_on_console_startup = 0
 
 " Close vim if the only window left open is a NERDTreeTabs
 let g:nerdtree_tabs_autoclose = 1
+
+" Show current file in NERDTree
+nnoremap <silent><Leader>f :NERDTreeFind<CR>
 
 " Auto refresh NERDTree
 autocmd CursorHold,CursorHoldI * call Refresh()
