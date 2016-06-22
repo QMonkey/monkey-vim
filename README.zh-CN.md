@@ -374,14 +374,13 @@ Leader+ji   跳转到头文件
 Leader+e    打开/关闭错误信息窗口
 ```
 
-#### 1.14 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.14 快速移动插件：[vim-sneak](https://github.com/justinmk/vim-sneak)
 
 ```
-Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
-Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
-Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
-Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
-Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
+f           搜索当前屏幕两个字符，并跳转到指定字符
+F           与“f”功能相同但方向相反
+t           搜索当前屏幕一个字符，并跳转（再按一次t）到指定字符
+T           与“t”功能相同但方向相反
 ```
 
 #### 1.15 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
@@ -495,14 +494,13 @@ Leader+rc   替换选中的字符串（需要逐一确认）
 K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 ```
 
-#### 3.5 快速移动插件：[EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.5 快速移动插件：[vim-sneak](https://github.com/justinmk/vim-sneak)
 
 ```
-Leader+Leader+j     跳转到当前屏幕，光标后任何指定行
-Leader+Leader+k     跳转到当前屏幕，光标前任何指定行
-Leader+Leader+w     跳转到当前屏幕，光标后任何指定单词
-Leader+Leader+b     跳转到当前屏幕，光标前任何指定单词
-Leader+Leader+s     搜索字符，并跳转到当前屏幕指定字符
+f           搜索当前屏幕两个字符，并跳转到指定字符
+F           与“f”功能相同但方向相反
+t           搜索当前屏幕一个字符，并跳转（再按一次t）到指定字符
+T           与“t”功能相同但方向相反
 ```
 
 #### 3.6 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)

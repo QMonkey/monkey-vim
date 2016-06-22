@@ -374,14 +374,13 @@ Leader+ji   Go to header file
 Leader+e    Toggle error window
 ```
 
-#### 1.14 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 1.14 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)
 
 ```
-Leader+Leader+j     Jump to specific line after the cursor
-Leader+Leader+k     Jump to specific line before the cursor
-Leader+Leader+w     Jump to specific word after the cursor
-Leader+Leader+b     Jump to specific word before the cursor
-Leader+Leader+s     Search one character and jump to specific word
+f       Search two character and jump to specific word
+F       Same as f, but in reverse direction
+t       Search one character and jump (press again) to specific word
+T       Same as t, but in reverse direction
 ```
 
 #### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
@@ -495,14 +494,13 @@ Leader+rc   Same as "Leader+R", but need to confirm
 K       Refer selected text in doc
 ```
 
-#### 3.5 Motions on speed: [EasyMotion](https://github.com/easymotion/vim-easymotion)
+#### 3.5 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)
 
 ```
-Leader+Leader+j     Jump to specific line after the cursor
-Leader+Leader+k     Jump to specific line before the cursor
-Leader+Leader+w     Jump to specific word after the cursor
-Leader+Leader+b     Jump to specific word before the cursor
-Leader+Leader+s     Search one character and jump to specific word
+f       Search two character and jump to specific word
+F       Same as f, but in reverse direction
+t       Search one character and jump (press t again) to specific word
+T       Same as t, but in reverse direction
 ```
 
 #### 3.6 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)
