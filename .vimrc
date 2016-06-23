@@ -58,7 +58,6 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
-Plug 'Valloric/ListToggle'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
@@ -766,7 +765,7 @@ nnoremap <Right> <C-w><
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
-nnoremap <silent><F8> :call DispatchQListToggle()<CR>
+nnoremap <silent><F8> :call QListToggle('Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
 nnoremap <silent><F10> :InstantMarkdownPreview<CR>
 " }
@@ -823,6 +822,43 @@ endfunction
 " No highlight search
 nnoremap <silent><Leader>/ :nohlsearch<CR>
 
+" QuickFix {
+function! QListToggle(cmd)
+	let buffer_count_before = BufferCount()
+	silent! cclose
+
+	if BufferCount() == buffer_count_before
+		execute a:cmd
+	else
+		let bufnrs = tabpagebuflist(tabpagenr())
+		for nr in bufnrs
+			let bname = bufname(nr)
+			if bname !~# 'NERD_tree' && bname !=# '__Tagbar__'
+				execute bufwinnr(nr) . 'wincmd w'
+				break
+			endif
+		endfor
+	endif
+endfunction
+
+function! LListToggle(cmd)
+	let buffer_count_before = BufferCount()
+	silent! lclose
+
+	if BufferCount() == buffer_count_before
+		execute a:cmd
+	endif
+endfunction
+
+function! BufferCount()
+	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
+endfunction
+
+let list_height = 10
+nnoremap <silent><Leader>q :call QListToggle('silent! botright copen '. list_height)<CR>
+nnoremap <silent><Leader>l :call LListToggle('silent! lopen '. list_height)<CR>
+" }
+
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
@@ -841,19 +877,6 @@ function! Prompt(prompt_text, ...)
 	endif
 	call inputrestore()
 	return Strip(value)
-endfunction
-
-function! DispatchQListToggle()
-	let buffer_count_before = BufferCount()
-	silent! cclose
-
-	if BufferCount() == buffer_count_before
-		Copen!
-	endif
-endfunction
-
-function! BufferCount()
-	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
 endfunction
 
 function! Clear()
@@ -1110,24 +1133,17 @@ let g:nerdtree_tabs_autoclose = 1
 " Show current file in NERDTree
 nnoremap <silent><Leader>f :NERDTreeFind<CR>
 
-" Auto refresh NERDTree
-autocmd CursorHold,CursorHoldI * call Refresh()
+" Refresh NERDTree when enter NERDTree buffer
+autocmd BufEnter * if &filetype ==# 'nerdtree' | call Refresh() | endif
 
-" Inspired by https://github.com/Xuyuanp/nerdtree-git-plugin
 function! Refresh()
-	if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
+	if !exists('g:NERDTree') || !g:NERDTree.IsOpen() || !exists('b:NERDTree')
 		return
 	endif
 
-	let winnr = winnr()
-
-	call g:NERDTree.CursorToTreeWin()
 	call b:NERDTree.root.refresh()
 	call b:NERDTree.root.refreshFlags()
 	call NERDTreeRender()
-
-	" Jump back
-	execute winnr . 'wincmd w'
 endfunction
 " }
 
@@ -1189,16 +1205,7 @@ let g:syntastic_enable_highlighting = 1
 let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 let g:syntastic_mode_map = {'mode': 'passive'}
 
-function! ToggleErrors()
-	let old_last_winnr = winnr('$')
-	lclose
-	if old_last_winnr == winnr('$')
-		" Nothing was closed, open syntastic_error location panel
-		Errors
-	endif
-endfunction
-
-nnoremap <silent><Leader>e :call ToggleErrors()<CR>
+nnoremap <silent><Leader>e :call LListToggle('Errors')<CR>
 " }
 
 " vim-autoformat {
