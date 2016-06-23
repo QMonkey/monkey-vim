@@ -379,8 +379,6 @@ Leader+e    打开/关闭错误信息窗口
 ```
 f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
-t           搜索当前屏幕一个字符，并跳转（再按一次t）到指定字符
-T           与“t”功能相同但方向相反
 ```
 
 #### 1.15 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
@@ -499,8 +497,6 @@ K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ru
 ```
 f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
-t           搜索当前屏幕一个字符，并跳转（再按一次t）到指定字符
-T           与“t”功能相同但方向相反
 ```
 
 #### 3.6 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)

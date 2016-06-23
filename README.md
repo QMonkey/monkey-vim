@@ -379,8 +379,6 @@ Leader+e    Toggle error window
 ```
 f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
-t       Search one character and jump (press again) to specific word
-T       Same as t, but in reverse direction
 ```
 
 #### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
@@ -499,8 +497,6 @@ K       Refer selected text in doc
 ```
 f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
-t       Search one character and jump (press t again) to specific word
-T       Same as t, but in reverse direction
 ```
 
 #### 3.6 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)
