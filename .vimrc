@@ -953,13 +953,6 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 " ack.vim {
 "let g:ack_use_dispatch = 1
 
-" Split rightward so as not to displace a left NERDTree
-let g:ack_mappings = {
-			\  'v':  '<C-W><CR><C-W>L<C-W>p<C-W>J<C-W>p',
-			\ 'gv': '<C-W><CR><C-W>L<C-W>p<C-W>J',
-			\ '<cr>': '<C-W><CR>:cclose<CR><C-W>T:copen<CR>'
-			\ }
-
 if executable('ag')
 	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
 elseif executable('ack') || executable('ack-grep')
