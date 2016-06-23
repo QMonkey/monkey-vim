@@ -1282,6 +1282,11 @@ autocmd FileType go nmap <silent><buffer><Leader>ga <Plug>(go-alternate-edit)
 autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
 " }
 
+" vim-javascript {
+let g:javascript_plugin_jsdoc = 1
+let g:javascript_plugin_ngdoc = 1
+" }
+
 " vim-json {
 let g:vim_json_syntax_conceal = 0
 " }
