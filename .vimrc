@@ -1315,6 +1315,12 @@ let g:lua_complete_omni = 1
 let g:lua_define_completion_mappings = 0
 " }
 
+" vim-ruby {
+let g:rubycomplete_buffer_loading = 1
+let g:rubycomplete_classes_in_global = 1
+let g:rubycomplete_rails = 1
+" }
+
 " vim-markdown {
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
