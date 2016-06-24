@@ -161,7 +161,13 @@ sudo yum install lua
 brew install lua
 ```
 
-#### 2.11 PHP
+#### 2.11 Ruby
+
+```bash
+sudo gem install ruby-beautify
+```
+
+#### 2.12 PHP
 
 ```bash
 # Ubuntu
@@ -177,7 +183,7 @@ sudo zypper install php
 brew install php
 ```
 
-#### 2.12 Shell
+#### 2.13 Shell
 
 ```bash
 # Ubuntu
@@ -193,7 +199,7 @@ sudo yum install rpmdevtools
 brew install checkbashisms
 ```
 
-#### 2.13 Markdown
+#### 2.14 Markdown
 
 ```bash
 sudo npm install -g instant-markdown-d
