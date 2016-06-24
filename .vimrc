@@ -58,6 +58,7 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
+Plug 'yssl/QFEnter'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
@@ -261,15 +262,15 @@ endfunction
 
 " Inspired by http://stackoverflow.com/questions/1533565/how-to-get-visually-selected-text-in-vimscript
 function! GetVisualSelection()
-	let selected = ''
+	let selection = ''
 	try
 		let a_save = @a
 		normal! gv"ay
-		let selected = @a
+		let selection = @a
 	finally
 		let @a = a_save
 	endtry
-	return selected
+	return selection
 endfunction
 
 " zeavim.vim {
@@ -814,8 +815,8 @@ vmap # :<C-u>call VisualSetSearchContent()<CR>//<CR>
 vmap * :<C-u>call VisualSetSearchContent()<CR>??<CR>
 
 function! VisualSetSearchContent()
-	let selected = GetVisualSelection()
-	let @/ = '\V' . substitute(escape(selected, '\'), '\n', '\\n', 'g')
+	let selection = GetVisualSelection()
+	let @/ = '\V' . substitute(escape(selection, '\'), '\n', '\\n', 'g')
 endfunction
 " }
 
@@ -824,20 +825,14 @@ nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " QuickFix {
 function! QListToggle(cmd)
+	let last_winnr = winnr('#')
 	let buffer_count_before = BufferCount()
 	silent! cclose
 
 	if BufferCount() == buffer_count_before
 		execute a:cmd
 	else
-		let bufnrs = tabpagebuflist(tabpagenr())
-		for nr in bufnrs
-			let bname = bufname(nr)
-			if bname !~# 'NERD_tree' && bname !=# '__Tagbar__'
-				execute bufwinnr(nr) . 'wincmd w'
-				break
-			endif
-		endfor
+		silent! execute last_winnr . 'wincmd w'
 	endif
 endfunction
 
@@ -857,6 +852,13 @@ endfunction
 let list_height = 10
 nnoremap <silent><Leader>q :call QListToggle('silent! botright copen '. list_height)<CR>
 nnoremap <silent><Leader>l :call LListToggle('silent! lopen '. list_height)<CR>
+" }
+
+" QFEnter {
+let g:qfenter_open_map = ['<CR>']
+let g:qfenter_vopen_map = ['v']
+let g:qfenter_hopen_map = ['s']
+let g:qfenter_topen_map = ['t']
 " }
 
 function! Strip(input_string)
@@ -986,9 +988,9 @@ nnoremap <silent><Leader>a :execute 'Ack!' GetCurrentWord()<CR>
 vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
 
 function! GetAckSelection()
-	let selected = printf('"%s"', GetVisualSelection())
-	let selected = escape(selected, '#')
-	return selected
+	let selection = printf('"%s"', GetVisualSelection())
+	let selection = escape(selection, '#')
+	return selection
 endfunction
 " }
 
@@ -1112,6 +1114,8 @@ let g:NERDTreeWinSize = 32
 let g:NERDTreeHijackNetrw = 1
 let NERDTreeAutoDeleteBuffer = 1
 let NERDTreeMinimalUI = 1
+let g:NERDTreeMapOpenSplit = 's'
+let g:NERDTreeMapOpenVSplit = 'v'
 
 " Show hidden
 let NERDTreeShowHidden = 1
@@ -1121,6 +1125,9 @@ let NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$'
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
 let g:nerdtree_tabs_open_on_console_startup = 0
+
+" Don't synchronize view of all NERDTree windows (scroll and cursor position)
+let g:nerdtree_tabs_synchronize_view = 0
 
 " Close vim if the only window left open is a NERDTreeTabs
 let g:nerdtree_tabs_autoclose = 1
