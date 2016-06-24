@@ -1184,8 +1184,12 @@ let g:ycm_autoclose_preview_window_after_insertion = 1
 let g:ycm_goto_buffer_command = 'same-buffer'
 let g:ycm_filepath_completion_use_working_dir = 1
 
+let ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'javascript', 'python']
 " Use Ctrl-o to jump back, see :help jumplist
-nnoremap <silent>gd :YcmCompleter GoToDefinition<CR>
+autocmd FileType * if index(ycm_go_to_definition_filetypes, &filetype) != -1
+			\ | nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
+			\ | else | nnoremap <silent><buffer>gd <C-]> | endif
+
 nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
 autocmd FileType c,cpp nnoremap <silent><buffer><Leader>ji :YcmCompleter GoToInclude<CR>
 " }
