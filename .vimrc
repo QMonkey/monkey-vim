@@ -1029,7 +1029,6 @@ let g:CtrlSpaceStatuslineFunction = 'lightline#statusline(0)'
 " Enable streak-mode
 let g:sneak#streak = 1
 let g:sneak#use_ic_scs = 1
-let g:sneak#s_next = 1
 
 " Disable default map for s and S
 map <Plug>(go_away_sneak_s) <Plug>Sneak_s
@@ -1041,10 +1040,6 @@ map <Plug>(go_away_sneak_previous) <Plug>SneakPrevious
 " 2-character sneak
 map f <Plug>(SneakStreak)
 map F <Plug>(SneakStreakBackward)
-
-" 1-character enhanced 'f' sneak
-map t <Plug>Sneak_f
-map T <Plug>Sneak_F
 " }
 
 " vim-easyclip {
