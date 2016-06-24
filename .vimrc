@@ -112,9 +112,9 @@ set showmatch
 " Highlight current line
 set cursorline
 
-" Only have cursorline in current window
-autocmd InsertEnter,BufLeave,WinLeave * set nocursorline
-autocmd InsertLeave,BufEnter,WinEnter * set cursorline
+" Disable cursorline in insert mode
+autocmd InsertEnter * set nocursorline
+autocmd InsertLeave * set cursorline
 " }
 
 " Search in time
