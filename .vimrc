@@ -763,12 +763,19 @@ nnoremap <Right> <C-w><
 " }
 
 " F2 ~ F10 {
-nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
+nnoremap <silent><F2> :call BetterNERDTreeTabsToggle()<CR>
 nnoremap <silent><F3> :TagbarToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QListToggle('Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
 nnoremap <silent><F10> :InstantMarkdownPreview<CR>
+
+function! BetterNERDTreeTabsToggle()
+	NERDTreeTabsToggle
+	if exists('g:NERDTree') && g:NERDTree.IsOpen()
+		silent! execute winnr('#') . 'wincmd w'
+	endif
+endfunction
 " }
 
 " Toggle {
