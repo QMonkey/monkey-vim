@@ -1003,8 +1003,7 @@ endfunction
 " }
 
 " Session {
-" Save session options
-set sessionoptions="blank,buffers,folds,globals,help,localoptions,resize,sesdir,tabpages,winpos,winsize"
+set sessionoptions-=options
 
 " Backup
 nnoremap <Leader>b :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
