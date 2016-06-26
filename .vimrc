@@ -185,6 +185,7 @@ endif
 " FileType {
 autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+
 autocmd FileType php setlocal matchpairs-=<:>
 " Wait to redraw
 autocmd FileType go setlocal lazyredraw
@@ -1079,7 +1080,7 @@ let g:rooter_manual_only = 1
 autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
 
 " Highlight .tags file as tags file
-autocmd BufNewFile,BufRead *.tags set filetype=tags
+autocmd BufNewFile,BufRead *.tags setfiletype tags
 " }
 
 " vim-easytags {
