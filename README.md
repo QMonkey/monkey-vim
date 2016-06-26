@@ -392,8 +392,8 @@ F       Same as f, but in reverse direction
 ```
 Ctrl+Space  Open CtrlSpace
 
-Leader+b    Backup workspace
-Leader+r    Restore workspace
+Leader+bs   Backup workspace
+Leader+rs   Restore workspace
 ```
 
 #### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)

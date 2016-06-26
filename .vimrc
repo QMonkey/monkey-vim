@@ -32,7 +32,7 @@ Plug 'majutsushi/tagbar'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
-Plug 'moll/vim-bbye', {'on': 'Bdelete'}
+Plug 'qpkorr/vim-bufkill'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
@@ -714,7 +714,7 @@ endfunction
 " }
 
 " Buffer {
-nnoremap <silent><Leader>d :Bdelete<CR>
+nnoremap <silent><Leader>d :BW<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', '', 'file')<CR>
 
 nnoremap <silent>[b :bprevious<CR>
@@ -1007,9 +1007,9 @@ endfunction
 set sessionoptions-=options
 
 " Backup
-nnoremap <Leader>b :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
 " Restore
-nnoremap <Leader>r :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 " }
 
 " CtrlP {
