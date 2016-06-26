@@ -95,13 +95,17 @@ let mapleader = ','
 " Number {
 set relativenumber number
 
-" Only work for the GUI version and a few console versions
-autocmd FocusLost * :set norelativenumber number
-autocmd FocusGained * :set relativenumber
+augroup RelativeNumber
+	autocmd!
 
-" Use absolute line number in insert mode
-autocmd InsertEnter * :set norelativenumber number
-autocmd InsertLeave * :set relativenumber
+	" Only work for the GUI version and a few console versions
+	autocmd FocusLost * :set norelativenumber number
+	autocmd FocusGained * :set relativenumber
+
+	" Use absolute line number in insert mode
+	autocmd InsertEnter * :set norelativenumber number
+	autocmd InsertLeave * :set relativenumber
+augroup END
 " }
 
 " Show the cursor position all the time
@@ -113,9 +117,13 @@ set showmatch
 " Highlight current line
 set cursorline
 
-" Disable cursorline in insert mode
-autocmd InsertEnter * set nocursorline
-autocmd InsertLeave * set cursorline
+augroup CursorLine
+	autocmd!
+
+	" Disable cursorline in insert mode
+	autocmd InsertEnter * set nocursorline
+	autocmd InsertLeave * set cursorline
+augroup END
 " }
 
 " Search in time
@@ -175,7 +183,11 @@ set ttimeoutlen=100
 set list listchars=tab:▸\ ,eol:¬,trail:⋅
 
 " Restore cursor to previous editing position
-autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+augroup RestoreCursorPosition
+	autocmd!
+
+	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+augroup END
 
 " Load matchit.vim, but only if the user hasn't installed a newer version.
 if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
@@ -183,14 +195,19 @@ if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
 endif
 
 " FileType {
-autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+augroup FileTypeGroup
+	autocmd!
 
-autocmd FileType php setlocal matchpairs-=<:>
-" Wait to redraw
-autocmd FileType go setlocal lazyredraw
+	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+	autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
-autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
+	autocmd FileType php setlocal matchpairs-=<:>
+	" Wait to redraw
+	autocmd FileType go setlocal lazyredraw
+
+	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
+augroup END
+
 function! AutoInsertFileHead()
 	" Shell
 	if &filetype ==# 'sh'
@@ -210,7 +227,16 @@ endfunc
 " }
 
 " Docset {
-autocmd FileType man,help setlocal nolist
+augroup Docset
+	autocmd!
+
+	autocmd FileType man,help setlocal nolist
+
+	" Use man as docset for unrecognized filetype
+	autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
+
+	autocmd FileType * call SetReferences()
+augroup END
 
 " Enable 'Man' command
 source $VIMRUNTIME/ftplugin/man.vim
@@ -219,14 +245,11 @@ function! GetCurrentWord()
 	return expand('<cword>')
 endfunction
 
-" Use man as docset for unrecognized filetype
-autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
 function! SetUnrecognizedFileTypeReferences()
 	nnoremap <silent><buffer><S-k> :execute 'Man' GetCurrentWord()<CR>
 	vnoremap <silent><buffer><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
 endfunction
 
-autocmd FileType * call SetReferences()
 function! SetReferences()
 	let filetype_references = {
 				\	'c': 'Man',
@@ -311,7 +334,11 @@ endif
 " }
 
 " Resize splits when the window is resized
-autocmd VimResized * execute "normal! \<C-w>="
+augroup AutoResize
+	autocmd!
+
+	autocmd VimResized * execute "normal! \<C-w>="
+augroup END
 
 " Number of lines from vertical edge to start scrolling
 set scrolloff=7
@@ -328,7 +355,11 @@ set foldmethod=syntax
 set foldlevel=99
 
 " Use indent style fold for python
-autocmd FileType python setlocal foldmethod=indent
+augroup PythonFold
+	autocmd!
+
+	autocmd FileType python setlocal foldmethod=indent
+augroup END
 
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
@@ -607,6 +638,7 @@ endfunction
 
 augroup AutoSyntastic
 	autocmd!
+
 	autocmd BufWritePost * if &filetype isnot# 'go' | call s:syntastic() | endif
 augroup END
 
@@ -786,7 +818,11 @@ nnoremap <silent>cop :set invpaste<CR>
 nnoremap <silent>col :set invlist<CR>
 
 " Disbale paste mode when leaving insert mode
-autocmd InsertLeave * setlocal nopaste
+augroup PasteMode
+	autocmd!
+
+	autocmd InsertLeave * setlocal nopaste
+augroup END
 " }
 
 " Zoom {
@@ -1076,11 +1112,15 @@ let g:rooter_manual_only = 1
 " }
 
 " Ctags {
-" Auto set tag file path
-autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
+augroup Ctags
+	autocmd!
 
-" Highlight .tags file as tags file
-autocmd BufNewFile,BufRead *.tags setfiletype tags
+	" Auto set tag file path
+	autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
+
+	" Highlight .tags file as tags file
+	autocmd BufNewFile,BufRead *.tags setfiletype tags
+augroup END
 " }
 
 " vim-easytags {
@@ -1143,8 +1183,12 @@ let g:nerdtree_tabs_autoclose = 1
 " Show current file in NERDTree
 nnoremap <silent><Leader>f :NERDTreeFind<CR>
 
-" Refresh NERDTree when enter NERDTree buffer
-autocmd BufEnter * if &filetype ==# 'nerdtree' | call Refresh() | endif
+augroup NERDTreeRefresh
+	autocmd!
+
+	" Refresh NERDTree when enter NERDTree buffer
+	autocmd BufEnter * if &filetype ==# 'nerdtree' | call Refresh() | endif
+augroup END
 
 function! Refresh()
 	if !exists('g:NERDTree') || !g:NERDTree.IsOpen() || !exists('b:NERDTree')
@@ -1185,21 +1229,31 @@ let g:ycm_goto_buffer_command = 'same-buffer'
 let g:ycm_filepath_completion_use_working_dir = 1
 
 let ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'javascript', 'python']
-" Use Ctrl-o to jump back, see :help jumplist
-autocmd FileType * if index(ycm_go_to_definition_filetypes, &filetype) != -1
-			\ | nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
-			\ | else | nnoremap <silent><buffer>gd <C-]> | endif
+
+augroup YouCompleteMeKeyMap
+	autocmd!
+
+	" Use Ctrl-o to jump back, see :help jumplist
+	autocmd FileType * if index(ycm_go_to_definition_filetypes, &filetype) != -1
+				\ | nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
+				\ | else | nnoremap <silent><buffer>gd <C-]> | endif
+
+	autocmd FileType c,cpp nnoremap <silent><buffer><Leader>ji :YcmCompleter GoToInclude<CR>
+augroup END
 
 nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
-autocmd FileType c,cpp nnoremap <silent><buffer><Leader>ji :YcmCompleter GoToInclude<CR>
 " }
 
 " Enable omni completion
-autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-autocmd FileType java setlocal omnifunc=javacomplete#Complete
-autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
-autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
+augroup Omnifunc
+	autocmd!
+
+	autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+	autocmd FileType java setlocal omnifunc=javacomplete#Complete
+	autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+	autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+	autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
+augroup END
 
 " Ultisnips {
 let g:UltiSnipsExpandTrigger='<Leader><tab>'
@@ -1224,7 +1278,11 @@ nnoremap <silent><Leader>e :call LListToggle('Errors')<CR>
 
 " vim-autoformat {
 " Execute Autoformat onsave
-autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+augroup AutoFormat
+	autocmd!
+
+	autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+augroup END
 
 " Enable autoindent
 let g:autoformat_autoindent = 1
@@ -1283,17 +1341,25 @@ let g:go_doc_keywordprg_enabled = 0
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 
-" Use Ctrl-o to jump back, see :help jumplist
-autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
-autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-install)
-autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
-autocmd FileType go nmap <silent><buffer><Leader>gt <Plug>(go-test)
-autocmd FileType go nmap <silent><buffer><Leader>gf <Plug>(go-test-func)
-autocmd FileType go nmap <silent><buffer><Leader>ga <Plug>(go-alternate-edit)
+augroup GolangKeymap
+	autocmd!
+
+	" Use Ctrl-o to jump back, see :help jumplist
+	autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
+	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-install)
+	autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
+	autocmd FileType go nmap <silent><buffer><Leader>gt <Plug>(go-test)
+	autocmd FileType go nmap <silent><buffer><Leader>gf <Plug>(go-test-func)
+	autocmd FileType go nmap <silent><buffer><Leader>ga <Plug>(go-alternate-edit)
+augroup END
 " }
 
 " vim-javacomplete2 {
-autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
+augroup JavaAutoFormat
+	autocmd!
+
+	autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
+augroup END
 " }
 
 " vim-javascript {
@@ -1341,8 +1407,12 @@ let g:instant_markdown_autostart = 0
 
 " Terminal {
 if !has('gui_running')
-	" Check file changes outside vim when in xterm
-	autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
+	augroup CheckFileChanges
+		autocmd!
+
+		" Check file changes outside vim when in xterm
+		autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
+	augroup END
 endif
 " }
 
@@ -1353,11 +1423,20 @@ if has('gui_running')
 	endfunction
 
 	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
-	" Fullscreen when gvim start up
-	autocmd VimEnter * call ToggleFullscreen()
 
-	" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
-	autocmd GUIEnter * set vb t_vb=
+	augroup Fullscreen
+		autocmd!
+
+		" Fullscreen when gvim start up
+		autocmd VimEnter * call ToggleFullscreen()
+	augroup END
+
+	augroup Visualbell
+		autocmd!
+
+		" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
+		autocmd GUIEnter * set vb t_vb=
+	augroup END
 
 	" Disable cursor flicker
 	set guicursor=a:block-blinkon0
