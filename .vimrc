@@ -478,7 +478,7 @@ function! GetBufferListOutputAsOneString()
 endfunction
 
 function! IsLocationListBuffer()
-	if &ft != 'qf'
+	if &filetype != 'qf'
 		return 0
 	endif
 
@@ -707,35 +707,46 @@ cnoremap <C-e> <End>
 " Delete current row
 inoremap <C-d> <ESC>ddi
 
-nnoremap <silent>q :call CloseWindow()<CR>
+nnoremap <silent>q :call QuitWindow()<CR>
 nnoremap <silent><S-q> :quitall<CR>
 
-function! CloseWindow()
+function! Quit()
+	let last_winnr = winnr('#')
+	let window_type = GetWindowType()
+
+	quit
+
+	if window_type == 2
+		silent! execute last_winnr . 'wincmd w'
+	endif
+endfunction
+
+function! QuitWindow()
 	if tabpagenr('$') > 1
-		quit
+		call Quit()
 		return
 	endif
 
-	let last_winnr = winnr('$')
-	if last_winnr == 1 || last_winnr > 3
-		quit
+	let max_winnr = winnr('$')
+	if max_winnr == 1 || max_winnr > 3
+		call Quit()
 		return
 	endif
 
-	if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
-		quit
+	if max_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
+		call Quit()
 		return
 	endif
 
-	if last_winnr == 3
+	if max_winnr == 3
 		if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
-			quit
+			call Quit()
 			return
 		endif
 
 		let tagbar_winnr = bufwinnr('__Tagbar__')
 		if tagbar_winnr < 0
-			quit
+			call Quit()
 			return
 		endif
 	endif
