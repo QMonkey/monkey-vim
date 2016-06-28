@@ -32,7 +32,6 @@ Plug 'majutsushi/tagbar'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
-Plug 'qpkorr/vim-bufkill'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
@@ -60,6 +59,7 @@ Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
+Plug 'qpkorr/vim-bufkill'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
@@ -77,9 +77,9 @@ Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
 
 if has('mac') || has('macunix')
-	Plug 'rizzatti/dash.vim', {'on' ['Dash', 'DashKeywords']}
+	Plug 'rizzatti/dash.vim'
 else
-	Plug 'KabbAmine/zeavim.vim', {'on': ['ZVKeyDocset', 'Zeavim', 'ZvV']}
+	Plug 'KabbAmine/zeavim.vim'
 endif
 " }
 
