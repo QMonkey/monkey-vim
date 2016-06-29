@@ -1074,7 +1074,7 @@ nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<C
 nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 " }
 
-" CtrlP {
+" ctrlp.vim {
 let g:ctrlp_follow_symlinks = 1
 let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
@@ -1086,6 +1086,12 @@ if executable( 'ag' )
 	" ag is fast enough that CtrlP doesn't need to cache
 	let g:ctrlp_use_caching = 0
 endif
+
+augroup CtrlP
+	autocmd!
+
+	nnoremap <silent><C-t> :CtrlPBufTag<CR>
+augroup END
 " }
 
 " vim-ctrlspace {

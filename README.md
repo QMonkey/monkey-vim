@@ -399,7 +399,8 @@ Leader+rs   Restore workspace
 #### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
-Ctrl+p      Open CtrlP
+Ctrl+p      Search files
+Ctrl+t      Search tags
 ```
 
 #### 1.17 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)

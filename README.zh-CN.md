@@ -399,7 +399,8 @@ Leader+rs   恢复workspace
 #### 1.16 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
-Ctrl+p      打开CtrlP
+Ctrl+p      搜索文件
+Ctrl+t      搜索tags
 ```
 
 #### 1.17 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)
