@@ -230,7 +230,7 @@ endfunc
 augroup Docset
 	autocmd!
 
-	autocmd FileType man,help setlocal nolist
+	autocmd FileType man,help,nerdtree setlocal nolist
 
 	" Use man as docset for unrecognized filetype
 	autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
