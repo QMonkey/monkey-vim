@@ -104,7 +104,7 @@ sudo npm install -g jsonlint
 sudo pip install jedi
 sudo pip install autopep8 or sudo pip install yapf
 sudo pip install pyflakes
-sudo pip install pep8
+sudo pip install pycodestyle
 ```
 
 #### 2.8 Golang
