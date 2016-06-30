@@ -59,7 +59,7 @@ Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
-Plug 'qpkorr/vim-bufkill'
+Plug 'QMonkey/vim-bbye'
 Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
@@ -772,7 +772,7 @@ endfunction
 " }
 
 " Buffer {
-nnoremap <silent><Leader>d :BW<CR>
+nnoremap <silent><Leader>d :Bdelete<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', '', 'file')<CR>
 
 nnoremap <silent>[b :bprevious<CR>
