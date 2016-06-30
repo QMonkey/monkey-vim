@@ -400,7 +400,8 @@ Leader+rs   恢复workspace
 
 ```
 Ctrl+p      搜索文件
-Ctrl+t      搜索tags
+Ctrl+t      搜索当前buffer的tags
+Ctrl+n      搜索整个工程的tags
 ```
 
 #### 1.17 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)

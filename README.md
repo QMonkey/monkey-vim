@@ -400,7 +400,8 @@ Leader+rs   Restore workspace
 
 ```
 Ctrl+p      Search files
-Ctrl+t      Search tags
+Ctrl+t      Search buffer tags
+Ctrl+n      Search project tags
 ```
 
 #### 1.17 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)

@@ -1091,6 +1091,7 @@ augroup CtrlP
 	autocmd!
 
 	nnoremap <silent><C-t> :CtrlPBufTag<CR>
+	nnoremap <silent><C-n> :CtrlPTag<CR>
 augroup END
 " }
 
@@ -1372,11 +1373,13 @@ let g:go_fmt_command = 'goimports'
 let g:go_doc_keywordprg_enabled = 0
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
+let g:go_def_mapping_enabled = 0
 
 augroup GolangKeymap
 	autocmd!
 
 	" Use Ctrl-o to jump back, see :help jumplist
+	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def)
 	autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
 	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-install)
 	autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
