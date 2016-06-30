@@ -1102,6 +1102,11 @@ let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
 let g:CtrlSpaceSaveWorkspaceOnExit = 1
 
 let g:CtrlSpaceStatuslineFunction = 'lightline#statusline(0)'
+
+if executable("ag")
+	" Use ag to collect all files in your project directory
+	let g:CtrlSpaceGlobCommand = 'ag -l --nogroup --nocolor -g ""'
+endif
 " }
 
 " vim-sneak {
