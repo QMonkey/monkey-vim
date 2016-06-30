@@ -1364,10 +1364,9 @@ map <Leader>c <Plug>(quickrun)
 " }
 
 " vim-go {
+let g:go_highlight_types = 1
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
-let g:go_highlight_structs = 1
-let g:go_highlight_interfaces = 1
 let g:go_highlight_build_constraints = 1
 let g:go_fmt_fail_silently = 1
 let g:go_disable_autoinstall = 1
