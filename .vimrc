@@ -1083,6 +1083,7 @@ let g:ctrlp_custom_ignore = {
 let g:ctrlp_buftag_types = {
 			\ 'go': '--language-force=go --go-types=fctv',
 			\ }
+
 if executable('ag')
 	" Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
 	let g:ctrlp_user_command = 'ag %s -l --nogroup --nocolor --smart-case -g ""'
@@ -1250,6 +1251,17 @@ let g:tagbar_compact = 1
 " Gitv {
 " Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
+" }
+
+" vim-signature {
+" Highlight mark a-zA-Z
+highlight SignatureMarkText cterm=bold ctermfg=154 gui=bold guifg=#A6E22E
+
+" Highlight marker !@#$%^&*()
+highlight SignatureMarkerText term=bold cterm=bold ctermfg=197 gui=bold guifg=#F92672
+
+let g:SignatureMarkTextHLDynamic = 1
+let g:SignatureMarkerTextHLDynamic = 1
 " }
 
 " YouCompleteMe {

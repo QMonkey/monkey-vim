@@ -356,14 +356,31 @@ zM      Close all folds
 #### 1.11 Marks
 
 ```
-m+[a-zA-Z]   Mark current row
-dm+[a-zA-Z]  Delete mark[a-zA-Z]
+m[a-zA-Z]   Toggle mark and display it in the leftmost column
+m,          Place the next available mark
+m.          If no mark on line, place the next available mark. Otherwise, remove (first) existing mark
 
-'+[a-zA-Z]   Jump to the mark
+dm[a-zA-Z]  Delete mark[a-zA-Z]
+m-          Delete all marks in current line
+m<Space>    Delete all marks in current buffer
 
-m+/          View all marks in Location List
-m+-          Delete all marks in current line
-m+<Space>    Delete all marks in current buffer
+'[a-zA-Z]   Jump to the mark
+]`          Jump to next mark
+[`          Jump to prev mark
+`]          Jump by alphabetical order to next mark
+`[          Jump by alphabetical order to prev mark
+m/          View all marks in Location List
+
+m[0-9]      Toggle the corresponding marker !@#$%^&*()
+
+m<S-[0-9]>  Remove all markers of the same type
+m<BS>       Remove all markers
+
+]-          Jump to next line having a marker of the same type
+[-          Jump to prev line having a marker of the same type
+]=          Jump to next line having a marker of any type
+[=          Jump to prev line having a marker of any type
+m?          Open location list and display markers from current buffer
 ```
 
 #### 1.12 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
@@ -387,7 +404,7 @@ f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
 ```
 
-#### 1.15 Switch buffer and tab. Save or restore workspace: [Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.15 Switch buffer and tab. Save or restore workspace: [vim-ctrlspace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  Open CtrlSpace

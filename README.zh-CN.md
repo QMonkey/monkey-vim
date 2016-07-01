@@ -356,14 +356,31 @@ zM      关闭所有折叠
 #### 1.11 Marks
 
 ```
-m+[a-zA-Z]   标记当前行
-dm+[a-zA-Z]  删除标记[a-zA-Z]
+m[a-zA-Z]   添加/删除标记
+m,          添加下一个可用的标记
+m.          如果当前行没有标记，添加下一个可用标记。否则，删除第一个标记
 
-'+[a-zA-Z]   跳转到标记行
+dm[a-zA-Z]  删除标记[a-zA-Z]
+m-          删除当前行的所有标记
+m<Space>    删除当前buffer的所有标记
 
-m+/          在Location List里，查看当前buffer的所有标记
-m+-          删除当前行的所有标记
-m+<Space>    删除当前buffer的所有标记
+'[a-zA-Z]   跳转到标记[a-zA-Z]
+]`          跳转到下一个标记
+[`          跳转到上一个标记
+`]          根据字母序列跳转到下一个标记
+`[          根据字母序列跳转到上一个标记
+m/          在Location List里，查看当前buffer的所有标记
+
+m[0-9]      添加/删除自定义标记!@#$%^&*()
+
+m<S-[0-9]>  删除相应的自定义标记
+m<BS>       删除所有自定义标记
+
+]-          跳转到下一个相同类型的自定义标记
+[-          跳转到上一个相同类型的自定义标记
+]=          跳转到下一个自定义标记
+[=          跳转到上一个自定义标记
+m?          在Location List里，查看当前buffer的所有自定义标记
 ```
 
 #### 1.12 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
@@ -387,7 +404,7 @@ f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
 ```
 
-#### 1.15 buffer、tab切换，保存/恢复workspace插件：[Vim-CtrlSpace](https://github.com/vim-ctrlspace/vim-ctrlspace)
+#### 1.15 buffer、tab切换，保存/恢复workspace插件：[vim-ctrlspace](https://github.com/vim-ctrlspace/vim-ctrlspace)
 
 ```
 Ctrl+Space  打开CtrlSpace
