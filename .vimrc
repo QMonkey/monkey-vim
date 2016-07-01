@@ -1265,8 +1265,8 @@ let g:SignatureMarkerTextHLDynamic = 1
 " }
 
 " YouCompleteMe {
-if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
-	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+if !empty(glob($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
+	let g:ycm_global_ycm_extra_conf = $HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
 
 " Do not use YouCompleteMe to check C, C++ and Objective-C, do it by syntastic
@@ -1465,7 +1465,7 @@ if !has('gui_running')
 		autocmd!
 
 		" Check file changes outside vim when in xterm
-		autocmd CursorHold,CursorHoldI,WinEnter,BufEnter * if getcmdtype() ==# '' | checktime | endif
+		autocmd CursorHold,CursorHoldI,BufEnter,WinEnter * if getcmdtype() ==# '' | checktime | endif
 	augroup END
 endif
 " }
