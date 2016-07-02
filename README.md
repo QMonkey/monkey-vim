@@ -193,7 +193,7 @@ brew install checkbashisms
 
 ```bash
 sudo npm install -g instant-markdown-d
-sudo npm install -g remark
+sudo npm install -g remark-cli
 sudo gem install mdl
 ```
 
