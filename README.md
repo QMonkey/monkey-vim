@@ -110,17 +110,7 @@ sudo pip install pycodestyle
 #### 2.8 Golang
 
 ```bash
-# Ubuntu
-sudo apt-get install golang
-
-# OpenSUSE
-sudo zypper install go
-
-# CentOS
-sudo yum install golang
-
-# Mac
-brew install go
+# Please install the lastest version of go
 
 # Other golang dependences
 # Execute vim command below after successfully install monkey-vim
