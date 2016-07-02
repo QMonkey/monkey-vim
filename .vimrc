@@ -1408,14 +1408,6 @@ augroup GolangKeymap
 augroup END
 " }
 
-" vim-javacomplete2 {
-augroup JavaAutoFormat
-	autocmd!
-
-	autocmd FileType java autocmd BufWrite <buffer> execute 'silent JCimportsAddMissing' | execute 'JCimportsRemoveUnused'
-augroup END
-" }
-
 " vim-javascript {
 let g:javascript_plugin_jsdoc = 1
 let g:javascript_plugin_ngdoc = 1
