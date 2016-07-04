@@ -1080,9 +1080,6 @@ let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
 			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp)$',
 			\ }
-let g:ctrlp_buftag_types = {
-			\ 'go': '--language-force=go --go-types=fctv',
-			\ }
 
 if executable('ag')
 	" Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
