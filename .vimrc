@@ -639,7 +639,7 @@ endfunction
 augroup AutoSyntastic
 	autocmd!
 
-	autocmd BufWritePost * if &filetype isnot# 'go' | call s:syntastic() | endif
+	autocmd BufReadPost,BufWritePost * if &filetype isnot# 'go' | call s:syntastic() | endif
 augroup END
 
 function! s:syntastic()
