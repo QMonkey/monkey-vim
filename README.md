@@ -239,6 +239,7 @@ U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
 q       Quit current window, same as :q
 Q       Quit vim, same as :qa
+t       Recording, same as origin q
 ```
 
 #### 1.2 F2 ~ F10
