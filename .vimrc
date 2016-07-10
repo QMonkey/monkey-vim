@@ -202,8 +202,6 @@ augroup FileTypeGroup
 	autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 	autocmd FileType php setlocal matchpairs-=<:>
-	" Wait to redraw
-	autocmd FileType go setlocal lazyredraw
 
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 augroup END
@@ -724,6 +722,8 @@ inoremap <C-d> <ESC>ddi
 
 nnoremap <silent>q :call QuitWindow()<CR>
 nnoremap <silent><S-q> :quitall<CR>
+
+noremap t q
 
 function! Quit()
 	let last_winnr = winnr('#')
