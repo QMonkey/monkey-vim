@@ -742,27 +742,15 @@ set shiftwidth=4
 set expandtab
 ```
 
-- In oreder to share clipboard between xterm vim and system, please install gvim, and add shell code below to your "~/.bashrc" file
-
-```bash
-if [ -x $(which gvim) ]
-then
-    alias vi='gvim -v'
-    alias vim='gvim -v'
-    alias view='gvim -v -R'
-    alias vimdiff='gvim -v -d'
-fi
-```
-
 ## FAQ
 
 [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
 
 ## Recommended settings
 
-### How to setup? Add shell code below to your "~/.bashrc" file
+- [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- Use vim to view man doc in shell by "vman" command
+- Use vim to view man doc in shell by "vman" command, please put it in your "~/.bashrc" file
 
 ```bash
 vman() {
@@ -775,6 +763,24 @@ vman() {
         echo "No manual entry for $*"
     fi
 }
+```
+
+- Remap Caps Lock key to Ctrl
+
+```bash
+# Windows
+# Please install keytweak
+
+# Linux
+# Please put this in the 10-nocaps.conf file under /etc/X11/xorg.conf.d/
+Section "InputClass"
+        Identifier             "keyboard-layout"
+        MatchIsKeyboard        "on"
+        Option "XkbOptions"    "ctrl:nocaps"
+EndSection
+
+# Mac
+# Go to System Preferences -> Keyboard -> Keyboard Tab -> Modifier Keys and select Control for Caps Lock
 ```
 
 ## Configuration

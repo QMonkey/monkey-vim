@@ -708,18 +708,6 @@ set shiftwidth=4
 set expandtab
 ```
 
-- 为了让运行在xterm上的vim可以与系统共享剪贴板，请安装gvim，并在~/.bashrc中加入以下Shell命令：
-
-```bash
-if [ -x $(which gvim) ]
-then
-    alias vi='gvim -v'
-    alias vim='gvim -v'
-    alias view='gvim -v -R'
-    alias vimdiff='gvim -v -d'
-fi
-```
-
 ## FAQ
 
 [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ.zh_CN)
@@ -727,6 +715,8 @@ fi
 ## 推荐设置
 
 ### 设置方法：在~/.bashrc中加入以下Shell命令
+
+- [源码构建vim](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
 - 使用vman命令，可在vim中下查看man文档
 
@@ -741,6 +731,24 @@ vman() {
         echo "No manual entry for $*"
     fi
 }
+```
+
+- 将Caps Lock按键映射为Ctrl
+
+```bash
+# Windows
+# 请安装keytweak
+
+# Linux
+# 新建10-nocaps.conf文件，内容如下，并放到/etc/X11/xorg.conf.d/目录下
+Section "InputClass"
+        Identifier             "keyboard-layout"
+        MatchIsKeyboard        "on"
+        Option "XkbOptions"    "ctrl:nocaps"
+EndSection
+
+# Mac
+# 打开系统偏好设置 -> 键盘 -> 键盘Tab窗口 -> 修改键，并将Caps Lock改成Control
 ```
 
 ## 意见或建议
