@@ -478,6 +478,7 @@ Leader+l        打开/关闭location list
 #### 2.1 按键修改
 
 ```
+t       记录操作，相当于原来的q
 Ctrl+d  删除当前行
 ```
 

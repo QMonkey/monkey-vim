@@ -510,6 +510,7 @@ Leader+l        Toggle location list
 #### 2.1 Remap
 
 ```
+t       Recording, same as origin q
 Ctrl+d  Delete current row
 ```
 
