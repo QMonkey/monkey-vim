@@ -203,6 +203,7 @@ augroup FileTypeGroup
 
 	autocmd FileType php setlocal matchpairs-=<:>
 
+	autocmd BufNewFile,BufRead *.tern-project setfiletype json
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 augroup END
 
@@ -1060,8 +1061,7 @@ nnoremap <silent><Leader>a :execute 'Ack!' GetCurrentWord()<CR>
 vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
 
 function! GetAckSelection()
-	let selection = printf('"%s"', fnameescape(GetVisualSelection()))
-	return selection
+	return printf('"%s"', fnameescape(GetVisualSelection()))
 endfunction
 " }
 
