@@ -1047,7 +1047,8 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 " }
 
 " ack.vim {
-"let g:ack_use_dispatch = 1
+let g:ack_apply_qmappings = 0
+let g:ack_apply_lmappings = 0
 
 if executable('ag')
 	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
@@ -1059,8 +1060,7 @@ nnoremap <silent><Leader>a :execute 'Ack!' GetCurrentWord()<CR>
 vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
 
 function! GetAckSelection()
-	let selection = printf('"%s"', GetVisualSelection())
-	let selection = escape(selection, '#')
+	let selection = printf('"%s"', fnameescape(GetVisualSelection()))
 	return selection
 endfunction
 " }
