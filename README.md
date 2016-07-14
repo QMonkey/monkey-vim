@@ -770,9 +770,6 @@ vman() {
 - Remap Caps Lock key to Ctrl
 
 ```bash
-# Windows
-# Please install keytweak
-
 # Linux
 # Please put this in the 10-caps2ctrl.conf file under /etc/X11/xorg.conf.d/
 Section "InputClass"

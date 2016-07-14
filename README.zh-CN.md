@@ -736,9 +736,6 @@ vman() {
 - 将Caps Lock按键映射为Ctrl
 
 ```bash
-# Windows
-# 请安装keytweak
-
 # Linux
 # 新建10-caps2ctrl.conf文件，内容如下，并放到/etc/X11/xorg.conf.d/目录下
 Section "InputClass"
