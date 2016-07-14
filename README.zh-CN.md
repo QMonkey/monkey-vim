@@ -716,11 +716,9 @@ set expandtab
 
 ## 推荐设置
 
-### 设置方法：在~/.bashrc中加入以下Shell命令
-
 - [源码构建vim](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- 使用vman命令，可在vim中下查看man文档
+- 在~/.bashrc中加入以下Shell代码，即可使用vman命令，在vim中下查看man文档
 
 ```bash
 vman() {
