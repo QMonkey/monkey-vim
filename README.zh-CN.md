@@ -724,11 +724,11 @@ set expandtab
 
 ```bash
 vman() {
-    vim -R -c "Man $*" ~/.vimrc \
-           -c "if line('$') == 1 | cquit | endif" \
-           -c "silent only" \
-           -c "setlocal nomodifiable" \
-           -c "execute 'bdelete ' . bufnr('~/.vimrc')"
+    vim -R --cmd "let g:CtrlSpaceLoaded = 1" \
+              -c "Man $*" \
+              -c "if line('$') == 1 | cquit | endif" \
+              -c "silent only" \
+              -c "setlocal nomodifiable"
     if [ "$?" != "0" ]; then
         echo "No manual entry for $*"
     fi
