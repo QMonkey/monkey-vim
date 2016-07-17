@@ -176,8 +176,13 @@ set noexpandtab
 
 set splitright
 
+" For mappings
+set timeout
+set timeoutlen=500
+" For key codes
 set ttimeout
-set ttimeoutlen=100
+" Unnoticeable small value
+set ttimeoutlen=10
 
 " Show tab and eof
 set list listchars=tab:▸\ ,eol:¬,trail:⋅
@@ -720,6 +725,7 @@ cnoremap <C-e> <End>
 
 " Delete current row
 inoremap <C-d> <ESC>ddi
+inoremap <C-k> <ESC>Da
 
 nnoremap <silent>q :call QuitWindow()<CR>
 nnoremap <silent><S-q> :quitall<CR>
@@ -1165,9 +1171,6 @@ augroup END
 " vim-easytags {
 let g:easytags_async = 1
 
-" Disable recurse, do it manually by :UpdateTags -R
-" let g:easytags_autorecurse = 1
-
 " Global tag file
 let g:easytags_file = $HOME . '/.vim/.tags'
 
@@ -1190,9 +1193,6 @@ let g:easytags_auto_update = 1
 " Only update tag file on write
 let g:easytags_events = ['BufWritePost']
 let g:easytags_on_cursorhold = 0
-
-" Update interval, default 4s
-" let g:easytags_updatetime_min = 10000
 " }
 
 " NERDTree {

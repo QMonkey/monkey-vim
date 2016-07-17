@@ -512,6 +512,7 @@ Leader+l        Toggle location list
 ```
 t       Recording, same as origin q
 Ctrl+d  Delete current row
+Ctrl+k  Delete from cursor to the end of the line
 ```
 
 ### 3. Visual mode

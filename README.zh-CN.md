@@ -480,6 +480,7 @@ Leader+l        打开/关闭location list
 ```
 t       记录操作，相当于原来的q
 Ctrl+d  删除当前行
+Ctrl+k  删除到行尾
 ```
 
 ### 3. 可视化模式
