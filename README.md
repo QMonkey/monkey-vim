@@ -416,7 +416,7 @@ Leader+jd   Go to declaration
 Leader+ji   Go to header file
 ```
 
-#### 1.13 Syntax checking plugin: [Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 Syntax checking plugin: [syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    Toggle error window
@@ -438,7 +438,7 @@ Leader+bs   Backup workspace
 Leader+rs   Restore workspace
 ```
 
-#### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      Search files
@@ -446,7 +446,7 @@ Ctrl+t      Search buffer tags
 Ctrl+n      Search project tags
 ```
 
-#### 1.17 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.17 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        Search current word in current directory
@@ -551,7 +551,7 @@ f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
 ```
 
-#### 3.6 Code searcher for project: [Ack.vim](https://github.com/mileszs/ack.vim)
+#### 3.6 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        Search selected text in current directory

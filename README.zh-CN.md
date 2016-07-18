@@ -384,7 +384,7 @@ Leader+jd   跳转到声明
 Leader+ji   跳转到头文件
 ```
 
-#### 1.13 静态语义语法检查插件：[Syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 静态语义语法检查插件：[syntastic](https://github.com/scrooloose/syntastic)
 
 ```
 Leader+e    打开/关闭错误信息窗口
@@ -406,7 +406,7 @@ Leader+bs   保存workspace
 Leader+rs   恢复workspace
 ```
 
-#### 1.16 项目文件搜索插件：[CtrlP](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.16 项目文件搜索插件：[ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim)
 
 ```
 Ctrl+p      搜索文件
@@ -414,7 +414,7 @@ Ctrl+t      搜索当前buffer的tags
 Ctrl+n      搜索整个工程的tags
 ```
 
-#### 1.17 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.17 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        当前目录搜索光标所在的词
@@ -519,7 +519,7 @@ f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
 ```
 
-#### 3.6 项目代码搜索插件：[Ack.vim](https://github.com/mileszs/ack.vim)
+#### 3.6 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        当前目录搜索选中字符串
