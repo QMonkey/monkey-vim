@@ -209,7 +209,7 @@ augroup FileTypeGroup
 
 	autocmd FileType php setlocal matchpairs-=<:>
 
-	autocmd BufNewFile,BufRead *.tern-project setfiletype json
+	autocmd BufNewFile,BufRead .tern-project setfiletype json
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 augroup END
 
@@ -676,11 +676,11 @@ colorscheme molokai
 " }
 
 " vim-indent-guides {
+let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_start_level = 2
 let g:indent_guides_guide_size = 1
 let g:indent_guides_tab_guides = 0
-let g:indent_guides_enable_on_vim_startup = 1
-let g:indent_guides_exclude_filetypes = ['nerdtree', 'tagbar']
+let g:indent_guides_exclude_filetypes = ['diff', 'git', 'gitcommit', 'qf', 'help', 'nerdtree', 'tagbar']
 " }
 
 " Key map {
