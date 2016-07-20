@@ -319,11 +319,11 @@ K                   Refer current word in doc
 Leader+Leader+z     Refer doc in dash or zeal
 
 gd              Go to definition
+Leader+gr       Go to references. Only support golang, python and javascript
 
 # Golang
 Leader+gb       GoBuild, build current package
 Leader+gi       GoInstall, build and install current package
-Leader+gr       GoReferrers
 Leader+gt       GoTest, execute go test for current go source
 Leader+gf       GoTestFunc, execute go test for current go test function
 Leader+ga       GoAlternate, alternate between implementation and test code

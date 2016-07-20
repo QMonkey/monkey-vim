@@ -319,11 +319,11 @@ K                   查看光标所在的单词在文档中的解释。（若文
 Leader+Leader+z     输入语言类型和关键字，在dash或zeal中查看相应的解释
 
 gd              定义跳转
+Leader+gr       跳转到引用标识符的地方。只支持golang，python和javascript
 
 # Golang
 Leader+gb       GoBuild，构建当前包
 Leader+gi       GoInstall，构建并且安装当前包
-Leader+gr       GoReferrers
 Leader+gt       GoTest，执行当前go文件的单元测试
 Leader+gf       GoTestFunc，执行光标所在的单元测试函数
 Leader+ga       GoAlternate，在源文件和单元测试间切换

@@ -1289,6 +1289,8 @@ augroup YouCompleteMeKeyMap
 				\ | else | nnoremap <silent><buffer>gd <C-]> | endif
 
 	autocmd FileType c,cpp nnoremap <silent><buffer><Leader>ji :YcmCompleter GoToInclude<CR>
+
+	autocmd FileType python,javascript nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
 augroup END
 
 nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
@@ -1390,6 +1392,7 @@ let g:go_doc_keywordprg_enabled = 0
 let g:godef_split = 2
 let g:godef_same_file_in_same_window = 1
 let g:go_def_mapping_enabled = 0
+let g:go_list_type = "quickfix"
 
 augroup GolangKeymap
 	autocmd!
