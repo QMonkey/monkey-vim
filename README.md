@@ -413,7 +413,7 @@ m?          Open location list and display markers from current buffer
 ```
 gd          Go to definition
 Leader+jd   Go to declaration
-Leader+ji   Go to header file
+Leader+jt   Go to header file, definition or declaration
 ```
 
 #### 1.13 Syntax checking plugin: [syntastic](https://github.com/scrooloose/syntastic)

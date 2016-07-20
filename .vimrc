@@ -1288,11 +1288,10 @@ augroup YouCompleteMeKeyMap
 				\ | nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
 				\ | else | nnoremap <silent><buffer>gd <C-]> | endif
 
-	autocmd FileType c,cpp nnoremap <silent><buffer><Leader>ji :YcmCompleter GoToInclude<CR>
-
 	autocmd FileType python,javascript nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
 augroup END
 
+nnoremap <silent><Leader>jt :YcmCompleter GoTo<CR>
 nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
 " }
 

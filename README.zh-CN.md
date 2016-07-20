@@ -381,7 +381,7 @@ m?          在Location List里，查看当前buffer的所有自定义标记
 ```
 gd          跳转到定义
 Leader+jd   跳转到声明
-Leader+ji   跳转到头文件
+Leader+ji   跳转到头文件，定义或声明
 ```
 
 #### 1.13 静态语义语法检查插件：[syntastic](https://github.com/scrooloose/syntastic)
