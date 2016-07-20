@@ -204,7 +204,7 @@ sudo gem install mdl
 
 ```bash
 cd monkey-vim
-cp .vimrc ~/.vimrc
+ln -s $(pwd)/.vimrc ~/.vimrc
 vim
 ```
 
@@ -213,7 +213,6 @@ vim
 ```bash
 cd monkey-vim
 git pull
-cp .vimrc ~/.vimrc
 ```
 
 ```vim
