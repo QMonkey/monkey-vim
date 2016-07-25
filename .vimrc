@@ -211,6 +211,9 @@ augroup FileTypeGroup
 
 	autocmd BufNewFile,BufRead .tern-project setfiletype json
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
+
+	" Move the quickfix window to the bottom of the window layout
+	autocmd FileType qf wincmd J
 augroup END
 
 function! AutoInsertFileHead()
