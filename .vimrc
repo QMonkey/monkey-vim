@@ -284,7 +284,7 @@ function! SetReferences()
 			vnoremap <silent><buffer><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
 		else
 			nnoremap <silent><buffer><S-k> :Zeavim<CR>
-			vnoremap <silent><buffer><S-k> <ESC>:ZvV<CR>
+			vnoremap <silent><buffer><S-k> :Zeavim<CR>
 		endif
 	endif
 endfunction
