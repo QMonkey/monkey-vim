@@ -915,6 +915,7 @@ nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " QuickFix {
 function! QListToggle(cmd)
+	let ftype = &filetype
 	let last_winnr = winnr('#')
 	let buffer_count_before = BufferCount()
 	silent! cclose
@@ -922,7 +923,9 @@ function! QListToggle(cmd)
 	if BufferCount() == buffer_count_before
 		execute a:cmd
 	else
-		silent! execute last_winnr . 'wincmd w'
+		if ftype is 'qf'
+			silent! execute last_winnr . 'wincmd w'
+		endif
 	endif
 endfunction
 
