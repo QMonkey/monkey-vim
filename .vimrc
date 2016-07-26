@@ -179,7 +179,7 @@ set splitright
 
 " For mappings
 set timeout
-set timeoutlen=500
+set timeoutlen=1000
 " For key codes
 set ttimeout
 " Unnoticeable small value
