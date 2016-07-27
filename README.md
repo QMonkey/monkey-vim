@@ -473,7 +473,7 @@ cs+surroundA+surroundB      Change surround A to B
 #### 1.20 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
-Leader+c        Run current file
+Leader+ru       Run current file
 ```
 
 #### 1.21 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
@@ -575,7 +575,7 @@ S+surroundA     Add surround A for selected text
 #### 3.9 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
-Leader+c    Run selected code
+Leader+ru    Run selected code
 ```
 
 #### 3.10 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)

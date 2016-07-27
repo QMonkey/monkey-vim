@@ -441,7 +441,7 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 #### 1.20 运行代码插件：[vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
-Leader+c        运行当前文件
+Leader+ru       运行当前文件
 ```
 
 #### 1.21 快速对齐插件：[vim-easy-align](https://github.com/junegunn/vim-easy-align)
@@ -543,7 +543,7 @@ S+surroundA     选中字符串增加A围绕字符
 #### 3.9 运行代码插件：[vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
-Leader+c        运行选中代码
+Leader+ru       运行选中代码
 ```
 
 #### 3.10 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
