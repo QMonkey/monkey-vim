@@ -175,6 +175,8 @@ set shiftwidth=8
 " Never use space to replace tab
 set noexpandtab
 
+set textwidth=78
+
 set splitright
 
 " For mappings
