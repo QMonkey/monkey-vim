@@ -439,8 +439,8 @@ let g:lightline = {
 			\ 'component_type': {
 			\   'syntastic': 'error',
 			\ },
-			\ 'separator': { 'left': '', 'right': '' },
-			\ 'subseparator': { 'left': '', 'right': '' },
+			\ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+			\ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
 			\ 'tab': {
 			\   'active': [ 'filename', 'modified' ],
 			\   'inactive': [ 'filename', 'modified' ],
@@ -449,8 +449,8 @@ let g:lightline = {
 			\   'left': [ [ 'tabs' ] ],
 			\   'right': []
 			\ },
-			\ 'tabline_separator': { 'left': '', 'right': '' },
-			\ 'tabline_subseparator': { 'left': '', 'right': '' },
+			\ 'tabline_separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+			\ 'tabline_subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
 			\ }
 
 function! LightLineModified()
@@ -458,7 +458,7 @@ function! LightLineModified()
 endfunction
 
 function! LightLineReadonly()
-	return &filetype !~? 'help' && &readonly ? '' : ''
+	return &filetype !~? 'help' && &readonly ? "\ue0a2" : ''
 endfunction
 
 function! LightLineFilename()
@@ -568,7 +568,7 @@ function! LightLineFugitive()
 	endif
 
 	try
-		let mark = ' '
+		let mark = "\ue0a0 "
 		let branch = fugitive#head()
 		return branch !=# '' ? mark.branch : ''
 	catch
