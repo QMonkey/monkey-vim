@@ -187,8 +187,9 @@ set ttimeout
 " Unnoticeable small value
 set ttimeoutlen=10
 
-" Show tab and eof
-set list listchars=tab:▸\ ,eol:¬,trail:⋅
+" Show tab, eof and trail space
+set list
+let &listchars="tab:\u25b8 ,eol:\u00ac,trail:\u22c5"
 
 " Restore cursor to previous editing position
 augroup RestoreCursorPosition
