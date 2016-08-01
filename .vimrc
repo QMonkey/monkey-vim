@@ -93,6 +93,19 @@ filetype plugin indent on
 let mapleader = ','
 " }
 
+" Encoding {
+language message en_US.UTF-8
+set langmenu=en_US.UTF-8
+
+scriptencoding utf-8
+set encoding=utf-8
+
+" Only work in terminal vim
+set termencoding=utf-8
+
+set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
+" }
+
 " Number {
 set relativenumber number
 
@@ -372,18 +385,8 @@ augroup PythonFold
 	autocmd FileType python setlocal foldmethod=indent
 augroup END
 
-language message en_US.UTF-8
-set langmenu=en_US.UTF-8
-
 " Character width. Should never be enable!
 "set ambiwidth=double
-
-scriptencoding utf-8
-set encoding=utf-8
-set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
-
-" Only work in terminal vim
-set termencoding=utf-8
 
 " Use both Unix, DOS and Mac file formats, but favor the Unix one for new files
 set fileformats=unix,dos,mac
@@ -1515,6 +1518,11 @@ if has('gui_running')
 	set guioptions-=T
 
 	" Set gui font
-	set guifont=Monospace\ 9
+	if has('gui_gtk2')
+		set guifont=Monospace\ 9
+	elseif has('gui_macvim')
+	elseif has('gui_win32')
+		set guifont=Hack:h10
+	endif
 endif
 " }
