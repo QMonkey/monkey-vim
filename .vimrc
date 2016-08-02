@@ -20,6 +20,13 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 endif
 " }
 
+" Windows {
+" On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization across systems easier
+if has('win32') || has('win64')
+	set runtimepath=$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME,$HOME/.vim/after,$VIM/vimfiles/after
+endif
+" }
+
 set nocompatible
 filetype off
 
