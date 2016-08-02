@@ -15,14 +15,22 @@
 " Init {
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
-	silent execute '!curl' '-fLo' $HOME . '/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+	let path = '/.vim/autoload/plug.vim'
+	if has('win32') || has('win64')
+		let path = '\.vim\autoload\plug.vim'
+	endif
+
+	silent execute '!curl' '-fLo' $HOME . path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 	autocmd VimEnter * PlugInstall | source $MYVIMRC
 endif
 " }
 
 " Windows {
-" On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization across systems easier
 if has('win32') || has('win64')
+	" Use forward slash as path separator
+	set shellslash
+
+	" On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization across systems easier
 	set runtimepath=$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME,$HOME/.vim/after,$VIM/vimfiles/after
 endif
 " }
