@@ -438,6 +438,7 @@ let g:lightline = {
 			\ },
 			\ 'inactive': {
 			\   'left': [ [ 'mode', 'filename' ] ],
+			\   'right': []
 			\ },
 			\ 'component_function': {
 			\   'gitgutter': 'LightLineGitGutter',
