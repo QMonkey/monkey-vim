@@ -1191,6 +1191,8 @@ let g:rooter_silent_chdir = 1
 
 " Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
 let g:rooter_manual_only = 1
+
+nnoremap <silent><Leader>cd :Rooter<CR>
 " }
 
 " Ctags {
