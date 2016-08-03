@@ -1412,6 +1412,8 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 
 " vim-quickrun {
 let g:quickrun_no_default_key_mappings = 1
+" Always output to quickfix. It will close automatically when the result is empty
+let g:quickrun_config = {'_': {'outputter': 'quickfix', 'outputter/quickfix/open_cmd': 'botright copen'}}
 
 map <Leader>ru <Plug>(quickrun)
 " }
@@ -1537,9 +1539,9 @@ if has('gui_running')
 	set guioptions-=T
 
 	" Set gui font
-	if has('gui_gtk2')
+	if has('gui_gtk')
 		set guifont=Monospace\ 9
-	elseif has('gui_macvim')
+	elseif has('gui_mac')
 	elseif has('gui_win32')
 		set guifont=Hack:h10
 	endif
