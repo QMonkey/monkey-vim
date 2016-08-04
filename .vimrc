@@ -1124,9 +1124,9 @@ let g:ctrlp_custom_ignore = {
 			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp)$',
 			\ }
 
-if executable('ag') && !has('win32') && !has('win64')
+if executable('ag')
 	" Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-	let g:ctrlp_user_command = 'ag %s -l --nogroup --nocolor --smart-case -g ""'
+	let g:ctrlp_user_command = 'ag -l --nogroup --nocolor --smart-case -g "" %s'
 	" ag is fast enough that CtrlP doesn't need to cache
 	let g:ctrlp_use_caching = 0
 endif
