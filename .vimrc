@@ -1352,8 +1352,8 @@ let g:UltiSnipsExpandTrigger='<Leader><tab>'
 
 " Syntastic {
 let g:syntastic_loc_list_height = 10
-let g:syntastic_error_symbol = '✖'
-let g:syntastic_style_error_symbol = '✖'
+let g:syntastic_error_symbol = "\u2716"
+let g:syntastic_style_error_symbol = "\u2716"
 let g:syntastic_warning_symbol = '!'
 let g:syntastic_style_warning_symbol = '!'
 let g:syntastic_always_populate_loc_list = 0
