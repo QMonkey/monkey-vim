@@ -476,18 +476,7 @@ cs+surroundA+surroundB      Change surround A to B
 Leader+ru       Run current file
 ```
 
-#### 1.21 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
-
-```
-ga              Start interactive EasyAlign for a motion/text object (e.g. gaip)
-```
-
-```vim
-" Please refer the official doc for more help
-:h vim-easy-align
-```
-
-#### 1.22 Others
+#### 1.21 Others
 
 ```
 '.              Jump to last changes
@@ -576,17 +565,6 @@ S+surroundA     Add surround A for selected text
 
 ```
 Leader+ru    Run selected code
-```
-
-#### 3.10 Easy align: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
-
-```
-ga              Start interactive EasyAlign in visual mode (e.g. vipga)
-```
-
-```vim
-" Please refer the official doc for more help
-:h vim-easy-align
 ```
 
 ### 4. Command line mode

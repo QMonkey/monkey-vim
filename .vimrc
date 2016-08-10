@@ -57,7 +57,6 @@ Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim', {'on': ['Ack', 'AckAdd', 'AckFromSearch', 'LAck', 'LAckAdd', 'AckFile', 'AckHelp', 'LAckHelp', 'AckWindow', 'LAckWindow']}
 Plug 'scrooloose/nerdcommenter'
 Plug 'Chiel92/vim-autoformat', {'on': 'Autoformat'}
-Plug 'junegunn/vim-easy-align', {'on': ['EasyAlign', '<Plug>(EasyAlign)']}
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen', 'Start', 'Spawn']}
 Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
@@ -1394,14 +1393,6 @@ let g:formatters_go = ['goimports']
 
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
-" }
-
-" vim-easy-align {
-" Start interactive EasyAlign for a motion/text object (e.g. gaip)
-nmap ga <Plug>(EasyAlign)
-
-" Start interactive EasyAlign in visual mode (e.g. vipga)
-xmap ga <Plug>(EasyAlign)
 " }
 
 " vim-better-whitespace {

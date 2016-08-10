@@ -444,18 +444,7 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 Leader+ru       运行当前文件
 ```
 
-#### 1.21 快速对齐插件：[vim-easy-align](https://github.com/junegunn/vim-easy-align)
-
-```
-ga              开始对齐模式
-```
-
-```vim
-" 更多vim-easy-align帮助，请参考：
-:h vim-easy-align
-```
-
-#### 1.22 其他
+#### 1.21 其他
 
 ```
 '.              最后一次变更的地方
@@ -544,17 +533,6 @@ S+surroundA     选中字符串增加A围绕字符
 
 ```
 Leader+ru       运行选中代码
-```
-
-#### 3.10 快速对齐插件: [vim-easy-align](https://github.com/junegunn/vim-easy-align)
-
-```
-ga              开始对齐模式
-```
-
-```vim
-" 更多vim-easy-align帮助，请参考：
-:h vim-easy-align
 ```
 
 ### 4. 命令行模式
