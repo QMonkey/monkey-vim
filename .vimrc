@@ -1403,8 +1403,6 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 
 " vim-quickrun {
 let g:quickrun_no_default_key_mappings = 1
-" Always output to quickfix. It will close automatically when the result is empty
-let g:quickrun_config = {'_': {'outputter': 'quickfix', 'outputter/quickfix/open_cmd': 'botright copen'}}
 
 map <Leader>ru <Plug>(quickrun)
 " }
