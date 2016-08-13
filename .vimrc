@@ -1498,6 +1498,35 @@ endif
 
 " GUI {
 if has('gui_running')
+	" Disable cursor flicker
+	set guicursor=a:block-blinkon0
+
+	" Disable scroll bar
+	set guioptions-=l
+	set guioptions-=L
+	set guioptions-=r
+	set guioptions-=R
+
+	" Disable menu and tool bar
+	set guioptions-=m
+	set guioptions-=T
+
+	" Set gui font
+	if has('gui_gtk')
+		set guifont=Monospace\ 9
+	elseif has('gui_macvim')
+		set guifont=Hack:h12
+	elseif has('gui_win32')
+		set guifont=Hack:h10
+	endif
+
+	augroup Visualbell
+		autocmd!
+
+		" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
+		autocmd GUIEnter * set vb t_vb=
+	augroup END
+
 	function! MaximizeWindow()
 		if has('gui_win32')
 			simalt ~x
@@ -1528,34 +1557,5 @@ if has('gui_running')
 	endfunction
 
 	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
-
-	augroup Visualbell
-		autocmd!
-
-		" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
-		autocmd GUIEnter * set vb t_vb=
-	augroup END
-
-	" Disable cursor flicker
-	set guicursor=a:block-blinkon0
-
-	" Disable scroll bar
-	set guioptions-=l
-	set guioptions-=L
-	set guioptions-=r
-	set guioptions-=R
-
-	" Disable menu and tool bar
-	set guioptions-=m
-	set guioptions-=T
-
-	" Set gui font
-	if has('gui_gtk')
-		set guifont=Monospace\ 9
-	elseif has('gui_macvim')
-		set guifont=Hack:h12
-	elseif has('gui_win32')
-		set guifont=Hack:h10
-	endif
 endif
 " }
