@@ -96,6 +96,10 @@ if has('mac') || has('macunix')
 else
 	Plug 'KabbAmine/zeavim.vim'
 endif
+
+if has('win32') || has('win64')
+	Plug 'kkoenig/wimproved.vim'
+endif
 " }
 
 " Add plugins to &runtimepath
@@ -1494,15 +1498,28 @@ endif
 
 " GUI {
 if has('gui_running')
+	function! MaximizeWindow()
+		if has('gui_win32')
+			simalt ~x
+		elseif has('gui_macvim')
+			" Make gvim tallest and widest as possible
+			set lines=999
+			set columns=9999
+		else
+			call system('wmctrl -ir ' . v:windowid . ' -b add,maximized_horz,maximized_vert')
+		endif
+	endfunction
+
+	augroup Maximize
+		autocmd!
+
+		" Maximize window on gvim start up
+		autocmd GUIEnter * call MaximizeWindow()
+	augroup END
+
 	function! ToggleFullscreen()
 		if has('gui_win32')
-			let lines = &lines
-			let columns = &columns
-
-			simalt ~x
-			if &lines == lines && &columns == columns
-				simalt ~r
-			endif
+			WToggleFullscreen
 		elseif has('gui_macvim')
 			set invfullscreen
 		else
@@ -1511,13 +1528,6 @@ if has('gui_running')
 	endfunction
 
 	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
-
-	augroup Fullscreen
-		autocmd!
-
-		" Fullscreen when gvim start up
-		autocmd VimEnter * call ToggleFullscreen()
-	augroup END
 
 	augroup Visualbell
 		autocmd!
