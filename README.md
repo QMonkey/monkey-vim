@@ -4,9 +4,7 @@ Read this in other languages: [简体中文](README.zh-CN.md)
 
 ## Introduction
 
-Maybe you feel like your IDE is not powerful or convenient. Therefore, you may install lots of plugins. After that, you may find your IDE is too slow! That is unbearable! Finally, you have to choose between powerful and lightweight. Perhaps you can also install an IDE for a specific programming language.
-
-The project monkey-vim, aims to make a powerful and fast IDE.
+The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
 
 ## Screenshot
 
@@ -53,11 +51,18 @@ sudo yum install wmctrl
 brew install ctags
 brew install cmake
 brew install the_silver_searcher or brew install ack
+
+# Windows
+Visual Studio with C++ component
+7-zip
+ctags
+cmake
+ag
 ```
 
 #### 2.2 Fonts
 
-- [powerline-font](https://github.com/powerline/fonts)
+- [Hack](https://github.com/chrissimpkins/Hack)
 
 #### 2.3 Docset
 
@@ -85,6 +90,11 @@ sudo yum install clang
 
 # Mac
 brew install clang
+
+# Windows
+gcc
+g++
+clang
 ```
 
 #### 2.5 Javascript
@@ -136,6 +146,9 @@ sudo yum install astyle
 
 # Mac
 brew install astyle
+
+# Windows
+astyle
 ```
 
 #### 2.10 Lua
@@ -152,6 +165,9 @@ sudo yum install lua
 
 # Mac
 brew install lua
+
+# Windows
+lua
 ```
 
 #### 2.11 Ruby
@@ -174,6 +190,9 @@ sudo zypper install php
 
 # Mac
 brew install php
+
+# Windows
+php
 ```
 
 #### 2.13 Shell
@@ -761,6 +780,9 @@ EndSection
 
 # Mac
 # Go to System Preferences -> Keyboard -> Keyboard Tab -> Modifier Keys and select Control for Caps Lock
+
+# Windows
+# Please install keytweak
 ```
 
 ## Configuration

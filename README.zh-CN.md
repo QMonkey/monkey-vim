@@ -4,9 +4,7 @@
 
 ## 简介
 
-也许你也有这样的经历：IDE不够强大，于是你给你的IDE装上各种各样的插件。随着插件增多，你发现IDE变得越来越卡，占用越来越多系统资源（我的Atom曾经占用了2G内存！！！）。最后，你不得不在强大和轻量之间权衡。
-
-monkey-vim项目，旨在打造一个强大，快速并且占用少量系统资源的IDE。
+monkey-vim项目，旨在打造一个强大，快速并且跨平台的IDE。
 
 ## 截图
 
@@ -53,11 +51,18 @@ sudo yum install wmctrl
 brew install ctags
 brew install cmake
 brew install the_silver_searcher 或 brew install ack
+
+# Windows
+Visual Studio（必须安装C++组件）
+7-zip
+ctags
+cmake
+ag
 ```
 
 #### 2.2 Fonts
 
-- [powerline-font](https://github.com/powerline/fonts)
+- [Hack](https://github.com/chrissimpkins/Hack)
 
 #### 2.3 Docset
 
@@ -85,6 +90,11 @@ sudo yum install clang
 
 # Mac
 brew install clang
+
+# Windows
+gcc
+g++
+clang
 ```
 
 #### 2.5 Javascript
@@ -136,6 +146,9 @@ sudo yum install astyle
 
 # Mac
 brew install astyle
+
+# Windows
+astyle
 ```
 
 #### 2.10 Lua
@@ -152,6 +165,9 @@ sudo yum install lua
 
 # Mac
 brew install lua
+
+# Windows
+lua
 ```
 
 #### 2.11 Ruby
@@ -174,6 +190,9 @@ sudo zypper install php
 
 # Mac
 brew install php
+
+# Windows
+php
 ```
 
 #### 2.13 Shell
@@ -727,6 +746,9 @@ EndSection
 
 # Mac
 # 打开系统偏好设置 -> 键盘 -> 键盘Tab窗口 -> 修改键，并将Caps Lock改成Control
+
+# Windows
+# 请安装keytweak
 ```
 
 ## 意见或建议
