@@ -1495,7 +1495,19 @@ endif
 " GUI {
 if has('gui_running')
 	function! ToggleFullscreen()
-		call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
+		if has('gui_win32')
+			let lines = &lines
+			let columns = &columns
+
+			simalt ~x
+			if &lines == lines && &columns == columns
+				simalt ~r
+			endif
+		elseif has('gui_macvim')
+			set invfullscreen
+		else
+			call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
+		endif
 	endfunction
 
 	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
