@@ -1530,7 +1530,8 @@ if has('gui_running')
 	" Set gui font
 	if has('gui_gtk')
 		set guifont=Monospace\ 9
-	elseif has('gui_mac')
+	elseif has('gui_macvim')
+		set guifont=Hack:h12
 	elseif has('gui_win32')
 		set guifont=Hack:h10
 	endif
