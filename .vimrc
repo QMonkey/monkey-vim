@@ -1365,6 +1365,7 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_enable_highlighting = 1
 let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+let g:syntastic_python_checkers = ['pyflakes']
 let g:syntastic_mode_map = {'mode': 'passive'}
 
 nnoremap <silent><Leader>e :call LListToggle('Errors')<CR>
