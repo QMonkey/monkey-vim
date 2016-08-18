@@ -221,15 +221,17 @@ sudo gem install mdl
 
 ### 3. Install monkey-vim
 
+- Linux and Mac
+
 ```bash
-# Linux and Mac
 cd monkey-vim
 ln -s $(pwd)/.vimrc ~/.vimrc
 vim
 ```
 
+- Windows
+
 ```bash
-# Windows
 cd monkey-vim
 mklink %HOMEDRIVE%%HOMEPATH%\.vimrc %CD%\.vimrc
 vim

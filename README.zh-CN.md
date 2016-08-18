@@ -221,15 +221,17 @@ sudo gem install mdl
 
 ### 3. 安装
 
+- Linux和Mac
+
 ```bash
-# Linux和Mac
 cd monkey-vim
 ln -s $(pwd)/.vimrc ~/.vimrc
 vim
 ```
 
+- Windows
+
 ```bash
-# Windows
 cd monkey-vim
 mklink %HOMEDRIVE%%HOMEPATH%\.vimrc %CD%\.vimrc
 vim
