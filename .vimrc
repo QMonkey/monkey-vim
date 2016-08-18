@@ -25,6 +25,11 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 endif
 " }
 
+" vim-plug {
+" Time limit of each task in seconds
+let g:plug_timeout = 600
+" }
+
 " Windows {
 if has('win32') || has('win64')
 	" Use forward slash as path separator
