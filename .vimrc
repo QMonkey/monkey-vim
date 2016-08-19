@@ -1116,6 +1116,11 @@ function! GetAckSelection()
 endfunction
 " }
 
+" nerdcommenter {
+let g:NERDSpaceDelims = 1
+let g:NERDRemoveExtraSpaces = 1
+" }
+
 " Session {
 set sessionoptions-=options
 
