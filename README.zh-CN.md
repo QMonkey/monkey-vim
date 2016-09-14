@@ -16,6 +16,10 @@ monkey-vim项目，旨在打造一个强大，快速并且跨平台的IDE。
 
 ![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
 
+## 要求
+
+- vim 8.0+
+
 ## 安装步骤
 
 ### 1. clone到本地

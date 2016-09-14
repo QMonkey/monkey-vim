@@ -16,7 +16,11 @@ The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
 
 ![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
 
-## How to install
+## Requirements
+
+- vim 8.0+
+
+## Installation
 
 ### 1. Git clone
 
