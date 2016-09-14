@@ -84,7 +84,6 @@ Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
-Plug 'elzr/vim-json', {'for': 'json'}
 Plug 'hdima/python-syntax', {'for': 'python'}
 Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
@@ -212,6 +211,9 @@ set shiftwidth=8
 set noexpandtab
 
 set textwidth=78
+
+set wrap
+set breakindent
 
 set splitright
 
@@ -423,10 +425,8 @@ set hidden
 " Auto reload file changes outside vim
 set autoread
 
-" No error bells
-set noerrorbells
-set novisualbell
-set t_vb=
+" No bells
+set belloff=all
 
 " Disable mouse
 set mouse=
@@ -1423,10 +1423,13 @@ map <Leader>ru <Plug>(quickrun)
 " }
 
 " vim-go {
-let g:go_highlight_types = 1
-let g:go_highlight_functions = 1
+let g:go_highlight_types = 0
+let g:go_highlight_functions = 0
 let g:go_highlight_methods = 1
 let g:go_highlight_build_constraints = 1
+let g:go_highlight_generate_tags = 1
+let g:go_highlight_space_tab_error = 0
+let g:go_highlight_trailing_whitespace_error = 0
 let g:go_fmt_fail_silently = 1
 let g:go_disable_autoinstall = 1
 " Disable run GoFmt on save, do it by vim-autoformat
@@ -1456,10 +1459,6 @@ augroup END
 " vim-javascript {
 let g:javascript_plugin_jsdoc = 1
 let g:javascript_plugin_ngdoc = 1
-" }
-
-" vim-json {
-let g:vim_json_syntax_conceal = 0
 " }
 
 " python-syntax {
@@ -1531,12 +1530,10 @@ if has('gui_running')
 		set guifont=Hack:h10
 	endif
 
-	augroup Visualbell
-		autocmd!
-
-		" When the GUI starts, 't_vb' is reset to its default value. See :help visualbell
-		autocmd GUIEnter * set vb t_vb=
-	augroup END
+	if has('gui_win32')
+		" Use directx as a text renderer on Windows
+		set renderoptions=type:directx
+	endif
 
 	function! MaximizeWindow()
 		if has('gui_win32')
