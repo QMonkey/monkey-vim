@@ -1420,6 +1420,12 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 let g:quickrun_no_default_key_mappings = 1
 
 map <Leader>ru <Plug>(quickrun)
+
+augroup QuickRunRemap
+	autocmd!
+
+	autocmd FileType quickrun nnoremap <buffer><silent>q :call QuitWindow()<CR>
+augroup END
 " }
 
 " vim-go {
