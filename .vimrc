@@ -1043,7 +1043,7 @@ function! GetString(prompt_text)
 
 			let c = ''
 			if n is# "\<BS>" || n == 8
-				let str = strpart(str, 0, strlen(str)-1)
+				let str = strcharpart(str, 0, strchars(str)-1)
 				call Clear()
 				echon a:prompt_text . str
 			else
