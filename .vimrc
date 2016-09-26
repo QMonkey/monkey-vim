@@ -975,6 +975,22 @@ endfunction
 let list_height = 10
 nnoremap <silent><Leader>q :call QListToggle('silent! botright copen '. list_height)<CR>
 nnoremap <silent><Leader>l :call LListToggle('silent! lopen '. list_height)<CR>
+
+if has('win32') || has('win64')
+	function QuickfixConv()
+		let qflist = getqflist()
+		for i in qflist
+			let i.text = iconv(i.text, "cp936", "utf-8")
+		endfor
+		call setqflist(qflist)
+	endfunction
+
+	augroup QuickfixEncodingConv
+		autocmd!
+
+		autocmd QuickfixCmdPost * call QuickfixConv()
+	augroup END
+endif
 " }
 
 " QFEnter {
