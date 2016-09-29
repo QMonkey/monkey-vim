@@ -102,7 +102,7 @@ else
 endif
 
 if has('win32') || has('win64')
-	Plug 'kkoenig/wimproved.vim'
+	Plug 'kkoenig/wimproved.vim', {'on': ['WCenter', 'WSetAlpha', 'WToggleFullscreen', 'WToggleClean']}
 endif
 " }
 
