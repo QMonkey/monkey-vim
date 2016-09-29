@@ -523,7 +523,7 @@ function! IsLocationListBuffer()
 	silent let buffer_list = GetBufferListOutputAsOneString()
 
 	let l:quickfix_match = matchlist(buffer_list,
-				\ '\n\s*\(\d\+\)[^\n]*Quickfix List')
+				\ '\n\s*\(\d\+\)[^\n]*Quickfix')
 	if empty(l:quickfix_match)
 		return 1
 	endif
