@@ -500,7 +500,7 @@ function! LightLineFilename()
 	endif
 
 	return fname == 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
-				\ fname == '__Tagbar__' ? '' :
+				\ fname =~ '__Tagbar__' ? '' :
 				\ fname =~ 'NERD_tree' ? '' :
 				\ ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
 				\ ('' != fname ? fname : '[No Name]') .
@@ -633,7 +633,7 @@ function! LightLineMode()
 					\ window_type == 1 ? 'Location' : ''
 	endif
 
-	return fname == '__Tagbar__' ? 'Tagbar' :
+	return fname =~ '__Tagbar__' ? 'Tagbar' :
 				\ fname == 'ControlP' ? 'CtrlP' :
 				\ fname == 'CtrlSpace' ? 'CtrlSpace' :
 				\ fname =~ 'NERD_tree' ? 'NERDTree' :
