@@ -15,11 +15,7 @@
 " Init {
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
-	let path = '/.vim/autoload/plug.vim'
-	if has('win32') || has('win64')
-		let path = '\.vim\autoload\plug.vim'
-	endif
-
+	let path = expand('/.vim/autoload/plug.vim')
 	silent execute '!curl' '-fLo' $HOME . path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 	autocmd VimEnter * PlugInstall | source $MYVIMRC
 endif
@@ -32,18 +28,15 @@ let g:plug_timeout = 600
 
 " Windows {
 if has('win32') || has('win64')
-	" Use forward slash as path separator
-	set shellslash
-
 	" On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization across systems easier
-	set runtimepath=$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME,$HOME/.vim/after,$VIM/vimfiles/after
+	set runtimepath=$HOME\.vim,$VIM\vimfiles,$VIMRUNTIME,$VIM\vimfiles\after,$HOME\.vim\after
 endif
 " }
 
 set nocompatible
 filetype off
 
-call plug#begin($HOME . '/.vim/bundle')
+call plug#begin(expand($HOME . '/.vim/bundle'))
 
 " Plugins {
 Plug 'tomasr/molokai'
@@ -1241,7 +1234,7 @@ augroup END
 let g:easytags_async = 1
 
 " Global tag file
-let g:easytags_file = $HOME . '/.vim/.tags'
+let g:easytags_file = expand($HOME . '/.vim/.tags')
 
 let g:easytags_opts = ['--fields=+liaS', '--extra=+q']
 let g:easytags_languages = {
@@ -1332,7 +1325,7 @@ let g:SignatureMarkerTextHLDynamic = 1
 
 " YouCompleteMe {
 if !empty(glob($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
-	let g:ycm_global_ycm_extra_conf = $HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+	let g:ycm_global_ycm_extra_conf = expand($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py')
 endif
 
 " Do not use YouCompleteMe to check C, C++ and Objective-C, do it by syntastic
