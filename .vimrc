@@ -1087,7 +1087,7 @@ function! Replace(mode, confirm, wholeword)
 		let flag .= 'e'
 	endif
 
-	execute ',$s/' . search . '/' . replace . '/' . flag . "| silent 1,'' -&& | update"
+	execute ',$s/' . search . '/' . replace . '/' . flag . "| 1,'' -&& | update"
 endfunction
 
 " Replace in normal mode
