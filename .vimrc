@@ -813,7 +813,6 @@ endfunction
 " }
 
 " Buffer {
-nnoremap <silent><Leader>d :Bdelete<CR>
 nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', '', 'file')<CR>
 
 nnoremap <silent>[b :bprevious<CR>
