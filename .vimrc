@@ -303,7 +303,7 @@ function! SetReferences()
 			continue
 		endif
 
-		let search = expand('<cword>')
+		let search = GetCurrentWord()
 		execute 'nnoremap <silent><buffer><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
 
 		" Enable reference in visual-mode
@@ -556,7 +556,7 @@ function! IsGitFile()
 		endif
 	endfor
 
-	let git_dir = fugitive#extract_git_dir(expand('%'))
+	let git_dir = fugitive#extract_git_dir(resolve(expand('%')))
 	if git_dir ==# ''
 		return 0
 	endif
@@ -1054,7 +1054,7 @@ function! Replace(mode, confirm, wholeword)
 	let word = ''
 	let wholeword = a:wholeword
 	if a:mode ==# 'n' || a:mode ==# 'normal'
-		let word .= expand('<cword>')
+		let word .= GetCurrentWord()
 	elseif a:mode ==# 'v' || a:mode ==# 'visual'
 		let word .= GetVisualSelection()
 		let wholeword = 0
