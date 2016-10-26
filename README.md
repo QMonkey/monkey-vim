@@ -489,7 +489,7 @@ Leader+a        Search current word in current directory
 #### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
-Leader+cc       Comment out the current line
+Leader+cl       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
@@ -583,7 +583,7 @@ Leader+a        Search selected text in current directory
 #### 3.7 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
-Leader+cc       Comment out the selected text
+Leader+cl       Comment out the selected text
 Leader+cu       Uncomments the selected line(s)
 ```
 

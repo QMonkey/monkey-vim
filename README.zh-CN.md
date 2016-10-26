@@ -457,7 +457,7 @@ Leader+a        当前目录搜索光标所在的词
 #### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
-Leader+cc       注释光标所在行
+Leader+cl       注释光标所在行
 Leader+cu       取消注释
 ```
 
@@ -551,7 +551,7 @@ Leader+a        当前目录搜索选中字符串
 #### 3.7 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
-Leader+cc       注释选中的代码
+Leader+cl       注释选中的代码
 Leader+cu       取消选中代码的注释
 ```
 
