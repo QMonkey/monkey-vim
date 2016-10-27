@@ -1075,7 +1075,7 @@ function! Replace(mode, confirm, wholeword)
 		return
 	endtry
 
-	let replace = escape(replace, '/\&~')
+	let replace = escape(replace, '/&~')
 
 	let flag = ''
 	if a:confirm
