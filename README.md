@@ -340,6 +340,8 @@ Leader+]    Jump to last tab
 #### 1.7 Replace
 
 ```
+# '\r' standard for newline
+
 Leader+R    Replace current word. Not whole word, and don't need to confirm
 Leader+rw   Same as "Leader+R", but search for whole world
 Leader+rc   Same as "Leader+R", but need to confirm
@@ -557,6 +559,8 @@ s       Replace selected text with clipboard content
 #### 3.3 Replace
 
 ```
+# '\r' standard for newline
+
 Leader+R    Replace selected text
 Leader+rc   Same as "Leader+R", but need to confirm
 ```
