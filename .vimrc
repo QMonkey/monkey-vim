@@ -1140,7 +1140,7 @@ nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<C
 let g:ctrlp_follow_symlinks = 1
 let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
-			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp)$',
+			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp|swn)$',
 			\ }
 
 if executable('ag')
@@ -1266,7 +1266,7 @@ let g:NERDTreeMapOpenVSplit = 'v'
 " Show hidden
 let NERDTreeShowHidden = 1
 " Ignore files
-let NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+let NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '\.swn$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
 
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
