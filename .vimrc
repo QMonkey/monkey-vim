@@ -76,11 +76,9 @@ Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
-Plug 'hdima/python-syntax', {'for': 'python'}
 Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
-Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
 Plug 'suan/vim-instant-markdown', {'for': 'markdown', 'on': 'InstantMarkdownPreview'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
@@ -1471,10 +1469,6 @@ augroup END
 " vim-javascript {
 let g:javascript_plugin_jsdoc = 1
 let g:javascript_plugin_ngdoc = 1
-" }
-
-" python-syntax {
-let python_highlight_all = 1
 " }
 
 " vim-lua-ftplugin {
