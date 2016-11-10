@@ -1211,6 +1211,13 @@ let g:rooter_change_directory_for_non_project_files = 'current'
 let g:rooter_manual_only = 1
 
 nnoremap <silent><Leader>cd :Rooter<CR>
+
+augroup ChangeRoot
+	autocmd!
+
+	" Change the working directory on vim startup
+	autocmd VimEnter * :Rooter
+augroup END
 " }
 
 " Ctags {
