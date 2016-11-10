@@ -769,19 +769,10 @@ set expandtab
 
 - [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- Use vim to view man doc in shell by "vman" command, please put it in your "~/.bashrc" file
+- Use vim to view man doc in shell, please put it in your "~/.bashrc" file
 
 ```bash
-vman() {
-    vim -R --cmd "let g:CtrlSpaceLoaded = 1" \
-              -c "Man $*" \
-              -c "if line('$') == 1 | cquit | endif" \
-              -c "silent only" \
-              -c "setlocal nomodifiable"
-    if [ "$?" != "0" ]; then
-        echo "No manual entry for $*"
-    fi
-}
+export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
 ```
 
 - Remap Caps Lock key to Ctrl

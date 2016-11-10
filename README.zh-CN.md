@@ -735,19 +735,10 @@ set expandtab
 
 - [源码构建vim](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- 在~/.bashrc中加入以下Shell代码，即可使用vman命令，在vim中下查看man文档
+- 在~/.bashrc中加入以下Shell代码，即可在vim中查看man文档
 
 ```bash
-vman() {
-    vim -R --cmd "let g:CtrlSpaceLoaded = 1" \
-              -c "Man $*" \
-              -c "if line('$') == 1 | cquit | endif" \
-              -c "silent only" \
-              -c "setlocal nomodifiable"
-    if [ "$?" != "0" ]; then
-        echo "No manual entry for $*"
-    fi
-}
+export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
 ```
 
 - 将Caps Lock按键映射为Ctrl
