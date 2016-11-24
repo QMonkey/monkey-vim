@@ -235,7 +235,7 @@ augroup FileTypeGroup
 	autocmd!
 
 	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-	autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd FileType javascript,json,yaml,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 	autocmd FileType php setlocal matchpairs-=<:>
 
