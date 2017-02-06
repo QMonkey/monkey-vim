@@ -38,18 +38,21 @@ sudo apt-get install ctags
 sudo apt-get install cmake
 sudo apt-get install silversearcher-ag or sudo apt-get install ack-grep
 sudo apt-get install wmctrl
+sudo apt-get install parcellite
 
 # OpenSUSE
 sudo zypper install ctags
 sudo zypper install cmake
 sudo zypper install the_silver_searcher or sudo zypper install ack
 sudo zypper install wmctrl
+sudo zypper install parcellite
 
 # CentOS
 sudo yum install ctags
 sudo yum install cmake
 sudo yum install the_silver_searcher or sudo yum install ack
 sudo yum install wmctrl
+sudo yum install clipit
 
 # Mac
 brew install ctags
