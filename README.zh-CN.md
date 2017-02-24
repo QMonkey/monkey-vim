@@ -283,8 +283,9 @@ t       记录操作，相当于原来的q
 #### 1.2 F2 ~ F10
 
 ```
-F2      打开/关闭NERDTree
-F3      打开/关闭Tagbar
+F2      打开/关闭NERDTree和Tagbar
+F3      打开/关闭NERDTree
+F4      打开/关闭Tagbar
 F7      异步运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
 F8      打开/关闭F7运行结果
 F9      运行当前文件

@@ -283,8 +283,9 @@ t       Recording, same as origin q
 #### 1.2 F2 ~ F10
 
 ```
-F2      Toggle NERDTree
-F3      Toggle Tagbar
+F2      Toggle NERDTree and Tagbar
+F3      Toggle NERDTree
+F4      Toggle Tagbar
 F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
 F8      Toggle output window of F7
 F9      Run current file
