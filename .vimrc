@@ -869,8 +869,20 @@ nnoremap <silent><F9> :QuickRun<CR>
 nnoremap <silent><F10> :InstantMarkdownPreview<CR>
 
 function! ToggleNERDTreeTabsAndTagbar()
-	call BetterNERDTreeTabsToggle()
-	TagbarToggle
+	let nerdtree_opened = exists('g:NERDTree') && g:NERDTree.IsOpen()
+	let tagbar_opened = bufwinnr('__Tagbar__') > 0
+	if xor(nerdtree_opened, tagbar_opened)
+		if !nerdtree_opened
+			call BetterNERDTreeTabsToggle()
+		endif
+
+		if !tagbar_opened
+			TagbarToggle
+		endif
+	else
+		call BetterNERDTreeTabsToggle()
+		TagbarToggle
+	endif
 endfunction
 
 function! BetterNERDTreeTabsToggle()
