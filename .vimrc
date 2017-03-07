@@ -80,7 +80,7 @@ Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
-Plug 'suan/vim-instant-markdown', {'for': 'markdown', 'on': 'InstantMarkdownPreview'}
+Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
 
@@ -866,7 +866,7 @@ nnoremap <silent><F4> :TagbarToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QListToggle('Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
-nnoremap <silent><F10> :InstantMarkdownPreview<CR>
+nnoremap <silent><F10> :LivedownPreview<CR>
 
 function! ToggleNERDTreeTabsAndTagbar()
 	let nerdtree_opened = exists('g:NERDTree') && g:NERDTree.IsOpen()
@@ -1519,11 +1519,6 @@ let g:rubycomplete_load_gemfile = 1
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
 let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'java', 'javascript', 'json', 'python', 'lua', 'ruby', 'php', 'bash=sh', 'vim', 'html', 'css']
-" }
-
-" vim-instant_markdown {
-let g:instant_markdown_slow = 1
-let g:instant_markdown_autostart = 0
 " }
 
 " Terminal {
