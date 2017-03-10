@@ -71,7 +71,6 @@ Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
-Plug 'octol/vim-cpp-enhanced-highlight', {'for': ['c', 'cpp']}
 Plug 'fatih/vim-go', {'for': 'go'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
