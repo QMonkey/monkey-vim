@@ -776,7 +776,7 @@ function! QuitWindow()
 		return
 	endif
 
-	if max_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
+	if max_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen()) || max_winnr > 2
 		call Quit()
 		return
 	endif
