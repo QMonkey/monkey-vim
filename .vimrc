@@ -42,7 +42,6 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
-Plug 'majutsushi/tagbar'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-ctrlspace/vim-ctrlspace'
@@ -489,7 +488,6 @@ function! LightLineFilename()
 	endif
 
 	return fname == 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
-				\ fname =~ '__Tagbar__' ? '' :
 				\ fname =~ 'NERD_tree' ? '' :
 				\ ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
 				\ ('' != fname ? fname : '[No Name]') .
@@ -542,7 +540,7 @@ function! IsGitFile()
 	endif
 
 	let fname = expand('%:t')
-	let plugins = ['\[Plugins\]', 'NERD_tree', 'Tagbar', 'ControlP', 'CtrlSpace']
+	let plugins = ['\[Plugins\]', 'NERD_tree', 'ControlP', 'CtrlSpace']
 
 	if fname ==# ''
 		return 0
@@ -622,8 +620,7 @@ function! LightLineMode()
 					\ window_type == 1 ? 'Location' : ''
 	endif
 
-	return fname =~ '__Tagbar__' ? 'Tagbar' :
-				\ fname == 'ControlP' ? 'CtrlP' :
+	return  fname == 'ControlP' ? 'CtrlP' :
 				\ fname == 'CtrlSpace' ? 'CtrlSpace' :
 				\ fname =~ 'NERD_tree' ? 'NERDTree' :
 				\ winwidth(0) > 60 ? lightline#mode() : ''
@@ -653,13 +650,6 @@ function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
 endfunction
 
 function! CtrlPStatusFunc_2(str)
-	return lightline#statusline(0)
-endfunction
-
-let g:tagbar_status_func = 'TagbarStatusFunc'
-
-function! TagbarStatusFunc(current, sort, fname, ...) abort
-	let g:lightline.fname = a:fname
 	return lightline#statusline(0)
 endfunction
 
@@ -702,7 +692,7 @@ let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_start_level = 2
 let g:indent_guides_guide_size = 1
 let g:indent_guides_tab_guides = 0
-let g:indent_guides_exclude_filetypes = ['diff', 'man', 'help', 'git', 'gitcommit', 'qf', 'nerdtree', 'tagbar']
+let g:indent_guides_exclude_filetypes = ['diff', 'man', 'help', 'git', 'gitcommit', 'qf', 'nerdtree']
 " }
 
 " Key map {
@@ -791,19 +781,6 @@ function! QuitWindow()
 		return
 	endif
 
-	if max_winnr == 3
-		if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
-			call Quit()
-			return
-		endif
-
-		let tagbar_winnr = bufwinnr('__Tagbar__')
-		if tagbar_winnr < 0
-			call Quit()
-			return
-		endif
-	endif
-
 	" If NERDTreeTabs is opend, only call quitall can save the session
 	quitall
 endfunction
@@ -860,30 +837,11 @@ nnoremap <Right> <C-w><
 " }
 
 " F2 ~ F10 {
-nnoremap <silent><F2> :call ToggleNERDTreeTabsAndTagbar()<CR>
-nnoremap <silent><F3> :call BetterNERDTreeTabsToggle()<CR>
-nnoremap <silent><F4> :TagbarToggle<CR>
+nnoremap <silent><F2> :call BetterNERDTreeTabsToggle()<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QListToggle('Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
 nnoremap <silent><F10> :LivedownPreview<CR>
-
-function! ToggleNERDTreeTabsAndTagbar()
-	let nerdtree_opened = exists('g:NERDTree') && g:NERDTree.IsOpen()
-	let tagbar_opened = bufwinnr('__Tagbar__') > 0
-	if xor(nerdtree_opened, tagbar_opened)
-		if !nerdtree_opened
-			call BetterNERDTreeTabsToggle()
-		endif
-
-		if !tagbar_opened
-			TagbarToggle
-		endif
-	else
-		call BetterNERDTreeTabsToggle()
-		TagbarToggle
-	endif
-endfunction
 
 function! BetterNERDTreeTabsToggle()
 	NERDTreeTabsToggle
@@ -1320,11 +1278,6 @@ function! Refresh()
 	call b:NERDTree.root.refreshFlags()
 	call NERDTreeRender()
 endfunction
-" }
-
-" Tagbar {
-let g:tagbar_width = 32
-let g:tagbar_compact = 1
 " }
 
 " Gitv {
