@@ -454,10 +454,10 @@ Leader+jd   Go to declaration
 Leader+jt   Go to header file, definition or declaration
 ```
 
-#### 1.13 Syntax checking plugin: [syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 Asynchronous lint engine: [ale](https://github.com/w0rp/ale)
 
 ```
-Leader+e    Toggle error window
+Leader+l    Toggle error window
 ```
 
 #### 1.14 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)

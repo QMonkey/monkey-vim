@@ -422,10 +422,10 @@ Leader+jd   跳转到声明
 Leader+jt   跳转到头文件，定义或声明
 ```
 
-#### 1.13 静态语义语法检查插件：[syntastic](https://github.com/scrooloose/syntastic)
+#### 1.13 异步语义语法检查插件：[ale](https://github.com/w0rp/ale)
 
 ```
-Leader+e    打开/关闭错误信息窗口
+Leader+l    打开/关闭错误信息窗口
 ```
 
 #### 1.14 快速移动插件：[vim-sneak](https://github.com/justinmk/vim-sneak)

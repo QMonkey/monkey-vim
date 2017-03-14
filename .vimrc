@@ -59,7 +59,7 @@ Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen',
 Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
 Plug 'airblade/vim-rooter'
 Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
-Plug 'scrooloose/syntastic'
+Plug 'w0rp/ale'
 Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer --tern-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
@@ -429,7 +429,7 @@ let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
 			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ], ['ctrlpmark'] ],
-			\   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
+			\   'right': [ [ 'ale', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
 			\ },
 			\ 'inactive': {
 			\   'left': [ [ 'mode', 'filename' ] ],
@@ -449,10 +449,10 @@ let g:lightline = {
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
-			\   'syntastic': 'SyntasticStatuslineFlag',
+			\   'ale': 'ALEGetStatusLine',
 			\ },
 			\ 'component_type': {
-			\   'syntastic': 'error',
+			\   'ale': 'error',
 			\ },
 			\ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
 			\ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
@@ -652,16 +652,10 @@ function! CtrlPStatusFunc_2(str)
 	return lightline#statusline(0)
 endfunction
 
-augroup AutoSyntastic
+augroup AfterALELint
 	autocmd!
-
-	autocmd BufReadPost,BufWritePost * if &filetype isnot# 'go' | call s:syntastic() | endif
+	autocmd User ALELint call lightline#update()
 augroup END
-
-function! s:syntastic()
-	SyntasticCheck
-	call lightline#update()
-endfunction
 " }
 
 " Enable 256 color for vim
@@ -1300,7 +1294,7 @@ if !empty(glob($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm
 	let g:ycm_global_ycm_extra_conf = expand($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py')
 endif
 
-" Do not use YouCompleteMe to check C, C++ and Objective-C, do it by syntastic
+" Do not use YouCompleteMe to check C, C++ and Objective-C, do it by ale
 let g:ycm_show_diagnostics_ui = 0
 let g:ycm_complete_in_comments = 1
 let g:ycm_complete_in_strings = 1
@@ -1344,22 +1338,21 @@ augroup END
 let g:UltiSnipsExpandTrigger='<Leader><tab>'
 " }
 
-" Syntastic {
-let g:syntastic_loc_list_height = 10
-let g:syntastic_error_symbol = "\u2716"
-let g:syntastic_style_error_symbol = "\u2716"
-let g:syntastic_warning_symbol = '!'
-let g:syntastic_style_warning_symbol = '!'
-let g:syntastic_always_populate_loc_list = 0
-let g:syntastic_auto_loc_list = 0
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:syntastic_enable_highlighting = 1
-let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
-let g:syntastic_python_checkers = ['pyflakes']
-let g:syntastic_mode_map = {'mode': 'passive'}
-
-nnoremap <silent><Leader>e :call LListToggle('Errors')<CR>
+" ale {
+let g:ale_sign_column_always = 0
+let g:ale_sign_error = "\u2716"
+let g:ale_sign_warning = '!'
+let g:ale_echo_msg_error_str = 'Error'
+let g:ale_echo_msg_warning_str = 'Warning'
+let g:ale_echo_msg_format = '[%linter%] %s'
+let g:ale_statusline_format = ['%d error(s)', '%d warning(s)', '']
+let g:ale_lint_on_enter = 1
+let g:ale_lint_on_save = 1
+let g:ale_lint_on_text_changed = 0
+let g:ale_set_loclist = 1
+let g:ale_set_quickfix = 0
+let g:ale_open_list = 0
+let g:ale_keep_list_window_open = 0
 " }
 
 " vim-autoformat {
