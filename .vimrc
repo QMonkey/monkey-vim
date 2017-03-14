@@ -1303,7 +1303,7 @@ let g:ycm_collect_identifiers_from_comments_and_strings = 1
 let g:ycm_collect_identifiers_from_tags_files = 1
 let g:ycm_seed_identifiers_with_syntax = 1
 let g:ycm_autoclose_preview_window_after_insertion = 1
-let g:ycm_goto_buffer_command = 'same-buffer'
+let g:ycm_goto_buffer_command = 'new-or-existing-tab'
 let g:ycm_filepath_completion_use_working_dir = 1
 
 let ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'javascript', 'python']
@@ -1417,16 +1417,15 @@ let g:go_fmt_autosave = 0
 let g:go_dispatch_enabled = 1
 let g:go_fmt_command = 'goimports'
 let g:go_doc_keywordprg_enabled = 0
-let g:godef_split = 2
-let g:godef_same_file_in_same_window = 1
 let g:go_def_mapping_enabled = 0
 let g:go_list_type = "quickfix"
+let g:go_def_reuse_buffer = 1
 
 augroup GolangKeymap
 	autocmd!
 
 	" Use Ctrl-o to jump back, see :help jumplist
-	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def)
+	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def-tab)
 	autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
 	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-install)
 	autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
