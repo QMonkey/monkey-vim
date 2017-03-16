@@ -951,10 +951,11 @@ endif
 " }
 
 " QFEnter {
-let g:qfenter_open_map = ['<CR>']
-let g:qfenter_vopen_map = ['i']
-let g:qfenter_hopen_map = ['a']
-let g:qfenter_topen_map = ['t']
+let g:qfenter_keymap = {}
+let g:qfenter_keymap.open = ['<CR>']
+let g:qfenter_keymap.vopen = ['i']
+let g:qfenter_keymap.hopen = ['a']
+let g:qfenter_keymap.topen = ['t']
 " }
 
 function! Strip(input_string)
