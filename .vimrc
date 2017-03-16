@@ -820,8 +820,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', '', 'file')<CR>
-nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', '', 'file')<CR>
+nnoremap <silent><Leader>s :execute 'split' Prompt('New split name: ', '', 'file')<CR>
+nnoremap <silent><Leader>v :execute 'vsplit' Prompt('New vsplit name: ', '', 'file')<CR>
 
 nnoremap <Up> <C-w>+
 nnoremap <Down> <C-w>-
@@ -952,8 +952,8 @@ endif
 
 " QFEnter {
 let g:qfenter_open_map = ['<CR>']
-let g:qfenter_vopen_map = ['v']
-let g:qfenter_hopen_map = ['s']
+let g:qfenter_vopen_map = ['i']
+let g:qfenter_hopen_map = ['a']
 let g:qfenter_topen_map = ['t']
 " }
 
@@ -1234,8 +1234,8 @@ let g:NERDTreeWinSize = 32
 let g:NERDTreeHijackNetrw = 1
 let NERDTreeAutoDeleteBuffer = 1
 let NERDTreeMinimalUI = 1
-let g:NERDTreeMapOpenSplit = 's'
-let g:NERDTreeMapOpenVSplit = 'v'
+let g:NERDTreeMapOpenSplit = 'a'
+let g:NERDTreeMapOpenVSplit = 'i'
 
 " Show hidden
 let NERDTreeShowHidden = 1
