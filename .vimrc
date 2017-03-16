@@ -799,7 +799,7 @@ endfunction
 " }
 
 " Tab {
-nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', '', 'file')<CR>
+nnoremap <silent><Leader>t :execute 'tabnew' PathPrompt('New tab name: ', '', 'file')<CR>
 nnoremap <silent>[t :tabprevious<CR>
 nnoremap <silent>]t :tabnext<CR>
 nnoremap <Leader>1 1gt
@@ -820,8 +820,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :execute 'split' Prompt('New split name: ', '', 'file')<CR>
-nnoremap <silent><Leader>v :execute 'vsplit' Prompt('New vsplit name: ', '', 'file')<CR>
+nnoremap <silent><Leader>s :execute 'split' PathPrompt('New split name: ', '', 'file')<CR>
+nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '', 'file')<CR>
 
 nnoremap <Up> <C-w>+
 nnoremap <Down> <C-w>-
@@ -832,7 +832,7 @@ nnoremap <Right> <C-w><
 " F2 ~ F10 {
 nnoremap <silent><F2> :call BetterNERDTreeTabsToggle()<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
-nnoremap <silent><F8> :call QListToggle('Copen!')<CR>
+nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
 nnoremap <silent><F10> :LivedownPreview<CR>
 
@@ -901,11 +901,15 @@ endfunction
 nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " QuickFix {
-function! QListToggle(cmd)
+function! QuickFixToggle(type, cmd)
 	let ftype = &filetype
 	let last_winnr = winnr('#')
 	let buffer_count_before = BufferCount()
-	silent! cclose
+	if a:type ==# 'quickfix' || a:type ==# 'q'
+		silent! cclose
+	elseif a:type ==# 'location' || a:type ==# 'l'
+		silent! lclose
+	endif
 
 	if BufferCount() == buffer_count_before
 		execute a:cmd
@@ -916,22 +920,13 @@ function! QListToggle(cmd)
 	endif
 endfunction
 
-function! LListToggle(cmd)
-	let buffer_count_before = BufferCount()
-	silent! lclose
-
-	if BufferCount() == buffer_count_before
-		execute a:cmd
-	endif
-endfunction
-
 function! BufferCount()
-	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
+	return len(tabpagebuflist())
 endfunction
 
 let list_height = 10
-nnoremap <silent><Leader>q :call QListToggle('silent! botright copen '. list_height)<CR>
-nnoremap <silent><Leader>l :call LListToggle('silent! lopen '. list_height)<CR>
+nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen '. list_height)<CR>
+nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen '. list_height)<CR>
 
 if has('win32') || has('win64')
 	function QuickfixConv()
@@ -976,6 +971,22 @@ function! Prompt(prompt_text, ...)
 	endif
 	call inputrestore()
 	return Strip(value)
+endfunction
+
+function! PathPrompt(prompt_text, ...)
+	let value = ''
+	if a:0 == 0
+		let value = Prompt(a:prompt_text)
+	elseif a:0 == 1
+		let value = Prompt(a:prompt_text, a:1)
+	else
+		let value = Prompt(a:prompt_text, a:1, a:2)
+	endif
+
+	if value ==# ''
+		let value = '%'
+	endif
+	return value
 endfunction
 
 function! Clear()
