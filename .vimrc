@@ -582,6 +582,9 @@ function! LightLineFugitive()
 	endif
 
 	try
+		if getftype(expand('%')) == 'link'
+			call fugitive#detect(resolve(expand('%')))
+		endif
 		let mark = "\ue0a0 "
 		let branch = fugitive#head()
 		return branch !=# '' ? mark.branch : ''
@@ -603,11 +606,11 @@ function! LightLineFileencoding()
 endfunction
 
 function! LightLinePercent()
-	return winwidth(0) > 70 ? printf("%3d%%", (100 * line('.') / line('$'))) : ''
+	return winwidth(0) > 70 ? printf('%3d%%', (100 * line('.') / line('$'))) : ''
 endfunction
 
 function! LightLineLineInfo()
-	return winwidth(0) > 70 ? printf("%3d/%-d :%-2d", line('.'), line('$'), col('.')) : ''
+	return winwidth(0) > 70 ? printf('%3d/%-d :%-2d', line('.'), line('$'), col('.')) : ''
 endfunction
 
 function! LightLineMode()
@@ -1145,7 +1148,7 @@ let g:CtrlSpaceSaveWorkspaceOnExit = 1
 
 let g:CtrlSpaceStatuslineFunction = 'lightline#statusline(0)'
 
-if executable("ag")
+if executable('ag')
 	" Use ag to collect all files in your project directory
 	let g:CtrlSpaceGlobCommand = 'ag -l --nogroup --nocolor -g ""'
 endif
@@ -1186,6 +1189,7 @@ let g:fastfold_fold_movement_commands = []
 " vim-rooter {
 let g:rooter_silent_chdir = 1
 let g:rooter_change_directory_for_non_project_files = 'current'
+let g:rooter_resolve_links = 1
 "let g:rooter_use_lcd = 1
 
 " Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
