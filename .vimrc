@@ -1261,15 +1261,22 @@ let NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$'
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
 let g:nerdtree_tabs_open_on_console_startup = 0
+let g:nerdtree_tabs_no_startup_for_diff = 1
+
+" Meaningful tab captions for inactive tabs
+let g:nerdtree_tabs_meaningful_tab_names = 1
+
+" When switching into a tab, make sure that focus is on the file window, not in the NERDTree window
+let g:nerdtree_tabs_focus_on_files = 1
 
 " Don't synchronize view of all NERDTree windows (scroll and cursor position)
-let g:nerdtree_tabs_synchronize_view = 0
+let g:nerdtree_tabs_synchronize_view = 1
 
 " Close vim if the only window left open is a NERDTreeTabs
 let g:nerdtree_tabs_autoclose = 1
 
 " Show current file in NERDTree
-nnoremap <silent><Leader>f :NERDTreeFind<CR>
+nnoremap <silent><Leader>f :NERDTreeTabsFind<CR>
 
 augroup NERDTreeRefresh
 	autocmd!
