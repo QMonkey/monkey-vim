@@ -1269,7 +1269,7 @@ let g:nerdtree_tabs_meaningful_tab_names = 1
 " When switching into a tab, make sure that focus is on the file window, not in the NERDTree window
 let g:nerdtree_tabs_focus_on_files = 1
 
-" Don't synchronize view of all NERDTree windows (scroll and cursor position)
+" Synchronize view of all NERDTree windows (scroll and cursor position)
 let g:nerdtree_tabs_synchronize_view = 1
 
 " Close vim if the only window left open is a NERDTreeTabs
