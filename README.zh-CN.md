@@ -758,7 +758,10 @@ EndSection
 # 打开系统偏好设置 -> 键盘 -> 键盘Tab窗口 -> 修改键，并将Caps Lock改成Control
 
 # Windows
-# 请安装keytweak
+# 以管理员权限运行并重启
+$hexified = "00,00,00,00,00,00,00,00,02,00,00,00,1d,00,3a,00,00,00,00,00".Split(",") | % { "0x$_"}
+$kbLayout = "HKLM:\System\CurrentControlSet\Control\Keyboard Layout"
+New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Value ([byte[]]$hexified)
 ```
 
 ## 意见或建议
