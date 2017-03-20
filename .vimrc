@@ -15,9 +15,14 @@
 " Init {
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
-	let path = expand('/.vim/autoload/plug.vim')
-	silent execute '!curl' '-fLo' $HOME . path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-	autocmd VimEnter * PlugInstall | source $MYVIMRC
+	let l:path = expand('/.vim/autoload/plug.vim')
+	silent execute '!curl' '-fLo' $HOME . l:path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+
+	augroup PlugInstall
+		autocmd!
+
+		autocmd VimEnter * PlugInstall | source $MYVIMRC
+	augroup END
 endif
 " }
 
@@ -99,15 +104,15 @@ call plug#end()
 filetype plugin indent on
 
 " Leader {
-let mapleader = ','
+let g:mapleader = ','
 " }
 
 " Encoding {
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
 
-scriptencoding utf-8
 set encoding=utf-8
+scriptencoding utf-8
 
 " Only work in terminal vim
 set termencoding=utf-8
@@ -224,7 +229,7 @@ augroup RestoreCursorPosition
 augroup END
 
 " Load matchit.vim, but only if the user hasn't installed a newer version.
-if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
+if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &runtimepath) ==# ''
 	runtime! macros/matchit.vim
 endif
 
@@ -287,28 +292,28 @@ function! SetUnrecognizedFileTypeReferences()
 endfunction
 
 function! SetReferences()
-	let filetype_references = {
+	let l:filetype_references = {
 				\	'c': 'Man',
 				\	'sh': 'Man',
 				\	'vim': 'help',
 				\ }
 
-	let is_reference_set = 0
-	for [ftype, reference] in items(filetype_references)
-		if &filetype != ftype
+	let l:is_reference_set = 0
+	for [l:ftype, l:reference] in items(l:filetype_references)
+		if &filetype != l:ftype
 			continue
 		endif
 
-		let search = GetCurrentWord()
-		execute 'nnoremap <silent><buffer><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
+		let l:search = GetCurrentWord()
+		execute 'nnoremap <silent><buffer><S-k> :execute "' . l:reference . '" GetCurrentWord()<CR>'
 
 		" Enable reference in visual-mode
-		execute 'vnoremap <silent><buffer><S-k> <ESC>:execute "' . reference . '" GetVisualSelection()<CR>'
+		execute 'vnoremap <silent><buffer><S-k> <ESC>:execute "' . l:reference . '" GetVisualSelection()<CR>'
 
-		let is_reference_set = 1
+		let l:is_reference_set = 1
 	endfor
 
-	if !is_reference_set
+	if !l:is_reference_set
 		" Default reference: dash or zeal
 		if has('mac') || has('macunix')
 			nnoremap <silent><buffer><S-k> :execute 'Dash' GetCurrentWord()<CR>
@@ -323,15 +328,15 @@ endfunction
 
 " Inspired by http://stackoverflow.com/questions/1533565/how-to-get-visually-selected-text-in-vimscript
 function! GetVisualSelection()
-	let selection = ''
+	let l:selection = ''
 	try
-		let a_save = @a
+		let l:a_save = @a
 		normal! gv"ay
-		let selection = @a
+		let l:selection = @a
 	finally
-		let @a = a_save
+		let @a = l:a_save
 	endtry
-	return selection
+	return l:selection
 endfunction
 
 " zeavim.vim {
@@ -351,18 +356,18 @@ endif
 " dash.vim {
 if has('mac') || has('macunix')
 	function! DashPrompt()
-		let dash_command = 'Dash'
+		let l:dash_command = 'Dash'
 
-		let ftype = Prompt('Docset: ', &filetype)
-		if empty(ftype)
-			let dash_command = 'Dash!'
+		let l:ftype = Prompt('Docset: ', &filetype)
+		if empty(l:ftype)
+			let l:dash_command = 'Dash!'
 		endif
 		call Clear()
 
-		let prompt_text = 'Dash (' . ftype . ")\n" . 'Search for: '
-		let key = Prompt(prompt_text)
+		let l:prompt_text = 'Dash (' . l:ftype . ")\n" . 'Search for: '
+		let l:key = Prompt(l:prompt_text)
 
-		execute dash_command key ftype
+		execute l:dash_command l:key l:ftype
 	endfunction
 
 	nmap <silent><Leader><Leader>z :call DashPrompt()<CR>
@@ -469,7 +474,7 @@ let g:lightline = {
 			\ }
 
 function! LightLineModified()
-	return &filetype =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+	return &filetype =~# 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
 endfunction
 
 function! LightLineReadonly()
@@ -477,8 +482,8 @@ function! LightLineReadonly()
 endfunction
 
 function! LightLineFilename()
-	let fname = expand('%:t')
-	if fname ==# 'CtrlSpace'
+	let l:fname = expand('%:t')
+	if l:fname ==# 'CtrlSpace'
 		return ctrlspace#api#StatuslineModeSegment('')
 	endif
 
@@ -486,35 +491,35 @@ function! LightLineFilename()
 		return ''
 	endif
 
-	return fname == 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
-				\ fname =~ 'NERD_tree' ? '' :
-				\ ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
-				\ ('' != fname ? fname : '[No Name]') .
-				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
+	return l:fname ==# 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
+				\ l:fname =~# 'NERD_tree' ? '' :
+				\ ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+				\ ('' !=# l:fname ? l:fname : '[No Name]') .
+				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
 
 function! GetBufferListOutputAsOneString()
-	let buffer_list = ''
-	redir =>> buffer_list
+	let l:buffer_list = ''
+	redir =>> l:buffer_list
 	ls
 	redir END
-	return buffer_list
+	return l:buffer_list
 endfunction
 
 function! IsLocationListBuffer()
-	if &filetype != 'qf'
+	if &filetype !=# 'qf'
 		return 0
 	endif
 
-	silent let buffer_list = GetBufferListOutputAsOneString()
+	silent let l:buffer_list = GetBufferListOutputAsOneString()
 
-	let l:quickfix_match = matchlist(buffer_list,
+	let l:quickfix_match = matchlist(l:buffer_list,
 				\ '\n\s*\(\d\+\)[^\n]*Quickfix')
 	if empty(l:quickfix_match)
 		return 1
 	endif
-	let quickfix_bufnr = l:quickfix_match[1]
-	return quickfix_bufnr == bufnr('%') ? 0 : 1
+	let l:quickfix_bufnr = l:quickfix_match[1]
+	return l:quickfix_bufnr == bufnr('%') ? 0 : 1
 endfunction
 
 function! GetWindowType()
@@ -538,21 +543,21 @@ function! IsGitFile()
 		return 0
 	endif
 
-	let fname = expand('%:t')
-	let plugins = ['\[Plugins\]', 'NERD_tree', 'ControlP', 'CtrlSpace']
+	let l:fname = expand('%:t')
+	let l:plugins = ['\[Plugins\]', 'NERD_tree', 'ControlP', 'CtrlSpace']
 
-	if fname ==# ''
+	if l:fname ==# ''
 		return 0
 	endif
 
-	for plugin in plugins
-		if fname =~ plugin
+	for l:plugin in l:plugins
+		if l:fname =~# l:plugin
 			return 0
 		endif
 	endfor
 
-	let git_dir = fugitive#extract_git_dir(resolve(expand('%')))
-	if git_dir ==# ''
+	let l:git_dir = fugitive#extract_git_dir(resolve(expand('%')))
+	if l:git_dir ==# ''
 		return 0
 	endif
 
@@ -568,8 +573,8 @@ function! LightLineGitGutter()
 		return ''
 	endif
 
-	let summary = GitGutterGetHunkSummary()
-	return printf('+%d ~%d -%d', summary[0], summary[1], summary[2])
+	let l:summary = GitGutterGetHunkSummary()
+	return printf('+%d ~%d -%d', l:summary[0], l:summary[1], l:summary[2])
 endfunction
 
 function! LightLineFugitive()
@@ -582,12 +587,12 @@ function! LightLineFugitive()
 	endif
 
 	try
-		if getftype(expand('%')) == 'link'
+		if getftype(expand('%')) ==# 'link'
 			call fugitive#detect(resolve(expand('%')))
 		endif
-		let mark = "\ue0a0 "
-		let branch = fugitive#head()
-		return branch !=# '' ? mark.branch : ''
+		let l:mark = "\ue0a0 "
+		let l:branch = fugitive#head()
+		return l:branch !=# '' ? l:mark.branch : ''
 	catch
 	endtry
 	return ''
@@ -614,22 +619,22 @@ function! LightLineLineInfo()
 endfunction
 
 function! LightLineMode()
-	let fname = expand('%:t')
-	let window_type = GetWindowType()
-	if fname !=# 'CtrlSpace' && window_type != 0
-		return window_type == 3 ? 'Preview' :
-					\ window_type == 2 ? 'Quickfix' :
-					\ window_type == 1 ? 'Location' : ''
+	let l:fname = expand('%:t')
+	let l:window_type = GetWindowType()
+	if l:fname !=# 'CtrlSpace' && l:window_type != 0
+		return l:window_type == 3 ? 'Preview' :
+					\ l:window_type == 2 ? 'Quickfix' :
+					\ l:window_type == 1 ? 'Location' : ''
 	endif
 
-	return  fname == 'ControlP' ? 'CtrlP' :
-				\ fname == 'CtrlSpace' ? 'CtrlSpace' :
-				\ fname =~ 'NERD_tree' ? 'NERDTree' :
+	return  l:fname ==# 'ControlP' ? 'CtrlP' :
+				\ l:fname ==# 'CtrlSpace' ? 'CtrlSpace' :
+				\ l:fname =~# 'NERD_tree' ? 'NERDTree' :
 				\ winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
 
 function! CtrlPMark()
-	if expand('%:t') =~ 'ControlP' && has_key(g:lightline, 'ctrlp_item')
+	if expand('%:t') =~# 'ControlP' && has_key(g:lightline, 'ctrlp_item')
 		call lightline#link('iR'[g:lightline.ctrlp_regex])
 		return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
 					\ , g:lightline.ctrlp_next], 0)
@@ -665,7 +670,7 @@ augroup END
 set t_Co=256
 
 " Inspired by http://sunaku.github.io/vim-256color-bce.html
-if &term =~ '256color'
+if &term =~# '256color'
 	" Disable Background Color Erase (BCE) so that color schemes
 	" render properly when inside 256-color tmux and GNU screen.
 	" See also http://snk.tuxfamily.org/log/vim-256color-bce.html
@@ -750,13 +755,13 @@ nnoremap <silent><S-q> :quitall<CR>
 noremap t q
 
 function! Quit()
-	let last_winnr = winnr('#')
-	let window_type = GetWindowType()
+	let l:last_winnr = winnr('#')
+	let l:window_type = GetWindowType()
 
 	quit
 
-	if window_type == 2
-		silent! execute last_winnr . 'wincmd w'
+	if l:window_type == 2
+		silent! execute l:last_winnr . 'wincmd w'
 	endif
 endfunction
 
@@ -766,13 +771,13 @@ function! QuitWindow()
 		return
 	endif
 
-	let max_winnr = winnr('$')
-	if max_winnr == 1 || max_winnr > 3
+	let l:max_winnr = winnr('$')
+	if l:max_winnr == 1 || l:max_winnr > 3
 		call Quit()
 		return
 	endif
 
-	if max_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen()) || max_winnr > 2
+	if l:max_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen()) || l:max_winnr > 2
 		call Quit()
 		return
 	endif
@@ -793,11 +798,11 @@ nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
 nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
 
 function! GetRootPath()
-	let root_path = FindRootDirectory()
-	if root_path ==# ''
-		let root_path = expand('%:p:h')
+	let l:root_path = FindRootDirectory()
+	if l:root_path ==# ''
+		let l:root_path = expand('%:p:h')
 	endif
-	return root_path
+	return l:root_path
 endfunction
 " }
 
@@ -895,8 +900,8 @@ vmap # :<C-u>call VisualSetSearchContent()<CR>//<CR>
 vmap * :<C-u>call VisualSetSearchContent()<CR>??<CR>
 
 function! VisualSetSearchContent()
-	let selection = GetVisualSelection()
-	let @/ = '\V' . substitute(escape(selection, '\'), '\n', '\\n', 'g')
+	let l:selection = GetVisualSelection()
+	let @/ = '\V' . substitute(escape(l:selection, '\'), '\n', '\\n', 'g')
 endfunction
 " }
 
@@ -905,20 +910,20 @@ nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " QuickFix {
 function! QuickFixToggle(type, cmd)
-	let ftype = &filetype
-	let last_winnr = winnr('#')
-	let buffer_count_before = BufferCount()
+	let l:ftype = &filetype
+	let l:last_winnr = winnr('#')
+	let l:buffer_count_before = BufferCount()
 	if a:type ==# 'quickfix' || a:type ==# 'q'
 		silent! cclose
 	elseif a:type ==# 'location' || a:type ==# 'l'
 		silent! lclose
 	endif
 
-	if BufferCount() == buffer_count_before
+	if BufferCount() == l:buffer_count_before
 		execute a:cmd
 	else
-		if ftype is 'qf'
-			silent! execute last_winnr . 'wincmd w'
+		if l:ftype is# 'qf'
+			silent! execute l:last_winnr . 'wincmd w'
 		endif
 	endif
 endfunction
@@ -927,17 +932,16 @@ function! BufferCount()
 	return len(tabpagebuflist())
 endfunction
 
-let list_height = 10
-nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen '. list_height)<CR>
-nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen '. list_height)<CR>
+nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
+nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 
 if has('win32') || has('win64')
 	function QuickfixConv()
-		let qflist = getqflist()
-		for i in qflist
-			let i.text = iconv(i.text, "cp936", "utf-8")
+		let l:qflist = getqflist()
+		for l:i in l:qflist
+			let l:i.text = iconv(l:i.text, 'cp936', 'utf-8')
 		endfor
-		call setqflist(qflist)
+		call setqflist(l:qflist)
 	endfunction
 
 	augroup QuickfixEncodingConv
@@ -964,32 +968,32 @@ endfunction
 " More completion_type, please refer :h command-completion
 function! Prompt(prompt_text, ...)
 	call inputsave()
-	let value = ''
+	let l:value = ''
 	if a:0 == 0
-		let value = input(a:prompt_text)
+		let l:value = input(a:prompt_text)
 	elseif a:0 == 1
-		let value = input(a:prompt_text, a:1)
+		let l:value = input(a:prompt_text, a:1)
 	else
-		let value = input(a:prompt_text, a:1, a:2)
+		let l:value = input(a:prompt_text, a:1, a:2)
 	endif
 	call inputrestore()
-	return Strip(value)
+	return Strip(l:value)
 endfunction
 
 function! PathPrompt(prompt_text, ...)
-	let value = ''
+	let l:value = ''
 	if a:0 == 0
-		let value = Prompt(a:prompt_text)
+		let l:value = Prompt(a:prompt_text)
 	elseif a:0 == 1
-		let value = Prompt(a:prompt_text, a:1)
+		let l:value = Prompt(a:prompt_text, a:1)
 	else
-		let value = Prompt(a:prompt_text, a:1, a:2)
+		let l:value = Prompt(a:prompt_text, a:1, a:2)
 	endif
 
-	if value ==# ''
-		let value = '%'
+	if l:value ==# ''
+		let l:value = '%'
 	endif
-	return value
+	return l:value
 endfunction
 
 function! Clear()
@@ -1001,72 +1005,72 @@ function! GetString(prompt_text)
 	call Clear()
 	echon a:prompt_text
 
-	let str = ''
+	let l:str = ''
 	try
 		while 1
-			let n = getchar()
-			if n == 27
+			let l:n = getchar()
+			if l:n == 27
 				throw 'exit'
 			endif
 
-			if n == 13
+			if l:n == 13
 				break
 			endif
 
-			let c = ''
-			if n is# "\<BS>" || n == 8
-				let str = strcharpart(str, 0, strchars(str)-1)
+			let l:c = ''
+			if l:n is# "\<BS>" || l:n == 8
+				let l:str = strcharpart(l:str, 0, strchars(l:str)-1)
 				call Clear()
-				echon a:prompt_text . str
+				echon a:prompt_text . l:str
 			else
-				let c = nr2char(n)
-				let str .= c
-				echon c
+				let l:c = nr2char(l:n)
+				let l:str .= l:c
+				echon l:c
 			endif
 		endwhile
 	catch /^Vim:Interrupt$/
 		throw 'exit'
 	endtry
 
-	return str
+	return l:str
 endfunction
 
 " Replace {
 function! Replace(mode, confirm, wholeword)
-	let word = ''
-	let wholeword = a:wholeword
+	let l:word = ''
+	let l:wholeword = a:wholeword
 	if a:mode ==# 'n' || a:mode ==# 'normal'
-		let word .= GetCurrentWord()
+		let l:word .= GetCurrentWord()
 	elseif a:mode ==# 'v' || a:mode ==# 'visual'
-		let word .= GetVisualSelection()
-		let wholeword = 0
+		let l:word .= GetVisualSelection()
+		let l:wholeword = 0
 	endif
 
-	let search = substitute(escape(word, '/\.*$^~['), '\n', '\\n', 'g')
-	if wholeword
-		let search = '\<' . search . '\>'
+	let l:search = substitute(escape(l:word, '/\.*$^~['), '\n', '\\n', 'g')
+	if l:wholeword
+		let l:search = '\<' . l:search . '\>'
 	endif
 
-	let replace = ''
+	let l:replace = ''
 	try
-		let prompt_text = 'Replace "' . word . '" with: '
-		let replace = GetString(prompt_text)
+		let l:prompt_text = 'Replace "' . l:word . '" with: '
+		let l:replace = GetString(l:prompt_text)
 	catch 'exit'
 		call Clear()
 		echon 'Replace: Canceled'
 		return
 	endtry
 
-	let replace = escape(replace, '/&~')
+	let l:replace = escape(l:replace, '/&~')
 
-	let flag = ''
+	let l:flag = ''
 	if a:confirm
-		let flag .= 'ec'
+		let l:flag .= 'ec'
 	else
-		let flag .= 'e'
+		let l:flag .= 'e'
 	endif
 
-	execute ',$s/' . search . '/' . replace . '/' . flag . "| 1,'' -&& | update"
+	execute ',$s/' . l:search . '/' . l:replace . '/' . l:flag . "| 1,'' -&& | update"
 endfunction
 
 " Replace in normal mode
@@ -1248,15 +1252,15 @@ let g:easytags_on_cursorhold = 0
 " Set NERDTree window width
 let g:NERDTreeWinSize = 32
 let g:NERDTreeHijackNetrw = 1
-let NERDTreeAutoDeleteBuffer = 1
-let NERDTreeMinimalUI = 1
+let g:NERDTreeAutoDeleteBuffer = 1
+let g:NERDTreeMinimalUI = 1
 let g:NERDTreeMapOpenSplit = 'a'
 let g:NERDTreeMapOpenVSplit = 'i'
 
 " Show hidden
-let NERDTreeShowHidden = 1
+let g:NERDTreeShowHidden = 1
 " Ignore files
-let NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '\.swn$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+let g:NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '\.swn$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
 
 " Don't open NERDTreeTabs automatically when vim starts up
 let g:nerdtree_tabs_open_on_gui_startup = 0
@@ -1329,7 +1333,7 @@ let g:ycm_autoclose_preview_window_after_insertion = 1
 let g:ycm_goto_buffer_command = 'new-or-existing-tab'
 let g:ycm_filepath_completion_use_working_dir = 1
 
-let ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'javascript', 'python']
+let g:ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'javascript', 'python']
 
 augroup YouCompleteMeKeyMap
 	autocmd!
@@ -1441,7 +1445,7 @@ let g:go_dispatch_enabled = 1
 let g:go_fmt_command = 'goimports'
 let g:go_doc_keywordprg_enabled = 0
 let g:go_def_mapping_enabled = 0
-let g:go_list_type = "quickfix"
+let g:go_list_type = 'quickfix'
 let g:go_def_reuse_buffer = 1
 
 augroup GolangKeymap
