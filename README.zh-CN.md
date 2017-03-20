@@ -107,7 +107,7 @@ clang
 #### 2.5 Javascript
 
 ```bash
-sudo npm install -g jslint
+sudo npm install -g jshint
 sudo npm install -g js-beautify
 sudo npm install -g tern
 ```
@@ -123,8 +123,8 @@ sudo npm install -g jsonlint
 ```bash
 sudo pip install jedi
 sudo pip install autopep8 或 sudo pip install yapf
-sudo pip install pyflakes
-sudo pip install pycodestyle
+sudo pip install flakes8
+sudo pip install mypy
 ```
 
 #### 2.8 Golang
@@ -180,6 +180,7 @@ lua
 #### 2.11 Ruby
 
 ```bash
+sudo gem install rubocop
 sudo gem install ruby-beautify
 ```
 
@@ -188,42 +189,47 @@ sudo gem install ruby-beautify
 ```bash
 # Ubuntu
 sudo apt-get install php
+pear install PHP_CodeSniffer
 
 # CentOS
 sudo yum install php
+pear install PHP_CodeSniffer
 
 # OpenSUSE
 sudo zypper install php
+pear install PHP_CodeSniffer
 
 # Mac
 brew install php
+pear install PHP_CodeSniffer
 
 # Windows
 php
+pear install PHP_CodeSniffer
 ```
 
 #### 2.13 Shell
 
 ```bash
 # Ubuntu
-sudo apt-get install devscripts
+sudo apt-get install shellcheck
 
 # OpenSUSE
-sudo zypper install checkbashisms
+sudo zypper install ShellCheck
 
 # CentOS
-sudo yum install rpmdevtools
+sudo yum install ShellCheck
 
 # Mac
-brew install checkbashisms
+brew install shellcheck
 ```
 
 #### 2.14 Markdown
 
 ```bash
+sudo pip install proselint
 sudo npm install -g livedown
 sudo npm install -g remark-cli
-sudo gem install mdl
 ```
 
 ### 3. 安装
