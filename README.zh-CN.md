@@ -232,6 +232,12 @@ sudo npm install -g livedown
 sudo npm install -g remark-cli
 ```
 
+#### 2.15 Vim
+
+```bash
+sudo pip install vim-vint
+```
+
 ### 3. 安装
 
 - Linux和Mac
