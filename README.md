@@ -297,7 +297,7 @@ t       Recording, same as origin q
 
 ```
 F2      Toggle NERDTree
-F7      Run current project asynchronously. You can use ":FocusDispatch" command to override the default command. For example, :FocusDispatch gcc % -o a.out
+F7      Run current project asynchronously. You can use “:FocusDispatch” command to override the default command. For example, :FocusDispatch gcc % -o a.out
 F8      Toggle output window of F7
 F9      Run current file
 F10     Markdown preview in browser
@@ -384,7 +384,7 @@ Leader+ga       GoAlternate, alternate between implementation and test code
 
 ```
 Ctrl+]  Jump to the definition of the keyword under the cursor
-g]      Like "Ctrl+]", but need to choose one tag to jump
+g]      Like “Ctrl+]”, but need to choose one tag to jump
 ```
 
 #### 1.10 Fold
@@ -497,7 +497,7 @@ Leader+ru       Run current file
 
 ```
 '.              Jump to last changes
-''              To the position before the latest jump, or where the last "m'" or "m`" command was given
+''              To the position before the latest jump, or where the last “m'” or “m`” command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
 Leader+f        Show current file in NERDTree
