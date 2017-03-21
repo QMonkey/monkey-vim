@@ -754,7 +754,7 @@ function! Quit()
 
 	quit
 
-	if l:window_type == 2
+	if l:window_type ==1 || l:window_type == 2
 		silent! execute l:last_winnr . 'wincmd w'
 	endif
 endfunction
