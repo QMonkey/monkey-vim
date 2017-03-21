@@ -38,9 +38,6 @@ if has('win32') || has('win64')
 endif
 " }
 
-set nocompatible
-filetype off
-
 call plug#begin(expand($HOME . '/.vim/bundle'))
 
 " Plugins {
@@ -76,7 +73,7 @@ Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
-Plug 'fatih/vim-go', {'for': 'go'}
+Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
 Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
@@ -100,8 +97,6 @@ endif
 
 " Add plugins to &runtimepath
 call plug#end()
-
-filetype plugin indent on
 
 " Leader {
 let g:mapleader = ','
@@ -261,9 +256,8 @@ function! AutoInsertFileHead()
 		call append(1, '# -*- coding: utf-8 -*-')
 	endif
 
-	normal G
-	normal o
-	normal o
+	call BlankDown(2)
+	call cursor(line('$'), 0)
 endfunc
 " }
 
@@ -678,8 +672,8 @@ if &term =~# '256color'
 endif
 
 " molokai {
-" Should before colorscheme
-syntax on
+" Should before colorscheme, do it by vim-plug
+" syntax on
 
 " Should before colorscheme, too
 let g:molokai_original = 1
@@ -728,13 +722,13 @@ nnoremap <silent> <Plug>BlankUp   :<C-U>call BlankUp(v:count1)<CR>
 nnoremap <silent> <Plug>BlankDown :<C-U>call BlankDown(v:count1)<CR>
 
 function! BlankUp(count)
-	put!=repeat(nr2char(10), a:count)
+	put! = repeat(nr2char(10), a:count)
 	']+1
 	silent! call repeat#set("\<Plug>BlankUp", a:count)
 endfunction
 
 function! BlankDown(count)
-	put =repeat(nr2char(10), a:count)
+	put = repeat(nr2char(10), a:count)
 	'[-1
 	silent! call repeat#set("\<Plug>BlankDown", a:count)
 endfunction

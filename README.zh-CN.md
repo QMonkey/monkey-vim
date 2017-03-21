@@ -266,6 +266,7 @@ git pull
 ```vim
 :PlugInstall
 :PlugUpdate
+:PlugUpgrade
 :PlugClean
 ```
 
