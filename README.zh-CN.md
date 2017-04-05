@@ -123,7 +123,7 @@ sudo npm install -g jsonlint
 ```bash
 sudo pip install jedi
 sudo pip install autopep8 或 sudo pip install yapf
-sudo pip install flakes8
+sudo pip install flake8
 sudo pip install mypy
 ```
 

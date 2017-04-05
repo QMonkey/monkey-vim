@@ -15,8 +15,8 @@
 " Init {
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
-	let l:path = expand('/.vim/autoload/plug.vim')
-	silent execute '!curl' '-fLo' $HOME . l:path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+	let s:path = expand('/.vim/autoload/plug.vim')
+	silent execute '!curl' '-fLo' $HOME . s:path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 
 	augroup PlugInstall
 		autocmd!
