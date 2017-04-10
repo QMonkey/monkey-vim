@@ -1377,6 +1377,21 @@ let g:ale_keep_list_window_open = 0
 " }
 
 " vim-autoformat {
+nnoremap <silent>coa :call ToggleAutoformat()<CR>
+
+function! ToggleAutoformat()
+	if !exists('b:autoformat_autoindent')
+		let b:autoformat_autoindent = 1
+	endif
+	let b:autoformat_autoindent = xor(b:autoformat_autoindent, 1)
+
+	if b:autoformat_autoindent == 1
+		echo 'Autoformat: Enabled'
+	else
+		echo 'Autoformat: Disabled'
+	endif
+endfunction
+
 " Execute Autoformat onsave
 augroup AutoFormat
 	autocmd!

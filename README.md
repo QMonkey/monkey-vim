@@ -504,6 +504,7 @@ Leader+f        Show current file in NERDTree
 cod             Toggle diff
 cop             Toggle paste
 col             Toggle list
+coa             Toggle autoformat
 [+<Space>       Add [count] blank lines above the cursor
 ]+<Space>       Add [count] blank lines below the cursor
 Leader+cd       Change project root

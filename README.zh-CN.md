@@ -504,6 +504,7 @@ Leader+f        在NERDTree中显示当前文件
 cod             切换diff模式
 cop             切换paste模式
 col             切换list模式
+coa             切换自动格式化代码
 [+<Space>       在光标之上添加n个空行
 ]+<Space>       在光标之下添加n个空行
 Leader+cd       切换到当前文件所在项目根路径
