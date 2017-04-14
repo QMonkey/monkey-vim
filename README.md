@@ -83,7 +83,7 @@ ag
 sudo apt-get install gcc
 sudo apt-get install g++
 # "x" depends on your clang version
-sudo apt-get install clang-3.x
+sudo apt-get install clang-format-3.x
 
 # OpenSUSE
 sudo zypper install gcc
@@ -124,7 +124,6 @@ sudo npm install -g jsonlint
 sudo pip install jedi
 sudo pip install autopep8 or sudo pip install yapf
 sudo pip install flake8
-sudo pip install mypy
 ```
 
 #### 2.8 Golang
