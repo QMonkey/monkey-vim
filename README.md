@@ -780,6 +780,7 @@ New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Valu
 - Prevent Vim from clearing the clipboard on exit
 
 Open parcellite **Preference>Display**, and check “Persistent History”
+
 ![parcellite](pictures/parcellite.png "parcellite.png")
 
 - [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
