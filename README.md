@@ -10,11 +10,11 @@ The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
 
 - **xterm vim**
 
-![xterm vim](./pictures/xterm_vim.png "xterm vim")
+![xterm vim](pictures/xterm_vim.png "xterm vim")
 
 - **gvim**
 
-![gvim](./pictures/gvim.png "gvim")
+![gvim](pictures/gvim.png "gvim")
 
 ## Requirements
 
@@ -780,7 +780,7 @@ New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Valu
 - Prevent Vim from clearing the clipboard on exit
 
 Open parcellite **Preference>Display**, and check “Persistent History”
-![parcellite](./pictures/parcellite.png "parcellite.png")
+![parcellite](pictures/parcellite.png "parcellite.png")
 
 - [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
 

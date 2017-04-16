@@ -10,11 +10,11 @@ monkey-vim项目，旨在打造一个强大，快速并且跨平台的IDE。
 
 - **xterm vim**
 
-![xterm vim](./pictures/xterm_vim.png "xterm vim")
+![xterm vim](pictures/xterm_vim.png "xterm vim")
 
 - **gvim**
 
-![gvim](./pictures/gvim.png "gvim")
+![gvim](pictures/gvim.png "gvim")
 
 ## 要求
 
@@ -778,7 +778,7 @@ New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Valu
 - 防止Vim在退出时清除剪贴板
 
 打开parcellite **Preference>Display**，并且勾选“Persistent History”
-![parcellite](./pictures/parcellite.png "parcellite.png")
+![parcellite](pictures/parcellite.png "parcellite.png")
 
 - [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ.zh_CN)
 
