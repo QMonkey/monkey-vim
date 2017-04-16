@@ -10,11 +10,11 @@ monkey-vim项目，旨在打造一个强大，快速并且跨平台的IDE。
 
 - **xterm vim**
 
-![xterm vim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/xterm_vim.png "xterm vim")
+![xterm vim](./pictures/xterm_vim.png "xterm vim")
 
 - **gvim**
 
-![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
+![gvim](./pictures/gvim.png "gvim")
 
 ## 要求
 
@@ -742,15 +742,11 @@ set shiftwidth=4
 set expandtab
 ```
 
-## FAQ
-
-[FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ.zh_CN)
-
 ## 推荐设置
 
 - [源码构建vim](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- 在~/.bashrc中加入以下Shell代码，即可在vim中查看man文档
+- 在bashrc中加入以下Shell代码，即可在vim中查看man文档
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
@@ -776,6 +772,15 @@ $hexified = "00,00,00,00,00,00,00,00,02,00,00,00,1d,00,3a,00,00,00,00,00".Split(
 $kbLayout = "HKLM:\System\CurrentControlSet\Control\Keyboard Layout"
 New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Value ([byte[]]$hexified)
 ```
+
+## FAQ
+
+- 防止Vim在退出时清除剪贴板
+
+打开parcellite **Preference>Display**，并且勾选“Persistent History”
+![parcellite](./pictures/parcellite.png "parcellite.png")
+
+- [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ.zh_CN)
 
 ## 意见或建议
 

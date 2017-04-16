@@ -10,11 +10,11 @@ The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
 
 - **xterm vim**
 
-![xterm vim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/xterm_vim.png "xterm vim")
+![xterm vim](./pictures/xterm_vim.png "xterm vim")
 
 - **gvim**
 
-![gvim](https://raw.githubusercontent.com/QMonkey/monkey-vim/master/pictures/gvim.png "gvim")
+![gvim](./pictures/gvim.png "gvim")
 
 ## Requirements
 
@@ -744,15 +744,11 @@ set shiftwidth=4
 set expandtab
 ```
 
-## FAQ
-
-[FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
-
 ## Recommended settings
 
 - [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- Use vim to view man doc in shell, please put it in your "~/.bashrc" file
+- Use vim to view man doc in shell, please put it in your bashrc file
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
@@ -778,6 +774,15 @@ $hexified = "00,00,00,00,00,00,00,00,02,00,00,00,1d,00,3a,00,00,00,00,00".Split(
 $kbLayout = "HKLM:\System\CurrentControlSet\Control\Keyboard Layout"
 New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Value ([byte[]]$hexified)
 ```
+
+## FAQ
+
+- Prevent Vim from clearing the clipboard on exit
+
+Open parcellite **Preference>Display**, and check “Persistent History”
+![parcellite](./pictures/parcellite.png "parcellite.png")
+
+- [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
 
 ## Configuration
 
