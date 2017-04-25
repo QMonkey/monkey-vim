@@ -754,7 +754,7 @@ set expandtab
 - 在bashrc中加入以下Shell代码，即可在vim中查看man文档
 
 ```bash
-export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
+export MANPAGER="env MAN_PN=1 vim -R --cmd 'let g:CtrlSpaceLoaded = 1' +MANPAGER -"
 ```
 
 - 将Caps Lock按键映射为Ctrl

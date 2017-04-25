@@ -756,7 +756,7 @@ set expandtab
 - Use vim to view man doc in shell, please put it in your bashrc file
 
 ```bash
-export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
+export MANPAGER="env MAN_PN=1 vim -R --cmd 'let g:CtrlSpaceLoaded = 1' +MANPAGER -"
 ```
 
 - Remap Caps Lock key to Ctrl
