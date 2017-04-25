@@ -1463,8 +1463,12 @@ augroup GolangKeymap
 	" Use Ctrl-o to jump back, see :help jumplist
 	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def-tab)
 	autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
-	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-install)
+	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-implements)
+	autocmd FileType go nmap <silent><buffer><Leader>gd <Plug>(go-describe)
 	autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
+	autocmd FileType go nmap <silent><buffer><Leader>gn <Plug>(go-rename)
+	autocmd FileType go nmap <silent><buffer><Leader>gw <Plug>(go-whicherrs)
+	autocmd FileType go nmap <silent><buffer><Leader>gc <Plug>(go-channelpeers)
 	autocmd FileType go nmap <silent><buffer><Leader>gt <Plug>(go-test)
 	autocmd FileType go nmap <silent><buffer><Leader>gf <Plug>(go-test-func)
 	autocmd FileType go nmap <silent><buffer><Leader>ga <Plug>(go-alternate-edit)

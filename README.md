@@ -373,7 +373,12 @@ Leader+gr       Go to references. Only support golang, python and javascript
 
 # Golang
 Leader+gb       GoBuild, build current package
-Leader+gi       GoInstall, build and install current package
+Leader+gi       GoImplements, show the interfaces that the type under the cursor implements
+Leader+gd       GoDescribe, describe selected syntax: definition, methods, etc
+Leader+gr       GoReferrers, show all refs to entity denoted by selected identifier
+Leader+gn       GoRename, rename the identifier under the cursor to the desired new name
+Leader+gw       GoWhicherrs, show the list of possible constants, global variables, and concrete types for the error type under the cursor
+Leader+gc       GoChannelPeers, show send/receive corresponding to selected channel op
 Leader+gt       GoTest, execute go test for current go source
 Leader+gf       GoTestFunc, execute go test for current go test function
 Leader+ga       GoAlternate, alternate between implementation and test code

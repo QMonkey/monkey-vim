@@ -373,7 +373,12 @@ Leader+gr       跳转到引用标识符的地方。只支持golang，python和j
 
 # Golang
 Leader+gb       GoBuild，构建当前包
-Leader+gi       GoInstall，构建并且安装当前包
+Leader+gi       GoImplements，显示光标所在接口的实现
+Leader+gd       GoDescribe, 描述光标所在语法：定义、方法等
+Leader+gr       GoReferrers, 显示光标所在标识的所有引用
+Leader+gn       GoRename, 重命名光标所在标识
+Leader+gw       GoWhicherrs, 显示光标所在错误的所有类型
+Leader+gc       GoChannelPeers, 显示光标所在channel的读写操作
 Leader+gt       GoTest，执行当前go文件的单元测试
 Leader+gf       GoTestFunc，执行光标所在的单元测试函数
 Leader+ga       GoAlternate，在源文件和单元测试间切换
