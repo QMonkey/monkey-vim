@@ -1333,15 +1333,14 @@ augroup YouCompleteMeKeyMap
 	autocmd!
 
 	" Use Ctrl-o to jump back, see :help jumplist
-	autocmd FileType * if index(ycm_go_to_definition_filetypes, &filetype) != -1
-				\ | nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
-				\ | else | nnoremap <silent><buffer>gd <C-]> | endif
+	autocmd FileType c,cpp,go,javascript,python nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
+	autocmd FileType c,cpp,go,javascript,python nnoremap <silent><buffer>gt :YcmCompleter GoTo<CR>
+	autocmd FileType c,cpp,go,javascript,python nnoremap <silent><buffer><Leader>jd :YcmCompleter GoToDeclaration<CR>
+	autocmd FileType * if index(g:ycm_go_to_definition_filetypes, &filetype) == -1 | nnoremap <silent><buffer>gd <C-]> | endif
 
 	autocmd FileType python,javascript nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
 augroup END
 
-nnoremap <silent><Leader>jt :YcmCompleter GoTo<CR>
-nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
 " }
 
 " Enable omni completion

@@ -435,8 +435,8 @@ m?          Open location list and display markers from current buffer
 
 ```
 gd          Go to definition
+gt          Go to header file, definition or declaration
 Leader+jd   Go to declaration
-Leader+jt   Go to header file, definition or declaration
 ```
 
 #### 1.13 Asynchronous lint engine: [ale](https://github.com/w0rp/ale)
