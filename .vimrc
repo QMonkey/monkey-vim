@@ -74,7 +74,6 @@ Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
 Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
-Plug 'artur-shaik/vim-javacomplete2', {'for': 'java'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
 Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
@@ -197,7 +196,7 @@ set shiftwidth=8
 " Never use space to replace tab
 set noexpandtab
 
-set textwidth=78
+set textwidth=0
 
 set wrap
 set breakindent
@@ -1348,7 +1347,6 @@ augroup Omnifunc
 	autocmd!
 
 	autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-	autocmd FileType java setlocal omnifunc=javacomplete#Complete
 	autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
 	autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
 	autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
@@ -1395,7 +1393,7 @@ endfunction
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd FileType c,cpp,go,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
 augroup END
 
 " Enable autoindent
@@ -1501,7 +1499,7 @@ let g:rubycomplete_load_gemfile = 1
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'java', 'javascript', 'json', 'python', 'lua', 'ruby', 'php', 'bash=sh', 'vim', 'html', 'css']
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'javascript', 'json', 'python', 'lua', 'ruby', 'php', 'bash=sh', 'vim', 'html', 'css']
 " }
 
 " Terminal {

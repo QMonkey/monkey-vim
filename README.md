@@ -136,28 +136,7 @@ sudo pip install flake8
 :GoInstallBinaries
 ```
 
-#### 2.9 Java
-
-```bash
-# Please install oracle jdk
-
-# Ubuntu
-sudo apt-get install astyle
-
-# OpenSUSE
-sudo zypper install astyle
-
-# CentOS
-sudo yum install astyle
-
-# Mac
-brew install astyle
-
-# Windows
-astyle
-```
-
-#### 2.10 Lua
+#### 2.9 Lua
 
 ```bash
 # Ubuntu
@@ -176,14 +155,14 @@ brew install lua
 lua
 ```
 
-#### 2.11 Ruby
+#### 2.10 Ruby
 
 ```bash
 sudo gem install rubocop
 sudo gem install ruby-beautify
 ```
 
-#### 2.12 PHP
+#### 2.11 PHP
 
 ```bash
 # Ubuntu
@@ -207,7 +186,7 @@ php
 pear install PHP_CodeSniffer
 ```
 
-#### 2.13 Shell
+#### 2.12 Shell
 
 ```bash
 # Ubuntu
@@ -223,7 +202,7 @@ sudo yum install ShellCheck
 brew install shellcheck
 ```
 
-#### 2.14 Markdown
+#### 2.13 Markdown
 
 ```bash
 sudo pip install proselint
@@ -231,7 +210,7 @@ sudo npm install -g livedown
 sudo npm install -g remark-cli
 ```
 
-#### 2.15 Vim
+#### 2.14 Vim
 
 ```bash
 sudo pip install vim-vint
