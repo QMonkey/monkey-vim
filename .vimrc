@@ -46,6 +46,11 @@ Plug 'nathanaelkane/vim-indent-guides'
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim'
+
+if !has('win32') && !has('win64')
+	Plug 'nixprime/cpsm', {'do': 'PY3=OFF $SHELL install.sh'}
+endif
+
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -252,9 +257,10 @@ function! AutoInsertFileHead()
 	" Python
 	if &filetype ==# 'python'
 		call setline(1, '#!/usr/bin/env python')
-		call append(1, '# -*- coding: utf-8 -*-')
+		call setline(2, '# -*- coding: utf-8 -*-')
 	endif
 
+	call cursor(line('$'), 0)
 	call BlankDown(2)
 	call cursor(line('$'), 0)
 endfunc
@@ -1117,17 +1123,21 @@ nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<C
 
 " ctrlp.vim {
 let g:ctrlp_follow_symlinks = 1
+let g:ctrlp_use_caching = 1
+let g:ctrlp_clear_cache_on_exit = 0
+let g:ctrlp_show_hidden = 1
 let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
 			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp|swn)$',
 			\ }
 
-if executable('ag')
-	" Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-	let g:ctrlp_user_command = 'ag -l --nogroup --nocolor --smart-case -g "" %s'
-	" ag is fast enough that CtrlP doesn't need to cache
-	let g:ctrlp_use_caching = 0
+if !has('win32') && !has('win64')
+	let g:ctrlp_match_func = {'match': 'cpsm#CtrlPMatch'}
 endif
+
+" if executable('ag')
+"         let g:ctrlp_user_command = 'ag -l --nogroup --nocolor --smart-case -g "" %s'
+" endif
 
 augroup CtrlP
 	autocmd!
