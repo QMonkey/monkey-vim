@@ -45,12 +45,7 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'itchyny/lightline.vim'
-Plug 'ctrlpvim/ctrlp.vim'
-
-if !has('win32') && !has('win64')
-	Plug 'nixprime/cpsm', {'do': 'PY3=OFF $SHELL install.sh'}
-endif
-
+Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -1121,29 +1116,17 @@ nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<C
 nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
 " }
 
-" ctrlp.vim {
-let g:ctrlp_follow_symlinks = 1
-let g:ctrlp_use_caching = 1
-let g:ctrlp_clear_cache_on_exit = 0
-let g:ctrlp_show_hidden = 1
-let g:ctrlp_custom_ignore = {
-			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
-			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp|swn)$',
-			\ }
+" command-t {
+let g:CommandTCancelMap = ['<ESC>', '<C-[>', '<C-c>']
+let g:CommandTMaxCachedDirectories = 0
+let g:CommandTSmartCase = 1
 
-if !has('win32') && !has('win64')
-	let g:ctrlp_match_func = {'match': 'cpsm#CtrlPMatch'}
-endif
-
-" if executable('ag')
-"         let g:ctrlp_user_command = 'ag -l --nogroup --nocolor --smart-case -g "" %s'
-" endif
-
-augroup CtrlP
+augroup CommandT
 	autocmd!
 
-	nnoremap <silent><C-t> :CtrlPBufTag<CR>
-	nnoremap <silent><C-n> :CtrlPTag<CR>
+	nnoremap <silent><C-p> :CommandT<CR>
+	nnoremap <silent><C-t> :CommandTTag<CR>
+	nnoremap <silent><C-n> :CommandTBuffer<CR>
 augroup END
 " }
 
