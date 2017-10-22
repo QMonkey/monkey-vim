@@ -1148,6 +1148,7 @@ endif
 " Enable streak-mode
 let g:sneak#streak = 1
 let g:sneak#use_ic_scs = 1
+let g:sneak#target_labels = ";sfadlgwterhiounpqv/SFADLGWTERHIOUNPQV?0"
 
 " Disable default map for s and S
 map <Plug>(go_away_sneak_s) <Plug>Sneak_s
