@@ -43,7 +43,6 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 " Plugins {
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
-" Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'itchyny/lightline.vim'
 Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
 Plug 'vim-ctrlspace/vim-ctrlspace'
@@ -62,7 +61,7 @@ Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
 Plug 'airblade/vim-rooter'
 Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
 Plug 'w0rp/ale'
-Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer --tern-completer'}
+Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
@@ -74,9 +73,6 @@ Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
 Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
-Plug 'pangloss/vim-javascript', {'for': 'javascript'}
-Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
-Plug 'tpope/vim-rails', {'for': 'ruby'}
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
@@ -230,9 +226,8 @@ augroup FileTypeGroup
 	autocmd!
 
 	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-	autocmd FileType javascript,json,yaml,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd FileType json,yaml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
-	autocmd BufNewFile,BufRead .tern-project setfiletype json
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 
 	" Move the quickfix window to the bottom of the window layout
@@ -261,7 +256,7 @@ endfunc
 augroup Docset
 	autocmd!
 
-	autocmd FileType man,help,nerdtree setlocal nolist
+	autocmd FileType man,help setlocal nolist
 
 	" Use man as docset for unrecognized filetype
 	autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
@@ -334,7 +329,6 @@ let g:zv_disable_mapping = 1
 
 " Add what you want to refer
 let g:zv_file_types = {
-			\	'javascript': 'javascript,nodejs',
 			\	'sql': 'mysql',
 			\ }
 
@@ -423,7 +417,7 @@ set laststatus=2
 let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
-			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ], ['ctrlpmark'] ],
+			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ] ],
 			\   'right': [ [ 'ale', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
 			\ },
 			\ 'inactive': {
@@ -440,7 +434,6 @@ let g:lightline = {
 			\   'percent': 'LightLinePercent',
 			\   'lineinfo': 'LightLineLineInfo',
 			\   'mode': 'LightLineMode',
-			\   'ctrlpmark': 'CtrlPMark',
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
@@ -481,9 +474,7 @@ function! LightLineFilename()
 		return ''
 	endif
 
-	return l:fname ==# 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
-				\ l:fname =~# 'NERD_tree' ? '' :
-				\ ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+	return ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
 				\ ('' !=# l:fname ? l:fname : '[No Name]') .
 				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
@@ -534,7 +525,7 @@ function! IsGitFile()
 	endif
 
 	let l:fname = expand('%:t')
-	let l:plugins = ['\[Plugins\]', 'NERD_tree', 'ControlP', 'CtrlSpace']
+	let l:plugins = ['\[Plugins\]', 'CtrlSpace']
 
 	if l:fname ==# ''
 		return 0
@@ -617,37 +608,7 @@ function! LightLineMode()
 					\ l:window_type == 1 ? 'Location' : ''
 	endif
 
-	return  l:fname ==# 'ControlP' ? 'CtrlP' :
-				\ l:fname ==# 'CtrlSpace' ? 'CtrlSpace' :
-				\ l:fname =~# 'NERD_tree' ? 'NERDTree' :
-				\ winwidth(0) > 60 ? lightline#mode() : ''
-endfunction
-
-function! CtrlPMark()
-	if expand('%:t') =~# 'ControlP' && has_key(g:lightline, 'ctrlp_item')
-		call lightline#link('iR'[g:lightline.ctrlp_regex])
-		return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
-					\ , g:lightline.ctrlp_next], 0)
-	else
-		return ''
-	endif
-endfunction
-
-let g:ctrlp_status_func = {
-			\ 'main': 'CtrlPStatusFunc_1',
-			\ 'prog': 'CtrlPStatusFunc_2',
-			\ }
-
-function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
-	let g:lightline.ctrlp_regex = a:regex
-	let g:lightline.ctrlp_prev = a:prev
-	let g:lightline.ctrlp_item = a:item
-	let g:lightline.ctrlp_next = a:next
-	return lightline#statusline(0)
-endfunction
-
-function! CtrlPStatusFunc_2(str)
-	return lightline#statusline(0)
+	return l:fname ==# 'CtrlSpace' ? 'CtrlSpace' : winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
 
 augroup AfterALELint
@@ -683,7 +644,7 @@ let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_start_level = 2
 let g:indent_guides_guide_size = 1
 let g:indent_guides_tab_guides = 0
-let g:indent_guides_exclude_filetypes = ['diff', 'man', 'help', 'git', 'gitcommit', 'qf', 'nerdtree']
+let g:indent_guides_exclude_filetypes = ['diff', 'man', 'help', 'git', 'gitcommit', 'qf']
 " }
 
 " Key map {
@@ -739,7 +700,7 @@ cnoremap <C-e> <End>
 inoremap <C-d> <ESC>ddi
 inoremap <C-k> <ESC>Da
 
-nnoremap <silent>q :call QuitWindow()<CR>
+nnoremap <silent>q :call Quit()<CR>
 nnoremap <silent><S-q> :quitall<CR>
 
 noremap t q
@@ -753,27 +714,6 @@ function! Quit()
 	if l:window_type == 1 || l:window_type == 2
 		silent! execute l:last_winnr . 'wincmd w'
 	endif
-endfunction
-
-function! QuitWindow()
-	if tabpagenr('$') > 1
-		call Quit()
-		return
-	endif
-
-	let l:max_winnr = winnr('$')
-	if l:max_winnr == 1 || l:max_winnr > 3
-		call Quit()
-		return
-	endif
-
-	if l:max_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen()) || l:max_winnr > 2
-		call Quit()
-		return
-	endif
-
-	" If NERDTreeTabs is opend, only call quitall can save the session
-	quitall
 endfunction
 " }
 
@@ -828,18 +768,10 @@ nnoremap <Right> <C-w><
 " }
 
 " F2 ~ F10 {
-nnoremap <silent><F2> :call BetterNERDTreeTabsToggle()<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
 nnoremap <silent><F10> :LivedownPreview<CR>
-
-function! BetterNERDTreeTabsToggle()
-	NERDTreeTabsToggle
-	if exists('g:NERDTree') && g:NERDTree.IsOpen()
-		silent! execute winnr('#') . 'wincmd w'
-	endif
-endfunction
 " }
 
 " Toggle {
@@ -1231,58 +1163,6 @@ let g:easytags_events = ['BufWritePost']
 let g:easytags_on_cursorhold = 0
 " }
 
-" NERDTree {
-" Set NERDTree window width
-let g:NERDTreeWinSize = 32
-let g:NERDTreeHijackNetrw = 1
-let g:NERDTreeAutoDeleteBuffer = 1
-let g:NERDTreeMinimalUI = 1
-let g:NERDTreeMapOpenSplit = 'a'
-let g:NERDTreeMapOpenVSplit = 'i'
-
-" Show hidden
-let g:NERDTreeShowHidden = 1
-" Ignore files
-let g:NERDTreeIgnore = ['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '\.swn$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
-
-" Don't open NERDTreeTabs automatically when vim starts up
-let g:nerdtree_tabs_open_on_gui_startup = 0
-let g:nerdtree_tabs_open_on_console_startup = 0
-let g:nerdtree_tabs_no_startup_for_diff = 1
-
-" Meaningful tab captions for inactive tabs
-let g:nerdtree_tabs_meaningful_tab_names = 1
-
-" When switching into a tab, make sure that focus is on the file window, not in the NERDTree window
-let g:nerdtree_tabs_focus_on_files = 1
-
-" Synchronize view of all NERDTree windows (scroll and cursor position)
-let g:nerdtree_tabs_synchronize_view = 1
-
-" Close vim if the only window left open is a NERDTreeTabs
-let g:nerdtree_tabs_autoclose = 1
-
-" Show current file in NERDTree
-nnoremap <silent><Leader>f :NERDTreeTabsFind<CR>
-
-augroup NERDTreeRefresh
-	autocmd!
-
-	" Refresh NERDTree when enter NERDTree buffer
-	autocmd BufEnter * if &filetype ==# 'nerdtree' | call Refresh() | endif
-augroup END
-
-function! Refresh()
-	if !exists('g:NERDTree') || !g:NERDTree.IsOpen() || !exists('b:NERDTree')
-		return
-	endif
-
-	call b:NERDTree.root.refresh()
-	call b:NERDTree.root.refreshFlags()
-	call NERDTreeRender()
-endfunction
-" }
-
 " Gitv {
 " Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
@@ -1316,18 +1196,18 @@ let g:ycm_autoclose_preview_window_after_insertion = 1
 let g:ycm_goto_buffer_command = 'new-tab'
 let g:ycm_filepath_completion_use_working_dir = 1
 
-let g:ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'javascript', 'python']
+let g:ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'python']
 
 augroup YouCompleteMeKeyMap
 	autocmd!
 
 	" Use Ctrl-o to jump back, see :help jumplist
-	autocmd FileType c,cpp,go,javascript,python nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
-	autocmd FileType c,cpp,go,javascript,python nnoremap <silent><buffer>gt :YcmCompleter GoTo<CR>
-	autocmd FileType c,cpp,go,javascript,python nnoremap <silent><buffer><Leader>jd :YcmCompleter GoToDeclaration<CR>
+	autocmd FileType c,cpp,go,python nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
+	autocmd FileType c,cpp,go,python nnoremap <silent><buffer>gt :YcmCompleter GoTo<CR>
+	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>jd :YcmCompleter GoToDeclaration<CR>
 	autocmd FileType * if index(g:ycm_go_to_definition_filetypes, &filetype) == -1 | nnoremap <silent><buffer>gd <C-]> | endif
 
-	autocmd FileType python,javascript nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
+	autocmd FileType python nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
 augroup END
 
 " }
@@ -1336,9 +1216,7 @@ augroup END
 augroup Omnifunc
 	autocmd!
 
-	autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 	autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-	autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
 augroup END
 
 " Ultisnips {
@@ -1382,7 +1260,7 @@ endfunction
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,javascript,json,python,lua,ruby,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd FileType c,cpp,go,python,lua,markdown,json,sh,vim autocmd BufWrite <buffer> :Autoformat
 augroup END
 
 " Enable autoindent
@@ -1420,7 +1298,7 @@ map <Leader>ru <Plug>(quickrun)
 augroup QuickRunRemap
 	autocmd!
 
-	autocmd FileType quickrun nnoremap <buffer><silent>q :call QuitWindow()<CR>
+	autocmd FileType quickrun nnoremap <buffer><silent>q :call Quit()<CR>
 augroup END
 " }
 
@@ -1461,23 +1339,11 @@ augroup GolangKeymap
 augroup END
 " }
 
-" vim-javascript {
-let g:javascript_plugin_jsdoc = 1
-let g:javascript_plugin_ngdoc = 1
-" }
-
-" vim-ruby {
-let g:rubycomplete_buffer_loading = 1
-let g:rubycomplete_classes_in_global = 1
-let g:rubycomplete_rails = 1
-let g:rubycomplete_load_gemfile = 1
-" }
-
 " vim-markdown {
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'javascript', 'json', 'python', 'lua', 'ruby', 'bash=sh', 'vim', 'html', 'css']
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'json']
 " }
 
 " Terminal {
