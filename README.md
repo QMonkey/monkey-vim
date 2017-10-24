@@ -162,31 +162,7 @@ sudo gem install rubocop
 sudo gem install ruby-beautify
 ```
 
-#### 2.11 PHP
-
-```bash
-# Ubuntu
-sudo apt-get install php
-pear install PHP_CodeSniffer
-
-# CentOS
-sudo yum install php
-pear install PHP_CodeSniffer
-
-# OpenSUSE
-sudo zypper install php
-pear install PHP_CodeSniffer
-
-# Mac
-brew install php
-pear install PHP_CodeSniffer
-
-# Windows
-php
-pear install PHP_CodeSniffer
-```
-
-#### 2.12 Shell
+#### 2.11 Shell
 
 ```bash
 # Ubuntu
@@ -202,7 +178,7 @@ sudo yum install ShellCheck
 brew install shellcheck
 ```
 
-#### 2.13 Markdown
+#### 2.12 Markdown
 
 ```bash
 sudo pip install proselint
@@ -210,7 +186,7 @@ sudo npm install -g livedown
 sudo npm install -g remark-cli
 ```
 
-#### 2.14 Vim
+#### 2.13 Vim
 
 ```bash
 sudo pip install vim-vint

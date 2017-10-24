@@ -43,7 +43,7 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 " Plugins {
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
-Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
+" Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 Plug 'itchyny/lightline.vim'
 Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
 Plug 'vim-ctrlspace/vim-ctrlspace'
@@ -75,10 +75,8 @@ Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
 Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
 Plug 'pangloss/vim-javascript', {'for': 'javascript'}
-Plug 'xolox/vim-lua-ftplugin', {'for': 'lua'}
 Plug 'vim-ruby/vim-ruby', {'for': 'ruby'}
 Plug 'tpope/vim-rails', {'for': 'ruby'}
-Plug 'shawncplus/phpcomplete.vim', {'for': 'php'}
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
 Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
@@ -233,8 +231,6 @@ augroup FileTypeGroup
 
 	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 	autocmd FileType javascript,json,yaml,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
-
-	autocmd FileType php setlocal matchpairs-=<:>
 
 	autocmd BufNewFile,BufRead .tern-project setfiletype json
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
@@ -1343,7 +1339,6 @@ augroup Omnifunc
 	autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 	autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
 	autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
-	autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
 augroup END
 
 " Ultisnips {
@@ -1387,7 +1382,7 @@ endfunction
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd FileType c,cpp,go,javascript,json,python,lua,ruby,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
 augroup END
 
 " Enable autoindent
@@ -1471,17 +1466,6 @@ let g:javascript_plugin_jsdoc = 1
 let g:javascript_plugin_ngdoc = 1
 " }
 
-" vim-lua-ftplugin {
-let g:lua_check_syntax = 0
-let g:lua_check_globals = 0
-let g:lua_complete_keywords = 1
-let g:lua_complete_globals = 1
-let g:lua_complete_library = 1
-let g:lua_complete_dynamic = 1
-let g:lua_complete_omni = 1
-let g:lua_define_completion_mappings = 0
-" }
-
 " vim-ruby {
 let g:rubycomplete_buffer_loading = 1
 let g:rubycomplete_classes_in_global = 1
@@ -1493,7 +1477,7 @@ let g:rubycomplete_load_gemfile = 1
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'javascript', 'json', 'python', 'lua', 'ruby', 'php', 'bash=sh', 'vim', 'html', 'css']
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'javascript', 'json', 'python', 'lua', 'ruby', 'bash=sh', 'vim', 'html', 'css']
 " }
 
 " Terminal {

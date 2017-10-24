@@ -162,31 +162,7 @@ sudo gem install rubocop
 sudo gem install ruby-beautify
 ```
 
-#### 2.11 PHP
-
-```bash
-# Ubuntu
-sudo apt-get install php
-pear install PHP_CodeSniffer
-
-# CentOS
-sudo yum install php
-pear install PHP_CodeSniffer
-
-# OpenSUSE
-sudo zypper install php
-pear install PHP_CodeSniffer
-
-# Mac
-brew install php
-pear install PHP_CodeSniffer
-
-# Windows
-php
-pear install PHP_CodeSniffer
-```
-
-#### 2.12 Shell
+#### 2.11 Shell
 
 ```bash
 # Ubuntu
@@ -202,7 +178,7 @@ sudo yum install ShellCheck
 brew install shellcheck
 ```
 
-#### 2.13 Markdown
+#### 2.12 Markdown
 
 ```bash
 sudo pip install proselint
@@ -210,7 +186,7 @@ sudo npm install -g livedown
 sudo npm install -g remark-cli
 ```
 
-#### 2.14 Vim
+#### 2.13 Vim
 
 ```bash
 sudo pip install vim-vint
@@ -535,7 +511,7 @@ Leader+rc   替换选中的字符串（需要逐一确认）
 #### 3.4 语言相关
 
 ```
-K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,php,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
+K       查看所选字符串在文档（若文件类型为c,c++,sh,go,python,ruby,vim，则打开split查看。否则打开dash或zeal查看。）中的解释
 ```
 
 #### 3.5 快速移动插件：[vim-sneak](https://github.com/justinmk/vim-sneak)
