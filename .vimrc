@@ -45,6 +45,7 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
+Plug 'tpope/vim-vinegar'
 Plug 'vim-ctrlspace/vim-ctrlspace'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -59,7 +60,7 @@ Plug 'ntpeters/vim-better-whitespace'
 Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen', 'Start', 'Spawn']}
 Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
 Plug 'airblade/vim-rooter'
-Plug 'xolox/vim-misc' | Plug 'xolox/vim-easytags'
+Plug 'ludovicchabant/vim-gutentags'
 Plug 'w0rp/ale'
 Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
@@ -724,8 +725,8 @@ nnoremap <silent>[b :bprevious<CR>
 nnoremap <silent>]b :bnext<CR>
 
 " Netrw style
-nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
-nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
+" nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
+" nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
 
 function! GetRootPath()
 	let l:root_path = FindRootDirectory()
@@ -1015,6 +1016,7 @@ vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
 " ack.vim {
 let g:ack_apply_qmappings = 0
 let g:ack_apply_lmappings = 0
+let g:ackpreview = 0
 
 if executable('ag')
 	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
@@ -1128,39 +1130,21 @@ augroup END
 augroup Ctags
 	autocmd!
 
-	" Auto set tag file path
-	autocmd BufNewFile,BufRead * execute 'setlocal tags=' . (!empty(FindRootDirectory()) ? FindRootDirectory() . '/' : './') . '.tags,' . &tags
-
 	" Highlight .tags file as tags file
 	autocmd BufNewFile,BufRead *.tags setfiletype tags
 augroup END
 " }
 
-" vim-easytags {
-let g:easytags_async = 1
-
-" Global tag file
-let g:easytags_file = expand($HOME . '/.vim/.tags')
-
-let g:easytags_opts = ['--fields=+liaS', '--extra=+q']
-let g:easytags_languages = {
-			\	'c': {
-			\		'args': ['--c-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
-			\	},
-			\	'cpp': {
-			\		'args': ['--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
-			\	}
-			\ }
-
-" Create dynamic tag file if not exists
-let g:easytags_dynamic_files = 2
-
-" Disable auto update tag files
-let g:easytags_auto_update = 1
-
-" Only update tag file on write
-let g:easytags_events = ['BufWritePost']
-let g:easytags_on_cursorhold = 0
+" vim-gutentags {
+let g:gutentags_ctags_tagfile = '.tags'
+let g:gutentags_ctags_auto_set_tags = 1
+let g:gutentags_generate_on_missing = 1
+let g:gutentags_generate_on_new = 0
+let g:gutentags_generate_on_write = 1
+let g:gutentags_background_update = 1
+let g:gutentags_resolve_symlinks = 1
+let g:gutentags_define_advanced_commands = 1
+let g:gutentags_ctags_extra_args = ['--fields=+liaS', '--extra=+q', '--recurse=no', '--c-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v', '--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
 " }
 
 " Gitv {
