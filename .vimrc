@@ -1054,9 +1054,10 @@ let g:CommandTSmartCase = 1
 augroup CommandT
 	autocmd!
 
-	nnoremap <silent><C-p> :CommandT<CR>
-	nnoremap <silent><C-t> :CommandTTag<CR>
-	nnoremap <silent><C-n> :CommandTBuffer<CR>
+	nmap <silent><C-p> <Plug>(CommandT)
+	nmap <silent><C-t> <Plug>(CommandTTag)
+	nmap <silent><C-n> <Plug>(CommandTBuffer)
+	nmap <silent><C-m> <Plug>(CommandTLine)
 augroup END
 " }
 
