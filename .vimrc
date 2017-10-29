@@ -1034,7 +1034,7 @@ let g:NERDRemoveExtraSpaces = 1
 " }
 
 " Session {
-set sessionoptions-=options
+set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds
 
 " Backup
 nnoremap <Leader>bs :execute 'Obsession' expand(GetRootPath() . '/.session.vim')<CR>
