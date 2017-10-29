@@ -48,7 +48,6 @@ Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extcon
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
-Plug 'michaeljsmith/vim-indent-object'
 Plug 'svermeulen/vim-easyclip'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
