@@ -104,29 +104,7 @@ g++
 clang
 ```
 
-#### 2.5 Javascript
-
-```bash
-sudo npm install -g jshint
-sudo npm install -g js-beautify
-sudo npm install -g tern
-```
-
-#### 2.6 JSON
-
-```bash
-sudo npm install -g jsonlint
-```
-
-#### 2.7 Python
-
-```bash
-sudo pip install jedi
-sudo pip install autopep8 或 sudo pip install yapf
-sudo pip install flake8
-```
-
-#### 2.8 Golang
+#### 2.5 Golang
 
 ```bash
 # 请安装最新版本的go
@@ -136,7 +114,15 @@ sudo pip install flake8
 :GoInstallBinaries
 ```
 
-#### 2.9 Lua
+#### 2.6 Python
+
+```bash
+sudo pip install jedi
+sudo pip install autopep8 或 sudo pip install yapf
+sudo pip install flake8
+```
+
+#### 2.7 Lua
 
 ```bash
 # Ubuntu
@@ -155,14 +141,13 @@ brew install lua
 lua
 ```
 
-#### 2.10 Ruby
+#### 2.8 JSON
 
 ```bash
-sudo gem install rubocop
-sudo gem install ruby-beautify
+sudo npm install -g jsonlint
 ```
 
-#### 2.11 Shell
+#### 2.9 Shell
 
 ```bash
 # Ubuntu
@@ -178,7 +163,7 @@ sudo yum install ShellCheck
 brew install shellcheck
 ```
 
-#### 2.12 Markdown
+#### 2.10 Markdown
 
 ```bash
 sudo pip install proselint
@@ -186,7 +171,7 @@ sudo npm install -g livedown
 sudo npm install -g remark-cli
 ```
 
-#### 2.13 Vim
+#### 2.11 Vim
 
 ```bash
 sudo pip install vim-vint
@@ -250,7 +235,6 @@ t       记录操作，相当于原来的q
 #### 1.2 F2 ~ F10
 
 ```
-F2      打开/关闭NERDTree
 F7      异步运行当前项目（可用:FocusDispatch注册执行的命令，如:FocusDispatch gcc % -o a.out）
 F8      打开/关闭F7运行结果
 F9      运行当前文件
@@ -407,37 +391,29 @@ f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
 ```
 
-#### 1.15 buffer、tab切换，保存/恢复workspace插件：[vim-ctrlspace](https://github.com/vim-ctrlspace/vim-ctrlspace)
-
-```
-Ctrl+Space  打开CtrlSpace
-
-Leader+bs   保存workspace
-Leader+rs   恢复workspace
-```
-
-#### 1.16 项目文件搜索插件：[ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.15 快速文件搜索插件：[command-t](https://github.com/wincent/command-t)
 
 ```
 Ctrl+p      搜索文件
-Ctrl+t      搜索当前buffer的tags
-Ctrl+n      搜索整个工程的tags
+Ctrl+t      搜索tags
+Ctrl+n      搜索buffer
+Ctrl+m      搜索行
 ```
 
-#### 1.17 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.16 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        当前目录搜索光标所在的词
 ```
 
-#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cl       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -446,20 +422,22 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.20 运行代码插件：[vim-quickrun](https://github.com/thinca/vim-quickrun)
+#### 1.19 运行代码插件：[vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
 Leader+ru       运行当前文件
 ```
 
-#### 1.21 其他
+#### 1.20 其他
 
 ```
+Leader+bs       保存session
+Leader+rs       删除session
+
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
-Leader+f        在NERDTree中显示当前文件
 cod             切换diff模式
 cop             切换paste模式
 col             切换list模式
@@ -709,7 +687,7 @@ set expandtab
 - 在bashrc中加入以下Shell代码，即可在vim中查看man文档
 
 ```bash
-export MANPAGER="env MAN_PN=1 vim -R --cmd 'let g:CtrlSpaceLoaded = 1' +MANPAGER -"
+export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
 ```
 
 - 将Caps Lock按键映射为Ctrl

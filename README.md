@@ -104,29 +104,7 @@ g++
 clang
 ```
 
-#### 2.5 Javascript
-
-```bash
-sudo npm install -g jshint
-sudo npm install -g js-beautify
-sudo npm install -g tern
-```
-
-#### 2.6 JSON
-
-```bash
-sudo npm install -g jsonlint
-```
-
-#### 2.7 Python
-
-```bash
-sudo pip install jedi
-sudo pip install autopep8 or sudo pip install yapf
-sudo pip install flake8
-```
-
-#### 2.8 Golang
+#### 2.5 Golang
 
 ```bash
 # Please install the lastest version of go
@@ -136,7 +114,15 @@ sudo pip install flake8
 :GoInstallBinaries
 ```
 
-#### 2.9 Lua
+#### 2.6 Python
+
+```bash
+sudo pip install jedi
+sudo pip install autopep8 or sudo pip install yapf
+sudo pip install flake8
+```
+
+#### 2.7 Lua
 
 ```bash
 # Ubuntu
@@ -155,14 +141,13 @@ brew install lua
 lua
 ```
 
-#### 2.10 Ruby
+#### 2.8 JSON
 
 ```bash
-sudo gem install rubocop
-sudo gem install ruby-beautify
+sudo npm install -g jsonlint
 ```
 
-#### 2.11 Shell
+#### 2.9 Shell
 
 ```bash
 # Ubuntu
@@ -178,7 +163,7 @@ sudo yum install ShellCheck
 brew install shellcheck
 ```
 
-#### 2.12 Markdown
+#### 2.10 Markdown
 
 ```bash
 sudo pip install proselint
@@ -186,7 +171,7 @@ sudo npm install -g livedown
 sudo npm install -g remark-cli
 ```
 
-#### 2.13 Vim
+#### 2.11 Vim
 
 ```bash
 sudo pip install vim-vint
@@ -250,7 +235,6 @@ t       Recording, same as origin q
 #### 1.2 F2 ~ F10
 
 ```
-F2      Toggle NERDTree
 F7      Run current project asynchronously. You can use “:FocusDispatch” command to override the default command. For example, :FocusDispatch gcc % -o a.out
 F8      Toggle output window of F7
 F9      Run current file
@@ -407,37 +391,29 @@ f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
 ```
 
-#### 1.15 Switch buffer and tab. Save or restore workspace: [vim-ctrlspace](https://github.com/vim-ctrlspace/vim-ctrlspace)
-
-```
-Ctrl+Space  Open CtrlSpace
-
-Leader+bs   Backup workspace
-Leader+rs   Restore workspace
-```
-
-#### 1.16 Full path fuzzy file, buffer, mru, tag, ... finder: [ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim)
+#### 1.15 Fast file navigation: [command-t](https://github.com/wincent/command-t)
 
 ```
 Ctrl+p      Search files
-Ctrl+t      Search buffer tags
-Ctrl+n      Search project tags
+Ctrl+t      Search tags
+Ctrl+n      Search buffer
+Ctrl+m      Search buffer lines
 ```
 
-#### 1.17 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.16 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        Search current word in current directory
 ```
 
-#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cl       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -446,20 +422,22 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.20 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
+#### 1.19 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
 Leader+ru       Run current file
 ```
 
-#### 1.21 Others
+#### 1.20 Others
 
 ```
+Leader+bs       Save session
+Leader+rs       Remove session
+
 '.              Jump to last changes
 ''              To the position before the latest jump, or where the last “m'” or “m`” command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
-Leader+f        Show current file in NERDTree
 cod             Toggle diff
 cop             Toggle paste
 col             Toggle list
@@ -711,7 +689,7 @@ set expandtab
 - Use vim to view man doc in shell, please put it in your bashrc file
 
 ```bash
-export MANPAGER="env MAN_PN=1 vim -R --cmd 'let g:CtrlSpaceLoaded = 1' +MANPAGER -"
+export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
 ```
 
 - Remap Caps Lock key to Ctrl
