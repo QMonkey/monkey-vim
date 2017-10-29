@@ -74,7 +74,7 @@ Plug 'yssl/QFEnter'
 Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': 'toml'}
-Plug 'moskytw/nginx-contrib-vim', {'for': 'nginx'}
+Plug 'chr4/nginx.vim', {'for': 'nginx'}
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
