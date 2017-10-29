@@ -28,7 +28,7 @@ endif
 
 " vim-plug {
 " Time limit of each task in seconds
-let g:plug_timeout = 600
+let g:plug_timeout = 300
 " }
 
 " Windows {
@@ -1044,7 +1044,7 @@ nnoremap <Leader>rs :Obsession!<CR>
 augroup RestoreSession
 	autocmd!
 
-	autocmd VimEnter * nested if findfile('.session.vim', GetRootPath()) !=# '' | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
+	autocmd VimEnter * nested if argc() == 0 && findfile('.session.vim', GetRootPath()) !=# '' | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
 augroup END
 " }
 
@@ -1132,7 +1132,15 @@ let g:gutentags_generate_on_write = 1
 let g:gutentags_background_update = 1
 let g:gutentags_resolve_symlinks = 1
 let g:gutentags_define_advanced_commands = 1
-let g:gutentags_ctags_extra_args = ['--fields=+liaS', '--extra=+q', '--recurse=no', '--c-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v', '--c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v']
+let g:gutentags_ctags_extra_args = [
+			\ '--fields=+liaS',
+			\ '--extra=+q',
+			\ '--recurse=no',
+			\ '--langmap=c:.c.h,vim:.vim.vimrc',
+			\ '--c-kinds=+p',
+			\ '--c++-kinds=+p',
+			\ '--python-kinds=+i',
+			\]
 " }
 
 " Gitv {
