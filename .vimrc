@@ -46,7 +46,7 @@ Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
 Plug 'tpope/vim-vinegar'
-Plug 'vim-ctrlspace/vim-ctrlspace'
+Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
@@ -466,15 +466,11 @@ function! LightLineReadonly()
 endfunction
 
 function! LightLineFilename()
-	let l:fname = expand('%:t')
-	if l:fname ==# 'CtrlSpace'
-		return ctrlspace#api#StatuslineModeSegment('')
-	endif
-
 	if GetWindowType() != 0
 		return ''
 	endif
 
+	let l:fname = expand('%:t')
 	return ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
 				\ ('' !=# l:fname ? l:fname : '[No Name]') .
 				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
@@ -526,7 +522,7 @@ function! IsGitFile()
 	endif
 
 	let l:fname = expand('%:t')
-	let l:plugins = ['\[Plugins\]', 'CtrlSpace']
+	let l:plugins = ['\[Plugins\]']
 
 	if l:fname ==# ''
 		return 0
@@ -603,13 +599,13 @@ endfunction
 function! LightLineMode()
 	let l:fname = expand('%:t')
 	let l:window_type = GetWindowType()
-	if l:fname !=# 'CtrlSpace' && l:window_type != 0
+	if l:window_type != 0
 		return l:window_type == 3 ? 'Preview' :
 					\ l:window_type == 2 ? 'Quickfix' :
 					\ l:window_type == 1 ? 'Location' : ''
 	endif
 
-	return l:fname ==# 'CtrlSpace' ? 'CtrlSpace' : winwidth(0) > 60 ? lightline#mode() : ''
+	return winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
 
 augroup AfterALELint
@@ -1041,9 +1037,15 @@ let g:NERDRemoveExtraSpaces = 1
 set sessionoptions-=options
 
 " Backup
-nnoremap <Leader>bs :execute 'CtrlSpaceSaveWorkspace' Prompt('Session name: ')<CR>
-" Restore
-nnoremap <Leader>rs :execute 'CtrlSpaceLoadWorkspace' Prompt('Session name: ')<CR>
+nnoremap <Leader>bs :execute 'Obsession' expand(GetRootPath() . '/.session.vim')<CR>
+" Remove
+nnoremap <Leader>rs :Obsession!<CR>
+
+augroup RestoreSession
+	autocmd!
+
+	autocmd VimEnter * nested if findfile('.session.vim', GetRootPath()) !=# '' | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
+augroup END
 " }
 
 " command-t {
@@ -1061,25 +1063,11 @@ augroup CommandT
 augroup END
 " }
 
-" vim-ctrlspace {
-" Only work after saving workspace
-let g:CtrlSpaceLoadLastWorkspaceOnStart = 1
-let g:CtrlSpaceSaveWorkspaceOnSwitch = 1
-let g:CtrlSpaceSaveWorkspaceOnExit = 1
-
-let g:CtrlSpaceStatuslineFunction = 'lightline#statusline(0)'
-
-if executable('ag')
-	" Use ag to collect all files in your project directory
-	let g:CtrlSpaceGlobCommand = 'ag -l --nogroup --nocolor -g ""'
-endif
-" }
-
 " vim-sneak {
 " Enable streak-mode
 let g:sneak#streak = 1
 let g:sneak#use_ic_scs = 1
-let g:sneak#target_labels = ";sfadlgwterhiounpqv/SFADLGWTERHIOUNPQV?0"
+let g:sneak#target_labels = ';sfadlgwterhiounpqv/SFADLGWTERHIOUNPQV?0'
 
 " Disable default map for s and S
 map <Plug>(go_away_sneak_s) <Plug>Sneak_s
@@ -1114,7 +1102,6 @@ let g:rooter_change_directory_for_non_project_files = 'current'
 let g:rooter_resolve_links = 1
 "let g:rooter_use_lcd = 1
 
-" Do it manually, or it will cause CtrlSpace's workspace cannot save other project's file.
 let g:rooter_manual_only = 1
 
 nnoremap <silent><Leader>cd :Rooter<CR>
