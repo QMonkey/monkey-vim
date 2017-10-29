@@ -326,11 +326,6 @@ endfunction
 " zeavim.vim {
 let g:zv_disable_mapping = 1
 
-" Add what you want to refer
-let g:zv_file_types = {
-			\	'sql': 'mysql',
-			\ }
-
 if !has('mac') && !has('macunix')
 	nmap <silent><Leader><Leader>z <Plug>ZVKeyDocset
 endif
