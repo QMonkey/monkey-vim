@@ -230,6 +230,8 @@ U       Redo, same as Ctrl-r
 q       Quit current window, same as :q
 Q       Quit vim, same as :qa
 t       Recording, same as origin q
+~       Open project root inside netrw
+-       Open current file directory inside netrw
 ```
 
 #### 1.2 F2 ~ F10

@@ -45,7 +45,6 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
-Plug 'tpope/vim-vinegar'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -719,18 +718,6 @@ nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', '', 'file
 
 nnoremap <silent>[b :bprevious<CR>
 nnoremap <silent>]b :bnext<CR>
-
-" Netrw style
-" nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
-" nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
-
-function! GetRootPath()
-	let l:root_path = FindRootDirectory()
-	if l:root_path ==# ''
-		let l:root_path = expand('%:p:h')
-	endif
-	return l:root_path
-endfunction
 " }
 
 " Tab {
@@ -799,6 +786,27 @@ function! ZoomToggle()
 endfunction
 
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
+" }
+
+" netrw {
+let g:netrw_banner = 0
+
+nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
+nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
+
+function! GetRootPath()
+	let l:root_path = FindRootDirectory()
+	if l:root_path ==# ''
+		let l:root_path = expand('%:p:h')
+	endif
+	return l:root_path
+endfunction
+
+augroup ProjectDrawer
+	autocmd!
+
+	autocmd FileType netrw nnoremap <silent><buffer>~ :execute 'edit' GetRootPath()<CR>
+augroup END
 " }
 
 " incsearch.vim {
