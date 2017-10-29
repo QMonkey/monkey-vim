@@ -230,8 +230,6 @@ U       Redo，相当于“Ctrl-r”
 q       退出窗口，相当于命令“:q”
 Q       退出vim，相当于命令“:qa”
 t       记录操作，相当于原来的q
-~       在netrw中打开工程根目录
--       在netrw打开当前文件所在文件夹
 ```
 
 #### 1.2 F2 ~ F10
@@ -250,9 +248,6 @@ F11     全屏切换（仅在gui模式下有效）
 Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
 [+b         切换到上一个缓冲
 ]+b         切换到下一个缓冲
-
--           在当前窗口打开文件所在的文件夹
-~           在当前窗口打开项目根路径，或者文件所在的文件夹
 ```
 
 #### 1.4 分屏
@@ -372,7 +367,35 @@ m<BS>       删除所有自定义标记
 m?          在Location List里，查看当前buffer的所有自定义标记
 ```
 
-#### 1.12 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.12 Netrw
+
+```
+-           在当前窗口打开文件所在的文件夹
+~           在当前窗口打开项目根路径，或者文件所在的文件夹
+
+<CR>        netrw 进入目录或者打开文件
+o           用水平分割在新浏览窗口中进入光标所在的文件/目录
+v           用垂直分割在新浏览窗口中进入光标所在的文件/目录
+t           在新标签页里进入光标所在的文件/目录
+-           netrw 往上一层目录
+%           在 netrw 当前目录打开新文件
+d           建立新目录
+D           试图删除文件/目录
+R           给指定的文件或目录换名
+c           使浏览中的目录成为当前目录
+i           在瘦、长、宽和树状列表方式循环
+gh          快速隐藏/显示点文件
+qf          显示文件信息
+gn          置顶光标下的目录
+<C-l>       netrw 刷新目录列表
+<C-r>       使用 gvim 服务器浏览
+r           反转排序顺序
+s           选择排序风格: 按名字、时间或文件大小
+x           用指定程序阅读文件
+X           用 system() 执行光标所在的文件
+```
+
+#### 1.13 代码补全，定义、声明跳转插件：[YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          跳转到定义
@@ -380,20 +403,20 @@ gt          跳转到头文件，定义或声明
 Leader+jd   跳转到声明
 ```
 
-#### 1.13 异步语义语法检查插件：[ale](https://github.com/w0rp/ale)
+#### 1.14 异步语义语法检查插件：[ale](https://github.com/w0rp/ale)
 
 ```
 Leader+l    打开/关闭错误信息窗口
 ```
 
-#### 1.14 快速移动插件：[vim-sneak](https://github.com/justinmk/vim-sneak)
+#### 1.15 快速移动插件：[vim-sneak](https://github.com/justinmk/vim-sneak)
 
 ```
 f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
 ```
 
-#### 1.15 快速文件搜索插件：[command-t](https://github.com/wincent/command-t)
+#### 1.16 快速文件搜索插件：[command-t](https://github.com/wincent/command-t)
 
 ```
 Ctrl+p      搜索文件
@@ -402,20 +425,20 @@ Ctrl+n      搜索buffer
 Ctrl+m      搜索行
 ```
 
-#### 1.16 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.17 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        当前目录搜索光标所在的词
 ```
 
-#### 1.17 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cl       注释光标所在行
 Leader+cu       取消注释
 ```
 
-#### 1.18 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -424,13 +447,13 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.19 运行代码插件：[vim-quickrun](https://github.com/thinca/vim-quickrun)
+#### 1.20 运行代码插件：[vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
 Leader+ru       运行当前文件
 ```
 
-#### 1.20 其他
+#### 1.21 其他
 
 ```
 Leader+bs       保存session

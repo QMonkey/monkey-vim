@@ -230,8 +230,6 @@ U       Redo, same as Ctrl-r
 q       Quit current window, same as :q
 Q       Quit vim, same as :qa
 t       Recording, same as origin q
-~       Open project root inside netrw
--       Open current file directory inside netrw
 ```
 
 #### 1.2 F2 ~ F10
@@ -250,9 +248,6 @@ F11     Toggle fullscreen, only available in GUI mode
 Leader+o    Open a new buffer with given file path in current window
 [+b         Jump to previous buffer
 ]+b         Jump to next buffer
-
--           Open file directory in current window
-~           Open project root or file directory in current window
 ```
 
 #### 1.4 Split
@@ -372,7 +367,35 @@ m<BS>       Remove all markers
 m?          Open location list and display markers from current buffer
 ```
 
-#### 1.12 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
+#### 1.12 Netrw
+
+```
+~           Open project root or file directory in current window
+-           Open file directory in current window
+
+<CR>        Netrw will enter the directory or read the file
+o           Enter the file/directory under the cursor in a new browser window. A horizontal split is used.
+v           Enter the file/directory under the cursor in a new browser window. A vertical split is used.
+t           Enter the file/directory under the cursor in a new tab
+-           Makes Netrw go up one directory
+%           Open a new file in netrw's current directory
+d           Make a directory
+D           Attempt to remove the file(s)/directory(ies)
+R           Rename the designated file(s)/directory(ies)
+c           Make browsing directory the current directory
+i           Cycle between thin, long, wide, and tree listings
+gh          Quick hide/unhide of dot-files
+qf          Display information on file
+gn          Make top of tree the directory below the cursor
+<C-l>       Causes Netrw to refresh the directory listing
+<C-r>       Browse using a gvim server
+r           Reverse sorting order
+s           Select sorting style: by name, time, or file size
+x           View file with an associated program
+X           Execute filename under cursor via system()
+```
+
+#### 1.13 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
 
 ```
 gd          Go to definition
@@ -380,20 +403,20 @@ gt          Go to header file, definition or declaration
 Leader+jd   Go to declaration
 ```
 
-#### 1.13 Asynchronous lint engine: [ale](https://github.com/w0rp/ale)
+#### 1.14 Asynchronous lint engine: [ale](https://github.com/w0rp/ale)
 
 ```
 Leader+l    Toggle error window
 ```
 
-#### 1.14 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)
+#### 1.15 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)
 
 ```
 f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
 ```
 
-#### 1.15 Fast file navigation: [command-t](https://github.com/wincent/command-t)
+#### 1.16 Fast file navigation: [command-t](https://github.com/wincent/command-t)
 
 ```
 Ctrl+p      Search files
@@ -402,20 +425,20 @@ Ctrl+n      Search buffer
 Ctrl+m      Search buffer lines
 ```
 
-#### 1.16 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.17 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
 
 ```
 Leader+a        Search current word in current directory
 ```
 
-#### 1.17 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
 
 ```
 Leader+cl       Comment out the current line
 Leader+cu       Uncomments the current line
 ```
 
-#### 1.18 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -424,13 +447,13 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.19 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
+#### 1.20 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
 
 ```
 Leader+ru       Run current file
 ```
 
-#### 1.20 Others
+#### 1.21 Others
 
 ```
 Leader+bs       Save session
