@@ -73,8 +73,8 @@ Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
 Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
-Plug 'cespare/vim-toml', {'for': 'toml'}
-Plug 'chr4/nginx.vim', {'for': 'nginx'}
+Plug 'cespare/vim-toml', {'for': ['toml', 'markdown']}
+Plug 'chr4/nginx.vim', {'for': ['nginx', 'markdown']}
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
@@ -1243,7 +1243,7 @@ endfunction
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,python,lua,markdown,json,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd FileType c,cpp,go,python,lua,markdown,json,nginx,sh,vim autocmd BufWrite <buffer> :Autoformat
 augroup END
 
 " Enable autoindent
@@ -1326,7 +1326,8 @@ augroup END
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'json']
+let g:markdown_minlines = 100
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'json', 'toml', 'nginx']
 " }
 
 " Terminal {
