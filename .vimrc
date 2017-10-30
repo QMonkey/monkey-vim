@@ -1046,7 +1046,7 @@ nnoremap <Leader>rs :Obsession!<CR>
 augroup RestoreSession
 	autocmd!
 
-	autocmd VimEnter * nested if argc() == 0 && findfile('.session.vim', GetRootPath()) !=# '' | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
+	autocmd VimEnter * nested if argc() == 0 && filereadable(expand(GetRootPath() . '/.session.vim')) | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
 augroup END
 " }
 
