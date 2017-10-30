@@ -1052,6 +1052,7 @@ augroup END
 
 " command-t {
 let g:CommandTCancelMap = ['<ESC>', '<C-[>', '<C-c>']
+let g:CommandTAcceptSelectionMap = ['<CR>', '<C-CR>']
 let g:CommandTAcceptSelectionSplitMap = ['<C-o>']
 let g:CommandTMaxCachedDirectories = 0
 let g:CommandTSmartCase = 1
