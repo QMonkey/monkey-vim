@@ -34,6 +34,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 ```bash
 # Ubuntu
+sudo apt-get install curl
 sudo apt-get install ctags
 sudo apt-get install cmake
 sudo apt-get install silversearcher-ag 或 sudo apt-get install ack-grep
@@ -41,6 +42,7 @@ sudo apt-get install wmctrl
 sudo apt-get install parcellite
 
 # OpenSUSE
+sudo zypper install curl
 sudo zypper install ctags
 sudo zypper install cmake
 sudo zypper install the_silver_searcher 或 sudo zypper install ack
@@ -48,6 +50,7 @@ sudo zypper install wmctrl
 sudo zypper install parcellite
 
 # CentOS
+sudo yum install curl
 sudo yum install ctags
 sudo yum install cmake
 sudo yum install the_silver_searcher 或 sudo yum install ack
@@ -55,6 +58,7 @@ sudo yum install wmctrl
 sudo yum install clipit
 
 # Mac
+brew install curl
 brew install ctags
 brew install cmake
 brew install the_silver_searcher 或 brew install ack
@@ -431,11 +435,10 @@ Ctrl+m      搜索行
 Leader+a        当前目录搜索光标所在的词
 ```
 
-#### 1.18 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 注释插件：[vim-commentary](https://github.com/tpope/vim-commentary)
 
 ```
-Leader+cl       注释光标所在行
-Leader+cu       取消注释
+gcc             注释/取消注释光标所在行
 ```
 
 #### 1.19 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)
@@ -530,11 +533,10 @@ F           与“f”功能相同但方向相反
 Leader+a        当前目录搜索选中字符串
 ```
 
-#### 3.7 注释插件：[nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.7 注释插件：[vim-commentary](https://github.com/tpope/vim-commentary)
 
 ```
-Leader+cl       注释选中的代码
-Leader+cu       取消选中代码的注释
+gc              注释/取消注释选中的代码行
 ```
 
 #### 3.8 围绕字符编辑插件：[vim-surround](https://github.com/tpope/vim-surround)

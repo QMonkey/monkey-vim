@@ -34,6 +34,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 ```bash
 # Ubuntu
+sudo apt-get install curl
 sudo apt-get install ctags
 sudo apt-get install cmake
 sudo apt-get install silversearcher-ag or sudo apt-get install ack-grep
@@ -41,6 +42,7 @@ sudo apt-get install wmctrl
 sudo apt-get install parcellite
 
 # OpenSUSE
+sudo zypper install curl
 sudo zypper install ctags
 sudo zypper install cmake
 sudo zypper install the_silver_searcher or sudo zypper install ack
@@ -48,6 +50,7 @@ sudo zypper install wmctrl
 sudo zypper install parcellite
 
 # CentOS
+sudo yum install curl
 sudo yum install ctags
 sudo yum install cmake
 sudo yum install the_silver_searcher or sudo yum install ack
@@ -55,6 +58,7 @@ sudo yum install wmctrl
 sudo yum install clipit
 
 # Mac
+brew install curl
 brew install ctags
 brew install cmake
 brew install the_silver_searcher or brew install ack
@@ -431,11 +435,10 @@ Ctrl+m      Search buffer lines
 Leader+a        Search current word in current directory
 ```
 
-#### 1.18 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 1.18 Commenter: [vim-commentary](https://github.com/tpope/vim-commentary)
 
 ```
-Leader+cl       Comment out the current line
-Leader+cu       Uncomments the current line
+gcc             Comment/Uncomments out the current line
 ```
 
 #### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
@@ -530,11 +533,10 @@ F       Same as f, but in reverse direction
 Leader+a        Search selected text in current directory
 ```
 
-#### 3.7 Commenter: [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
+#### 3.7 Commenter: [vim-commentary](https://github.com/tpope/vim-commentary)
 
 ```
-Leader+cl       Comment out the selected text
-Leader+cu       Uncomments the selected line(s)
+gc              Comment/Uncomments out the selected lines
 ```
 
 #### 3.8 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
