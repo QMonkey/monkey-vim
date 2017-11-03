@@ -52,7 +52,7 @@ Plug 'svermeulen/vim-easyclip'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim', {'on': ['Ack', 'AckAdd', 'AckFromSearch', 'LAck', 'LAckAdd', 'AckFile', 'AckHelp', 'LAckHelp', 'AckWindow', 'LAckWindow']}
-Plug 'scrooloose/nerdcommenter'
+Plug 'tpope/vim-commentary'
 Plug 'Chiel92/vim-autoformat', {'on': 'Autoformat'}
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen', 'Start', 'Spawn']}
@@ -1028,11 +1028,6 @@ vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
 function! GetAckSelection()
 	return printf('"%s"', fnameescape(GetVisualSelection()))
 endfunction
-" }
-
-" nerdcommenter {
-let g:NERDSpaceDelims = 1
-let g:NERDRemoveExtraSpaces = 1
 " }
 
 " Session {
