@@ -1282,14 +1282,16 @@ augroup END
 " }
 
 " vim-go {
-" Disable all types of highlight in order to run faster
+" Disable most of highlight in order to run faster
 let g:go_highlight_types = 0
 let g:go_highlight_functions = 0
 let g:go_highlight_methods = 0
-let g:go_highlight_build_constraints = 0
+let g:go_highlight_build_constraints = 1
 let g:go_highlight_generate_tags = 0
 let g:go_highlight_space_tab_error = 0
 let g:go_highlight_trailing_whitespace_error = 0
+let g:go_highlight_string_spellcheck = 0
+let g:go_highlight_format_strings = 1
 let g:go_fmt_fail_silently = 1
 let g:go_disable_autoinstall = 1
 " Disable run GoFmt on save, do it by vim-autoformat
