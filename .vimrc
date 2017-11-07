@@ -1304,7 +1304,7 @@ augroup GolangKeymap
 	autocmd!
 
 	" Use Ctrl-o to jump back, see :help jumplist
-	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def-tab)
+	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def)
 	autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
 	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-implements)
 	autocmd FileType go nmap <silent><buffer><Leader>gd <Plug>(go-describe)
