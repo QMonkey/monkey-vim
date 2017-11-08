@@ -114,8 +114,19 @@ clang
 # Please install the lastest version of go
 
 # Other golang dependences
-# Execute vim command below after successfully install monkey-vim
-:GoInstallBinaries
+# Linux and Mac
+go get -u github.com/nsf/gocode
+go get -u github.com/rogpeppe/godef
+go get -u golang.org/x/tools/cmd/goimports
+go get -u github.com/golang/lint/golint
+go get -u github.com/alecthomas/gometalinter
+
+# Windows
+go get -u -ldflags -H=windowsgui github.com/nsf/gocode
+go get -u github.com/rogpeppe/godef
+go get -u golang.org/x/tools/cmd/goimports
+go get -u github.com/golang/lint/golint
+go get -u github.com/alecthomas/gometalinter
 ```
 
 #### 2.6 Python
@@ -308,20 +319,8 @@ Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
 K                   Refer current word in doc
 Leader+Leader+z     Refer doc in dash or zeal
 
-gd              Go to definition
-Leader+gr       Go to references. Only support golang, python and javascript
-
-# Golang
-Leader+gb       GoBuild, build current package
-Leader+gi       GoImplements, show the interfaces that the type under the cursor implements
-Leader+gd       GoDescribe, describe selected syntax: definition, methods, etc
-Leader+gr       GoReferrers, show all refs to entity denoted by selected identifier
-Leader+gn       GoRename, rename the identifier under the cursor to the desired new name
-Leader+gw       GoWhicherrs, show the list of possible constants, global variables, and concrete types for the error type under the cursor
-Leader+gc       GoChannelPeers, show send/receive corresponding to selected channel op
-Leader+gt       GoTest, execute go test for current go source
-Leader+gf       GoTestFunc, execute go test for current go test function
-Leader+ga       GoAlternate, alternate between implementation and test code
+gd                  Go to definition
+Leader+gr           Go to references. Only support python
 ```
 
 #### 1.9 Ctags

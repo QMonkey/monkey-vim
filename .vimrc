@@ -71,7 +71,6 @@ Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
-Plug 'fatih/vim-go', {'for': 'go', 'do': ':GoInstallBinaries'}
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': ['toml', 'markdown']}
 Plug 'chr4/nginx.vim', {'for': ['nginx', 'markdown']}
@@ -1278,46 +1277,6 @@ augroup QuickRunRemap
 	autocmd!
 
 	autocmd FileType quickrun nnoremap <buffer><silent>q :call Quit()<CR>
-augroup END
-" }
-
-" vim-go {
-" Disable most of highlight in order to run faster
-let g:go_highlight_types = 0
-let g:go_highlight_functions = 0
-let g:go_highlight_methods = 0
-let g:go_highlight_build_constraints = 1
-let g:go_highlight_generate_tags = 0
-let g:go_highlight_space_tab_error = 0
-let g:go_highlight_trailing_whitespace_error = 0
-let g:go_highlight_string_spellcheck = 0
-let g:go_highlight_format_strings = 1
-let g:go_fmt_fail_silently = 1
-let g:go_disable_autoinstall = 1
-" Disable run GoFmt on save, do it by vim-autoformat
-let g:go_fmt_autosave = 0
-let g:go_dispatch_enabled = 1
-let g:go_fmt_command = 'goimports'
-let g:go_doc_keywordprg_enabled = 0
-let g:go_def_mapping_enabled = 0
-let g:go_list_type = 'quickfix'
-let g:go_def_reuse_buffer = 1
-
-augroup GolangKeymap
-	autocmd!
-
-	" Use Ctrl-o to jump back, see :help jumplist
-	autocmd FileType go nmap <silent><buffer>gd <Plug>(go-def)
-	autocmd FileType go nmap <silent><buffer><Leader>gb <Plug>(go-build)
-	autocmd FileType go nmap <silent><buffer><Leader>gi <Plug>(go-implements)
-	autocmd FileType go nmap <silent><buffer><Leader>gd <Plug>(go-describe)
-	autocmd FileType go nmap <silent><buffer><Leader>gr <Plug>(go-referrers)
-	autocmd FileType go nmap <silent><buffer><Leader>gn <Plug>(go-rename)
-	autocmd FileType go nmap <silent><buffer><Leader>gw <Plug>(go-whicherrs)
-	autocmd FileType go nmap <silent><buffer><Leader>gc <Plug>(go-channelpeers)
-	autocmd FileType go nmap <silent><buffer><Leader>gt <Plug>(go-test)
-	autocmd FileType go nmap <silent><buffer><Leader>gf <Plug>(go-test-func)
-	autocmd FileType go nmap <silent><buffer><Leader>ga <Plug>(go-alternate-edit)
 augroup END
 " }
 

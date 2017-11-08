@@ -114,8 +114,19 @@ clang
 # 请安装最新版本的go
 
 # 其他golang依赖工具
-# monkey-vim 安装成功后，执行以下vim命令
-:GoInstallBinaries
+# Linux and Mac
+go get -u github.com/nsf/gocode
+go get -u github.com/rogpeppe/godef
+go get -u golang.org/x/tools/cmd/goimports
+go get -u github.com/golang/lint/golint
+go get -u github.com/alecthomas/gometalinter
+
+# Windows
+go get -u -ldflags -H=windowsgui github.com/nsf/gocode
+go get -u github.com/rogpeppe/godef
+go get -u golang.org/x/tools/cmd/goimports
+go get -u github.com/golang/lint/golint
+go get -u github.com/alecthomas/gometalinter
 ```
 
 #### 2.6 Python
@@ -308,20 +319,8 @@ Leader+rcw  替换光标所在的单词（整词，需要逐一确认）
 K                   查看光标所在的单词在文档中的解释。（若文件类型为c,sh,vim，则打开split查看。否则打开dash或zeal查看。）
 Leader+Leader+z     输入语言类型和关键字，在dash或zeal中查看相应的解释
 
-gd              定义跳转
-Leader+gr       跳转到引用标识符的地方。只支持golang，python和javascript
-
-# Golang
-Leader+gb       GoBuild，构建当前包
-Leader+gi       GoImplements，显示光标所在接口的实现
-Leader+gd       GoDescribe, 描述光标所在语法：定义、方法等
-Leader+gr       GoReferrers, 显示光标所在标识的所有引用
-Leader+gn       GoRename, 重命名光标所在标识
-Leader+gw       GoWhicherrs, 显示光标所在错误的所有类型
-Leader+gc       GoChannelPeers, 显示光标所在channel的读写操作
-Leader+gt       GoTest，执行当前go文件的单元测试
-Leader+gf       GoTestFunc，执行光标所在的单元测试函数
-Leader+ga       GoAlternate，在源文件和单元测试间切换
+gd                  定义跳转
+Leader+gr           跳转到引用标识符的地方。只支持python
 ```
 
 #### 1.9 Ctags
