@@ -396,6 +396,19 @@ r           Reverse sorting order
 s           Select sorting style: by name, time, or file size
 x           View file with an associated program
 X           Execute filename under cursor via system()
+
+mf          Mark a file
+mr          Mark files using a shell-style regexp
+mF          Unmark files
+mu          Unmark all marked files
+md          Apply diff to marked files (up to 3)
+mg          Apply vimgrep to marked files
+mv          Apply arbitrary vim command to marked files
+mx          Apply arbitrary shell command to marked files
+mX          Apply arbitrary shell command to marked files en bloc
+mt          The cursor directory becomes markfile target
+mc          Copy marked files to marked-file target directory
+mm          Move marked files to marked-file target directory
 ```
 
 #### 1.13 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
