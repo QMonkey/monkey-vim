@@ -390,8 +390,8 @@ i           Cycle between thin, long, wide, and tree listings
 gh          Quick hide/unhide of dot-files
 qf          Display information on file
 gn          Make top of tree the directory below the cursor
-<C-l>       Causes Netrw to refresh the directory listing
-<C-r>       Browse using a gvim server
+Ctrl+l      Causes Netrw to refresh the directory listing
+Ctrl+r      Browse using a gvim server
 r           Reverse sorting order
 s           Select sorting style: by name, time, or file size
 x           View file with an associated program
@@ -465,6 +465,7 @@ Leader+rs       Remove session
 ''              To the position before the latest jump, or where the last “m'” or “m`” command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
+Ctrl+^          Edit the alternate file. Mostly the alternate file is the previously edited file
 cod             Toggle diff
 cop             Toggle paste
 col             Toggle list
