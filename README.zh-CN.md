@@ -578,7 +578,7 @@ Ctrl+e  跳到命令行最后
 :LAck[!] {pattern}
 ```
 
-### 3. UpdateTags
+### 3. GutentagsUpdate
 
 ```vim
 " 为当前文件生成tag

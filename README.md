@@ -579,7 +579,7 @@ Ctrl+e  Jump to the end of the command line
 :LAck[!] {pattern}
 ```
 
-### 3. UpdateTags
+### 3. GutentagsUpdate
 
 ```vim
 " Generate tags for current file
