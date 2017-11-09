@@ -582,10 +582,10 @@ Ctrl+e  跳到命令行最后
 
 ```vim
 " 为当前文件生成tag
-:UpdateTags
+:GutentagsUpdate
 
 " 为整个工程生成tag
-:UpdateTags -R
+:GutentagsUpdate!
 ```
 
 ### 4. YcmGenerateConfig

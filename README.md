@@ -583,10 +583,10 @@ Ctrl+e  Jump to the end of the command line
 
 ```vim
 " Generate tags for current file
-:UpdateTags
+:GutentagsUpdate
 
 " Generate tags for current project
-:UpdateTags -R
+:GutentagsUpdate!
 ```
 
 ### 4. YcmGenerateConfig
