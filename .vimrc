@@ -44,7 +44,6 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
-Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-obsession'
@@ -400,7 +399,7 @@ set autoread
 set belloff=all
 
 " Disable mouse
-set mouse=
+set mouse=a
 
 " Only if there are at least two tab pages
 set showtabline=1
@@ -1060,23 +1059,6 @@ augroup Fzf
 	nmap <silent><C-m> :BCommits<CR>
 	nmap <silent><C-w> :Windows<CR>
 augroup END
-" }
-
-" command-t {
-let g:CommandTCancelMap = ['<ESC>', '<C-[>', '<C-c>']
-let g:CommandTAcceptSelectionMap = ['<CR>', '<C-CR>']
-let g:CommandTAcceptSelectionSplitMap = ['<C-o>']
-let g:CommandTMaxCachedDirectories = 0
-let g:CommandTSmartCase = 1
-
-" augroup CommandT
-"	autocmd!
-
-"	nmap <silent><C-p> <Plug>(CommandT)
-"	nmap <silent><C-t> <Plug>(CommandTTag)
-"	nmap <silent><C-n> <Plug>(CommandTBuffer)
-"	nmap <silent><C-m> <Plug>(CommandTLine)
-" augroup END
 " }
 
 " vim-sneak {
