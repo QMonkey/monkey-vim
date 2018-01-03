@@ -45,6 +45,8 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'wincent/command-t', {'do': 'cd ruby/command-t/ext/command-t && ruby extconf.rb && make'}
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -67,7 +69,7 @@ Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'Locate', 'SudoEdit', 'SudoWrite', 'Wall']}
+Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'SudoEdit', 'SudoWrite', 'Wall']}
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'yssl/QFEnter'
@@ -1044,6 +1046,22 @@ augroup RestoreSession
 augroup END
 " }
 
+" fzf.vim {
+let g:fzf_layout = { 'down': '~30%' }
+
+command! -bang -nargs=? -complete=dir HFiles call fzf#vim#files(<q-args>, {'source': 'fd --hidden --follow --exclude .git ""'}, <bang>0)
+
+augroup Fzf
+	autocmd!
+
+	nmap <silent><C-p> :HFiles<CR>
+	nmap <silent><C-t> :BTags<CR>
+	nmap <silent><C-n> :Buffers<CR>
+	nmap <silent><C-m> :BCommits<CR>
+	nmap <silent><C-w> :Windows<CR>
+augroup END
+" }
+
 " command-t {
 let g:CommandTCancelMap = ['<ESC>', '<C-[>', '<C-c>']
 let g:CommandTAcceptSelectionMap = ['<CR>', '<C-CR>']
@@ -1051,14 +1069,14 @@ let g:CommandTAcceptSelectionSplitMap = ['<C-o>']
 let g:CommandTMaxCachedDirectories = 0
 let g:CommandTSmartCase = 1
 
-augroup CommandT
-	autocmd!
+" augroup CommandT
+"	autocmd!
 
-	nmap <silent><C-p> <Plug>(CommandT)
-	nmap <silent><C-t> <Plug>(CommandTTag)
-	nmap <silent><C-n> <Plug>(CommandTBuffer)
-	nmap <silent><C-m> <Plug>(CommandTLine)
-augroup END
+"	nmap <silent><C-p> <Plug>(CommandT)
+"	nmap <silent><C-t> <Plug>(CommandTTag)
+"	nmap <silent><C-n> <Plug>(CommandTBuffer)
+"	nmap <silent><C-m> <Plug>(CommandTLine)
+" augroup END
 " }
 
 " vim-sneak {
