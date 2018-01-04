@@ -434,13 +434,14 @@ f           搜索当前屏幕两个字符，并跳转到指定字符
 F           与“f”功能相同但方向相反
 ```
 
-#### 1.16 快速文件搜索插件：[command-t](https://github.com/wincent/command-t)
+#### 1.16 快速文件搜索插件：[fzf.vim](https://github.com/junegunn/fzf.vim)
 
 ```
 Ctrl+p      搜索文件
 Ctrl+t      搜索tags
 Ctrl+n      搜索buffer
-Ctrl+m      搜索行
+Ctrl+m      打开当前buffer的git commit
+Ctrl+w      搜索打开的窗口
 ```
 
 #### 1.17 项目代码搜索插件：[ack.vim](https://github.com/mileszs/ack.vim)
@@ -588,10 +589,10 @@ Ctrl+e  跳到命令行最后
 
 ```vim
 " 递归搜索包含test的代码，搜索结果加载到quickfix。":Ack"命令会打开第一个搜索结果
-:Ack[!] {pattern}
+:Ack[!] [PATTERN]
 
 " 同Ack，但搜索结果加载到location list
-:LAck[!] {pattern}
+:LAck[!] [PATTERN]
 ```
 
 ### 3. GutentagsUpdate
@@ -611,11 +612,60 @@ Ctrl+e  跳到命令行最后
 :YcmGenerateConfig
 ```
 
-### 5. Locate
+### 5. Commits
 
 ```vim
-" 使用"locate"命令搜索文件，搜索结果加载到quickfix。":Locate"命令会打开第一个搜索结果
-:Locate[!] {args}
+" Git commits
+:Commits
+```
+
+### 6. Tags
+
+```vim
+" 搜索整个工程的tags
+:Tags [QUERY]
+```
+
+### 7. Snippets
+
+```vim
+" Snippets
+:Snippets
+```
+
+### 8. GFiles
+
+```vim
+" Git files (git ls-files)
+:GFiles [OPTS]
+```
+
+### 9. GFiles?
+
+```vim
+" Git files (git status)
+:GFiles?
+```
+
+### 10. Ag
+
+```vim
+" ag搜索结果
+:Ag [PATTERN]
+```
+
+### 11. Marks
+
+```vim
+" 搜索marks
+:Marks
+```
+
+### 12. Locate
+
+```vim
+" locate命令输出
+:Locate [PATTERN]
 ```
 
 ## 在vim中使用git

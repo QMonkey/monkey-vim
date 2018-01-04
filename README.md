@@ -32,6 +32,8 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 #### 2.1 Dependent tools
 
+- [fd](https://github.com/sharkdp/fd)
+
 ```bash
 # Ubuntu
 sudo apt-get install curl
@@ -434,13 +436,14 @@ f       Search two character and jump to specific word
 F       Same as f, but in reverse direction
 ```
 
-#### 1.16 Fast file navigation: [command-t](https://github.com/wincent/command-t)
+#### 1.16 Fast file navigation: [fzf.vim](https://github.com/junegunn/fzf.vim)
 
 ```
 Ctrl+p      Search files
 Ctrl+t      Search tags
 Ctrl+n      Search buffer
-Ctrl+m      Search buffer lines
+Ctrl+m      Git commits for the current buffer
+Ctrl+w      Search windows
 ```
 
 #### 1.17 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
@@ -589,10 +592,10 @@ Ctrl+e  Jump to the end of the command line
 ```vim
 " Search recursively in current directory for the pattern, and then open the quickfix for you.
 " Jump to the first result unless ! is given.
-:Ack[!] {pattern}
+:Ack[!] [PATTERN]
 
 " Same as :Ack, but load the result into location list
-:LAck[!] {pattern}
+:LAck[!] [PATTERN]
 ```
 
 ### 3. GutentagsUpdate
@@ -612,11 +615,60 @@ Ctrl+e  Jump to the end of the command line
 :YcmGenerateConfig
 ```
 
-### 5. Locate
+### 5. Commits
 
 ```vim
-" Run 'locate' and load the results into the quickfix. Jump to the first result unless ! is given.
-:Locate[!] {args}
+" Git commits
+:Commits
+```
+
+### 6. Tags
+
+```vim
+" Tags in the project
+:Tags [QUERY]
+```
+
+### 7. Snippets
+
+```vim
+" Snippets
+:Snippets
+```
+
+### 8. GFiles
+
+```vim
+" Git files (git ls-files)
+:GFiles [OPTS]
+```
+
+### 9. GFiles?
+
+```vim
+" Git files (git status)
+:GFiles?
+```
+
+### 10. Ag
+
+```vim
+" ag search result
+:Ag [PATTERN]
+```
+
+### 11. Marks
+
+```vim
+" Search marks
+:Marks
+```
+
+### 12. Locate
+
+```vim
+" locate command output
+:Locate [PATTERN]
 ```
 
 ## Use git in vim
