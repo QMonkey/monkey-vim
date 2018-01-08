@@ -44,7 +44,7 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf', {'dir': '~/.fzf', 'do': './install --all'}
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
@@ -438,8 +438,8 @@ let g:lightline = {
 			\ 'component_type': {
 			\   'ale': 'error',
 			\ },
-			\ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
-			\ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
+			\ 'separator': {'left': "\ue0b0", 'right': "\ue0b2"},
+			\ 'subseparator': {'left': "\ue0b1", 'right': "\ue0b3"},
 			\ 'tab': {
 			\   'active': [ 'filename', 'modified' ],
 			\   'inactive': [ 'filename', 'modified' ],
@@ -448,8 +448,8 @@ let g:lightline = {
 			\   'left': [ [ 'tabs' ] ],
 			\   'right': []
 			\ },
-			\ 'tabline_separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
-			\ 'tabline_subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
+			\ 'tabline_separator': {'left': "\ue0b0", 'right': "\ue0b2"},
+			\ 'tabline_subseparator': {'left': "\ue0b1", 'right': "\ue0b3"},
 			\ }
 
 function! LightLineModified()
@@ -988,14 +988,20 @@ augroup END
 " }
 
 " fzf.vim {
-let g:fzf_layout = { 'down': '~30%' }
+let g:fzf_layout = {'down': '~30%'}
 
-command! -bang -nargs=? -complete=dir HFiles call fzf#vim#files(<q-args>, {'source': 'fd --hidden --follow --exclude .git ""'}, <bang>0)
+if executable('fd')
+	command! -bang -nargs=? -complete=dir HFiles call fzf#vim#files(<q-args>, {'source': 'fd --hidden --follow --exclude .git ""'}, <bang>0)
+endif
 
 augroup Fzf
 	autocmd!
 
-	nmap <silent><C-p> :HFiles<CR>
+	if executable('fd')
+		nmap <silent><C-p> :HFiles<CR>
+	else
+		nmap <silent><C-p> :Files<CR>
+	endif
 	nmap <silent><C-t> :BTags<CR>
 	nmap <silent><C-n> :Buffers<CR>
 	nmap <silent><C-m> :BCommits<CR>
