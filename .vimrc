@@ -64,7 +64,7 @@ Plug 'w0rp/ale'
 Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'} | Plug 'idanarye/vim-merginal'
+Plug 'tpope/vim-fugitive' | Plug 'idanarye/vim-merginal' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
@@ -747,6 +747,7 @@ nnoremap <Right> <C-w><
 " }
 
 " F2 ~ F10 {
+nnoremap <silent><F2> :MerginalToggle<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
