@@ -740,11 +740,6 @@ nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
 nnoremap <silent><Leader>s :execute 'split' PathPrompt('New split name: ', '', 'file')<CR>
 nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '', 'file')<CR>
-
-nnoremap <Up> <C-w>+
-nnoremap <Down> <C-w>-
-nnoremap <Left> <C-w>>
-nnoremap <Right> <C-w><
 " }
 
 " F2 ~ F10 {
