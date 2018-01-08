@@ -64,14 +64,15 @@ Plug 'w0rp/ale'
 Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
+Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'} | Plug 'idanarye/vim-merginal'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'SudoEdit', 'SudoWrite', 'Wall']}
+Plug 'brooth/far.vim'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
-Plug 'yssl/QFEnter'
+Plug 'romainl/vim-qf'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': ['toml', 'markdown']}
 Plug 'chr4/nginx.vim', {'for': ['nginx', 'markdown']}
@@ -853,8 +854,8 @@ function! BufferCount()
 	return len(tabpagebuflist())
 endfunction
 
-nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
-nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
+" nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
+" nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 
 if has('win32') || has('win64')
 	function QuickfixConv()
@@ -873,12 +874,35 @@ if has('win32') || has('win64')
 endif
 " }
 
+" vim-qf {
+let g:qf_mapping_ack_style = 1
+let g:qf_window_bottom = 1
+let g:qf_loclist_window_bottom = 1
+let g:qf_auto_resize = 1
+let g:qf_max_height = 10
+let g:qf_auto_open_quickfix = 0
+let g:qf_auto_open_loclist = 0
+let g:qf_auto_quit = 1
+
+nmap <Leader>q <Plug>qf_qf_toggle
+nmap <Leader>l <Plug>qf_loc_toggle
+" }
+
 " QFEnter {
 let g:qfenter_keymap = {}
 let g:qfenter_keymap.open = ['<CR>']
 let g:qfenter_keymap.vopen = ['i']
 let g:qfenter_keymap.hopen = ['a']
 let g:qfenter_keymap.topen = ['t']
+" }
+
+" far.vim {
+let g:far#auto_write_replaced_buffers = 1
+let g:far#repl_devider = "  \xe2\x9e\x9d  "
+let g:far#multiline_sign = "\xe2\xac\x8e"
+let g:far#cut_text_sign = "\xe2\x80\xa6"
+let g:far#collapse_sign = '-'
+let g:far#expand_sign = '+'
 " }
 
 function! Strip(input_string)
@@ -921,95 +945,6 @@ function! Clear()
 	echon "\r\r"
 	echon ''
 endfunction
-
-function! GetString(prompt_text)
-	call Clear()
-	echon a:prompt_text
-
-	let l:str = ''
-	try
-		while 1
-			let l:n = getchar()
-			if l:n == 27
-				throw 'exit'
-			endif
-
-			if l:n == 13
-				break
-			endif
-
-			let l:c = ''
-			if l:n is# "\<BS>" || l:n == 8
-				let l:str = strcharpart(l:str, 0, strchars(l:str)-1)
-				call Clear()
-				echon a:prompt_text . l:str
-			else
-				let l:c = nr2char(l:n)
-				let l:str .= l:c
-				echon l:c
-			endif
-		endwhile
-	catch /^Vim:Interrupt$/
-		throw 'exit'
-	endtry
-
-	return l:str
-endfunction
-
-" Replace {
-function! Replace(mode, confirm, wholeword)
-	let l:word = ''
-	let l:wholeword = a:wholeword
-	if a:mode ==# 'n' || a:mode ==# 'normal'
-		let l:word .= GetCurrentWord()
-	elseif a:mode ==# 'v' || a:mode ==# 'visual'
-		let l:word .= GetVisualSelection()
-		let l:wholeword = 0
-	endif
-
-	let l:search = substitute(escape(l:word, '/\.*$^~['), '\n', '\\n', 'g')
-	if l:wholeword
-		let l:search = '\<' . l:search . '\>'
-	endif
-
-	let l:replace = ''
-	try
-		let l:prompt_text = 'Replace "' . l:word . '" with: '
-		let l:replace = GetString(l:prompt_text)
-	catch 'exit'
-		call Clear()
-		echon 'Replace: Canceled'
-		return
-	endtry
-
-	let l:replace = escape(l:replace, '/&~')
-
-	let l:flag = ''
-	if a:confirm
-		let l:flag .= 'ec'
-	else
-		let l:flag .= 'e'
-	endif
-
-	execute ',$s/' . l:search . '/' . l:replace . '/' . l:flag . "| 1,'' -&& | update"
-endfunction
-
-" Replace in normal mode
-" Default
-nnoremap <Leader>R :call Replace('n', 0, 0)<CR>
-" Wholeword
-nnoremap <Leader>rw :call Replace('n', 0, 1)<CR>
-" Confirm
-nnoremap <Leader>rc :call Replace('n', 1, 0)<CR>
-" Wholeword, confirm
-nnoremap <Leader>rcw :call Replace('n', 1, 1)<CR>
-
-" Replace in visual mode
-" Default
-vnoremap <Leader>R :call Replace('v', 0, 0)<CR>
-" Confirm
-vnoremap <Leader>rc :call Replace('v', 1, 0)<CR>
-" }
 
 " ack.vim {
 let g:ack_apply_qmappings = 0
