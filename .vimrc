@@ -70,6 +70,7 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'SudoEdit', 'SudoWrite', 'Wall']}
 Plug 'brooth/far.vim'
+Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
@@ -904,6 +905,11 @@ let g:far#multiline_sign = "\xe2\xac\x8e"
 let g:far#cut_text_sign = "\xe2\x80\xa6"
 let g:far#collapse_sign = '-'
 let g:far#expand_sign = '+'
+" }
+
+" winresizer {
+let g:winresizer_gui_enable = 0
+let g:winresizer_start_key = '<F3>'
 " }
 
 function! Strip(input_string)
