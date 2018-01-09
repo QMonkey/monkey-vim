@@ -51,6 +51,7 @@ Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-easyclip'
+Plug 'chaoren/vim-wordmotion'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim', {'on': ['Ack', 'AckAdd', 'AckFromSearch', 'LAck', 'LAckAdd', 'AckFile', 'AckHelp', 'LAckHelp', 'AckWindow', 'LAckWindow']}
@@ -447,7 +448,7 @@ let g:lightline = {
 			\   'inactive': [ 'filename', 'modified' ],
 			\ },
 			\ 'tabline': {
-			\   'left': [ [ 'tabs' ] ],
+			\   'left': [[ 'tabs' ]],
 			\   'right': []
 			\ },
 			\ 'tabline_separator': {'left': "\ue0b0", 'right': "\ue0b2"},
