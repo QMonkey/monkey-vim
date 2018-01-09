@@ -44,6 +44,7 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
+Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
 Plug 'junegunn/fzf', {'dir': '~/.fzf', 'do': './install --all'}
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-obsession'
@@ -413,11 +414,11 @@ set laststatus=2
 let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
-			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ] ],
-			\   'right': [ [ 'ale', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
+			\   'left': [['mode', 'paste'], ['gitgutter', 'fugitive', 'filename'], ['ctrlpmark']],
+			\   'right': [['ale', 'lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
 			\ },
 			\ 'inactive': {
-			\   'left': [ [ 'mode', 'filename' ] ],
+			\   'left': [['mode', 'filename']],
 			\   'right': []
 			\ },
 			\ 'component_function': {
@@ -430,6 +431,7 @@ let g:lightline = {
 			\   'percent': 'LightLinePercent',
 			\   'lineinfo': 'LightLineLineInfo',
 			\   'mode': 'LightLineMode',
+			\   'ctrlpmark': 'CtrlPMark',
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
@@ -466,7 +468,8 @@ function! LightLineFilename()
 	endif
 
 	let l:fname = expand('%:t')
-	return ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+	return l:fname ==# 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
+				\ ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
 				\ ('' !=# l:fname ? l:fname : '[No Name]') .
 				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
@@ -517,7 +520,7 @@ function! IsGitFile()
 	endif
 
 	let l:fname = expand('%:t')
-	let l:plugins = ['\[Plugins\]']
+	let l:plugins = ['\[Plugins\]', 'ControlP']
 
 	if l:fname ==# ''
 		return 0
@@ -600,7 +603,35 @@ function! LightLineMode()
 					\ l:window_type == 1 ? 'Location' : ''
 	endif
 
-	return winwidth(0) > 60 ? lightline#mode() : ''
+	return  l:fname ==# 'ControlP' ? 'CtrlP' :
+				\ winwidth(0) > 60 ? lightline#mode() : ''
+endfunction
+
+function! CtrlPMark()
+	if expand('%:t') =~# 'ControlP' && has_key(g:lightline, 'ctrlp_item')
+		call lightline#link('iR'[g:lightline.ctrlp_regex])
+		return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
+					\ , g:lightline.ctrlp_next], 0)
+	else
+		return ''
+	endif
+endfunction
+
+let g:ctrlp_status_func = {
+			\ 'main': 'CtrlPStatusFunc_1',
+			\ 'prog': 'CtrlPStatusFunc_2',
+			\ }
+
+function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
+	let g:lightline.ctrlp_regex = a:regex
+	let g:lightline.ctrlp_prev = a:prev
+	let g:lightline.ctrlp_item = a:item
+	let g:lightline.ctrlp_next = a:next
+	return lightline#statusline(0)
+endfunction
+
+function! CtrlPStatusFunc_2(str)
+	return lightline#statusline(0)
 endfunction
 
 augroup AfterALELint
@@ -744,6 +775,7 @@ nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '',
 
 " F2 ~ F10 {
 nnoremap <silent><F2> :MerginalToggle<CR>
+nnoremap <silent><F4> :CtrlPClearAllCaches<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
@@ -985,22 +1017,39 @@ augroup END
 " fzf.vim {
 let g:fzf_layout = {'down': '~30%'}
 
-if executable('fd')
-	command! -bang -nargs=? -complete=dir HFiles call fzf#vim#files(<q-args>, {'source': 'fd --hidden --follow --exclude .git ""'}, <bang>0)
-endif
-
 augroup Fzf
 	autocmd!
 
-	if executable('fd')
-		nmap <silent><C-p> :HFiles<CR>
-	else
-		nmap <silent><C-p> :Files<CR>
-	endif
-	nmap <silent><C-t> :BTags<CR>
-	nmap <silent><C-n> :Buffers<CR>
 	nmap <silent><C-m> :BCommits<CR>
 	nmap <silent><C-w> :Windows<CR>
+augroup END
+" }
+
+" ctrlp.vim {
+let g:ctrlp_map = '<c-p>'
+let g:ctrlp_follow_symlinks = 1
+let g:ctrlp_use_caching = 1
+let g:ctrlp_clear_cache_on_exit = 0
+let g:ctrlp_max_files = 0
+let g:ctrlp_show_hidden = 1
+let g:ctrlp_custom_ignore = {
+			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
+			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp|swn)$',
+			\ }
+
+let g:ctrlp_match_func = {'match': 'pymatcher#PyMatch'}
+let g:ctrlp_match_current_file = 1
+let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:15,results:15'
+let g:ctrlp_prompt_mappings = {
+			\ 'PrtClearCache()': ['<F5>'],
+			\ 'PrtDeleteEnt()': ['<c-d>'],
+			\ }
+
+augroup CtrlP
+	autocmd!
+
+	nmap <silent><C-t> :CtrlPBufTag<CR>
+	nmap <silent><C-n> :CtrlPBuffer<CR>
 augroup END
 " }
 
