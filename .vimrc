@@ -444,11 +444,11 @@ let g:lightline = {
 			\ 'separator': {'left': "\ue0b0", 'right': "\ue0b2"},
 			\ 'subseparator': {'left': "\ue0b1", 'right': "\ue0b3"},
 			\ 'tab': {
-			\   'active': [ 'filename', 'modified' ],
-			\   'inactive': [ 'filename', 'modified' ],
+			\   'active': ['filename', 'modified'],
+			\   'inactive': ['filename', 'modified'],
 			\ },
 			\ 'tabline': {
-			\   'left': [[ 'tabs' ]],
+			\   'left': [['tabs']],
 			\   'right': []
 			\ },
 			\ 'tabline_separator': {'left': "\ue0b0", 'right': "\ue0b2"},
