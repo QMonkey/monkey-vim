@@ -51,7 +51,6 @@ Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-easyclip'
-Plug 'chaoren/vim-wordmotion'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
 Plug 'mileszs/ack.vim', {'on': ['Ack', 'AckAdd', 'AckFromSearch', 'LAck', 'LAckAdd', 'AckFile', 'AckHelp', 'LAckHelp', 'AckWindow', 'LAckWindow']}
@@ -77,6 +76,7 @@ Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
+Plug 'euclio/vim-markdown-composer', {'do': 'cargo build --release --no-default-features --features json-rpc'}
 Plug 'cespare/vim-toml', {'for': ['toml', 'markdown']}
 Plug 'chr4/nginx.vim', {'for': ['nginx', 'markdown']}
 
@@ -757,7 +757,7 @@ nnoremap <silent><F4> :CtrlPClearAllCaches<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
 nnoremap <silent><F9> :QuickRun<CR>
-nnoremap <silent><F10> :LivedownPreview<CR>
+" nnoremap <silent><F10> :LivedownPreview<CR>
 " }
 
 " Toggle {
@@ -1103,6 +1103,10 @@ let g:gutentags_ctags_extra_args = [
 " Gitv {
 " Disable ctrl key map due to the conflict
 let g:Gitv_DoNotMapCtrlKey = 1
+" }
+
+" vim-markdown-compser {
+let g:markdown_composer_autostart = 0
 " }
 
 " vim-signature {
