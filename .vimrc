@@ -475,41 +475,18 @@ function! LightLineFilename()
 				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
 
-function! GetBufferListOutputAsOneString()
-	let l:buffer_list = ''
-	redir =>> l:buffer_list
-	ls
-	redir END
-	return l:buffer_list
-endfunction
-
-function! IsLocationListBuffer()
-	if &filetype !=# 'qf'
-		return 0
-	endif
-
-	silent let l:buffer_list = GetBufferListOutputAsOneString()
-
-	let l:quickfix_match = matchlist(l:buffer_list,
-				\ '\n\s*\(\d\+\)[^\n]*Quickfix')
-	if empty(l:quickfix_match)
-		return 1
-	endif
-	let l:quickfix_bufnr = l:quickfix_match[1]
-	return l:quickfix_bufnr == bufnr('%') ? 0 : 1
-endfunction
-
 function! GetWindowType()
 	if &previewwindow
 		return 3
 	endif
 
 	if &filetype is# 'qf'
-		if !IsLocationListBuffer()
+		let l:cur_winnr = winnr()
+		if qf#IsQfWindow(l:cur_winnr)
 			return 2
+		elseif qf#IsLocWindow(l:cur_winnr)
+			return 1
 		endif
-
-		return 1
 	endif
 
 	return 0
@@ -884,9 +861,6 @@ function! BufferCount()
 	return len(tabpagebuflist())
 endfunction
 
-" nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
-" nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
-
 if has('win32') || has('win64')
 	function QuickfixConv()
 		let l:qflist = getqflist()
@@ -916,14 +890,6 @@ let g:qf_auto_quit = 1
 
 nmap <Leader>q <Plug>qf_qf_toggle
 nmap <Leader>l <Plug>qf_loc_toggle
-" }
-
-" QFEnter {
-let g:qfenter_keymap = {}
-let g:qfenter_keymap.open = ['<CR>']
-let g:qfenter_keymap.vopen = ['i']
-let g:qfenter_keymap.hopen = ['a']
-let g:qfenter_keymap.topen = ['t']
 " }
 
 " far.vim {
