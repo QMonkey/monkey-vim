@@ -608,9 +608,11 @@ function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
 	return lightline#statusline(0)
 endfunction
 
-function! CtrlPStatusFunc_2(str)
-	return lightline#statusline(0)
-endfunction
+function! CtrlPStatusFunc_2(...)
+	let l:len = '%#Function# ' . a:1 . ' %*'
+	let l:dir = ' %=%<%#LineNr# ' . getcwd() . ' %*'
+	retu l:len . l:dir
+endf
 
 augroup AfterALELint
 	autocmd!
