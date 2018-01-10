@@ -402,7 +402,7 @@ set autoread
 set belloff=all
 
 " Disable mouse
-set mouse=a
+set mouse=
 
 " Only if there are at least two tab pages
 set showtabline=1
