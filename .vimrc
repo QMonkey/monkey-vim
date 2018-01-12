@@ -45,8 +45,6 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
-Plug 'junegunn/fzf', {'dir': '~/.fzf', 'do': './install --all'}
-Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -979,17 +977,6 @@ augroup RestoreSession
 	autocmd!
 
 	autocmd VimEnter * nested if argc() == 0 && filereadable(expand(GetRootPath() . '/.session.vim')) | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
-augroup END
-" }
-
-" fzf.vim {
-let g:fzf_layout = {'down': '~30%'}
-
-augroup Fzf
-	autocmd!
-
-	nmap <silent><C-m> :BCommits<CR>
-	nmap <silent><C-w> :Windows<CR>
 augroup END
 " }
 
