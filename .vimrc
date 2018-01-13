@@ -60,7 +60,7 @@ Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'w0rp/ale'
-Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer'}
+Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --go-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'idanarye/vim-merginal' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
