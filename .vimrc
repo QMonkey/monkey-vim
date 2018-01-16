@@ -1118,7 +1118,7 @@ let g:ycm_collect_identifiers_from_comments_and_strings = 1
 let g:ycm_collect_identifiers_from_tags_files = 1
 let g:ycm_seed_identifiers_with_syntax = 1
 let g:ycm_autoclose_preview_window_after_insertion = 1
-let g:ycm_goto_buffer_command="new-or-existing-tab"
+let g:ycm_goto_buffer_command = 'new-or-existing-tab'
 let g:ycm_filepath_completion_use_working_dir = 1
 
 let g:ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'python']
