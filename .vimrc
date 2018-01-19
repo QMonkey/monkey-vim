@@ -67,7 +67,7 @@ Plug 'tpope/vim-fugitive' | Plug 'idanarye/vim-merginal' | Plug 'gregsexton/gitv
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'SudoEdit', 'SudoWrite', 'Wall']}
+Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'Locate', 'SudoEdit', 'SudoWrite', 'Wall']}
 Plug 'brooth/far.vim'
 Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
