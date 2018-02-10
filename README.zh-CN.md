@@ -486,8 +486,6 @@ cod             切换diff模式
 cop             切换paste模式
 col             切换list模式
 coa             切换自动格式化代码
-[+<Space>       在光标之上添加n个空行
-]+<Space>       在光标之下添加n个空行
 Leader+cd       切换到当前文件所在项目根路径
 Leader+/        取消搜索高亮
 Leader+space    去除行尾空白字符

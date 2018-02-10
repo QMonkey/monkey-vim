@@ -247,7 +247,7 @@ function! AutoInsertFileHead()
 	endif
 
 	call cursor(line('$'), 0)
-	call BlankDown(2)
+	put = repeat(nr2char(10), 2)
 	call cursor(line('$'), 0)
 endfunc
 " }
@@ -670,25 +670,6 @@ nnoremap U <C-r>
 
 " Save file with root permission
 cnoreabbrev W SudoWrite
-
-" Quickly add empty lines
-nmap <silent>[<Space> <Plug>BlankUp
-nmap <silent>]<Space> <Plug>BlankDown
-
-nnoremap <silent> <Plug>BlankUp   :<C-U>call BlankUp(v:count1)<CR>
-nnoremap <silent> <Plug>BlankDown :<C-U>call BlankDown(v:count1)<CR>
-
-function! BlankUp(count)
-	put! = repeat(nr2char(10), a:count)
-	']+1
-	silent! call repeat#set("\<Plug>BlankUp", a:count)
-endfunction
-
-function! BlankDown(count)
-	put = repeat(nr2char(10), a:count)
-	'[-1
-	silent! call repeat#set("\<Plug>BlankDown", a:count)
-endfunction
 
 " Better comand-line editing
 cnoremap <C-j> <Down>
