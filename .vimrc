@@ -59,7 +59,7 @@ Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen',
 Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'w0rp/ale'
+Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
 Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --go-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
@@ -413,7 +413,7 @@ let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
 			\   'left': [['mode', 'paste'], ['gitgutter', 'fugitive', 'filename'], ['ctrlpmark']],
-			\   'right': [['ale', 'lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
+			\   'right': [['linter_checking', 'linter_errors', 'linter_warnings', 'linter_ok', 'lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
 			\ },
 			\ 'inactive': {
 			\   'left': [['mode', 'filename']],
@@ -433,10 +433,16 @@ let g:lightline = {
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
-			\   'ale': 'ALEGetStatusLine',
+			\   'linter_checking': 'lightline#ale#checking',
+			\   'linter_warnings': 'lightline#ale#warnings',
+			\   'linter_errors': 'lightline#ale#errors',
+			\   'linter_ok': 'lightline#ale#ok',
 			\ },
 			\ 'component_type': {
-			\   'ale': 'error',
+			\   'linter_checking': 'left',
+			\   'linter_warnings': 'warning',
+			\   'linter_errors': 'error',
+			\   'linter_ok': 'left',
 			\ },
 			\ 'separator': {'left': "\ue0b0", 'right': "\ue0b2"},
 			\ 'subseparator': {'left': "\ue0b1", 'right': "\ue0b3"},
@@ -1145,6 +1151,13 @@ let g:ale_set_loclist = 1
 let g:ale_set_quickfix = 0
 let g:ale_open_list = 0
 let g:ale_keep_list_window_open = 0
+" }
+
+" lightline-ale {
+let g:lightline#ale#indicator_checking = 'Linting...'
+let g:lightline#ale#indicator_warnings = 'Warning: '
+let g:lightline#ale#indicator_errors = 'Errors: '
+let g:lightline#ale#indicator_ok = 'OK'
 " }
 
 " vim-autoformat {
