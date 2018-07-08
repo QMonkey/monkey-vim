@@ -45,13 +45,13 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
+Plug 'cocopon/vaffle.vim'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-easyclip'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
-Plug 'mileszs/ack.vim', {'on': ['Ack', 'AckAdd', 'AckFromSearch', 'LAck', 'LAckAdd', 'AckFile', 'AckHelp', 'LAckHelp', 'AckWindow', 'LAckWindow']}
 Plug 'tpope/vim-commentary'
 Plug 'Chiel92/vim-autoformat', {'on': 'Autoformat'}
 Plug 'ntpeters/vim-better-whitespace'
@@ -68,7 +68,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'Locate', 'SudoEdit', 'SudoWrite', 'Wall']}
-Plug 'brooth/far.vim'
+Plug 'eugen0329/vim-esearch'
 Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
@@ -776,9 +776,11 @@ endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 " }
 
-" netrw {
-let g:netrw_liststyle = 3
-let g:netrw_banner = 0
+" vaffle {
+let g:loaded_netrw = 1
+let g:loaded_netrwPlugin = 1
+let g:vaffle_show_hidden_files = 1
+let g:vaffle_use_default_mappings = 0
 
 nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
 nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
@@ -794,7 +796,21 @@ endfunction
 augroup ProjectDrawer
 	autocmd!
 
-	autocmd FileType netrw nnoremap <silent><buffer>~ :execute 'edit' GetRootPath()<CR>
+	autocmd FileType vaffle nmap <silent><buffer>~ <Plug>(vaffle-open-home)
+	autocmd FileType vaffle nmap <silent><buffer>- <Plug>(vaffle-open-parent)
+	autocmd FileType vaffle nmap <silent><buffer>* <Plug>(vaffle-toggle-all)
+	autocmd FileType vaffle map <silent><buffer><Space> <Plug>(vaffle-toggle-current)
+	autocmd FileType vaffle map <silent><buffer><CR> <Plug>(vaffle-open-selected)
+	autocmd FileType vaffle nmap <silent><buffer>t <Plug>(vaffle-open-selected-tab)
+	autocmd FileType vaffle nmap <silent><buffer>q <Plug>(vaffle-quit)
+	autocmd FileType vaffle nmap <silent><buffer>R <Plug>(vaffle-refresh)
+	autocmd FileType vaffle nmap <silent><buffer>I <Plug>(vaffle-toggle-hidden)
+	autocmd FileType vaffle nmap <silent><buffer>o <Plug>(vaffle-mkdir)
+	autocmd FileType vaffle nmap <silent><buffer>i <Plug>(vaffle-new-file)
+	autocmd FileType vaffle map <silent><buffer>d <Plug>(vaffle-delete-selected)
+	autocmd FileType vaffle map <silent><buffer>m <Plug>(vaffle-move-selected)
+	autocmd FileType vaffle map <silent><buffer>r <Plug>(vaffle-rename-selected)
+	autocmd FileType vaffle map <silent><buffer>x <Plug>(vaffle-fill-cmdline)
 augroup END
 " }
 
@@ -934,7 +950,15 @@ function! Clear()
 	echon ''
 endfunction
 
-" ack.vim {
+" vim-esearch {
+let g:esearch = {
+			\ 'adapter':    'ag',
+			\ 'backend':    'vim8',
+			\ 'out':        'qflist',
+			\ 'batch_size': 1000,
+			\ 'use':        ['visual', 'hlsearch', 'last'],
+			\}
+
 let g:ack_apply_qmappings = 0
 let g:ack_apply_lmappings = 0
 let g:ackpreview = 0
