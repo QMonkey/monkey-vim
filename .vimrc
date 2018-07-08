@@ -45,6 +45,7 @@ Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
+Plug 'dyng/ctrlsf.vim' | Plug 'gabesoft/vim-ags'
 Plug 'cocopon/vaffle.vim'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
@@ -68,7 +69,6 @@ Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'Locate', 'SudoEdit', 'SudoWrite', 'Wall']}
-Plug 'eugen0329/vim-esearch'
 Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
@@ -950,15 +950,7 @@ function! Clear()
 	echon ''
 endfunction
 
-" vim-esearch {
-let g:esearch = {
-			\ 'adapter':    'ag',
-			\ 'backend':    'vim8',
-			\ 'out':        'qflist',
-			\ 'batch_size': 1000,
-			\ 'use':        ['visual', 'hlsearch', 'last'],
-			\}
-
+" ctrlsf.vim {
 let g:ack_apply_qmappings = 0
 let g:ack_apply_lmappings = 0
 let g:ackpreview = 0
