@@ -908,7 +908,7 @@ let g:far#expand_sign = '+'
 
 " winresizer {
 let g:winresizer_gui_enable = 0
-let g:winresizer_start_key = '<F3>'
+let g:winresizer_start_key = '<F5>'
 " }
 
 function! Strip(input_string)
@@ -952,17 +952,6 @@ function! Clear()
 	echon ''
 endfunction
 
-" ctrlsf.vim {
-let g:ctrlsf_confirm_save = 0
-let g:ctrlsf_extra_backend_args = {
-			\ 'ag': '--hidden'
-			\ }
-let g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
-
-nmap <silent><Leader>a <Plug>CtrlSFCwordExec
-vmap <silent><Leader>a <Plug>CtrlSFVwordExec
-" }
-
 " Session {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds
 
@@ -994,7 +983,6 @@ let g:ctrlp_match_func = {'match': 'pymatcher#PyMatch'}
 let g:ctrlp_match_current_file = 1
 let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:15,results:15'
 let g:ctrlp_prompt_mappings = {
-			\ 'PrtClearCache()': ['<F5>'],
 			\ 'PrtDeleteEnt()': ['<c-d>'],
 			\ }
 
@@ -1004,6 +992,17 @@ augroup CtrlP
 	nmap <silent><C-t> :CtrlPBufTag<CR>
 	nmap <silent><C-n> :CtrlPBuffer<CR>
 augroup END
+" }
+
+" ctrlsf.vim {
+let g:ctrlsf_confirm_save = 0
+let g:ctrlsf_extra_backend_args = {
+			\ 'ag': '--hidden'
+			\ }
+let g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
+
+nmap <silent><Leader>a <Plug>CtrlSFCwordExec
+vmap <silent><Leader>a <Plug>CtrlSFVwordExec
 " }
 
 " vim-sneak {
