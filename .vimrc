@@ -737,8 +737,10 @@ nnoremap <silent><Leader>s :execute 'split' PathPrompt('New split name: ', '', '
 nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '', 'file')<CR>
 " }
 
-" F2 ~ F10 {
-nnoremap <silent><F2> :MerginalToggle<CR>
+" F1 ~ F10 {
+nmap <silent><F1> <Plug>CtrlSFPrompt
+nnoremap <silent><F2> :CtrlSFToggle<CR>
+nnoremap <silent><F3> :MerginalToggle<CR>
 nnoremap <silent><F4> :CtrlPClearAllCaches<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
@@ -951,22 +953,14 @@ function! Clear()
 endfunction
 
 " ctrlsf.vim {
-let g:ack_apply_qmappings = 0
-let g:ack_apply_lmappings = 0
-let g:ackpreview = 0
+let g:ctrlsf_confirm_save = 0
+let g:ctrlsf_extra_backend_args = {
+			\ 'ag': '--hidden'
+			\ }
+let g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
 
-if executable('ag')
-	let g:ackprg = 'ag --hidden --nogroup --nocolor --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
-elseif executable('ack') || executable('ack-grep')
-	let g:ack_default_options = ' -s -H --nocolor --nogroup --nopager --column --smart-case --ignore-dir={.git,.hg,.svn,.bzr}'
-endif
-
-nnoremap <silent><Leader>a :execute 'Ack!' GetCurrentWord()<CR>
-vnoremap <silent><Leader>a <ESC>:execute 'Ack!' GetAckSelection()<CR>
-
-function! GetAckSelection()
-	return printf('"%s"', fnameescape(GetVisualSelection()))
-endfunction
+nmap <silent><Leader>a <Plug>CtrlSFCwordExec
+vmap <silent><Leader>a <Plug>CtrlSFVwordExec
 " }
 
 " Session {
