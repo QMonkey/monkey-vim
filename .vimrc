@@ -64,7 +64,7 @@ Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
 Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --go-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-Plug 'tpope/vim-fugitive' | Plug 'idanarye/vim-merginal' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
+Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
@@ -740,7 +740,6 @@ nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '',
 " F1 ~ F10 {
 nmap <silent><F1> <Plug>CtrlSFPrompt
 nnoremap <silent><F2> :CtrlSFToggle<CR>
-nnoremap <silent><F3> :MerginalToggle<CR>
 nnoremap <silent><F4> :CtrlPClearAllCaches<CR>
 nnoremap <silent><F7> :Dispatch!<CR>
 nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
