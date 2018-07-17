@@ -68,7 +68,7 @@ Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-eunuch', {'on': ['Remove', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Find', 'Locate', 'SudoEdit', 'SudoWrite', 'Wall']}
+Plug 'tpope/vim-eunuch', {'on': ['Delete', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Cfind', 'Lfind', 'Clocate', 'Llocate', 'SudoEdit', 'SudoWrite', 'Wall']}
 Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
@@ -802,7 +802,9 @@ augroup ProjectDrawer
 	autocmd FileType vaffle nmap <silent><buffer>* <Plug>(vaffle-toggle-all)
 	autocmd FileType vaffle map <silent><buffer><Space> <Plug>(vaffle-toggle-current)
 	autocmd FileType vaffle map <silent><buffer><CR> <Plug>(vaffle-open-selected)
-	autocmd FileType vaffle nmap <silent><buffer>t <Plug>(vaffle-open-selected-tab)
+	autocmd FileType vaffle nmap <silent><buffer>t <Plug>(vaffle-open-current-tab)
+	autocmd FileType vaffle nmap <silent><buffer>s <Plug>(vaffle-open-selected-split)
+	autocmd FileType vaffle nmap <silent><buffer>v <Plug>(vaffle-open-selected-vsplit)
 	autocmd FileType vaffle nmap <silent><buffer>q <Plug>(vaffle-quit)
 	autocmd FileType vaffle nmap <silent><buffer>R <Plug>(vaffle-refresh)
 	autocmd FileType vaffle nmap <silent><buffer>I <Plug>(vaffle-toggle-hidden)
