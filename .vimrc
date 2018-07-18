@@ -894,8 +894,8 @@ let g:qf_auto_open_quickfix = 0
 let g:qf_auto_open_loclist = 0
 let g:qf_auto_quit = 1
 
-nmap <Leader>q <Plug>qf_qf_toggle
-nmap <Leader>l <Plug>qf_loc_toggle
+nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
+nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 " }
 
 " far.vim {
