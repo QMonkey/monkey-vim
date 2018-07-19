@@ -46,6 +46,7 @@ Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
 Plug 'dyng/ctrlsf.vim' | Plug 'gabesoft/vim-ags'
+Plug 'terryma/vim-multiple-cursors'
 Plug 'cocopon/vaffle.vim'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
@@ -991,7 +992,7 @@ augroup CtrlP
 	autocmd!
 
 	nmap <silent><C-t> :CtrlPBufTag<CR>
-	nmap <silent><C-n> :CtrlPBuffer<CR>
+	nmap <silent><C-m> :CtrlPBuffer<CR>
 augroup END
 " }
 
