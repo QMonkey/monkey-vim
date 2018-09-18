@@ -74,6 +74,7 @@ Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
+Plug 'will133/vim-dirdiff'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 Plug 'cespare/vim-toml', {'for': ['toml', 'markdown']}
 Plug 'chr4/nginx.vim', {'for': ['nginx', 'markdown']}
