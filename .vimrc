@@ -1192,7 +1192,7 @@ endfunction
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,python,lua,markdown,json,nginx,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd FileType c,cpp,go,python,lua,sql,markdown,json,nginx,sh,vim autocmd BufWrite <buffer> :Autoformat
 augroup END
 
 " Enable autoindent
