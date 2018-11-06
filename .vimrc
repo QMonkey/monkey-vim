@@ -72,7 +72,7 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-eunuch', {'on': ['Delete', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Cfind', 'Lfind', 'Clocate', 'Llocate', 'SudoEdit', 'SudoWrite', 'Wall']}
 Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
-Plug 'kshenoy/vim-signature'
+" Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
 Plug 'will133/vim-dirdiff'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
@@ -117,12 +117,12 @@ augroup RelativeNumber
 	autocmd!
 
 	" Only work for the GUI version and a few console versions
-	autocmd FocusLost * :set norelativenumber number
-	autocmd FocusGained * :set relativenumber
+	autocmd FocusGained * set relativenumber
+	autocmd FocusLost * set norelativenumber number
 
-	" Use absolute line number in insert mode
-	autocmd InsertEnter * :set norelativenumber number
-	autocmd InsertLeave * :set relativenumber
+	" Only display relativenumber in active normal mode buffer
+	autocmd WinEnter,BufEnter,InsertLeave * set relativenumber
+	autocmd WinLeave,BufLeave,InsertEnter * set norelativenumber number
 augroup END
 " }
 
