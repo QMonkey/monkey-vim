@@ -54,6 +54,7 @@ Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-easyclip'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/incsearch.vim'
+Plug 'henrik/vim-indexed-search'
 Plug 'tpope/vim-commentary'
 Plug 'Chiel92/vim-autoformat', {'on': 'Autoformat'}
 Plug 'ntpeters/vim-better-whitespace'
@@ -819,6 +820,10 @@ augroup ProjectDrawer
 augroup END
 " }
 
+" vim-indexed-search {
+let g:indexed_search_mappings = 0
+" }
+
 " incsearch.vim {
 map / <Plug>(incsearch-forward)
 map ? <Plug>(incsearch-backward)
@@ -826,8 +831,8 @@ map g/ <Plug>(incsearch-stay)
 
 let g:incsearch#auto_nohlsearch = 1
 
-map n <Plug>(incsearch-nohl-n)
-map N <Plug>(incsearch-nohl-N)
+map n <Plug>(incsearch-nohl-n)zv:ShowSearchIndex<CR>
+map N <Plug>(incsearch-nohl-N)zv:ShowSearchIndex<CR>
 nmap # <Plug>(incsearch-nohl-*)
 nmap * <Plug>(incsearch-nohl-#)
 map g* <Plug>(incsearch-nohl-g#)
