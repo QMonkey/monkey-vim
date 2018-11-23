@@ -357,10 +357,16 @@ endif
 " }
 
 " Resize splits when the window is resized
+function! ResizeAllTab()
+	let l:cur_tab = tabpagenr()
+	silent! execute 'tabdo wincmd ='
+	silent! execute 'tabnext ' . l:cur_tab
+endfunction
+
 augroup AutoResize
 	autocmd!
 
-	autocmd VimResized * execute "normal! \<C-w>="
+	autocmd VimResized * call ResizeAllTab()
 augroup END
 
 " Number of lines from vertical edge to start scrolling
