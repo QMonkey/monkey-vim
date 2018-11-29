@@ -911,15 +911,6 @@ nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10'
 nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 " }
 
-" far.vim {
-let g:far#auto_write_replaced_buffers = 1
-let g:far#repl_devider = "  \xe2\x9e\x9d  "
-let g:far#multiline_sign = "\xe2\xac\x8e"
-let g:far#cut_text_sign = "\xe2\x80\xa6"
-let g:far#collapse_sign = '-'
-let g:far#expand_sign = '+'
-" }
-
 " winresizer {
 let g:winresizer_gui_enable = 0
 let g:winresizer_start_key = '<F5>'
