@@ -47,7 +47,7 @@ Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
 Plug 'dyng/ctrlsf.vim'
 Plug 'terryma/vim-multiple-cursors'
-Plug 'cocopon/vaffle.vim'
+Plug 'justinmk/vim-dirvish'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
@@ -786,14 +786,12 @@ endfunction
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 " }
 
-" vaffle {
+" vim-dirvish {
 let g:loaded_netrw = 1
 let g:loaded_netrwPlugin = 1
-let g:vaffle_show_hidden_files = 1
-let g:vaffle_use_default_mappings = 0
 
-nnoremap <silent>- :execute 'edit' expand('%:p:h')<CR>
-nnoremap <silent>~ :execute 'edit' GetRootPath()<CR>
+nnoremap <silent>- :execute 'Dirvish' expand('%:p:h')<CR>
+nnoremap <silent>~ :execute 'Dirvish' GetHomePath()<CR>
 
 function! GetRootPath()
 	let l:root_path = FindRootDirectory()
@@ -803,26 +801,28 @@ function! GetRootPath()
 	return l:root_path
 endfunction
 
+function! GetHomePath()
+	let l:root_path = FindRootDirectory()
+	if l:root_path ==# ''
+		let l:root_path = expand('~')
+	endif
+	return l:root_path
+endfunction
+
 augroup ProjectDrawer
 	autocmd!
 
-	autocmd FileType vaffle nmap <silent><buffer>~ <Plug>(vaffle-open-home)
-	autocmd FileType vaffle nmap <silent><buffer>- <Plug>(vaffle-open-parent)
-	autocmd FileType vaffle nmap <silent><buffer>* <Plug>(vaffle-toggle-all)
-	autocmd FileType vaffle map <silent><buffer><Space> <Plug>(vaffle-toggle-current)
-	autocmd FileType vaffle map <silent><buffer><CR> <Plug>(vaffle-open-selected)
-	autocmd FileType vaffle nmap <silent><buffer>t <Plug>(vaffle-open-current-tab)
-	autocmd FileType vaffle nmap <silent><buffer>s <Plug>(vaffle-open-selected-split)
-	autocmd FileType vaffle nmap <silent><buffer>v <Plug>(vaffle-open-selected-vsplit)
-	autocmd FileType vaffle nmap <silent><buffer>q <Plug>(vaffle-quit)
-	autocmd FileType vaffle nmap <silent><buffer>R <Plug>(vaffle-refresh)
-	autocmd FileType vaffle nmap <silent><buffer>I <Plug>(vaffle-toggle-hidden)
-	autocmd FileType vaffle nmap <silent><buffer>o <Plug>(vaffle-mkdir)
-	autocmd FileType vaffle nmap <silent><buffer>i <Plug>(vaffle-new-file)
-	autocmd FileType vaffle map <silent><buffer>d <Plug>(vaffle-delete-selected)
-	autocmd FileType vaffle map <silent><buffer>m <Plug>(vaffle-move-selected)
-	autocmd FileType vaffle map <silent><buffer>r <Plug>(vaffle-rename-selected)
-	autocmd FileType vaffle map <silent><buffer>x <Plug>(vaffle-fill-cmdline)
+	autocmd FileType dirvish silent! unmap <buffer>a
+	autocmd FileType dirvish silent! unmap <buffer>A
+	autocmd FileType dirvish silent! unmap <buffer>i
+	autocmd FileType dirvish silent! unmap <buffer>I
+	autocmd FileType dirvish silent! unmap <buffer>o
+	autocmd FileType dirvish silent! unmap <buffer>O
+
+	autocmd FileType dirvish noremap <silent><buffer>o :call dirvish#open('edit', 0)<CR>
+	autocmd FileType dirvish noremap <silent><buffer>a :call dirvish#open('split', 0)<CR>
+	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
+	autocmd FileType dirvish noremap <silent><buffer>t :call dirvish#open('tabedit', 0)<CR>
 augroup END
 " }
 
