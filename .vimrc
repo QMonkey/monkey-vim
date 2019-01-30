@@ -70,7 +70,7 @@ Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-eunuch', {'on': ['Delete', 'Unlink', 'Move', 'Rename', 'Chmod', 'Mkdir', 'Cfind', 'Lfind', 'Clocate', 'Llocate', 'SudoEdit', 'SudoWrite', 'Wall']}
+Plug 'tpope/vim-eunuch'
 Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
 " Plug 'kshenoy/vim-signature'
@@ -895,6 +895,10 @@ if has('win32') || has('win64')
 		autocmd QuickfixCmdPost * call QuickfixConv()
 	augroup END
 endif
+" }
+
+" vim-eunuch {
+command! -bar -nargs=1 -bang -complete=file Duplicate saveas<bang> %:h/<args>
 " }
 
 " vim-qf {
