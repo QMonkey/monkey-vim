@@ -1228,6 +1228,18 @@ let g:better_whitespace_filetypes_blacklist = ['diff', 'git', 'gitcommit', 'qf',
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
 
+" vim-dispatch {
+let g:dispatch_handlers = [
+			\ 'job',
+			\ 'tmux',
+			\ 'screen',
+			\ 'windows',
+			\ 'iterm',
+			\ 'x11',
+			\ 'headless',
+			\ ]
+" }
+
 " vim-quickrun {
 let g:quickrun_no_default_key_mappings = 1
 
