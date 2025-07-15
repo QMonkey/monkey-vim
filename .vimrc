@@ -31,13 +31,6 @@ endif
 let g:plug_timeout = 300
 " }
 
-" Windows {
-if has('win32') || has('win64')
-	" On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization across systems easier
-	set runtimepath=$HOME\.vim,$VIM\vimfiles,$VIMRUNTIME,$VIM\vimfiles\after,$HOME\.vim\after
-endif
-" }
-
 call plug#begin(expand($HOME . '/.vim/bundle'))
 
 " Plugins {
@@ -46,27 +39,30 @@ Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
 Plug 'dyng/ctrlsf.vim'
-Plug 'terryma/vim-multiple-cursors'
+Plug 'mg979/vim-visual-multi'
 Plug 'justinmk/vim-dirvish'
 Plug 'tpope/vim-obsession'
 Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
-Plug 'svermeulen/vim-easyclip'
+Plug 'svermeulen/vim-subversive'
 Plug 'Konfekt/FastFold'
-Plug 'haya14busa/incsearch.vim' | Plug 'henrik/vim-indexed-search'
+Plug 'haya14busa/is.vim'
+Plug 'haya14busa/vim-asterisk'
+Plug 'osyo-manga/vim-anzu'
 Plug 'RRethy/vim-illuminate'
 Plug 'tpope/vim-commentary'
-Plug 'Chiel92/vim-autoformat', {'on': 'Autoformat'}
+Plug 'vim-autoformat/vim-autoformat', {'on': 'Autoformat'}
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen', 'Start', 'Spawn']}
 Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
-Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --go-completer'}
+Plug 'ycm-core/YouCompleteMe', {'do': 'python3 install.py --clang-completer --go-completer'}
 			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-Plug 'tpope/vim-fugitive' | Plug 'gregsexton/gitv', {'on': 'Gitv'}
+Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
+Plug 'Eliot00/git-lens.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
@@ -77,17 +73,11 @@ Plug 'Raimondi/delimitMate'
 Plug 'romainl/vim-qf'
 Plug 'will133/vim-dirdiff'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
-Plug 'cespare/vim-toml', {'for': ['toml', 'markdown']}
-Plug 'chr4/nginx.vim', {'for': ['nginx', 'markdown']}
 
 if has('mac') || has('macunix')
 	Plug 'rizzatti/dash.vim'
 else
 	Plug 'KabbAmine/zeavim.vim'
-endif
-
-if has('win32') || has('win64')
-	Plug 'kkoenig/wimproved.vim', {'on': ['WCenter', 'WSetAlpha', 'WToggleFullscreen', 'WToggleClean']}
 endif
 " }
 
@@ -116,10 +106,6 @@ set relativenumber number
 
 augroup RelativeNumber
 	autocmd!
-
-	" Only work for the GUI version and a few console versions
-	autocmd FocusGained * set relativenumber
-	autocmd FocusLost * set norelativenumber number
 
 	" Only display relativenumber in active normal mode buffer
 	autocmd WinEnter,BufEnter,InsertLeave * set relativenumber
@@ -229,7 +215,7 @@ augroup FileTypeGroup
 	autocmd!
 
 	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-	autocmd FileType json,yaml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd FileType json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 
@@ -301,14 +287,14 @@ function! SetReferences()
 		let l:is_reference_set = 1
 	endfor
 
-	if !l:is_reference_set
+	if !l:is_reference_set && &filetype != 'dirvish'
 		" Default reference: dash or zeal
 		if has('mac') || has('macunix')
 			nnoremap <silent><buffer><S-k> :execute 'Dash' GetCurrentWord()<CR>
 			vnoremap <silent><buffer><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
 		else
 			nnoremap <silent><buffer><S-k> :Zeavim<CR>
-			vnoremap <silent><buffer><S-k> :Zeavim<CR>
+			vnoremap <silent><buffer><S-k> :ZeavimV<CR>
 		endif
 	endif
 endfunction
@@ -522,7 +508,7 @@ function! IsGitFile()
 		endif
 	endfor
 
-	let l:git_dir = fugitive#extract_git_dir(resolve(expand('%')))
+	let l:git_dir = FugitiveExtractGitDir(resolve(expand('%')))
 	if l:git_dir ==# ''
 		return 0
 	endif
@@ -819,6 +805,7 @@ augroup ProjectDrawer
 	autocmd FileType dirvish silent! unmap <buffer>o
 	autocmd FileType dirvish silent! unmap <buffer>O
 
+	autocmd FileType dirvish noremap - <plug>(dirvish_up)
 	autocmd FileType dirvish noremap <silent><buffer>o :call dirvish#open('edit', 0)<CR>
 	autocmd FileType dirvish noremap <silent><buffer>a :call dirvish#open('split', 0)<CR>
 	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
@@ -826,26 +813,13 @@ augroup ProjectDrawer
 augroup END
 " }
 
-" vim-indexed-search {
-let g:indexed_search_mappings = 0
-" }
-
-" incsearch.vim {
-map / <Plug>(incsearch-forward)
-map ? <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
-let g:incsearch#auto_nohlsearch = 1
-
-map n <Plug>(incsearch-nohl-n)zv:ShowSearchIndex<CR>
-map N <Plug>(incsearch-nohl-N)zv:ShowSearchIndex<CR>
-nmap # <Plug>(incsearch-nohl-*)
-nmap * <Plug>(incsearch-nohl-#)
-map g* <Plug>(incsearch-nohl-g#)
-map g# <Plug>(incsearch-nohl-g*)
-
-vmap # :<C-u>call VisualSetSearchContent()<CR>//<CR>
-vmap * :<C-u>call VisualSetSearchContent()<CR>??<CR>
+" is.vim {
+map n <Plug>(is-nohl)<Plug>(anzu-n-with-echo)
+map N <Plug>(is-nohl)<Plug>(anzu-N-with-echo)
+map *  <Plug>(asterisk-z*)<Plug>(is-nohl-1)
+map g* <Plug>(asterisk-gz*)<Plug>(is-nohl-1)
+map #  <Plug>(asterisk-z#)<Plug>(is-nohl-1)
+map g# <Plug>(asterisk-gz#)<Plug>(is-nohl-1)
 
 function! VisualSetSearchContent()
 	let l:selection = GetVisualSelection()
@@ -879,22 +853,6 @@ endfunction
 function! BufferCount()
 	return len(tabpagebuflist())
 endfunction
-
-if has('win32') || has('win64')
-	function QuickfixConv()
-		let l:qflist = getqflist()
-		for l:i in l:qflist
-			let l:i.text = iconv(l:i.text, 'cp936', 'utf-8')
-		endfor
-		call setqflist(l:qflist)
-	endfunction
-
-	augroup QuickfixEncodingConv
-		autocmd!
-
-		autocmd QuickfixCmdPost * call QuickfixConv()
-	augroup END
-endif
 " }
 
 " vim-eunuch {
@@ -1032,13 +990,11 @@ map f <Plug>(SneakStreak)
 map F <Plug>(SneakStreakBackward)
 " }
 
-" vim-easyclip {
-let g:EasyClipUseYankDefaults = 0
-let g:EasyClipUseCutDefaults = 0
-let g:EasyClipUsePasteDefaults = 0
-let g:EasyClipEnableBlackHoleRedirect = 0
-let g:EasyClipUsePasteToggleDefaults = 0
-let g:EasyClipUseSubstituteDefaults = 1
+" vim-subversive {
+nmap s <plug>(SubversiveSubstitute)
+xmap s <plug>(SubversiveSubstitute)
+nmap ss <plug>(SubversiveSubstituteLine)
+nmap S <plug>(SubversiveSubstituteToEndOfLine)
 " }
 
 " FastFold {
@@ -1094,9 +1050,11 @@ let g:gutentags_ctags_extra_args = [
 			\]
 " }
 
-" Gitv {
-" Disable ctrl key map due to the conflict
-let g:Gitv_DoNotMapCtrlKey = 1
+" git-lens.vim {
+vim9cmd g:GIT_LENS_ENABLED = true
+vim9cmd g:GIT_LENS_CONFIG = {
+	blame_delay: 200,
+}
 " }
 
 " vim-signature {
@@ -1111,8 +1069,8 @@ let g:SignatureMarkerTextHLDynamic = 1
 " }
 
 " YouCompleteMe {
-if !empty(glob($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
-	let g:ycm_global_ycm_extra_conf = expand($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py')
+if !empty(glob($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/examples/.ycm_extra_conf.py'))
+	let g:ycm_global_ycm_extra_conf = expand($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/examples/.ycm_extra_conf.py')
 endif
 
 " Do not use YouCompleteMe to check C, C++ and Objective-C, do it by ale
@@ -1126,6 +1084,7 @@ let g:ycm_seed_identifiers_with_syntax = 1
 let g:ycm_autoclose_preview_window_after_insertion = 1
 let g:ycm_goto_buffer_command = 'new-or-existing-tab'
 let g:ycm_filepath_completion_use_working_dir = 1
+let g:ycm_confirm_extra_conf = 0
 
 let g:ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'python']
 
@@ -1135,10 +1094,10 @@ augroup YouCompleteMeKeyMap
 	" Use Ctrl-o to jump back, see :help jumplist
 	autocmd FileType c,cpp,go,python nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
 	autocmd FileType c,cpp,go,python nnoremap <silent><buffer>gt :YcmCompleter GoTo<CR>
+	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
+	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>gi :YcmCompleter GoToImplementation<CR>
 	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>jd :YcmCompleter GoToDeclaration<CR>
 	autocmd FileType * if index(g:ycm_go_to_definition_filetypes, &filetype) == -1 | nnoremap <silent><buffer>gd <C-]> | endif
-
-	autocmd FileType python nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
 augroup END
 
 " }
@@ -1179,36 +1138,21 @@ let g:lightline#ale#indicator_ok = 'OK'
 " }
 
 " vim-autoformat {
-nnoremap <silent>coa :call ToggleAutoformat()<CR>
-
-function! ToggleAutoformat()
-	if !exists('b:autoformat_autoindent')
-		let b:autoformat_autoindent = 1
-	endif
-	let b:autoformat_autoindent = xor(b:autoformat_autoindent, 1)
-
-	if b:autoformat_autoindent == 1
-		echo 'Autoformat: Enabled'
-	else
-		echo 'Autoformat: Disabled'
-	endif
-endfunction
-
 " Execute Autoformat onsave
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,python,lua,sql,markdown,json,nginx,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd FileType c,cpp,go,python,lua,sql,markdown,json,sh,vim autocmd BufWrite <buffer> :Autoformat
 augroup END
 
-" Enable autoindent
-let g:autoformat_autoindent = 1
+" Disable autoindent
+let g:autoformat_autoindent = 0
 
-" Enable auto retab
-let g:autoformat_retab = 1
+" Disable auto retab
+let g:autoformat_retab = 0
 
-" Enable auto remove trailing spaces
-let g:autoformat_remove_trailing_spaces = 1
+" Disable auto remove trailing spaces
+let g:autoformat_remove_trailing_spaces = 0
 
 " Generic C, C++, Objective-C style
 " A style similar to the Linux Kernel Coding Style
@@ -1216,7 +1160,7 @@ let g:autoformat_remove_trailing_spaces = 1
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
 
 " Golang
-let g:formatters_go = ['goimports']
+let g:formatters_go = ['gofumpt']
 
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
@@ -1257,7 +1201,7 @@ augroup END
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
 let g:markdown_minlines = 100
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'json', 'toml', 'nginx']
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'json']
 " }
 
 " Terminal {
@@ -1268,67 +1212,5 @@ if !has('gui_running')
 		" Check file changes outside vim when in xterm
 		autocmd CursorHold,CursorHoldI,BufEnter,WinEnter * if getcmdtype() ==# '' | checktime | endif
 	augroup END
-endif
-" }
-
-" GUI {
-if has('gui_running')
-	" Disable cursor flicker
-	set guicursor=a:block-blinkon0
-
-	" Disable scroll bar
-	set guioptions-=l
-	set guioptions-=L
-	set guioptions-=r
-	set guioptions-=R
-
-	" Disable menu and tool bar
-	set guioptions-=m
-	set guioptions-=T
-
-	" Set gui font
-	if has('gui_gtk')
-		set guifont=Monospace\ 9
-	elseif has('gui_macvim')
-		set guifont=Hack:h12
-	elseif has('gui_win32')
-		set guifont=Hack:h10
-	endif
-
-	if has('gui_win32')
-		" Use directx as a text renderer on Windows
-		set renderoptions=type:directx
-	endif
-
-	function! MaximizeWindow()
-		if has('gui_win32')
-			simalt ~x
-		elseif has('gui_macvim')
-			" Make gvim tallest and widest as possible
-			set lines=999
-			set columns=9999
-		else
-			call system('wmctrl -ir ' . v:windowid . ' -b add,maximized_horz,maximized_vert')
-		endif
-	endfunction
-
-	augroup Maximize
-		autocmd!
-
-		" Maximize window on gvim start up
-		autocmd GUIEnter * call MaximizeWindow()
-	augroup END
-
-	function! ToggleFullscreen()
-		if has('gui_win32')
-			WToggleFullscreen
-		elseif has('gui_macvim')
-			set invfullscreen
-		else
-			call system('wmctrl -ir ' . v:windowid . ' -b toggle,fullscreen')
-		endif
-	endfunction
-
-	nnoremap <silent><F11> :call ToggleFullscreen()<CR>
 endif
 " }
