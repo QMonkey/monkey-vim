@@ -37,7 +37,7 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 Plug 'tomasr/molokai'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
-Plug 'ctrlpvim/ctrlp.vim' | Plug 'FelikZ/ctrlp-py-matcher'
+Plug 'Yggdroot/LeaderF', {'do': ':LeaderfInstallCExtension'}
 Plug 'dyng/ctrlsf.vim'
 Plug 'mg979/vim-visual-multi'
 Plug 'justinmk/vim-dirvish'
@@ -48,30 +48,25 @@ Plug 'svermeulen/vim-subversive'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/is.vim'
 Plug 'haya14busa/vim-asterisk'
-Plug 'osyo-manga/vim-anzu'
 Plug 'RRethy/vim-illuminate'
 Plug 'tpope/vim-commentary'
-Plug 'vim-autoformat/vim-autoformat', {'on': 'Autoformat'}
+Plug 'vim-autoformat/vim-autoformat'
 Plug 'ntpeters/vim-better-whitespace'
-Plug 'tpope/vim-dispatch', {'on': ['Dispatch', 'FocusDispatch', 'Make', 'Copen', 'Start', 'Spawn']}
-Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
+Plug 'skywind3000/asyncrun.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
-Plug 'ycm-core/YouCompleteMe', {'do': 'python3 install.py --clang-completer --go-completer'}
-			\ | Plug 'rdnetto/YCM-Generator', {'branch': 'stable', 'for': ['c', 'cpp'], 'on': 'YcmGenerateConfig'}
-Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
+Plug 'prabirshrestha/vim-lsp' | Plug 'mattn/vim-lsp-settings'
+Plug 'prabirshrestha/asyncomplete.vim' | Plug 'prabirshrestha/asyncomplete-lsp.vim'
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'Eliot00/git-lens.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-eunuch'
-Plug 'simeji/winresizer'
 Plug 'Raimondi/delimitMate'
-" Plug 'kshenoy/vim-signature'
+Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
-Plug 'will133/vim-dirdiff'
+Plug 'simeji/winresizer'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 
 if has('mac') || has('macunix')
@@ -136,6 +131,9 @@ set incsearch
 set hlsearch
 set ignorecase
 set smartcase
+
+" Show search count message when searching
+set shortmess-=S shortmess+=s
 
 " The ":substitute" flag 'g' is default on. This means that
 " all matches in a line are substituted instead of one. When a 'g' flag
@@ -226,12 +224,12 @@ augroup END
 function! AutoInsertFileHead()
 	" Shell
 	if &filetype ==# 'sh'
-		call setline(1, '#!/bin/sh')
+		call setline(1, '#!/bin/bash')
 	endif
 
 	" Python
 	if &filetype ==# 'python'
-		call setline(1, '#!/usr/bin/env python')
+		call setline(1, '#!/usr/bin/env python3')
 		call setline(2, '# -*- coding: utf-8 -*-')
 	endif
 
@@ -407,7 +405,7 @@ set laststatus=2
 let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
-			\   'left': [['mode', 'paste'], ['gitgutter', 'fugitive', 'filename'], ['ctrlpmark']],
+			\   'left': [['mode', 'paste'], ['gitgutter', 'fugitive', 'filename']],
 			\   'right': [['linter_ok', 'linter_warnings', 'linter_errors', 'linter_checking', 'lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
 			\ },
 			\ 'inactive': {
@@ -424,7 +422,6 @@ let g:lightline = {
 			\   'percent': 'LightLinePercent',
 			\   'lineinfo': 'LightLineLineInfo',
 			\   'mode': 'LightLineMode',
-			\   'ctrlpmark': 'CtrlPMark',
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
@@ -467,8 +464,7 @@ function! LightLineFilename()
 	endif
 
 	let l:fname = expand('%:t')
-	return l:fname ==# 'ControlP' && has_key(g:lightline, 'ctrlp_item') ? g:lightline.ctrlp_item :
-				\ ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+	return  ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
 				\ ('' !=# l:fname ? l:fname : '[No Name]') .
 				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
 endfunction
@@ -540,10 +536,10 @@ function! LightLineFugitive()
 
 	try
 		if getftype(expand('%')) ==# 'link'
-			call fugitive#detect(resolve(expand('%')))
+			call FugitiveDetect(resolve(expand('%')))
 		endif
 		let l:mark = "\ue0a0 "
-		let l:branch = fugitive#head()
+		let l:branch = FugitiveHead()
 		return l:branch !=# '' ? l:mark.branch : ''
 	catch
 	endtry
@@ -579,38 +575,8 @@ function! LightLineMode()
 					\ l:window_type == 1 ? 'Location' : ''
 	endif
 
-	return  l:fname ==# 'ControlP' ? 'CtrlP' :
-				\ winwidth(0) > 60 ? lightline#mode() : ''
+	return winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
-
-function! CtrlPMark()
-	if expand('%:t') =~# 'ControlP' && has_key(g:lightline, 'ctrlp_item')
-		call lightline#link('iR'[g:lightline.ctrlp_regex])
-		return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
-					\ , g:lightline.ctrlp_next], 0)
-	else
-		return ''
-	endif
-endfunction
-
-let g:ctrlp_status_func = {
-			\ 'main': 'CtrlPStatusFunc_1',
-			\ 'prog': 'CtrlPStatusFunc_2',
-			\ }
-
-function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
-	let g:lightline.ctrlp_regex = a:regex
-	let g:lightline.ctrlp_prev = a:prev
-	let g:lightline.ctrlp_item = a:item
-	let g:lightline.ctrlp_next = a:next
-	return lightline#statusline(0)
-endfunction
-
-function! CtrlPStatusFunc_2(...)
-	let l:len = '%#Function# ' . a:1 . ' %*'
-	let l:dir = ' %=%<%#LineNr# ' . getcwd() . ' %*'
-	retu l:len . l:dir
-endf
 
 augroup AfterALELint
 	autocmd!
@@ -668,9 +634,6 @@ noremap ; :
 
 " Remap U to <C-r> for easier redo
 nnoremap U <C-r>
-
-" Save file with root permission
-cnoreabbrev W SudoWrite
 
 " Better comand-line editing
 cnoremap <C-j> <Down>
@@ -733,13 +696,8 @@ nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '',
 " }
 
 " F1 ~ F10 {
-nmap <silent><F1> <Plug>CtrlSFPrompt
+nmap <F1> <Plug>CtrlSFPrompt
 nnoremap <silent><F2> :CtrlSFToggle<CR>
-nnoremap <silent><F4> :CtrlPClearAllCaches<CR>
-nnoremap <silent><F7> :Dispatch!<CR>
-nnoremap <silent><F8> :call QuickFixToggle('q', 'Copen!')<CR>
-nnoremap <silent><F9> :QuickRun<CR>
-nnoremap <silent><F10> :LivedownPreview<CR>
 " }
 
 " Toggle {
@@ -814,21 +772,11 @@ augroup END
 " }
 
 " is.vim {
-map n <Plug>(is-nohl)<Plug>(anzu-n-with-echo)
-map N <Plug>(is-nohl)<Plug>(anzu-N-with-echo)
 map *  <Plug>(asterisk-z*)<Plug>(is-nohl-1)
 map g* <Plug>(asterisk-gz*)<Plug>(is-nohl-1)
 map #  <Plug>(asterisk-z#)<Plug>(is-nohl-1)
 map g# <Plug>(asterisk-gz#)<Plug>(is-nohl-1)
-
-function! VisualSetSearchContent()
-	let l:selection = GetVisualSelection()
-	let @/ = '\V' . substitute(escape(l:selection, '\'), '\n', '\\n', 'g')
-endfunction
 " }
-
-" No highlight search
-nnoremap <silent><Leader>/ :nohlsearch<CR>
 
 " QuickFix {
 function! QuickFixToggle(type, cmd)
@@ -855,10 +803,6 @@ function! BufferCount()
 endfunction
 " }
 
-" vim-eunuch {
-command! -bar -nargs=1 -bang -complete=file Duplicate saveas<bang> %:h/<args>
-" }
-
 " vim-qf {
 let g:qf_mapping_ack_style = 1
 let g:qf_window_bottom = 1
@@ -875,7 +819,7 @@ nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 
 " winresizer {
 let g:winresizer_gui_enable = 0
-let g:winresizer_start_key = '<F5>'
+let g:winresizer_start_key = '<F3>'
 " }
 
 function! Strip(input_string)
@@ -920,7 +864,7 @@ function! Clear()
 endfunction
 
 " Session {
-set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds
+set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
 " Backup
 nnoremap <Leader>bs :execute 'Obsession' expand(GetRootPath() . '/.session.vim')<CR>
@@ -934,42 +878,50 @@ augroup RestoreSession
 augroup END
 " }
 
-" ctrlp.vim {
-let g:ctrlp_map = '<c-p>'
-let g:ctrlp_follow_symlinks = 1
-let g:ctrlp_use_caching = 1
-let g:ctrlp_clear_cache_on_exit = 0
-let g:ctrlp_max_files = 0
-let g:ctrlp_show_hidden = 1
-let g:ctrlp_custom_ignore = {
-			\ 'dir':  '\v[\/]\.(git|hg|svn|bzr)$',
-			\ 'file': '\v\.(o|obj|so|dll|exe|pyc|pyo|swo|swp|swn)$',
-			\ }
+" LeaderF {
+let g:Lf_PythonVersion = 3
+let g:Lf_ShortcutF = '<C-p>'
+let g:Lf_ShortcutB = '<C-m>'
+let g:Lf_WindowPosition = 'bottom'
+let g:Lf_ShowDevIcons = 0
+let g:Lf_StlColorscheme = 'powerline'
+let g:Lf_StlSeparator = {'left': "\ue0b0", 'right': "\ue0b2"}
+let g:Lf_PreviewResult = {
+			\ 'File': 0,
+			\ 'Buffer': 0,
+			\ 'Mru': 0,
+			\ 'Tag': 0,
+			\ 'BufTag': 0,
+			\ 'Function': 0,
+			\ 'Line': 0,
+			\ 'Colorscheme': 1,
+			\ 'Rg': 0,
+			\ 'Gtags': 0
+			\}
 
-let g:ctrlp_match_func = {'match': 'pymatcher#PyMatch'}
-let g:ctrlp_match_current_file = 1
-let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:15,results:15'
-let g:ctrlp_prompt_mappings = {
-			\ 'PrtDeleteEnt()': ['<c-d>'],
-			\ }
-
-augroup CtrlP
+augroup LeaderF
 	autocmd!
 
-	nmap <silent><C-t> :CtrlPBufTag<CR>
-	nmap <silent><C-m> :CtrlPBuffer<CR>
+	nmap <silent><C-w> :LeaderfWindow<CR>
+	nmap <silent><C-t> :LeaderfBufTag<CR>
+	nmap <silent><C-e> :LeaderfLine<CR>
 augroup END
 " }
 
 " ctrlsf.vim {
 let g:ctrlsf_confirm_save = 0
 let g:ctrlsf_extra_backend_args = {
-			\ 'ag': '--hidden'
+			\ 'rg': '--hidden',
+			\ 'ag': '--hidden',
 			\ }
 let g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
 
 nmap <silent><Leader>a <Plug>CtrlSFCwordExec
 vmap <silent><Leader>a <Plug>CtrlSFVwordExec
+" }
+
+" vim-visual-multi {
+" let g:VM_set_statusline = 0
 " }
 
 " vim-sneak {
@@ -1007,7 +959,6 @@ let g:fastfold_fold_movement_commands = []
 let g:rooter_silent_chdir = 1
 let g:rooter_change_directory_for_non_project_files = 'current'
 let g:rooter_resolve_links = 1
-"let g:rooter_use_lcd = 1
 
 let g:rooter_manual_only = 1
 
@@ -1068,59 +1019,55 @@ let g:SignatureMarkTextHLDynamic = 1
 let g:SignatureMarkerTextHLDynamic = 1
 " }
 
-" YouCompleteMe {
-if !empty(glob($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/examples/.ycm_extra_conf.py'))
-	let g:ycm_global_ycm_extra_conf = expand($HOME . '/.vim/bundle/YouCompleteMe/third_party/ycmd/examples/.ycm_extra_conf.py')
-endif
+" vim-lsp {
+" Do it by ale
+let g:lsp_diagnostics_enabled = 0
+let g:lsp_document_code_action_signs_enabled = 0
+let g:lsp_completion_documentation_enabled = 1
+let g:lsp_preview_autoclose = 0
 
-" Do not use YouCompleteMe to check C, C++ and Objective-C, do it by ale
-let g:ycm_show_diagnostics_ui = 0
-let g:ycm_complete_in_comments = 1
-let g:ycm_complete_in_strings = 1
-let g:ycm_use_ultisnips_completer = 1
-let g:ycm_collect_identifiers_from_comments_and_strings = 1
-let g:ycm_collect_identifiers_from_tags_files = 1
-let g:ycm_seed_identifiers_with_syntax = 1
-let g:ycm_autoclose_preview_window_after_insertion = 1
-let g:ycm_goto_buffer_command = 'new-or-existing-tab'
-let g:ycm_filepath_completion_use_working_dir = 1
-let g:ycm_confirm_extra_conf = 0
+function! OnLspBufferEnabled()
+	setlocal signcolumn=yes
+	setlocal omnifunc=lsp#complete
+	if exists('+tagfunc')
+		setlocal tagfunc=lsp#tagfunc
+	endif
 
-let g:ycm_go_to_definition_filetypes = ['c', 'cpp', 'go', 'python']
+	nnoremap <silent><buffer>gd <plug>(lsp-definition)
+	nnoremap <silent><buffer>gc <plug>(lsp-declaration)
+	nnoremap <silent><buffer>gt <plug>(lsp-type-definition)
+	nnoremap <silent><buffer>gi <plug>(lsp-implementation)
+	nnoremap <silent><buffer>gr <plug>(lsp-references)
+	nnoremap <silent><buffer>gh <plug>(lsp-hover)
 
-augroup YouCompleteMeKeyMap
+	nnoremap <silent><buffer><Leader>gd <plug>(lsp-peek-definition)
+	nnoremap <silent><buffer><Leader>gc <plug>(lsp-peek-declaration)
+	nnoremap <silent><buffer><Leader>gt <plug>(lsp-peek-type-definition)
+	nnoremap <silent><buffer><Leader>gi <plug>(lsp-peek-implementation)
+
+	nnoremap <silent><buffer><Leader>rn <plug>(lsp-rename)
+	" nnoremap <buffer><expr><C-u> lsp#scroll(-7)
+	" nnoremap <buffer><expr><C-d> lsp#scroll(+7)
+endfunction
+
+augroup LspInstall
 	autocmd!
 
-	" Use Ctrl-o to jump back, see :help jumplist
-	autocmd FileType c,cpp,go,python nnoremap <silent><buffer>gd :YcmCompleter GoToDefinition<CR>
-	autocmd FileType c,cpp,go,python nnoremap <silent><buffer>gt :YcmCompleter GoTo<CR>
-	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>gr :YcmCompleter GoToReferences<CR>
-	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>gi :YcmCompleter GoToImplementation<CR>
-	autocmd FileType c,cpp,go,python nnoremap <silent><buffer><Leader>jd :YcmCompleter GoToDeclaration<CR>
-	autocmd FileType * if index(g:ycm_go_to_definition_filetypes, &filetype) == -1 | nnoremap <silent><buffer>gd <C-]> | endif
+	autocmd User lsp_buffer_enabled call OnLspBufferEnabled()
 augroup END
-
-" }
-
-" Enable omni completion
-augroup Omnifunc
-	autocmd!
-
-	autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-augroup END
-
-" Ultisnips {
-let g:UltiSnipsExpandTrigger='<Leader><tab>'
 " }
 
 " ale {
 let g:ale_sign_column_always = 0
-let g:ale_sign_error = "\u2716"
-let g:ale_sign_warning = '!'
+let g:ale_sign_error = 'E>'
+let g:ale_sign_warning = 'W>'
 let g:ale_echo_msg_error_str = 'Error'
 let g:ale_echo_msg_warning_str = 'Warning'
 let g:ale_echo_msg_format = '[%linter%] %s'
 let g:ale_statusline_format = ['%d error(s)', '%d warning(s)', '']
+let g:airline#extensions#ale#enabled = 0
+let g:ale_lsp_show_message_severity = 'warning'
+let g:ale_lint_on_insert_leave = 0
 let g:ale_lint_on_enter = 1
 let g:ale_lint_on_save = 1
 let g:ale_lint_on_text_changed = 0
@@ -1128,6 +1075,7 @@ let g:ale_set_loclist = 1
 let g:ale_set_quickfix = 0
 let g:ale_open_list = 0
 let g:ale_keep_list_window_open = 0
+let g:ale_completion_enabled = 0
 " }
 
 " lightline-ale {
@@ -1142,7 +1090,8 @@ let g:lightline#ale#indicator_ok = 'OK'
 augroup AutoFormat
 	autocmd!
 
-	autocmd FileType c,cpp,go,python,lua,sql,markdown,json,sh,vim autocmd BufWrite <buffer> :Autoformat
+	autocmd BufWritePre * :Autoformat
+	" autocmd BufWritePre * :LspDocumentFormat
 augroup END
 
 " Disable autoindent
@@ -1160,7 +1109,8 @@ let g:autoformat_remove_trailing_spaces = 0
 let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
 
 " Golang
-let g:formatters_go = ['gofumpt']
+let g:formatters_go = ['goimports', 'gofumpt']
+let g:run_all_formatters_go = 1
 
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
@@ -1172,28 +1122,10 @@ let g:better_whitespace_filetypes_blacklist = ['diff', 'git', 'gitcommit', 'qf',
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
 
-" vim-dispatch {
-let g:dispatch_handlers = [
-			\ 'job',
-			\ 'tmux',
-			\ 'screen',
-			\ 'windows',
-			\ 'iterm',
-			\ 'x11',
-			\ 'headless',
-			\ ]
-" }
+" asyncrun.vim {
+let g:asyncrun_exit = 'echo "AsyncRun finished!"'
 
-" vim-quickrun {
-let g:quickrun_no_default_key_mappings = 1
-
-map <Leader>ru <Plug>(quickrun)
-
-augroup QuickRunRemap
-	autocmd!
-
-	autocmd FileType quickrun nnoremap <buffer><silent>q :call Quit()<CR>
-augroup END
+nnoremap <F4> :AsyncRun<Space>
 " }
 
 " vim-markdown {
@@ -1201,7 +1133,7 @@ augroup END
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
 let g:markdown_minlines = 100
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'json']
+let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'json']
 " }
 
 " Terminal {
