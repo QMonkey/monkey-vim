@@ -246,9 +246,9 @@ augroup Docset
 	autocmd FileType man,help setlocal nolist
 
 	" Use man as docset for unrecognized filetype
-	autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
+	autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeDoc() | endif
 
-	autocmd FileType * call SetReferences()
+	autocmd FileType * call SetDoc()
 augroup END
 
 " Enable 'Man' command
@@ -258,35 +258,37 @@ function! GetCurrentWord()
 	return expand('<cword>')
 endfunction
 
-function! SetUnrecognizedFileTypeReferences()
+function! SetUnrecognizedFileTypeDoc()
 	nnoremap <silent><buffer><S-k> :execute 'Man' GetCurrentWord()<CR>
 	vnoremap <silent><buffer><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
 endfunction
 
-function! SetReferences()
-	let l:filetype_references = {
+function! SetDoc()
+	let l:filetype_docs = {
 				\	'c': 'Man',
-				\	'sh': 'Man',
+				\	'sh': 'BashHelp',
+				\	'go': 'GoDoc',
+				\	'python': 'PyDoc',
 				\	'vim': 'help',
 				\ }
 
-	let l:is_reference_set = 0
-	for [l:ftype, l:reference] in items(l:filetype_references)
-		if &filetype != l:ftype
+	let l:is_doc_set = 0
+	for [l:ftype, l:doc] in items(l:filetype_docs)
+		if &filetype !=# l:ftype
 			continue
 		endif
 
 		let l:search = GetCurrentWord()
-		execute 'nnoremap <silent><buffer><S-k> :execute "' . l:reference . '" GetCurrentWord()<CR>'
+		execute 'nnoremap <silent><buffer><S-k> :execute "' . l:doc . '" GetCurrentWord()<CR>'
 
-		" Enable reference in visual-mode
-		execute 'vnoremap <silent><buffer><S-k> <ESC>:execute "' . l:reference . '" GetVisualSelection()<CR>'
+		" Enable doc in visual-mode
+		execute 'vnoremap <silent><buffer><S-k> <ESC>:execute "' . l:doc . '" GetVisualSelection()<CR>'
 
-		let l:is_reference_set = 1
+		let l:is_doc_set = 1
 	endfor
 
-	if !l:is_reference_set && &filetype != 'dirvish'
-		" Default reference: dash or zeal
+	if !l:is_doc_set && &filetype !=# 'dirvish'
+		" Default doc: dash or zeal
 		if has('mac') || has('macunix')
 			nnoremap <silent><buffer><S-k> :execute 'Dash' GetCurrentWord()<CR>
 			vnoremap <silent><buffer><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
@@ -296,6 +298,67 @@ function! SetReferences()
 		endif
 	endif
 endfunction
+
+function! ViewDoc(commands, name)
+	let l:buf_name = expand("$HOME/__doc__")
+	if bufloaded(l:buf_name)
+		let l:buf_is_new = 0
+		if bufname('%') !=# l:buf_name
+			execute 'silent sbuffer ' . bufnr(l:buf_name)
+		endif
+	else
+		let l:buf_is_new = 1
+		execute 'silent split ' . l:buf_name
+	endif
+
+	setlocal modifiable
+	setlocal noswapfile
+	setlocal buftype=nofile
+	setlocal bufhidden=delete
+	setlocal nofoldenable
+	setlocal nonumber
+	setlocal norelativenumber
+	setlocal nolist
+	setlocal nobuflisted
+	setlocal filetype=man
+
+	for l:command in a:commands
+		let l:cmd = l:command['cmd']
+		let l:err_msg = l:command['err_msg']
+		if !empty(l:err_msg)
+			let l:cmd = printf('if (%s | grep "%s"); then exit 1; else %s; fi', l:cmd, l:err_msg, l:cmd)
+			let l:cmd = printf("bash -c '%s'", l:cmd)
+		endif
+
+		silent keepjumps %delete _
+		execute  'silent read !' . l:cmd
+		normal 1G
+		silent keepjumps 0delete _
+
+		if v:shell_error == 0
+			break
+		endif
+	endfor
+
+	if v:shell_error != 0
+		if l:buf_is_new
+			execute 'silent bdelete!'
+		else
+			normal u
+			setlocal nomodified
+			setlocal nomodifiable
+		endif
+		redraw
+		echohl WarningMsg | echo 'No documentation found for ' . a:name | echohl None
+	else
+		setlocal nomodified
+		setlocal nomodifiable
+	endif
+endfunction
+
+command! -nargs=1 BashHelp :call ViewDoc([{'cmd': 'bash -c "help <args>"', 'err_msg': ''}, {'cmd': 'man -S 1,8 <args>', 'err_msg': ''}], '<args>')
+command! -nargs=1 PyDoc :call ViewDoc([{'cmd': 'python3 -m pydoc <args>', 'err_msg': 'No Python documentation found'}], '<args>')
+command! -nargs=1 GoDoc :call ViewDoc([{'cmd': 'go doc -cmd -all <args>', 'err_msg': ''}], '<args>')
 " }
 
 " Inspired by http://stackoverflow.com/questions/1533565/how-to-get-visually-selected-text-in-vimscript
@@ -492,7 +555,7 @@ function! IsGitFile()
 	endif
 
 	let l:fname = expand('%:t')
-	let l:plugins = ['\[Plugins\]', 'ControlP']
+	let l:plugins = ['\[Plugins\]']
 
 	if l:fname ==# ''
 		return 0
@@ -904,6 +967,7 @@ augroup LeaderF
 
 	nmap <silent><C-w> :LeaderfWindow<CR>
 	nmap <silent><C-t> :LeaderfBufTag<CR>
+	nmap <silent><C-y> :LeaderfFunction<CR>
 	nmap <silent><C-e> :LeaderfLine<CR>
 augroup END
 " }
@@ -1123,9 +1187,12 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
 
 " asyncrun.vim {
-let g:asyncrun_exit = 'echo "AsyncRun finished!"'
+let g:asyncrun_exit = 'echohl WarningMsg | echo "AsyncRun finished!" | echohl None'
 
 nnoremap <F4> :AsyncRun<Space>
+
+" Asynchronous Make command
+command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
 " }
 
 " vim-markdown {
