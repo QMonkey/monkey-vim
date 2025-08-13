@@ -46,10 +46,8 @@ Plug 'justinmk/vim-sneak'
 Plug 'wellle/targets.vim'
 Plug 'svermeulen/vim-subversive'
 Plug 'Konfekt/FastFold'
-Plug 'haya14busa/is.vim'
 Plug 'haya14busa/vim-asterisk'
 Plug 'RRethy/vim-illuminate'
-Plug 'tpope/vim-commentary'
 Plug 'vim-autoformat/vim-autoformat'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'skywind3000/asyncrun.vim'
@@ -66,7 +64,6 @@ Plug 'tpope/vim-repeat'
 Plug 'Raimondi/delimitMate'
 Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
-Plug 'simeji/winresizer'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 
 if has('mac') || has('macunix')
@@ -78,6 +75,20 @@ endif
 
 " Add plugins to &runtimepath
 call plug#end()
+
+" Builtin packages {
+silent! packadd! comment
+silent! packadd! hlyank
+silent! packadd! matchit
+silent! packadd! nohlsearch
+
+" Enable 'Man' command
+source $VIMRUNTIME/ftplugin/man.vim
+
+" Disable netrw
+let g:loaded_netrw = 1
+let g:loaded_netrwPlugin = 1
+" }
 
 " Leader {
 let g:mapleader = ','
@@ -203,11 +214,6 @@ augroup RestoreCursorPosition
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
 augroup END
 
-" Load matchit.vim, but only if the user hasn't installed a newer version.
-if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &runtimepath) ==# ''
-	runtime! macros/matchit.vim
-endif
-
 " FileType {
 augroup FileTypeGroup
 	autocmd!
@@ -250,9 +256,6 @@ augroup Docset
 
 	autocmd FileType * call SetDoc()
 augroup END
-
-" Enable 'Man' command
-source $VIMRUNTIME/ftplugin/man.vim
 
 function! GetCurrentWord()
 	return expand('<cword>')
@@ -794,9 +797,6 @@ nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 " }
 
 " vim-dirvish {
-let g:loaded_netrw = 1
-let g:loaded_netrwPlugin = 1
-
 nnoremap <silent>- :execute 'Dirvish' expand('%:p:h')<CR>
 nnoremap <silent>~ :execute 'Dirvish' GetHomePath()<CR>
 
@@ -816,7 +816,7 @@ function! GetHomePath()
 	return l:root_path
 endfunction
 
-augroup ProjectDrawer
+augroup SplitExplorer
 	autocmd!
 
 	autocmd FileType dirvish silent! unmap <buffer>a
@@ -832,13 +832,14 @@ augroup ProjectDrawer
 	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
 	autocmd FileType dirvish noremap <silent><buffer>t :call dirvish#open('tabedit', 0)<CR>
 augroup END
+
 " }
 
-" is.vim {
-map *  <Plug>(asterisk-z*)<Plug>(is-nohl-1)
-map g* <Plug>(asterisk-gz*)<Plug>(is-nohl-1)
-map #  <Plug>(asterisk-z#)<Plug>(is-nohl-1)
-map g# <Plug>(asterisk-gz#)<Plug>(is-nohl-1)
+" vim-asterisk {
+map *  <Plug>(asterisk-z*)
+map g* <Plug>(asterisk-gz*)
+map #  <Plug>(asterisk-z#)
+map g# <Plug>(asterisk-gz#)
 " }
 
 " QuickFix {
@@ -878,11 +879,6 @@ let g:qf_auto_quit = 1
 
 nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
 nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
-" }
-
-" winresizer {
-let g:winresizer_gui_enable = 0
-let g:winresizer_start_key = '<F3>'
 " }
 
 function! Strip(input_string)
@@ -1066,10 +1062,10 @@ let g:gutentags_ctags_extra_args = [
 " }
 
 " git-lens.vim {
-vim9cmd g:GIT_LENS_ENABLED = true
-vim9cmd g:GIT_LENS_CONFIG = {
-	blame_delay: 200,
-}
+let g:GIT_LENS_ENABLED = 1
+let g:GIT_LENS_CONFIG = {
+			\ 'blame_delay': 200,
+			\ }
 " }
 
 " vim-signature {
@@ -1181,7 +1177,7 @@ let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fence
 " }
 
 " vim-better-whitespace {
-let g:better_whitespace_filetypes_blacklist = ['diff', 'git', 'gitcommit', 'qf', 'help']
+let g:better_whitespace_filetypes_blacklist = ['diff', 'git', 'gitcommit', 'qf', 'help', 'ctrlsf']
 
 nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
@@ -1189,10 +1185,11 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " asyncrun.vim {
 let g:asyncrun_exit = 'echohl WarningMsg | echo "AsyncRun finished!" | echohl None'
 
-nnoremap <F4> :AsyncRun<Space>
-
 " Asynchronous Make command
 command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
+
+nnoremap <F3> :Make<Space>
+nnoremap <F4> :AsyncRun<Space>
 " }
 
 " vim-markdown {
