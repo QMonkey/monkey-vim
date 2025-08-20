@@ -42,12 +42,13 @@ Plug 'dyng/ctrlsf.vim'
 Plug 'mg979/vim-visual-multi'
 Plug 'justinmk/vim-dirvish'
 Plug 'tpope/vim-obsession'
-Plug 'justinmk/vim-sneak'
+Plug 'monkoose/vim9-stargate'
 Plug 'wellle/targets.vim'
+Plug 'michaeljsmith/vim-indent-object'
 Plug 'svermeulen/vim-subversive'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/vim-asterisk'
-Plug 'RRethy/vim-illuminate'
+Plug 'dominikduda/vim_current_word'
 Plug 'vim-autoformat/vim-autoformat'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'skywind3000/asyncrun.vim'
@@ -61,7 +62,8 @@ Plug 'Eliot00/git-lens.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'Raimondi/delimitMate'
+Plug 'jiangmiao/auto-pairs'
+Plug 'andymass/vim-matchup'
 Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
@@ -79,7 +81,6 @@ call plug#end()
 " Builtin packages {
 silent! packadd! comment
 silent! packadd! hlyank
-silent! packadd! matchit
 silent! packadd! nohlsearch
 
 " Enable 'Man' command
@@ -273,6 +274,7 @@ function! SetDoc()
 				\	'go': 'GoDoc',
 				\	'python': 'PyDoc',
 				\	'vim': 'help',
+				\	'help': 'help',
 				\ }
 
 	let l:is_doc_set = 0
@@ -303,7 +305,7 @@ function! SetDoc()
 endfunction
 
 function! ViewDoc(commands, name)
-	let l:buf_name = expand("$HOME/__doc__")
+	let l:buf_name = expand($HOME . '/__doc__')
 	if bufloaded(l:buf_name)
 		let l:buf_is_new = 0
 		if bufname('%') !=# l:buf_name
@@ -334,8 +336,8 @@ function! ViewDoc(commands, name)
 		endif
 
 		silent keepjumps %delete _
-		execute  'silent read !' . l:cmd
-		normal 1G
+		execute 'silent read !' . l:cmd
+		execute 1
 		silent keepjumps 0delete _
 
 		if v:shell_error == 0
@@ -347,7 +349,7 @@ function! ViewDoc(commands, name)
 		if l:buf_is_new
 			execute 'silent bdelete!'
 		else
-			normal u
+			execute 'silent undo'
 			setlocal nomodified
 			setlocal nomodifiable
 		endif
@@ -941,10 +943,11 @@ augroup END
 let g:Lf_PythonVersion = 3
 let g:Lf_ShortcutF = '<C-p>'
 let g:Lf_ShortcutB = '<C-m>'
-let g:Lf_WindowPosition = 'bottom'
+let g:Lf_WindowPosition = 'popup'
 let g:Lf_ShowDevIcons = 0
 let g:Lf_StlColorscheme = 'powerline'
 let g:Lf_StlSeparator = {'left': "\ue0b0", 'right': "\ue0b2"}
+let g:Lf_Ctags = 'ctags --fields=+liaS --extra=+q --langmap=c:.c.h,vim:.vim.vimrc'
 let g:Lf_PreviewResult = {
 			\ 'File': 0,
 			\ 'Buffer': 0,
@@ -981,25 +984,30 @@ vmap <silent><Leader>a <Plug>CtrlSFVwordExec
 " }
 
 " vim-visual-multi {
+let g:VM_maps = {}
+let g:VM_maps['Select Operator'] = 'gs'
 " let g:VM_set_statusline = 0
 " }
 
-" vim-sneak {
-" Enable streak-mode
-let g:sneak#streak = 1
-let g:sneak#use_ic_scs = 1
-let g:sneak#target_labels = ';sfadlgwterhiounpqv/SFADLGWTERHIOUNPQV?0'
+" vim9-stargate {
+let g:stargate_name = 'QMonkey'
 
-" Disable default map for s and S
-map <Plug>(go_away_sneak_s) <Plug>Sneak_s
-map <Plug>(go_away_sneak_S) <Plug>Sneak_S
+" For 1 character to search before showing hints
+noremap f <Cmd>call stargate#OKvim(1)<CR>
+" For 2 consecutive characters to search
+noremap F <Cmd>call stargate#OKvim(2)<CR>
 
-map <Plug>(go_away_sneak_next) <Plug>SneakNext
-map <Plug>(go_away_sneak_previous) <Plug>SneakPrevious
-
-" 2-character sneak
-map f <Plug>(SneakStreak)
-map F <Plug>(SneakStreakBackward)
+highlight StargateFocus ctermfg=101 guifg=#958C6A
+highlight StargateDesaturate ctermfg=238 guifg=#49423F
+highlight StargateError ctermfg=167 guifg=#D35B4B
+highlight StargateLabels ctermfg=179 ctermbg=234 guifg=#CAA247 guibg=#171E2C
+highlight StargateErrorLabels ctermfg=179 ctermbg=52 guifg=#CAA247 guibg=#551414
+highlight StargateMain cterm=bold ctermfg=199 gui=bold guifg=#F2119C
+highlight StargateSecondary cterm=bold ctermfg=49 gui=bold guifg=#11EB9C
+highlight StargateShip ctermfg=233 ctermbg=234 guifg=#111111 guibg=#CAA247
+highlight StargateVIM9000 cterm=bold ctermfg=233 ctermbg=139 gui=bold guifg=#111111 guibg=#B2809F
+highlight StargateMessage ctermfg=143 guifg=#A5B844
+highlight StargateErrorMessage ctermfg=167 guifg=#E36659
 " }
 
 " vim-subversive {
@@ -1022,7 +1030,7 @@ let g:rooter_resolve_links = 1
 
 let g:rooter_manual_only = 1
 
-nnoremap <silent><Leader>cd :Rooter<CR>
+nnoremap <silent><Leader>cr :Rooter<CR>
 
 augroup ChangeRoot
 	autocmd!
@@ -1042,23 +1050,25 @@ augroup END
 " }
 
 " vim-gutentags {
+let g:gutentags_modules = ['ctags']
+let g:gutentags_project_root = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
+let g:gutentags_cache_dir = expand($HOME . '/.cache/tags')
 let g:gutentags_ctags_tagfile = '.tags'
 let g:gutentags_ctags_auto_set_tags = 1
+let g:gutentags_ctags_extra_args = [
+			\ '--fields=+liaS',
+			\ '--extra=+q',
+			\ '--langmap=c:.c.h,vim:.vim.vimrc',
+			\ '--c-kinds=+p',
+			\ '--c++-kinds=+p',
+			\ '--python-kinds=+i',
+			\]
 let g:gutentags_generate_on_missing = 1
 let g:gutentags_generate_on_new = 0
 let g:gutentags_generate_on_write = 1
 let g:gutentags_background_update = 1
 let g:gutentags_resolve_symlinks = 1
 let g:gutentags_define_advanced_commands = 1
-let g:gutentags_ctags_extra_args = [
-			\ '--fields=+liaS',
-			\ '--extra=+q',
-			\ '--recurse=no',
-			\ '--langmap=c:.c.h,vim:.vim.vimrc',
-			\ '--c-kinds=+p',
-			\ '--c++-kinds=+p',
-			\ '--python-kinds=+i',
-			\]
 " }
 
 " git-lens.vim {
@@ -1066,6 +1076,12 @@ let g:GIT_LENS_ENABLED = 1
 let g:GIT_LENS_CONFIG = {
 			\ 'blame_delay': 200,
 			\ }
+" }
+
+" vim_current_word {
+let g:vim_current_word#highlight_delay = 200
+highlight CurrentWord cterm=underline ctermbg=237 gui=underline guibg=#3A3A3A
+highlight CurrentWordTwins ctermbg=237 guibg=#3A3A3A
 " }
 
 " vim-signature {
@@ -1183,7 +1199,7 @@ nnoremap <silent><Leader><Space> :StripWhitespace<CR>
 " }
 
 " asyncrun.vim {
-let g:asyncrun_exit = 'echohl WarningMsg | echo "AsyncRun finished!" | echohl None'
+let g:asyncrun_exit = 'silent! botright copen 10 | cbottom'
 
 " Asynchronous Make command
 command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
