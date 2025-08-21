@@ -1120,9 +1120,11 @@ let g:lsp_preview_autoclose = 0
 function! OnLspBufferEnabled()
 	setlocal signcolumn=yes
 	setlocal omnifunc=lsp#complete
-	if exists('+tagfunc')
-		setlocal tagfunc=lsp#tagfunc
-	endif
+
+	" Remove due to overriding the default action of ctags
+	" if exists('+tagfunc')
+	" 	setlocal tagfunc=lsp#tagfunc
+	" endif
 
 	nnoremap <silent><buffer>gd <plug>(lsp-definition)
 	nnoremap <silent><buffer>gc <plug>(lsp-declaration)
