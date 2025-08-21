@@ -703,15 +703,25 @@ noremap ; :
 " Remap U to <C-r> for easier redo
 nnoremap U <C-r>
 
-" Better comand-line editing
-cnoremap <C-j> <Down>
-cnoremap <C-k> <Up>
+" Better insert mode moving and editing
+inoremap <C-p> <Up>
+inoremap <C-n> <Down>
+inoremap <C-b> <Left>
+inoremap <C-f> <Right>
+inoremap <C-a> <Home>
+inoremap <C-e> <End>
+inoremap <C-h> <BackSpace>
+inoremap <C-d> <Del>
+
+" Better command mode moving and editing
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+cnoremap <C-b> <Left>
+cnoremap <C-f> <Right>
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
-
-" Delete current row
-inoremap <C-d> <ESC>ddi
-inoremap <C-k> <ESC>Da
+cnoremap <C-h> <BackSpace>
+cnoremap <C-d> <Del>
 
 nnoremap <silent>q :call Quit()<CR>
 nnoremap <silent><S-q> :quitall<CR>
@@ -947,7 +957,7 @@ let g:Lf_WindowPosition = 'popup'
 let g:Lf_ShowDevIcons = 0
 let g:Lf_StlColorscheme = 'powerline'
 let g:Lf_StlSeparator = {'left': "\ue0b0", 'right': "\ue0b2"}
-let g:Lf_Ctags = 'ctags --fields=+liaS --extra=+q --langmap=c:.c.h,vim:.vim.vimrc'
+let g:Lf_Ctags = 'ctags --fields=+liaS --extras=+q --langmap=c:.c.h,vim:.vim.vimrc'
 let g:Lf_PreviewResult = {
 			\ 'File': 0,
 			\ 'Buffer': 0,
@@ -1024,10 +1034,10 @@ let g:fastfold_fold_movement_commands = []
 " }
 
 " vim-rooter {
+let g:rooter_patterns = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
 let g:rooter_silent_chdir = 1
 let g:rooter_change_directory_for_non_project_files = 'current'
 let g:rooter_resolve_links = 1
-
 let g:rooter_manual_only = 1
 
 nnoremap <silent><Leader>cr :Rooter<CR>
@@ -1057,7 +1067,7 @@ let g:gutentags_ctags_tagfile = '.tags'
 let g:gutentags_ctags_auto_set_tags = 1
 let g:gutentags_ctags_extra_args = [
 			\ '--fields=+liaS',
-			\ '--extra=+q',
+			\ '--extras=+q',
 			\ '--langmap=c:.c.h,vim:.vim.vimrc',
 			\ '--c-kinds=+p',
 			\ '--c++-kinds=+p',
@@ -1078,8 +1088,13 @@ let g:GIT_LENS_CONFIG = {
 			\ }
 " }
 
+" auto-pairs {
+let g:AutoPairsMapCh = 1
+" }
+
 " vim_current_word {
 let g:vim_current_word#highlight_delay = 200
+
 highlight CurrentWord cterm=underline ctermbg=237 gui=underline guibg=#3A3A3A
 highlight CurrentWordTwins ctermbg=237 guibg=#3A3A3A
 " }
