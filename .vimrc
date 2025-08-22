@@ -67,12 +67,6 @@ Plug 'andymass/vim-matchup'
 Plug 'kshenoy/vim-signature'
 Plug 'romainl/vim-qf'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
-
-if has('mac') || has('macunix')
-	Plug 'rizzatti/dash.vim'
-else
-	Plug 'KabbAmine/zeavim.vim'
-endif
 " }
 
 " Add plugins to &runtimepath
@@ -247,62 +241,20 @@ endfunc
 " }
 
 " Docset {
+" Use :Man as the default docset
+set keywordprg=:Man
+
 augroup Docset
 	autocmd!
 
 	autocmd FileType man,help setlocal nolist
 
-	" Use man as docset for unrecognized filetype
-	autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeDoc() | endif
-
-	autocmd FileType * call SetDoc()
+	autocmd FileType c setlocal keywordprg=:Man
+	autocmd FileType sh setlocal keywordprg=:BashHelp
+	autocmd FileType go setlocal keywordprg=:GoDoc
+	autocmd FileType python setlocal keywordprg=:PyDoc
+	autocmd FileType vim,help setlocal keywordprg=:help
 augroup END
-
-function! GetCurrentWord()
-	return expand('<cword>')
-endfunction
-
-function! SetUnrecognizedFileTypeDoc()
-	nnoremap <silent><buffer><S-k> :execute 'Man' GetCurrentWord()<CR>
-	vnoremap <silent><buffer><S-k> <ESC>:execute 'Man' GetVisualSelection()<CR>
-endfunction
-
-function! SetDoc()
-	let l:filetype_docs = {
-				\	'c': 'Man',
-				\	'sh': 'BashHelp',
-				\	'go': 'GoDoc',
-				\	'python': 'PyDoc',
-				\	'vim': 'help',
-				\	'help': 'help',
-				\ }
-
-	let l:is_doc_set = 0
-	for [l:ftype, l:doc] in items(l:filetype_docs)
-		if &filetype !=# l:ftype
-			continue
-		endif
-
-		let l:search = GetCurrentWord()
-		execute 'nnoremap <silent><buffer><S-k> :execute "' . l:doc . '" GetCurrentWord()<CR>'
-
-		" Enable doc in visual-mode
-		execute 'vnoremap <silent><buffer><S-k> <ESC>:execute "' . l:doc . '" GetVisualSelection()<CR>'
-
-		let l:is_doc_set = 1
-	endfor
-
-	if !l:is_doc_set && &filetype !=# 'dirvish'
-		" Default doc: dash or zeal
-		if has('mac') || has('macunix')
-			nnoremap <silent><buffer><S-k> :execute 'Dash' GetCurrentWord()<CR>
-			vnoremap <silent><buffer><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
-		else
-			nnoremap <silent><buffer><S-k> :Zeavim<CR>
-			vnoremap <silent><buffer><S-k> :ZeavimV<CR>
-		endif
-	endif
-endfunction
 
 function! ViewDoc(commands, name)
 	let l:buf_name = expand($HOME . '/__doc__')
@@ -364,48 +316,6 @@ endfunction
 command! -nargs=1 BashHelp :call ViewDoc([{'cmd': 'bash -c "help <args>"', 'err_msg': ''}, {'cmd': 'man -S 1,8 <args>', 'err_msg': ''}], '<args>')
 command! -nargs=1 PyDoc :call ViewDoc([{'cmd': 'python3 -m pydoc <args>', 'err_msg': 'No Python documentation found'}], '<args>')
 command! -nargs=1 GoDoc :call ViewDoc([{'cmd': 'go doc -cmd -all <args>', 'err_msg': ''}], '<args>')
-" }
-
-" Inspired by http://stackoverflow.com/questions/1533565/how-to-get-visually-selected-text-in-vimscript
-function! GetVisualSelection()
-	let l:selection = ''
-	try
-		let l:a_save = @a
-		normal! gv"ay
-		let l:selection = @a
-	finally
-		let @a = l:a_save
-	endtry
-	return l:selection
-endfunction
-
-" zeavim.vim {
-let g:zv_disable_mapping = 1
-
-if !has('mac') && !has('macunix')
-	nmap <silent><Leader><Leader>z <Plug>ZVKeyDocset
-endif
-" }
-
-" dash.vim {
-if has('mac') || has('macunix')
-	function! DashPrompt()
-		let l:dash_command = 'Dash'
-
-		let l:ftype = Prompt('Docset: ', &filetype)
-		if empty(l:ftype)
-			let l:dash_command = 'Dash!'
-		endif
-		call Clear()
-
-		let l:prompt_text = 'Dash (' . l:ftype . ")\n" . 'Search for: '
-		let l:key = Prompt(l:prompt_text)
-
-		execute l:dash_command l:key l:ftype
-	endfunction
-
-	nmap <silent><Leader><Leader>z :call DashPrompt()<CR>
-endif
 " }
 
 " Resize splits when the window is resized
@@ -937,15 +847,37 @@ endfunction
 " Session {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
+function! GetSessionFileInfo()
+	let l:session_dir = expand($HOME . '/.cache/sessions/')
+	let l:session_filename = l:session_dir . substitute(trim(GetRootPath(), '/', 1), '/', '-', 'g') . '-session.vim'
+	return [l:session_dir, l:session_filename]
+endfunction
+
+function! BackupSession()
+	let l:session_info = GetSessionFileInfo()
+	let l:session_dir = l:session_info[0]
+	let l:session_filename = l:session_info[1]
+	call mkdir(l:session_dir, 'p')
+	execute 'Obsession' l:session_filename
+endfunction
+
+function! RestoreSession()
+	let l:session_info = GetSessionFileInfo()
+	let l:session_filename = l:session_info[1]
+	if argc() == 0 && filereadable(l:session_filename)
+		execute 'source' l:session_filename
+	endif
+endfunction
+
 " Backup
-nnoremap <Leader>bs :execute 'Obsession' expand(GetRootPath() . '/.session.vim')<CR>
+nnoremap <Leader>bs :call BackupSession()<CR>
 " Remove
 nnoremap <Leader>rs :Obsession!<CR>
 
-augroup RestoreSession
+augroup Session
 	autocmd!
 
-	autocmd VimEnter * nested if argc() == 0 && filereadable(expand(GetRootPath() . '/.session.vim')) | execute 'source' expand(GetRootPath() . '/.session.vim') | endif
+	autocmd VimEnter * nested call RestoreSession()
 augroup END
 " }
 
@@ -974,7 +906,6 @@ let g:Lf_PreviewResult = {
 augroup LeaderF
 	autocmd!
 
-	nmap <silent><C-w> :LeaderfWindow<CR>
 	nmap <silent><C-t> :LeaderfBufTag<CR>
 	nmap <silent><C-y> :LeaderfFunction<CR>
 	nmap <silent><C-e> :LeaderfLine<CR>
@@ -1120,11 +1051,6 @@ let g:lsp_preview_autoclose = 0
 function! OnLspBufferEnabled()
 	setlocal signcolumn=yes
 	setlocal omnifunc=lsp#complete
-
-	" Remove due to overriding the default action of ctags
-	" if exists('+tagfunc')
-	" 	setlocal tagfunc=lsp#tagfunc
-	" endif
 
 	nnoremap <silent><buffer>gd <plug>(lsp-definition)
 	nnoremap <silent><buffer>gc <plug>(lsp-declaration)
