@@ -57,6 +57,7 @@ Plug 'ludovicchabant/vim-gutentags'
 Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
 Plug 'prabirshrestha/vim-lsp' | Plug 'mattn/vim-lsp-settings'
 Plug 'prabirshrestha/asyncomplete.vim' | Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'Eliot00/git-lens.vim'
 Plug 'airblade/vim-gitgutter'
@@ -241,81 +242,16 @@ endfunc
 " }
 
 " Docset {
-" Use :Man as the default docset
-set keywordprg=:Man
-
 augroup Docset
 	autocmd!
 
 	autocmd FileType man,help setlocal nolist
 
-	autocmd FileType c setlocal keywordprg=:Man
-	autocmd FileType sh setlocal keywordprg=:BashHelp
-	autocmd FileType go setlocal keywordprg=:GoDoc
-	autocmd FileType python setlocal keywordprg=:PyDoc
+	" Use :LspHover as the default docset
+	autocmd FileType * setlocal keywordprg=:LspHover
+	autocmd FileType c,man setlocal keywordprg=:Man
 	autocmd FileType vim,help setlocal keywordprg=:help
 augroup END
-
-function! ViewDoc(commands, name)
-	let l:buf_name = expand($HOME . '/__doc__')
-	if bufloaded(l:buf_name)
-		let l:buf_is_new = 0
-		if bufname('%') !=# l:buf_name
-			execute 'silent sbuffer ' . bufnr(l:buf_name)
-		endif
-	else
-		let l:buf_is_new = 1
-		execute 'silent split ' . l:buf_name
-	endif
-
-	setlocal modifiable
-	setlocal noswapfile
-	setlocal buftype=nofile
-	setlocal bufhidden=delete
-	setlocal nofoldenable
-	setlocal nonumber
-	setlocal norelativenumber
-	setlocal nolist
-	setlocal nobuflisted
-	setlocal filetype=man
-
-	for l:command in a:commands
-		let l:cmd = l:command['cmd']
-		let l:err_msg = l:command['err_msg']
-		if !empty(l:err_msg)
-			let l:cmd = printf('if (%s | grep "%s"); then exit 1; else %s; fi', l:cmd, l:err_msg, l:cmd)
-			let l:cmd = printf("bash -c '%s'", l:cmd)
-		endif
-
-		silent keepjumps %delete _
-		execute 'silent read !' . l:cmd
-		execute 1
-		silent keepjumps 0delete _
-
-		if v:shell_error == 0
-			break
-		endif
-	endfor
-
-	if v:shell_error != 0
-		if l:buf_is_new
-			execute 'silent bdelete!'
-		else
-			execute 'silent undo'
-			setlocal nomodified
-			setlocal nomodifiable
-		endif
-		redraw
-		echohl WarningMsg | echo 'No documentation found for ' . a:name | echohl None
-	else
-		setlocal nomodified
-		setlocal nomodifiable
-	endif
-endfunction
-
-command! -nargs=1 BashHelp :call ViewDoc([{'cmd': 'bash -c "help <args>"', 'err_msg': ''}, {'cmd': 'man -S 1,8 <args>', 'err_msg': ''}], '<args>')
-command! -nargs=1 PyDoc :call ViewDoc([{'cmd': 'python3 -m pydoc <args>', 'err_msg': 'No Python documentation found'}], '<args>')
-command! -nargs=1 GoDoc :call ViewDoc([{'cmd': 'go doc -cmd -all <args>', 'err_msg': ''}], '<args>')
 " }
 
 " Resize splits when the window is resized
@@ -581,6 +517,7 @@ endif
 let g:molokai_original = 1
 let g:rehash256 = 1
 
+set background=dark
 colorscheme molokai
 " }
 
@@ -1016,6 +953,7 @@ let g:gutentags_define_advanced_commands = 1
 let g:GIT_LENS_ENABLED = 1
 let g:GIT_LENS_CONFIG = {
 			\ 'blame_delay': 200,
+			\ 'blame_wrap': v:false,
 			\ }
 " }
 
@@ -1065,8 +1003,8 @@ function! OnLspBufferEnabled()
 	nnoremap <silent><buffer><Leader>gi <plug>(lsp-peek-implementation)
 
 	nnoremap <silent><buffer><Leader>rn <plug>(lsp-rename)
-	" nnoremap <buffer><expr><C-u> lsp#scroll(-7)
-	" nnoremap <buffer><expr><C-d> lsp#scroll(+7)
+	nnoremap <buffer><expr><Up> lsp#scroll(-7)
+	nnoremap <buffer><expr><Down> lsp#scroll(+7)
 endfunction
 
 augroup LspInstall
@@ -1074,6 +1012,22 @@ augroup LspInstall
 
 	autocmd User lsp_buffer_enabled call OnLspBufferEnabled()
 augroup END
+" }
+
+" vim-vsnip {
+" Expand
+imap <expr> <C-j> vsnip#expandable() ? '<Plug>(vsnip-expand)' : '<C-j>'
+smap <expr> <C-j> vsnip#expandable() ? '<Plug>(vsnip-expand)' : '<C-j>'
+
+" Expand or jump
+imap <expr> <C-l> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
+smap <expr> <C-l> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
+
+" Jump forward or backward
+imap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
+smap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
+imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
+smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 " }
 
 " ale {
