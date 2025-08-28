@@ -201,7 +201,7 @@ set ttimeoutlen=10
 
 " Show tab, eof and trail space
 set list
-let &listchars="tab:\u25b8 ,eol:\u00ac,trail:\u22c5"
+set listchars=tab:▸\ ,eol:¬,trail:·
 
 " Restore cursor to previous editing position
 augroup RestoreCursorPosition
@@ -959,6 +959,13 @@ let g:GIT_LENS_CONFIG = {
 
 " auto-pairs {
 let g:AutoPairsMapCh = 1
+
+augroup AutoPairs
+	autocmd!
+
+	" Don't treat double quotes as pairs in vim
+	autocmd FileType vim let b:AutoPairs = {'(':')', '[':']', '{':'}', "'":"'", '```':'```', '"""':'"""', "'''":"'''", "`":"`"}
+augroup END
 " }
 
 " vim_current_word {
