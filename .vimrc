@@ -157,6 +157,15 @@ set completeopt=menu,menuone
 " For regular expressions turn magic on, and you don't need to add '\' before some special meaning characters.
 set magic
 
+" Swap file directory
+set directory=$HOME/.vim/swap//
+
+" Make the jumplist behave like the tagstack
+set jumpoptions+=stack
+
+" Don't load the .viminfo file on startup
+set viminfo=
+
 " Share vim clipboard with system clipboard (gvim -v in xterm)
 if has('unnamedplus')
 	" When possible use + register for copy-paste
@@ -276,7 +285,7 @@ set sidescrolloff=15
 " Number of cols to scroll at a time
 set sidescroll=1
 
-" Disable fold on start up
+" Disable fold on startup
 set nofoldenable
 set foldmethod=syntax
 set foldlevel=99
