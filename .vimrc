@@ -21,7 +21,7 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 	augroup PlugInstall
 		autocmd!
 
-		autocmd VimEnter * PlugInstall | source $MYVIMRC
+		autocmd VimEnter * PlugInstall | call mkdir($HOME . '/.vim/swap/', 'p') | source $MYVIMRC
 	augroup END
 endif
 " }
