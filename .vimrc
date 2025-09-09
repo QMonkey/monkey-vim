@@ -66,6 +66,7 @@ Plug 'tpope/vim-repeat'
 Plug 'jiangmiao/auto-pairs'
 Plug 'andymass/vim-matchup'
 Plug 'kshenoy/vim-signature'
+Plug 'tpope/vim-eunuch'
 Plug 'romainl/vim-qf'
 Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 " }
@@ -163,9 +164,6 @@ set directory=$HOME/.vim/swap//
 " Make the jumplist behave like the tagstack
 set jumpoptions+=stack
 
-" Don't load the .viminfo file on startup
-set viminfo=
-
 " Share vim clipboard with system clipboard (gvim -v in xterm)
 if has('unnamedplus')
 	" When possible use + register for copy-paste
@@ -217,6 +215,13 @@ augroup RestoreCursorPosition
 	autocmd!
 
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+augroup END
+
+" Clear jumplist on vim startup
+augroup Jumplist
+	autocmd!
+
+	autocmd VimEnter * :clearjumps
 augroup END
 
 " FileType {
