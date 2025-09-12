@@ -18,10 +18,11 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 	let s:path = expand('/.vim/autoload/plug.vim')
 	silent execute '!curl' '-fLo' $HOME . s:path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 
-	augroup PlugInstall
+	augroup Init
 		autocmd!
 
-		autocmd VimEnter * PlugInstall | call mkdir($HOME . '/.vim/swap/', 'p') | source $MYVIMRC
+		autocmd VimEnter * PlugInstall | source $MYVIMRC
+		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p')
 	augroup END
 endif
 " }
@@ -364,8 +365,8 @@ let g:lightline = {
 			\   'linter_warnings': 'warning',
 			\   'linter_ok': 'left',
 			\ },
-			\ 'separator': {'left': "\ue0b0", 'right': "\ue0b2"},
-			\ 'subseparator': {'left': "\ue0b1", 'right': "\ue0b3"},
+			\ 'separator': {'left': '', 'right': ''},
+			\ 'subseparator': {'left': '│', 'right': '│'},
 			\ 'tab': {
 			\   'active': ['filename', 'modified'],
 			\   'inactive': ['filename', 'modified'],
@@ -374,8 +375,8 @@ let g:lightline = {
 			\   'left': [['tabs']],
 			\   'right': []
 			\ },
-			\ 'tabline_separator': {'left': "\ue0b0", 'right': "\ue0b2"},
-			\ 'tabline_subseparator': {'left': "\ue0b1", 'right': "\ue0b3"},
+			\ 'tabline_separator': {'left': '', 'right': ''},
+			\ 'tabline_subseparator': {'left': '│', 'right': '│'},
 			\ }
 
 function! LightLineModified()
@@ -839,7 +840,7 @@ let g:Lf_ShortcutB = '<C-m>'
 let g:Lf_WindowPosition = 'popup'
 let g:Lf_ShowDevIcons = 0
 let g:Lf_StlColorscheme = 'powerline'
-let g:Lf_StlSeparator = {'left': "\ue0b0", 'right': "\ue0b2"}
+let g:Lf_StlSeparator = {'left': '', 'right': ''}
 let g:Lf_Ctags = 'ctags --fields=+liaS --extras=+q --langmap=c:.c.h,vim:.vim.vimrc'
 let g:Lf_PreviewResult = {
 			\ 'File': 0,
