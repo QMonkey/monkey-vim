@@ -55,9 +55,10 @@ Plug 'ntpeters/vim-better-whitespace'
 Plug 'skywind3000/asyncrun.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
-Plug 'prabirshrestha/vim-lsp' | Plug 'mattn/vim-lsp-settings'
-Plug 'prabirshrestha/asyncomplete.vim' | Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'yegappan/lsp'
+" Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
+" Plug 'prabirshrestha/vim-lsp' | Plug 'mattn/vim-lsp-settings'
+" Plug 'prabirshrestha/asyncomplete.vim' | Plug 'prabirshrestha/asyncomplete-lsp.vim'
 Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'Eliot00/git-lens.vim'
@@ -1033,6 +1034,112 @@ augroup LspInstall
 	autocmd!
 
 	autocmd User lsp_buffer_enabled call OnLspBufferEnabled()
+augroup END
+" }
+
+" lsp {
+function! OnLspSetup()
+	let l:lspOpts = #{
+				\   aleSupport: v:false,
+				\   autoComplete: v:true,
+				\   autoHighlight: v:false,
+				\   autoHighlightDiags: v:true,
+				\   autoPopulateDiags: v:false,
+				\   completionMatcher: 'case',
+				\   completionMatcherValue: 1,
+				\   completionTextEdit: v:true,
+				\   diagVirtualTextAlign: 'after',
+				\   diagVirtualTextWrap: 'truncate',
+				\   diagSignErrorText: 'E>',
+				\   diagSignHintText: 'H>',
+				\   diagSignInfoText: 'I>',
+				\   diagSignWarningText: 'W>',
+				\   echoSignature: v:false,
+				\   hideDisabledCodeActions: v:false,
+				\   highlightDiagInline: v:true,
+				\   hoverInPreview: v:false,
+				\   ignoreMissingServer: v:false,
+				\   keepFocusInDiags: v:true,
+				\   keepFocusInReferences: v:true,
+				\   noNewlineInCompletion: v:false,
+				\   omniComplete: v:false,
+				\   outlineOnRight: v:false,
+				\   outlineWinSize: 20,
+				\   popupBorder: v:true,
+				\   popupBorderHighlight: 'Title',
+				\   popupBorderHighlightPeek: 'Special',
+				\   popupBorderSignatureHelp: v:false,
+				\   popupHighlightSignatureHelp: 'Pmenu',
+				\   popupHighlight: 'Normal',
+				\   semanticHighlight: v:true,
+				\   showDiagInBalloon: v:true,
+				\   showDiagInPopup: v:true,
+				\   showDiagOnStatusLine: v:true,
+				\   showDiagWithSign: v:true,
+				\   showDiagWithVirtualText: v:true,
+				\   showInlayHints: v:false,
+				\   showSignature: v:true,
+				\   snippetSupport: v:true,
+				\   ultisnipsSupport: v:false,
+				\   useBufferCompletion: v:false,
+				\   usePopupInCodeAction: v:false,
+				\   useQuickfixForLocations: v:false,
+				\   vsnipSupport: v:true,
+				\   bufferCompletionTimeout: 100,
+				\   customCompletionKinds: v:false,
+				\   completionKinds: {},
+				\   filterCompletionDuplicates: v:false,
+				\   condensedCompletionMenu: v:false,
+				\ }
+
+	let l:lspServers = [#{
+				\  name: 'clang',
+				\  filetype: ['c', 'cpp'],
+				\  path: 'clangd',
+				\  args: ['--background-index', '--clang-tidy']
+				\ },
+				\ #{
+				\ name: 'gopls',
+				\   filetype: 'go',
+				\   path: 'gopls',
+				\   args: ['serve']
+				\ }]
+
+	call LspOptionsSet(l:lspOpts)
+	call LspAddServer(l:lspServers)
+endfunction
+
+function! OnLspAttached()
+	setlocal keywordprg=:LspHover
+	setlocal formatexpr=lsp#lsp#FormatExpr()
+
+	nnoremap <silent><buffer>gd :LspGotoDefinition<CR>
+	nnoremap <silent><buffer>gc :LspGotoDeclaration<CR>
+	nnoremap <silent><buffer>gt :LspGotoTypeDef<CR>
+	nnoremap <silent><buffer>gi :LspGotoImpl<CR>
+	nnoremap <silent><buffer>gr :LspShowReferences<CR>
+	nnoremap <silent><buffer>gh :LspHover<CR>
+
+	nnoremap <silent><buffer><Leader>gd :LspPeekDefinition<CR>
+	nnoremap <silent><buffer><Leader>gc :LspPeekDeclaration<CR>
+	nnoremap <silent><buffer><Leader>gr :LspPeekReferences<CR>
+	nnoremap <silent><buffer><Leader>gt :LspPeekTypeDef<CR>
+	nnoremap <silent><buffer><Leader>gi :LspPeekImpl<CR>
+
+	nnoremap <silent><buffer><Leader>rn :LspRename<CR>
+
+	" nnoremap <silent><buffer> [d        :LspDiagPrevWrap<CR>
+	" nnoremap <silent><buffer> ]d        :LspDiagNextWrap<CR>
+	" nnoremap <silent><buffer> [D        :LspDiag first<CR>
+	" nnoremap <silent><buffer> ]D        :LspDiag last<CR>
+	" nnoremap <silent><buffer> <leader>d :LspDiag current<CR>
+endfunction
+
+augroup Lsp
+	autocmd!
+
+	autocmd User LspSetup call OnLspSetup()
+	autocmd User LspAttached call OnLspAttached()
 augroup END
 " }
 
