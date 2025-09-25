@@ -56,9 +56,6 @@ Plug 'skywind3000/asyncrun.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'yegappan/lsp'
-" Plug 'w0rp/ale' | Plug 'maximbaz/lightline-ale'
-" Plug 'prabirshrestha/vim-lsp' | Plug 'mattn/vim-lsp-settings'
-" Plug 'prabirshrestha/asyncomplete.vim' | Plug 'prabirshrestha/asyncomplete-lsp.vim'
 Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'Eliot00/git-lens.vim'
@@ -322,8 +319,8 @@ set autoread
 " No bells
 set belloff=all
 
-" Disable mouse
-set mouse=
+" Enable mouse in normal, visual and insert mode
+set mouse=nvi
 
 " Only if there are at least two tab pages
 set showtabline=1
@@ -355,10 +352,6 @@ let g:lightline = {
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
-			\   'linter_checking': 'lightline#ale#checking',
-			\   'linter_errors': 'lightline#ale#errors',
-			\   'linter_warnings': 'lightline#ale#warnings',
-			\   'linter_ok': 'lightline#ale#ok',
 			\ },
 			\ 'component_type': {
 			\   'linter_checking': 'left',
@@ -385,7 +378,7 @@ function! LightLineModified()
 endfunction
 
 function! LightLineReadonly()
-	return &filetype !~? 'help' && &readonly ? "\ue0a2" : ''
+	return &filetype !~? 'help' && &readonly ? '🔒' : ''
 endfunction
 
 function! LightLineFilename()
@@ -507,11 +500,6 @@ function! LightLineMode()
 
 	return winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
-
-augroup AfterALELint
-	autocmd!
-	autocmd User ALELint call lightline#update()
-augroup END
 " }
 
 " Enable 256 color for vim
@@ -1002,41 +990,6 @@ let g:SignatureMarkTextHLDynamic = 1
 let g:SignatureMarkerTextHLDynamic = 1
 " }
 
-" vim-lsp {
-" Do it by ale
-let g:lsp_diagnostics_enabled = 0
-let g:lsp_document_code_action_signs_enabled = 0
-let g:lsp_completion_documentation_enabled = 1
-let g:lsp_preview_autoclose = 0
-
-function! OnLspBufferEnabled()
-	setlocal signcolumn=yes
-	setlocal omnifunc=lsp#complete
-
-	nnoremap <silent><buffer>gd <plug>(lsp-definition)
-	nnoremap <silent><buffer>gc <plug>(lsp-declaration)
-	nnoremap <silent><buffer>gt <plug>(lsp-type-definition)
-	nnoremap <silent><buffer>gi <plug>(lsp-implementation)
-	nnoremap <silent><buffer>gr <plug>(lsp-references)
-	nnoremap <silent><buffer>gh <plug>(lsp-hover)
-
-	nnoremap <silent><buffer><Leader>gd <plug>(lsp-peek-definition)
-	nnoremap <silent><buffer><Leader>gc <plug>(lsp-peek-declaration)
-	nnoremap <silent><buffer><Leader>gt <plug>(lsp-peek-type-definition)
-	nnoremap <silent><buffer><Leader>gi <plug>(lsp-peek-implementation)
-
-	nnoremap <silent><buffer><Leader>rn <plug>(lsp-rename)
-	nnoremap <buffer><expr><Up> lsp#scroll(-7)
-	nnoremap <buffer><expr><Down> lsp#scroll(+7)
-endfunction
-
-augroup LspInstall
-	autocmd!
-
-	autocmd User lsp_buffer_enabled call OnLspBufferEnabled()
-augroup END
-" }
-
 " lsp {
 function! OnLspSetup()
 	let l:lspOpts = #{
@@ -1093,46 +1046,76 @@ function! OnLspSetup()
 				\ }
 
 	let l:lspServers = [#{
-				\  name: 'clang',
+				\  name: 'clangd',
 				\  filetype: ['c', 'cpp'],
 				\  path: 'clangd',
 				\  args: ['--background-index', '--clang-tidy']
 				\ },
-				\ #{
-				\ name: 'gopls',
+				\ #{name: 'gopls',
 				\   filetype: 'go',
 				\   path: 'gopls',
 				\   args: ['serve']
-				\ }]
+				\ },
+				\ #{name: 'pylsp',
+				\   filetype: 'python',
+				\   path: 'pylsp',
+				\   args: []
+				\ },
+				\#{name: 'lua-language-server',
+				\   filetype: 'lua',
+				\   path: 'lua-language-server',
+				\   args: [],
+				\ },
+				\ #{name: 'bash-language-server',
+				\   filetype: 'sh',
+				\   path: 'bash-language-server',
+				\   args: ['start']
+				\ },
+				\#{name: 'vim-language-server',
+				\   filetype: 'vim',
+				\   path: 'vim-language-server',
+				\   args: ['--stdio']
+				\ },
+				\#{name: 'vscode-json-language-server',
+				\   filetype: ['json'],
+				\   path: 'vscode-json-language-server',
+				\   args: ['--stdio']
+				\ },
+				\#{name: 'vscode-markdown-language-server',
+				\   filetype: ['markdown'],
+				\   path: 'vscode-markdown-language-server',
+				\   args: ['--stdio']
+				\ }
+				\]
 
 	call LspOptionsSet(l:lspOpts)
 	call LspAddServer(l:lspServers)
 endfunction
 
 function! OnLspAttached()
-	setlocal keywordprg=:LspHover
 	setlocal formatexpr=lsp#lsp#FormatExpr()
+
+	nnoremap <silent><buffer>gh :LspHover<CR>
 
 	nnoremap <silent><buffer>gd :LspGotoDefinition<CR>
 	nnoremap <silent><buffer>gc :LspGotoDeclaration<CR>
 	nnoremap <silent><buffer>gt :LspGotoTypeDef<CR>
 	nnoremap <silent><buffer>gi :LspGotoImpl<CR>
 	nnoremap <silent><buffer>gr :LspShowReferences<CR>
-	nnoremap <silent><buffer>gh :LspHover<CR>
 
 	nnoremap <silent><buffer><Leader>gd :LspPeekDefinition<CR>
 	nnoremap <silent><buffer><Leader>gc :LspPeekDeclaration<CR>
-	nnoremap <silent><buffer><Leader>gr :LspPeekReferences<CR>
 	nnoremap <silent><buffer><Leader>gt :LspPeekTypeDef<CR>
 	nnoremap <silent><buffer><Leader>gi :LspPeekImpl<CR>
+	nnoremap <silent><buffer><Leader>gr :LspPeekReferences<CR>
+
+	nnoremap <silent><buffer>[d :LspDiagPrevWrap<CR>
+	nnoremap <silent><buffer>]d :LspDiagNextWrap<CR>
+	nnoremap <silent><buffer>[D :LspDiag first<CR>
+	nnoremap <silent><buffer>]D :LspDiag last<CR>
+	nnoremap <silent><buffer><Leader>gh :LspDiag! current<CR>
 
 	nnoremap <silent><buffer><Leader>rn :LspRename<CR>
-
-	" nnoremap <silent><buffer> [d        :LspDiagPrevWrap<CR>
-	" nnoremap <silent><buffer> ]d        :LspDiagNextWrap<CR>
-	" nnoremap <silent><buffer> [D        :LspDiag first<CR>
-	" nnoremap <silent><buffer> ]D        :LspDiag last<CR>
-	" nnoremap <silent><buffer> <leader>d :LspDiag current<CR>
 endfunction
 
 augroup Lsp
@@ -1159,41 +1142,13 @@ imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 " }
 
-" ale {
-let g:ale_sign_column_always = 0
-let g:ale_sign_error = 'E>'
-let g:ale_sign_warning = 'W>'
-let g:ale_echo_msg_error_str = 'Error'
-let g:ale_echo_msg_warning_str = 'Warning'
-let g:ale_echo_msg_format = '[%linter%] %s'
-let g:ale_statusline_format = ['%d error(s)', '%d warning(s)', '']
-let g:airline#extensions#ale#enabled = 0
-let g:ale_lsp_show_message_severity = 'warning'
-let g:ale_lint_on_insert_leave = 0
-let g:ale_lint_on_enter = 1
-let g:ale_lint_on_save = 1
-let g:ale_lint_on_text_changed = 0
-let g:ale_set_loclist = 1
-let g:ale_set_quickfix = 0
-let g:ale_open_list = 0
-let g:ale_keep_list_window_open = 0
-let g:ale_completion_enabled = 0
-" }
-
-" lightline-ale {
-let g:lightline#ale#indicator_checking = 'Linting...'
-let g:lightline#ale#indicator_warnings = 'Warning: '
-let g:lightline#ale#indicator_errors = 'Errors: '
-let g:lightline#ale#indicator_ok = 'OK'
-" }
-
 " vim-autoformat {
 " Execute Autoformat onsave
 augroup AutoFormat
 	autocmd!
 
 	autocmd BufWritePre * :Autoformat
-	" autocmd BufWritePre * :LspDocumentFormat
+	" autocmd BufWritePre * :LspFormat
 augroup END
 
 " Disable autoindent
