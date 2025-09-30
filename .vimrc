@@ -22,9 +22,21 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 		autocmd!
 
 		autocmd VimEnter * PlugInstall | source $MYVIMRC
-		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p')
+		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p') | call InitClangFormat()
 	augroup END
 endif
+
+function! InitClangFormat()
+	let l:lines = [
+				\ 'BasedOnStyle: LLVM',
+				\ 'IndentWidth: 8',
+				\ 'UseTab: Always',
+				\ 'BreakBeforeBraces: Linux',
+				\ 'AllowShortIfStatementsOnASingleLine: false',
+				\ 'IndentCaseLabels: false'
+				\ ]
+	call writefile(l:lines, $HOME . '/.clang-format')
+endfunction
 " }
 
 " vim-plug {
@@ -50,7 +62,6 @@ Plug 'svermeulen/vim-subversive'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/vim-asterisk'
 Plug 'dominikduda/vim_current_word'
-Plug 'vim-autoformat/vim-autoformat'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'skywind3000/asyncrun.vim'
 Plug 'airblade/vim-rooter'
@@ -1000,7 +1011,7 @@ function! OnLspSetup()
 				\   autoPopulateDiags: v:false,
 				\   completionMatcher: 'case',
 				\   completionMatcherValue: 1,
-				\   completionTextEdit: v:true,
+				\   completionTextEdit: v:false,
 				\   diagVirtualTextAlign: 'after',
 				\   diagVirtualTextWrap: 'truncate',
 				\   diagSignErrorText: 'E>',
@@ -1049,17 +1060,74 @@ function! OnLspSetup()
 				\  name: 'clangd',
 				\  filetype: ['c', 'cpp'],
 				\  path: 'clangd',
-				\  args: ['--background-index', '--clang-tidy']
+				\  args: [
+				\    '--background-index',
+				\    '--clang-tidy',
+				\    '--all-scopes-completion=true',
+				\    '--completion-style=detailed',
+				\    '--function-arg-placeholders=true',
+				\    '--header-insertion=iwyu',
+				\    '--header-insertion-decorators'
+				\  ]
 				\ },
 				\ #{name: 'gopls',
-				\   filetype: 'go',
+				\   filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
 				\   path: 'gopls',
-				\   args: ['serve']
+				\   args: ['serve'],
+				\   rootSearch: ['go.work', 'go.mod'],
+				\   workspaceConfig: {
+				\     'gopls': {
+				\       'analyses': {
+				\         'nilness': v:true,
+				\         'unusedparams': v:true,
+				\         'unusedwrite': v:true,
+				\         'useany': v:true,
+				\       },
+				\       'hoverKind': 'FullDocumentation',
+				\       'gofumpt': v:true,
+				\       'completeUnimported': v:true,
+				\       'staticcheck': v:true,
+				\       'usePlaceholders': v:true,
+				\       'completionDocumentation': v:true,
+				\       'codelenses': {
+				\         'generate': v:true,
+				\         'test': v:true,
+				\         'run_vulncheck_exp': v:true,
+				\       },
+				\       'hints': {
+				\         'assignVariableTypes': v:true,
+				\         'compositeLiteralFields': v:true,
+				\         'compositeLiteralTypes': v:true,
+				\         'constantValues': v:true,
+				\         'functionTypeParameters': v:true,
+				\         'parameterNames': v:true,
+				\         'rangeVariableTypes': v:true,
+				\       },
+				\     },
+				\   }
 				\ },
 				\ #{name: 'pylsp',
 				\   filetype: 'python',
 				\   path: 'pylsp',
-				\   args: []
+				\   args: [],
+				\   workspaceConfig: {
+				\     'pylsp': {
+				\       'plugins': {
+				\         'pylint': {
+				\           'enabled': v:false
+				\         },
+				\         'rope_autoimport': {
+				\           'enabled': v:true,
+				\           'completions': {
+				\             'enabled': v:true
+				\           },
+				\           'code_actions': {
+				\             'enabled': v:true
+				\           }
+				\         },
+				\       }
+				\     }
+				\   },
 				\ },
 				\#{name: 'lua-language-server',
 				\   filetype: 'lua',
@@ -1123,6 +1191,7 @@ augroup Lsp
 
 	autocmd User LspSetup call OnLspSetup()
 	autocmd User LspAttached call OnLspAttached()
+	autocmd BufWritePre * :LspFormat
 augroup END
 " }
 
@@ -1140,37 +1209,6 @@ imap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
 smap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
 imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
-" }
-
-" vim-autoformat {
-" Execute Autoformat onsave
-augroup AutoFormat
-	autocmd!
-
-	autocmd BufWritePre * :Autoformat
-	" autocmd BufWritePre * :LspFormat
-augroup END
-
-" Disable autoindent
-let g:autoformat_autoindent = 0
-
-" Disable auto retab
-let g:autoformat_retab = 0
-
-" Disable auto remove trailing spaces
-let g:autoformat_remove_trailing_spaces = 0
-
-" Generic C, C++, Objective-C style
-" A style similar to the Linux Kernel Coding Style
-" Linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
-let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
-
-" Golang
-let g:formatters_go = ['goimports', 'gofumpt']
-let g:run_all_formatters_go = 1
-
-" Markdown
-let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
 " }
 
 " vim-better-whitespace {
