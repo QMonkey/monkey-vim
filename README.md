@@ -284,7 +284,6 @@ git pull
 | [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session management |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | Faster folding for large files |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | Improved `*` / `#` search |
-| [dominikduda/vim_current_word](https://github.com/dominikduda/vim_current_word) | Highlight current word |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | Visual marks |
 | [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | Auto-change working directory |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list helpers |
@@ -308,8 +307,8 @@ L       To the last character of the line, same as $
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
 q       Quit current window, same as :q
-Q       Quit vim, same as :qa
-t       Recording, same as the original q
+Shift+q  Quit vim, same as :qa
+t       Recording, same as the original q (normal and visual mode)
 
 j       Move down one display line (gj), works on wrapped lines
 k       Move up one display line (gk), works on wrapped lines
@@ -519,8 +518,8 @@ Ctrl+^          Edit the alternate file. Mostly the alternate file is the previo
 cod             Toggle diff
 cop             Toggle paste
 col             Toggle list
+con             Clear search highlight
 Leader+cr       Change project root
-Leader+/        No highlight search
 Leader+space        Strip trailing whitespace
 Leader+Leader+space  Strip trailing whitespace + \\r (DOS newlines)
 Leader+q            Toggle quickfix
@@ -529,13 +528,7 @@ Leader+l            Toggle location list
 
 ### 2. Insert mode
 
-#### 2.1 Remap
-
-```
-t       Recording, same as the original q
-```
-
-#### 2.2 Snippets (vim-vsnip)
+#### 2.1 Snippets (vim-vsnip)
 
 ```
 Ctrl+j      Expand snippet or jump to next placeholder
@@ -596,8 +589,8 @@ S+surroundA     Add surround A for selected text (vim-surround built-in)
 ### 4. Command line mode
 
 ```
-Ctrl+j  Next command
-Ctrl+k  Previous command
+Ctrl+p  Previous command
+Ctrl+n  Next command
 Ctrl+a  Jump to the begin of the command line
 Ctrl+e  Jump to the end of the command line
 ```
