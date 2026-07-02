@@ -63,7 +63,7 @@ brew install curl git fd ripgrep universal-ctags cmake
 
 #### 2.2 Fonts
 
-A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) (e.g. Hack Nerd Font) is recommended for Powerline icons in the status line.
+[Nerd Font](https://github.com/ryanoasis/nerd-fonts) (e.g. Hack Nerd Font) is recommended for Powerline icons in the status line.
 
 - [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
 
