@@ -439,17 +439,6 @@ augroup LightLineCache
 	autocmd BufWinEnter,WinEnter * unlet! w:window_type
 augroup END
 
-function! LightLineVMInfo()
-	if !exists('b:VM_Selection') || empty(b:VM_Selection)
-		return ''
-	endif
-	let l:vm = VMInfos()
-	if empty(l:vm)
-		return ''
-	endif
-	return printf('VM %s', l:vm.ratio)
-endfunction
-
 " Combined git status component: gutter summary + branch name.
 " Replaces LightLineGitGutter & LightLineFugitive; avoids calling
 " s:GetWindowType() / s:IsGitFile() / FugitiveExtractGitDir() twice.
@@ -520,8 +509,57 @@ function! LightLineMode()
 					\ l:window_type == 1 ? 'Location' : ''
 	endif
 
+	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+		return 'VM'
+	endif
+
 	return winwidth(0) > 60 ? lightline#mode() : ''
 endfunction
+" }
+
+" vim-visual-multi lightline integration {
+highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
+highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
+
+function! LightLineVMInfo()
+	if s:GetWindowType() != 0
+		return ''
+	endif
+	if !exists('b:VM_Selection') || empty(b:VM_Selection)
+		return ''
+	endif
+	let l:vm = VMInfos()
+	if empty(l:vm)
+		return ''
+	endif
+	let l:result = l:vm.ratio
+	if !empty(@/)
+		let l:result .= '  /' . @/
+	endif
+	return l:result
+endfunction
+
+let s:saved_normal_left = []
+function! s:VM_Enter()
+	let s:saved_normal_left = copy(g:lightline#colorscheme#powerline#palette.normal.left[0])
+	let g:lightline#colorscheme#powerline#palette.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+	call lightline#highlight()
+	call lightline#update()
+endfunction
+function! s:VM_Leave()
+	if !empty(s:saved_normal_left)
+		let g:lightline#colorscheme#powerline#palette.normal.left[0] = s:saved_normal_left
+		let s:saved_normal_left = []
+	endif
+	call lightline#highlight()
+	call lightline#update()
+endfunction
+augroup VMLightLine
+	autocmd!
+	autocmd User visual_multi_start silent call s:VM_Enter()
+	autocmd User visual_multi_exit  silent call s:VM_Leave()
+augroup END
+
 " }
 
 " Color support {
@@ -661,6 +699,7 @@ nnoremap <silent><F2> :CtrlSFToggle<CR>
 nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
 nnoremap <silent>cop :set invpaste<CR>
 nnoremap <silent>col :set invlist<CR>
+nnoremap <silent>con :nohl<CR>
 nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohl<CR>
 " <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
 nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohl<CR>
