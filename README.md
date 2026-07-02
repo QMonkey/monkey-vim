@@ -4,7 +4,19 @@ Read this in other languages: [简体中文](README.zh-CN.md)
 
 ## Introduction
 
-The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
+The project monkey-vim, aims to make a powerful and fast terminal-native IDE.
+
+**Positioning:** monkey-vim targets pure terminal environments — no GUI, no gvim, no built-in terminal multiplexing. Use it in:
+
+| Environment | Description |
+|---|---|
+| Linux Terminal | xterm, kitty, alacritty, wezterm, gnome-terminal, etc. |
+| macOS Terminal | Terminal.app, iTerm2, kitty, etc. |
+| WSL | Windows Subsystem for Linux (WSL2 recommended) |
+| Server TTY | Bare Linux console (tty1–tty63), 256-color fallback |
+| kmscon | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support |
+
+Window/split management is delegated to tmux or your terminal emulator's native tabs.
 
 ## Screenshot
 
@@ -12,13 +24,10 @@ The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
 
 ![xterm vim](pictures/xterm_vim.png "xterm vim")
 
-- **gvim**
-
-![gvim](pictures/gvim.png "gvim")
-
 ## Requirements
 
-- vim 8.0+
+- vim 9.0+
+- A terminal environment (no GUI / gvim support)
 
 ## Installation
 
@@ -28,177 +37,118 @@ The project monkey-vim, aims to make a powerful, fast and cross platform IDE.
 git clone https://github.com/QMonkey/monkey-vim.git
 ```
 
-### 2. Install dependences
+### 2. Install dependencies
 
-#### 2.1 Dependent tools
+#### 2.1 Common tools
 
-- [fd](https://github.com/sharkdp/fd)
+| Tool | Purpose | Required |
+|---|---|---|
+| curl | Plugin manager bootstrap | Yes |
+| git | Plugin manager, vim-fugitive | Yes |
+| [fd](https://github.com/sharkdp/fd) | LeaderF file search backend | Yes |
+| [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) | ctrlsf code search backend | Yes |
+| universal-ctags | gutentags tag generation | Yes |
+| cmake | Build LeaderF C extension | Yes (compile-time only) |
 
 ```bash
-# Ubuntu
-sudo apt-get install curl
-sudo apt-get install ctags
-sudo apt-get install cmake
-sudo apt-get install silversearcher-ag or sudo apt-get install ack-grep
-sudo apt-get install wmctrl
-sudo apt-get install parcellite
+# Ubuntu/Debian
+sudo apt-get install curl git fd-find ripgrep universal-ctags cmake
 
-# OpenSUSE
-sudo zypper install curl
-sudo zypper install ctags
-sudo zypper install cmake
-sudo zypper install the_silver_searcher or sudo zypper install ack
-sudo zypper install wmctrl
-sudo zypper install parcellite
+# Arch Linux
+sudo pacman -S curl git fd ripgrep ctags cmake
 
-# CentOS
-sudo yum install curl
-sudo yum install ctags
-sudo yum install cmake
-sudo yum install the_silver_searcher or sudo yum install ack
-sudo yum install wmctrl
-sudo yum install clipit
-
-# Mac
-brew install curl
-brew install ctags
-brew install cmake
-brew install the_silver_searcher or brew install ack
-
-# Windows
-Visual Studio with C++ component
-7-zip
-ctags
-cmake
-ag
+# macOS
+brew install curl git fd ripgrep universal-ctags cmake
 ```
 
 #### 2.2 Fonts
 
-- [Hack](https://github.com/chrissimpkins/Hack)
+A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) (e.g. Hack Nerd Font) is recommended for Powerline icons in the status line.
 
-#### 2.3 Docset
+- [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
 
-- [Dash](https://kapeli.com/dash/)
-- [Zeal](https://zealdocs.org/)
+#### 2.3 LSP servers
+
+Language Server Protocol support is provided by [yegappan/lsp](https://github.com/yegappan/lsp). Install the servers for languages you use:
+
+| Language | LSP Server | Install |
+|---|---|---|
+| C/C++ | clangd | `sudo apt-get install clangd` or `brew install llvm` |
+| Go | gopls | `go install golang.org/x/tools/gopls@latest` |
+| Python | python-lsp-server | `pip install python-lsp-server` |
+| Rust | rust-analyzer | `rustup component add rust-analyzer` or `brew install rust-analyzer` |
+| Lua | lua-language-server | `sudo apt-get install lua-language-server` or `brew install lua-language-server` |
+| Shell | bash-language-server | `npm install -g bash-language-server` |
+| Vim | vim-language-server | `npm install -g vim-language-server` |
+| JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
+| TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
+| JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
+| YAML | yaml-language-server | `npm install -g yaml-language-server` |
+| Markdown | marksman | `sudo apt-get install marksman` or `brew install marksman` |
 
 #### 2.4 C/C++
 
 ```bash
 # Ubuntu
-sudo apt-get install gcc
-sudo apt-get install g++
-# "x" depends on your clang version
-sudo apt-get install clang-format-3.x
+sudo apt-get install gcc g++ clangd clang-format
 
-# OpenSUSE
-sudo zypper install gcc
-sudo zypper install gcc-c++
-sudo zypper install llvm-clang
-
-# CentOS
-sudo yum install gcc
-sudo yum install gcc-c++
-sudo yum install clang
-
-# Mac
-brew install clang
-
-# Windows
-gcc
-g++
-clang
+# macOS
+brew install gcc llvm clang-format
 ```
 
-#### 2.5 Golang
+#### 2.5 Go
 
 ```bash
-# Please install the lastest version of go
-
-# Other golang dependences
-# Linux and Mac
-go get -u github.com/nsf/gocode
-go get -u github.com/rogpeppe/godef
-go get -u golang.org/x/tools/cmd/goimports
-go get -u github.com/golang/lint/golint
-go get -u github.com/alecthomas/gometalinter
-go get -u github.com/kisielk/errcheck
-
-# Windows
-go get -u -ldflags -H=windowsgui github.com/nsf/gocode
-go get -u github.com/rogpeppe/godef
-go get -u golang.org/x/tools/cmd/goimports
-go get -u github.com/golang/lint/golint
-go get -u github.com/alecthomas/gometalinter
-go get -u github.com/kisielk/errcheck
+# Install the latest version of Go, then:
+go install golang.org/x/tools/gopls@latest
 ```
 
 #### 2.6 Python
 
 ```bash
-sudo pip install jedi
-sudo pip install autopep8 or sudo pip install yapf
-sudo pip install flake8
+pip install python-lsp-server
+# Optional: formatters/linters
+pip install autopep8 flake8 pylint
 ```
 
-#### 2.7 Lua
+#### 2.7 JavaScript / TypeScript
 
 ```bash
-# Ubuntu
-sudo apt-get install lua
-
-# OpenSUSE
-sudo zypper install lua
-
-# CentOS
-sudo yum install lua
-
-# Mac
-brew install lua
-
-# Windows
-lua
+# Install LSP server
+npm install -g typescript-language-server typescript
 ```
 
-#### 2.8 JSON
+#### 2.8 Rust
 
 ```bash
-sudo npm install -g jsonlint
+# Install rust-analyzer via rustup
+rustup component add rust-analyzer
+# Or via brew
+brew install rust-analyzer
 ```
 
-#### 2.9 Shell
+#### 2.9 YAML
 
 ```bash
-# Ubuntu
-sudo apt-get install shellcheck
-
-# OpenSUSE
-sudo zypper install ShellCheck
-
-# CentOS
-sudo yum install ShellCheck
-
-# Mac
-brew install shellcheck
+# Install LSP server
+npm install -g yaml-language-server
 ```
 
 #### 2.10 Markdown
 
+Preview Markdown in browser via WSL/glow:
 ```bash
-sudo pip install proselint
-sudo npm install -g livedown
-sudo npm install -g remark-cli
-```
+# Option 1: glow (terminal Markdown renderer)
+# https://github.com/charmbracelet/glow
+brew install glow  # or: go install github.com/charmbracelet/glow@latest
 
-#### 2.11 Vim
-
-```bash
-sudo pip install vim-vint
+# Option 2: Open in Windows browser (WSL only)
+# :!explorer.exe %
 ```
 
 ### 3. Install monkey-vim
 
-- Linux and Mac
+- Linux, Mac, WSL, and kmscon
 
 ```bash
 cd monkey-vim
@@ -206,12 +156,90 @@ ln -s $(pwd)/.vimrc ~/.vimrc
 vim
 ```
 
-- Windows
+### 4. kmscon setup (optional)
+
+[kmscon](https://github.com/dvdhrm/kmscon) is a Linux KMS/DRM-based system console that replaces the legacy tty with full Unicode support, multi-seat capability, and true color rendering. It is an excellent companion for monkey-vim on headless servers.
+
+#### 4.1 Install kmscon
 
 ```bash
-cd monkey-vim
-mklink %HOMEDRIVE%%HOMEPATH%\.vimrc %CD%\.vimrc
-vim
+# Ubuntu/Debian
+sudo apt-get install kmscon
+
+# Arch Linux
+sudo pacman -S kmscon
+
+# Build from source
+git clone https://github.com/dvdhrm/kmscon.git
+cd kmscon
+./autogen.sh
+./configure --prefix=/usr
+make
+sudo make install
+```
+
+#### 4.2 Replace tty with kmscon (permanent)
+
+To make kmscon the default system console instead of the legacy tty/getty, replace agetty with kmscon on the desired tty:
+
+```bash
+# Stop the existing getty on tty1
+sudo systemctl stop getty@tty1.service
+sudo systemctl disable getty@tty1.service
+
+# Create a kmscon service for tty1
+sudo mkdir -p /etc/systemd/system/getty.target.wants
+sudo ln -s /usr/lib/systemd/system/kmsconvt@.service \
+    /etc/systemd/system/getty.target.wants/kmsconvt@tty1.service
+
+# Start kmscon on tty1
+sudo systemctl start kmsconvt@tty1.service
+```
+
+After reboot, press `Ctrl+Alt+F1` to switch to the kmscon-enhanced tty1. You can repeat this for tty2–tty6 as needed.
+
+To preserve the ability to run a text-based autologin (e.g. for a headless coding server):
+
+```bash
+# Override the kmscon service to enable autologin
+sudo systemctl edit kmsconvt@tty1.service
+
+# Add the following lines:
+[Service]
+ExecStart=
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
+    --login -- /usr/bin/agetty --autologin your-username --noclear %I
+```
+
+Then `Ctrl+Alt+F1` will drop you directly into a kmscon session with vim-ready true color and Unicode.
+
+#### 4.3 Run vim inside kmscon
+
+Manually, for a one-off session:
+
+```bash
+# Start kmscon on a spare tty and run vim directly
+sudo kmscon --login -- /usr/bin/vim
+
+# Or switch to an existing kmscon session and launch vim
+sudo kmscon --switch
+```
+
+#### 4.4 Color support
+
+kmscon supports true color (24-bit). monkey-vim detects this automatically via `has('termguicolors')` and renders GUI colors directly.
+
+If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with molokai's `rehash256` palette for accurate color approximation.
+
+#### 4.5 Fonts
+
+kmscon uses the system's built-in font renderer. For Powerline icons in the status line, ensure a Nerd Font is available:
+
+```bash
+# Download and install Hack Nerd Font system-wide
+wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip
+sudo unzip -o Hack.zip -d /usr/share/fonts/truetype/hack
+sudo fc-cache -fv
 ```
 
 ## Update project
@@ -228,6 +256,39 @@ git pull
 :PlugClean
 ```
 
+## Plugin list
+
+| Plugin | Purpose |
+|---|---|
+| [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol client |
+| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | Snippet engine |
+| [Yggdroot/LeaderF](https://github.com/Yggdroot/LeaderF) | Fuzzy file/buffer/tag finder |
+| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | Async code search (rg/ag backend) |
+| [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | Async command runner |
+| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | Status line |
+| [tomasr/molokai](https://github.com/tomasr/molokai) | Colorscheme |
+| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | Multiple cursors |
+| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | Easy motion (replaces vim-sneak) |
+| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git wrapper |
+| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git diff in sign column |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | Automatic ctags generation |
+| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | Directory viewer (replaces netrw) |
+| [tpope/vim-surround](https://github.com/tpope/vim-surround) | Surround text with parens/quotes/etc |
+| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | Substitute with clipboard |
+| [andymass/vim-matchup](https://github.com/andymass/vim-matchup) | Extended % matching |
+| [wellle/targets.vim](https://github.com/wellle/targets.vim) | Additional text objects |
+| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects |
+| [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | Auto-close brackets/parens |
+| [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | Repeat plugin maps with `.` |
+| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX shell helpers (:W for sudo write) |
+| [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session management |
+| [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | Faster folding for large files |
+| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | Improved `*` / `#` search |
+| [dominikduda/vim_current_word](https://github.com/dominikduda/vim_current_word) | Highlight current word |
+| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | Visual marks |
+| [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | Auto-change working directory |
+| [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list helpers |
+
 ## Keyboard shortcut
 
 ```
@@ -239,26 +300,43 @@ The "Leader" key below means comma key.
 #### 1.1 Remap
 
 ```
-s       Replace a motion/text object with clipboard content
-S       Replace the text from cursor position to the end of the line with clipboard content
+s       Replace a motion/text object with clipboard content (e.g. siw)
+S       Replace from cursor to end of line with clipboard content
 Y       Copy from the cursor position to the end of the line, same as y$
 H       To the first non-blank character of the line, same as ^
-L       To the last non-blank character of the line, same as $
+L       To the last character of the line, same as $
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
 q       Quit current window, same as :q
 Q       Quit vim, same as :qa
-t       Recording, same as origin q
+t       Recording, same as the original q
+
+j       Move down one display line (gj), works on wrapped lines
+k       Move up one display line (gk), works on wrapped lines
+f       Search 1 char to jump (stargate)
+F       Search 2 consecutive chars to jump (stargate)
 ```
 
-#### 1.2 F2 ~ F10
+The following remaps work in both Insert mode and Command-line mode:
 
 ```
-F7      Run current project asynchronously. You can use “:FocusDispatch” command to override the default command. For example, :FocusDispatch gcc % -o a.out
-F8      Toggle output window of F7
-F9      Run current file
-F10     Markdown preview in browser
-F11     Toggle fullscreen, only available in GUI mode
+Ctrl+p  Move up        (Up)
+Ctrl+n  Move down      (Down)
+Ctrl+b  Move left      (Left)
+Ctrl+f  Move right     (Right)
+Ctrl+a  Jump to start  (Home)
+Ctrl+e  Jump to end    (End)
+Ctrl+h  Backspace      (BackSpace)
+Ctrl+d  Delete forward (Del)
+```
+
+#### 1.2 F1 ~ F4
+
+```
+F1      Open CtrlSF search prompt
+F2      Toggle CtrlSF search window
+F3      Open async Make prompt
+F4      Open AsyncRun prompt
 ```
 
 #### 1.3 Buffer
@@ -279,11 +357,6 @@ Ctrl+h      Jump to the left split
 Ctrl+j      Jump to the below split
 Ctrl+k      Jump to the above split
 Ctrl+l      Jump to the right split
-
-up          Stretch the window vertically
-down        Shrink the window vertically
-left        Stretch the window horizontally
-right       Shrink the window horizontally
 Leader+z    Toggle zoom
 ```
 
@@ -299,42 +372,64 @@ Leader+[    Jump to first tab
 Leader+]    Jump to last tab
 ```
 
-#### 1.6 Search
+#### 1.6 Search (vim-asterisk)
+
+Pressing `*` or `#` highlights all occurrences of the word under cursor without moving. Press again to jump normally.
 
 ```
-#       Search current word forward
-*       Search current word backward
+*       Highlight current word without moving (press again to jump)
+g*      Same as *, partial match
+#       Same as *, search backward
+g#      Same as g*, search backward
 ```
 
-#### 1.7 Replace
+#### 1.7 Replace (vim-subversive)
 
 ```
-# '\r' standard for newline
-
-Leader+R    Replace current word. Not whole word, and don't need to confirm
-Leader+rw   Same as "Leader+R", but search for whole world
-Leader+rc   Same as "Leader+R", but need to confirm
-Leader+rcw  Same as "Leader+R", but search for whole world and need to confirm
+s{textobj}  Replace a text object with clipboard content (e.g. siw to replace current word)
+ss          Replace entire current line with clipboard content
+S           Replace from cursor to end of line with clipboard content
 ```
 
-#### 1.8 Programming language
+#### 1.8 LSP (Language Server Protocol)
 
 ```
-K                   Refer current word in doc
-Leader+Leader+z     Refer doc in dash or zeal
+K                   Hover documentation for symbol under cursor
+gh                  Show hover in popup
 
 gd                  Go to definition
-Leader+gr           Go to references. Only support python
+gc                  Go to declaration
+gt                  Go to type definition
+gi                  Go to implementation
+gr                  Show references
+
+Leader+gd           Peek definition
+Leader+gc           Peek declaration
+Leader+gt           Peek type definition
+Leader+gi           Peek implementation
+Leader+gr           Peek references
+
+Leader+rn           Rename symbol
+[d                  Previous diagnostic
+]d                  Next diagnostic
+[D                  First diagnostic
+]D                  Last diagnostic
+Leader+gh           Show current line diagnostics
 ```
 
-#### 1.9 Ctags
+#### 1.9 File/Buffer/Tag navigation (LeaderF)
 
 ```
-Ctrl+]  Jump to the definition of the keyword under the cursor
-g]      Like “Ctrl+]”, but need to choose one tag to jump
+Ctrl+p      Search files
+Ctrl+m      Search buffers
+Ctrl+t      Search buffer tags
+Ctrl+y      Search function in buffer
+Ctrl+e      Search line in buffer
 ```
 
 #### 1.10 Fold
+
+These are standard Vim built-in keys enhanced by FastFold for performance:
 
 ```
 za      When on a closed fold, open it. When on an open fold, close it and set 'foldenable'
@@ -344,7 +439,7 @@ zR      Open all folds
 zM      Close all folds
 ```
 
-#### 1.11 Marks
+#### 1.11 Marks (vim-signature)
 
 ```
 m[a-zA-Z]   Toggle mark and display it in the leftmost column
@@ -374,91 +469,27 @@ m<BS>       Remove all markers
 m?          Open location list and display markers from current buffer
 ```
 
-#### 1.12 Netrw
+#### 1.12 Dirvish (Directory viewer, replaces netrw)
 
 ```
-~           Open project root or file directory in current window
 -           Open file directory in current window
+~           Open project root or home directory in current window
 
-<CR>        Netrw will enter the directory or read the file
-o           Enter the file/directory under the cursor in a new browser window. A horizontal split is used.
-v           Enter the file/directory under the cursor in a new browser window. A vertical split is used.
-t           Enter the file/directory under the cursor in a new tab
--           Makes Netrw go up one directory
-%           Open a new file in netrw's current directory
-d           Make a directory
-D           Attempt to remove the file(s)/directory(ies)
-R           Rename the designated file(s)/directory(ies)
-c           Make browsing directory the current directory
-i           Cycle between thin, long, wide, and tree listings
-gh          Quick hide/unhide of dot-files
-qf          Display information on file
-gn          Make top of tree the directory below the cursor
-Ctrl+l      Causes Netrw to refresh the directory listing
-Ctrl+r      Browse using a gvim server
-r           Reverse sorting order
-s           Select sorting style: by name, time, or file size
-x           View file with an associated program
-X           Execute filename under cursor via system()
-
-mf          Mark a file
-mr          Mark files using a shell-style regexp
-mF          Unmark files
-mu          Unmark all marked files
-md          Apply diff to marked files (up to 3)
-mg          Apply vimgrep to marked files
-mv          Apply arbitrary vim command to marked files
-mx          Apply arbitrary shell command to marked files
-mX          Apply arbitrary shell command to marked files en bloc
-mt          The cursor directory becomes markfile target
-mc          Copy marked files to marked-file target directory
-mm          Move marked files to marked-file target directory
+<CR>        Enter directory or open file
+o           Open in current window (edit)
+a           Open in horizontal split
+i           Open in vertical split
+t           Open in new tab
+-           Go up one directory
 ```
 
-#### 1.13 Code-completion engine: [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
-
-```
-gd          Go to definition
-gt          Go to header file, definition or declaration
-Leader+jd   Go to declaration
-```
-
-#### 1.14 Asynchronous lint engine: [ale](https://github.com/w0rp/ale)
-
-```
-Leader+l    Toggle error window
-```
-
-#### 1.15 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)
-
-```
-f       Search two character and jump to specific word
-F       Same as f, but in reverse direction
-```
-
-#### 1.16 Fast file navigation: [fzf.vim](https://github.com/junegunn/fzf.vim)
-
-```
-Ctrl+p      Search files
-Ctrl+t      Search tags
-Ctrl+n      Search buffer
-Ctrl+m      Git commits for the current buffer
-Ctrl+w      Search windows
-```
-
-#### 1.17 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
+#### 1.13 Code search (ctrlsf)
 
 ```
 Leader+a        Search current word in current directory
 ```
 
-#### 1.18 Commenter: [vim-commentary](https://github.com/tpope/vim-commentary)
-
-```
-gcc             Comment/Uncomments out the current line
-```
-
-#### 1.19 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
+#### 1.14 Surround (vim-surround)
 
 ```
 ys+textobj+surroundA        Add surround A for the region of textobj
@@ -467,32 +498,33 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.20 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
+#### 1.15 Async run
 
 ```
-Leader+ru       Run current file
+F3      Async make
+F4      Async run arbitrary command
 ```
 
-#### 1.21 Others
+#### 1.16 Others
 
 ```
 Leader+bs       Save session
 Leader+rs       Remove session
 
 '.              Jump to last changes
-''              To the position before the latest jump, or where the last “m'” or “m`” command was given
+''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
 Ctrl+^          Edit the alternate file. Mostly the alternate file is the previously edited file
 cod             Toggle diff
 cop             Toggle paste
 col             Toggle list
-coa             Toggle autoformat
-Leader+cd       Change project root
+Leader+cr       Change project root
 Leader+/        No highlight search
-Leader+space    Strip whitespace
-Leader+q        Toggle quickfix
-Leader+l        Toggle location list
+Leader+space        Strip trailing whitespace
+Leader+Leader+space  Strip trailing whitespace + \\r (DOS newlines)
+Leader+q            Toggle quickfix
+Leader+l            Toggle location list
 ```
 
 ### 2. Insert mode
@@ -500,9 +532,16 @@ Leader+l        Toggle location list
 #### 2.1 Remap
 
 ```
-t       Recording, same as origin q
-Ctrl+d  Delete current row
-Ctrl+k  Delete from cursor to the end of the line
+t       Recording, same as the original q
+```
+
+#### 2.2 Snippets (vim-vsnip)
+
+```
+Ctrl+j      Expand snippet or jump to next placeholder
+Ctrl+l      Expand snippet or jump forward
+Tab         Jump to next placeholder
+Shift+Tab   Jump to previous placeholder
 ```
 
 ### 3. Visual mode
@@ -512,13 +551,15 @@ Ctrl+k  Delete from cursor to the end of the line
 ```
 s       Replace selected text with clipboard content
 ;       Enter command line mode, same as :
+<       Decrease indent, keep selection
+>       Increase indent, keep selection
 ```
 
 #### 3.2 Search
 
 ```
-#       Search selected text forward
-*       Search selected text backward
+*       Search selected text forward (standard vim behavior, enhanced by vim-asterisk)
+#       Search selected text backward (standard vim behavior, enhanced by vim-asterisk)
 ```
 
 #### 3.3 Replace
@@ -526,45 +567,30 @@ s       Replace selected text with clipboard content
 ```
 # '\r' standard for newline
 
-Leader+R    Replace selected text
-Leader+rc   Same as "Leader+R", but need to confirm
+s{textobj}  Replace a text object with clipboard content (e.g. siw)
+ss          Replace entire current line with clipboard content
+S           Replace from cursor to end of line with clipboard content
 ```
 
-#### 3.4 Programming language
+
+
+#### 3.4 Easy motion (vim9-stargate)
 
 ```
-K       Refer selected text in doc
+f       Search 1 character to jump to specific word
+F       Search 2 consecutive characters to jump (reverse direction)
 ```
 
-#### 3.5 Motions on speed: [vim-sneak](https://github.com/justinmk/vim-sneak)
-
-```
-f       Search two character and jump to specific word
-F       Same as f, but in reverse direction
-```
-
-#### 3.6 Code searcher for project: [ack.vim](https://github.com/mileszs/ack.vim)
+#### 3.5 Code search (ctrlsf)
 
 ```
 Leader+a        Search selected text in current directory
 ```
 
-#### 3.7 Commenter: [vim-commentary](https://github.com/tpope/vim-commentary)
+#### 3.6 Surround (vim-surround)
 
 ```
-gc              Comment/Uncomments out the selected lines
-```
-
-#### 3.8 Change surround easier: [vim-surround](https://github.com/tpope/vim-surround)
-
-```
-S+surroundA     Add surround A for selected text
-```
-
-#### 3.9 Run code: [vim-quickrun](https://github.com/thinca/vim-quickrun)
-
-```
-Leader+ru    Run selected code
+S+surroundA     Add surround A for selected text (vim-surround built-in)
 ```
 
 ### 4. Command line mode
@@ -578,22 +604,19 @@ Ctrl+e  Jump to the end of the command line
 
 ## Useful command
 
-### 1. W
+### 1. W (vim-eunuch)
 
 ```vim
 " Save file with root permission
 :W
 ```
 
-### 2. Ack
+### 2. CtrlSF
 
 ```vim
-" Search recursively in current directory for the pattern, and then open the quickfix for you.
+" Search recursively in current directory for the pattern
 " Jump to the first result unless ! is given.
-:Ack[!] [PATTERN]
-
-" Same as :Ack, but load the result into location list
-:LAck[!] [PATTERN]
+:CtrlSF[!] [PATTERN]
 ```
 
 ### 3. GutentagsUpdate
@@ -606,67 +629,26 @@ Ctrl+e  Jump to the end of the command line
 :GutentagsUpdate!
 ```
 
-### 4. YcmGenerateConfig
+### 4. LeaderF
 
 ```vim
-" Generate ".ycm_extra_conf.py" file for current project
-:YcmGenerateConfig
-```
+" Search files
+:LeaderfFile [QUERY]
 
-### 5. Commits
+" Search buffers
+:LeaderfBuffer [QUERY]
 
-```vim
-" Git commits
-:Commits
-```
+" Search tags in the project
+:LeaderfTag [QUERY]
 
-### 6. Tags
+" Search buffer tags
+:LeaderfBufTag [QUERY]
 
-```vim
-" Tags in the project
-:Tags [QUERY]
-```
+" Search functions
+:LeaderfFunction [QUERY]
 
-### 7. Snippets
-
-```vim
-" Snippets
-:Snippets
-```
-
-### 8. GFiles
-
-```vim
-" Git files (git ls-files)
-:GFiles [OPTS]
-```
-
-### 9. GFiles?
-
-```vim
-" Git files (git status)
-:GFiles?
-```
-
-### 10. Ag
-
-```vim
-" ag search result
-:Ag [PATTERN]
-```
-
-### 11. Marks
-
-```vim
 " Search marks
-:Marks
-```
-
-### 12. Locate
-
-```vim
-" locate command output
-:Locate [PATTERN]
+:LeaderfMarks [QUERY]
 ```
 
 ## Use git in vim
@@ -675,59 +657,18 @@ Ctrl+e  Jump to the end of the command line
 
 ```vim
 " Run an arbitrary git command. Similar to :!git [args] but chdir to the repository tree first.
+" Recommended over :Gstatus, :Gcommit, :Gdiff, etc.
 :Git [args]
 
-" Bring up the output of git-status in the preview window. "g?" command for more help
-:Gstatus
-
-" A wrapper around git-commit.  If there is nothing to commit, :Gstatus is called instead.
-:Gcommit [args]
-
-" Calls git-merge and loads errors and conflicted files into the quickfix
-:Gmerge [args]
-
-" Like :Gmerge, but for git-pull
-:Gpull [args]
-
-" Like :Gpush, but for git-fetch
-:Gfetch [args]
-
-" Invoke git-push, load the results into the quickfix
-:Gpush [args]
-
-" Same as git grep
-:Ggrep [args]
-
-" Empty the buffer and :read a fugitive-revision. When the argument is omitted, this is similar to git-checkout on a work tree file or git-add on a stage file, but without writing anything to disk
-:Gread [path]
-
-" You can give :Gwrite an explicit path of where in the work tree to write
-:Gwrite [path]
-
-" Wrapper around git-mv that renames the buffer afterward
-:Gmove {destination}
-
-" Wrapper around git-rm that deletes the buffer afterward
-:Gremove
-
-" Perform a vimdiff against the current file in the given revision
-:Gdiff [args]
-
-" Load all previous revisions of the current file into the quickfix.  Additional git-log arguments can be given (for example, --reverse).
-" If "--" appears as an argument, no file specific filtering is done, and previous commits rather than previous file revisions are loaded
-:Glog [args]
-
-" Like |:Glog|, but use the location list instead of the quickfix
-:Gllog [args]
-
-" Use git-log -L to load previous revisions of the given range of the current file into the quickfix
-:{range}Glog [args]
-
-" Run git-blame on the file and open the results in a scroll bound vertical split. "g?" command for more help
-:Gblame [flags]
-
-" Run git-blame on the given range
-:{range}Gblame [flags]
+" Common examples:
+:Git status
+:Git diff
+:Git commit
+:Git log
+:Git blame
+:Git pull
+:Git push
+:Git checkout %
 
 " More help, please refer the video
 https://github.com/tpope/vim-fugitive#screencasts
@@ -736,27 +677,16 @@ https://github.com/tpope/vim-fugitive#screencasts
 :h fugitive.txt
 ```
 
-### 2. gitk for vim: [gitv](https://github.com/gregsexton/gitv)
+### 2. Git commit browser: [gv.vim](https://github.com/junegunn/gv.vim)
 
 ```vim
-" Invoking this command on a buffer that belongs to a git repository causes the gitv browser to open. '!' causes gitv to open in file mode rather than browser mode.
-" Any [args] supplied are passed on to the gitv viewer and can be used to narrow the commits that are shown.
-" If this command is run on a buffer not belonging to a git repository a message stating 'Not a git repository.' is displayed
-:Gitv! [args]
-
-" In file mode it narrows the commits shown to only those affecting lines in the range
-:{range}Gitv! [args]
-
-" Like :Gitv!, but open in browser mode
-:Gitv [args]
-
-" Please refer the official doc for more help
-:h gitv.txt
+" Open git commit browser
+:GV
 ```
 
 ## Precautions
 
-- I perfer 8 size indentation, and use hard tab instead of space. Therefore, monkey-vim uses 8 size tab. If you perfer 4 size indentation, and use space instead of tab. You can change the config below
+- monkey-vim defaults to 8-width tab indentation using hard tabs. If you prefer 4-width spaces, change:
 
 ```vim
 set tabstop=8
@@ -778,40 +708,25 @@ set expandtab
 
 - [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- Use vim to view man doc in shell, please put it in your bashrc file
+- Use vim to view man doc in shell, put this in your bashrc:
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
 ```
 
-- Remap Caps Lock key to Ctrl
-
-```bash
-# Linux
-# Please put this in the 10-caps2ctrl.conf file under /etc/X11/xorg.conf.d/
-Section "InputClass"
-        Identifier             "keyboard-layout"
-        MatchIsKeyboard        "on"
-        Option "XkbOptions"    "ctrl:nocaps"
-EndSection
-
-# Mac
-# Go to System Preferences -> Keyboard -> Keyboard Tab -> Modifier Keys and select Control for Caps Lock
-
-# Windows
-# Run as Administrator and reboot
-$hexified = "00,00,00,00,00,00,00,00,02,00,00,00,1d,00,3a,00,00,00,00,00".Split(",") | % { "0x$_"}
-$kbLayout = "HKLM:\System\CurrentControlSet\Control\Keyboard Layout"
-New-ItemProperty -Path $kbLayout -Name "Scancode Map" -PropertyType Binary -Value ([byte[]]$hexified)
-```
-
 ## FAQ
 
-- Prevent Vim from clearing the clipboard on exit
+- Vim clipboard integration
 
-Open parcellite **Preference>Display**, and check “Persistent History”
+monkey-vim sets `clipboard=unnamed,unnamedplus` so vim's yank/delete automatically syncs to the system clipboard. Copied text persists in the system clipboard after vim exits (the system clipboard is owned by the display server / Wayland compositor / terminal, not by vim).
 
-![parcellite](pictures/parcellite.png "parcellite.png")
+If you use a standalone clipboard manager (optional):
+
+| Tool | Platform | Purpose |
+|---|---|---|
+| [parcellite](https://parcellite.sourceforge.net/) | X11 | Lightweight clipboard manager with persistent history |
+| [cliphist](https://github.com/sentriz/cliphist) | Wayland | Clipboard history for wlroots-based compositors |
+| Built-in | macOS/WSL | System clipboard persists by default — no extra tool needed |
 
 - [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
 
