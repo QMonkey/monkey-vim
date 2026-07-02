@@ -284,7 +284,6 @@ git pull
 | [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session 管理 |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | 大文件折叠性能优化 |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | 增强 `*` / `#` 搜索 |
-| [dominikduda/vim_current_word](https://github.com/dominikduda/vim_current_word) | 高亮当前单词 |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | 可视化书签 |
 | [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | 自动切换工作目录 |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list 增强 |
@@ -308,8 +307,8 @@ L       跳到当前行最后一个字符,相当于"$"命令
 U       Redo，相当于"Ctrl-r"
 ;       进入命令行模式，相当于":"键
 q       退出窗口，相当于命令":q"
-Q       退出vim，相当于命令":qa"
-t       记录操作，相当于原来的q
+Shift+q  退出vim，相当于命令":qa"
+t       记录操作，相当于原来的q（普通模式和可视化模式）
 
 j       移至下一显示行（gj），在折行中正常移动
 k       移至上一显示行（gk），在折行中正常移动
@@ -519,8 +518,8 @@ Ctrl+^          打开上次编辑的文件
 cod             切换diff模式
 cop             切换paste模式
 col             切换list模式
+con             清除搜索高亮
 Leader+cr       切换到当前文件所在项目根路径
-Leader+/        取消搜索高亮
 Leader+space        去除行尾空白字符（:substitute）
 Leader+Leader+space  去除行尾空白字符 + \\r（DOS 换行符）
 Leader+q            打开/关闭quickfix
@@ -529,13 +528,7 @@ Leader+l            打开/关闭location list
 
 ### 2. 插入模式
 
-#### 2.1 按键修改
-
-```
-t       记录操作，相当于原来的 q
-```
-
-#### 2.2 代码片段（vim-vsnip）
+#### 2.1 代码片段（vim-vsnip）
 
 ```
 Ctrl+j      展开代码片段或跳转到下一个占位符
@@ -594,8 +587,8 @@ S+surroundA     选中字符串增加A围绕字符
 ### 4. 命令行模式
 
 ```
-Ctrl+j  下一条命令
-Ctrl+k  上一条命令
+Ctrl+p  上一条命令
+Ctrl+n  下一条命令
 Ctrl+a  跳到命令行最前
 Ctrl+e  跳到命令行最后
 ```
