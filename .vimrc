@@ -27,6 +27,10 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 endif
 
 function! InitClangFormat()
+	let l:clang_format = $HOME . '/.clang-format'
+	if filereadable(l:clang_format)
+		return
+	endif
 	let l:lines = [
 				\ 'BasedOnStyle: LLVM',
 				\ 'IndentWidth: 8',
@@ -35,7 +39,7 @@ function! InitClangFormat()
 				\ 'AllowShortIfStatementsOnASingleLine: false',
 				\ 'IndentCaseLabels: false'
 				\ ]
-	call writefile(l:lines, $HOME . '/.clang-format')
+	call writefile(l:lines, l:clang_format)
 endfunction
 " }
 
@@ -48,7 +52,6 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 
 " Plugins {
 Plug 'tomasr/molokai'
-Plug 'nathanaelkane/vim-indent-guides'
 Plug 'itchyny/lightline.vim'
 Plug 'Yggdroot/LeaderF', {'do': ':LeaderfInstallCExtension'}
 Plug 'dyng/ctrlsf.vim'
@@ -61,24 +64,20 @@ Plug 'michaeljsmith/vim-indent-object'
 Plug 'svermeulen/vim-subversive'
 Plug 'Konfekt/FastFold'
 Plug 'haya14busa/vim-asterisk'
-Plug 'dominikduda/vim_current_word'
-Plug 'ntpeters/vim-better-whitespace'
 Plug 'skywind3000/asyncrun.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'yegappan/lsp'
 Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
-Plug 'Eliot00/git-lens.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
-Plug 'jiangmiao/auto-pairs'
+Plug 'cohama/lexima.vim'
 Plug 'andymass/vim-matchup'
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-eunuch'
 Plug 'romainl/vim-qf'
-Plug 'shime/vim-livedown', {'for': 'markdown', 'on': 'LivedownPreview'}
 " }
 
 " Add plugins to &runtimepath
@@ -121,8 +120,8 @@ augroup RelativeNumber
 	autocmd!
 
 	" Only display relativenumber in active normal mode buffer
-	autocmd WinEnter,BufEnter,InsertLeave * set relativenumber
-	autocmd WinLeave,BufLeave,InsertEnter * set norelativenumber number
+	autocmd WinEnter,InsertLeave * set relativenumber
+	autocmd WinLeave,InsertEnter * set norelativenumber number
 augroup END
 " }
 
@@ -174,7 +173,7 @@ set directory=$HOME/.vim/swap//
 " Make the jumplist behave like the tagstack
 set jumpoptions+=stack
 
-" Share vim clipboard with system clipboard (gvim -v in xterm)
+" Share vim clipboard with system clipboard
 if has('unnamedplus')
 	" When possible use + register for copy-paste
 	set clipboard=unnamed,unnamedplus
@@ -218,7 +217,7 @@ set ttimeoutlen=10
 
 " Show tab, eof and trail space
 set list
-set listchars=tab:▸\ ,eol:¬,trail:·
+set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
 " Restore cursor to previous editing position
 augroup RestoreCursorPosition
@@ -239,7 +238,8 @@ augroup FileTypeGroup
 	autocmd!
 
 	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-	autocmd FileType json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd FileType json,yaml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd FileType javascript,typescript setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 
@@ -251,16 +251,17 @@ function! AutoInsertFileHead()
 	" Shell
 	if &filetype ==# 'sh'
 		call setline(1, '#!/bin/bash')
+		call cursor(line('$'), 0)
+		put = ''
 	endif
 
 	" Python
 	if &filetype ==# 'python'
 		call setline(1, '#!/usr/bin/env python3')
-		call setline(2, '# -*- coding: utf-8 -*-')
+		call cursor(line('$'), 0)
+		put = repeat(nr2char(10), 2)
 	endif
 
-	call cursor(line('$'), 0)
-	put = repeat(nr2char(10), 2)
 	call cursor(line('$'), 0)
 endfunc
 " }
@@ -305,11 +306,11 @@ set nofoldenable
 set foldmethod=syntax
 set foldlevel=99
 
-" Use indent style fold for python
-augroup PythonFold
+" Use indent style fold for python and yaml
+augroup LanguageFold
 	autocmd!
 
-	autocmd FileType python setlocal foldmethod=indent
+	autocmd FileType python,yaml setlocal foldmethod=indent
 augroup END
 
 " Character width. Should never be enable!
@@ -343,16 +344,16 @@ set laststatus=2
 let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
-			\   'left': [['mode', 'paste'], ['gitgutter', 'fugitive', 'filename']],
-			\   'right': [['linter_ok', 'linter_warnings', 'linter_errors', 'linter_checking', 'lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
+			\   'left': [['mode', 'paste'], ['vminfo', 'gitinfo', 'filename']],
+			\   'right': [['lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
 			\ },
 			\ 'inactive': {
 			\   'left': [['mode', 'filename']],
 			\   'right': []
 			\ },
 			\ 'component_function': {
-			\   'gitgutter': 'LightLineGitGutter',
-			\   'fugitive': 'LightLineFugitive',
+			\   'gitinfo': 'LightLineGitInfo',
+			\   'vminfo': 'LightLineVMInfo',
 			\   'filename': 'LightLineFilename',
 			\   'fileformat': 'LightLineFileformat',
 			\   'filetype': 'LightLineFiletype',
@@ -363,12 +364,6 @@ let g:lightline = {
 			\ },
 			\ 'component_expand': {
 			\   'tabs': 'lightline#tabs',
-			\ },
-			\ 'component_type': {
-			\   'linter_checking': 'left',
-			\   'linter_errors': 'error',
-			\   'linter_warnings': 'warning',
-			\   'linter_ok': 'left',
 			\ },
 			\ 'separator': {'left': '', 'right': ''},
 			\ 'subseparator': {'left': '│', 'right': '│'},
@@ -384,100 +379,117 @@ let g:lightline = {
 			\ 'tabline_subseparator': {'left': '│', 'right': '│'},
 			\ }
 
-function! LightLineModified()
+function! s:LightLineModified()
 	return &filetype =~# 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
 endfunction
 
-function! LightLineReadonly()
+function! s:LightLineReadonly()
 	return &filetype !~? 'help' && &readonly ? '🔒' : ''
 endfunction
 
-function! LightLineFilename()
-	if GetWindowType() != 0
-		return ''
+" Cached window type: returns 0=normal, 1=location, 2=quickfix, 3=preview
+" Result is stored in w:window_type to avoid recomputation within the same
+" statusline refresh cycle. Invalidated on BufWinEnter/WinEnter.
+function! s:GetWindowType()
+	if exists('w:window_type')
+		return w:window_type
 	endif
-
-	let l:fname = expand('%:t')
-	return  ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
-				\ ('' !=# l:fname ? l:fname : '[No Name]') .
-				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
-endfunction
-
-function! GetWindowType()
 	if &previewwindow
-		return 3
-	endif
-
-	if &filetype is# 'qf'
+		let w:window_type = 3
+	elseif &filetype is# 'qf'
 		let l:cur_winnr = winnr()
 		if qf#IsQfWindow(l:cur_winnr)
-			return 2
+			let w:window_type = 2
 		elseif qf#IsLocWindow(l:cur_winnr)
-			return 1
+			let w:window_type = 1
+		else
+			let w:window_type = 0
 		endif
+	else
+		let w:window_type = 0
 	endif
-
-	return 0
+	return w:window_type
 endfunction
 
-function! IsGitFile()
+" Cached git file detection. Result is stored in b:is_git_file,
+" invalidated on BufEnter.
+function! s:IsGitFile()
+	if exists('b:is_git_file')
+		return b:is_git_file
+	endif
+	let b:is_git_file = 0
 	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
 		return 0
 	endif
-
 	let l:fname = expand('%:t')
-	let l:plugins = ['\[Plugins\]']
-
-	if l:fname ==# ''
+	if l:fname ==# '' || l:fname =~# '\[Plugins\]'
 		return 0
 	endif
-
-	for l:plugin in l:plugins
-		if l:fname =~# l:plugin
-			return 0
-		endif
-	endfor
-
-	let l:git_dir = FugitiveExtractGitDir(resolve(expand('%')))
-	if l:git_dir ==# ''
+	if FugitiveExtractGitDir(resolve(expand('%'))) ==# ''
 		return 0
 	endif
-
+	let b:is_git_file = 1
 	return 1
 endfunction
 
-function! LightLineGitGutter()
-	if GetWindowType() != 0
+" Invalidate per-buffer and per-window caches
+augroup LightLineCache
+	autocmd!
+	autocmd BufEnter * unlet! b:is_git_file
+	autocmd BufWinEnter,WinEnter * unlet! w:window_type
+augroup END
+
+function! LightLineVMInfo()
+	if !exists('b:VM_Selection') || empty(b:VM_Selection)
 		return ''
 	endif
-
-	if !IsGitFile()
+	let l:vm = VMInfos()
+	if empty(l:vm)
 		return ''
 	endif
-
-	let l:summary = GitGutterGetHunkSummary()
-	return printf('+%d ~%d -%d', l:summary[0], l:summary[1], l:summary[2])
+	return printf('VM %s', l:vm.ratio)
 endfunction
 
-function! LightLineFugitive()
-	if GetWindowType() != 0
+" Combined git status component: gutter summary + branch name.
+" Replaces LightLineGitGutter & LightLineFugitive; avoids calling
+" s:GetWindowType() / s:IsGitFile() / FugitiveExtractGitDir() twice.
+function! LightLineGitInfo()
+	if s:GetWindowType() != 0
 		return ''
 	endif
-
-	if !IsGitFile()
+	if !s:IsGitFile()
 		return ''
 	endif
-
+	let l:parts = []
+	try
+		let l:s = GitGutterGetHunkSummary()
+		call add(l:parts, printf('+%d ~%d -%d', l:s[0], l:s[1], l:s[2]))
+	catch
+	endtry
 	try
 		if getftype(expand('%')) ==# 'link'
 			call FugitiveDetect(resolve(expand('%')))
 		endif
-		let l:mark = "\ue0a0 "
 		let l:branch = FugitiveHead()
-		return l:branch !=# '' ? l:mark.branch : ''
+		if l:branch !=# ''
+			call add(l:parts, " " . l:branch)
+		endif
 	catch
 	endtry
-	return ''
+	return join(l:parts, ' ')
+endfunction
+
+function! LightLineFilename()
+	if s:GetWindowType() != 0
+		return ''
+	endif
+	let l:ro = s:LightLineReadonly()
+	let l:mod = s:LightLineModified()
+	let l:fname = expand('%:t')
+	if l:fname ==# ''
+		let l:fname = '[No Name]'
+	endif
+	return join(filter([l:ro, l:fname, l:mod], 'v:val !=# ""'), ' ')
 endfunction
 
 function! LightLineFileformat()
@@ -501,8 +513,7 @@ function! LightLineLineInfo()
 endfunction
 
 function! LightLineMode()
-	let l:fname = expand('%:t')
-	let l:window_type = GetWindowType()
+	let l:window_type = s:GetWindowType()
 	if l:window_type != 0
 		return l:window_type == 3 ? 'Preview' :
 					\ l:window_type == 2 ? 'Quickfix' :
@@ -513,35 +524,38 @@ function! LightLineMode()
 endfunction
 " }
 
-" Enable 256 color for vim
-set t_Co=256
-
-" Inspired by http://sunaku.github.io/vim-256color-bce.html
-if &term =~# '256color'
-	" Disable Background Color Erase (BCE) so that color schemes
-	" render properly when inside 256-color tmux and GNU screen.
-	" See also http://snk.tuxfamily.org/log/vim-256color-bce.html
-	set t_ut=
+" Color support {
+" Use true color when the terminal supports it
+if has('termguicolors')
+	set termguicolors
 endif
 
-" molokai {
-" Should before colorscheme, do it by vim-plug
-" syntax on
+if &termguicolors
+" True color: Vim renders GUI colors (guifg/guibg) directly
+else
+	" Fallback: 256-color mode for terminals without true color support
+	set t_Co=256
 
-" Should before colorscheme, too
+	" Disable Background Color Erase (BCE) so that color schemes
+	" render properly when inside 256-color tmux and GNU screen.
+	" See http://snk.tuxfamily.org/log/vim-256color-bce.html
+	if &term =~# '256color'
+		set t_ut=
+	endif
+endif
+" }
+
+" molokai {
+" Should be set before :colorscheme
 let g:molokai_original = 1
-let g:rehash256 = 1
+if !&termguicolors
+	" Rehash 256-color palette for better approximation of GUI colors.
+	" Not needed when termguicolors is on, since true GUI colors are used.
+	let g:rehash256 = 1
+endif
 
 set background=dark
 colorscheme molokai
-" }
-
-" vim-indent-guides {
-let g:indent_guides_enable_on_vim_startup = 1
-let g:indent_guides_start_level = 2
-let g:indent_guides_guide_size = 1
-let g:indent_guides_tab_guides = 0
-let g:indent_guides_exclude_filetypes = ['diff', 'man', 'help', 'git', 'gitcommit', 'qf']
 " }
 
 " Key map {
@@ -588,16 +602,19 @@ cnoremap <C-d> <Del>
 nnoremap <silent>q :call Quit()<CR>
 nnoremap <silent><S-q> :quitall<CR>
 
-noremap t q
+nnoremap t q
+vnoremap t q
 
 function! Quit()
 	let l:last_winnr = winnr('#')
-	let l:window_type = GetWindowType()
+	let l:window_type = s:GetWindowType()
 
 	quit
 
 	if l:window_type == 1 || l:window_type == 2
-		silent! execute l:last_winnr . 'wincmd w'
+		if win_id2win(win_getid(l:last_winnr))
+			silent! execute l:last_winnr . 'wincmd w'
+		endif
 	endif
 endfunction
 " }
@@ -644,6 +661,9 @@ nnoremap <silent><F2> :CtrlSFToggle<CR>
 nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
 nnoremap <silent>cop :set invpaste<CR>
 nnoremap <silent>col :set invlist<CR>
+nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohl<CR>
+" <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
+nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohl<CR>
 
 " Disbale paste mode when leaving insert mode
 augroup PasteMode
@@ -672,22 +692,19 @@ nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 
 " vim-dirvish {
 nnoremap <silent>- :execute 'Dirvish' expand('%:p:h')<CR>
-nnoremap <silent>~ :execute 'Dirvish' GetHomePath()<CR>
+nnoremap <silent>~ :execute 'Dirvish' GetProjectOrHome()<CR>
 
-function! GetRootPath()
-	let l:root_path = FindRootDirectory()
-	if l:root_path ==# ''
-		let l:root_path = expand('%:p:h')
+function! GetFileroot()
+	let l:root = FindRootDirectory()
+	if l:root ==# ''
+		let l:root = expand('%:p:h')
 	endif
-	return l:root_path
+	return l:root
 endfunction
 
-function! GetHomePath()
-	let l:root_path = FindRootDirectory()
-	if l:root_path ==# ''
-		let l:root_path = expand('~')
-	endif
-	return l:root_path
+function! GetProjectOrHome()
+	let l:root = FindRootDirectory()
+	return l:root !=# '' ? l:root : expand('~')
 endfunction
 
 augroup SplitExplorer
@@ -776,24 +793,11 @@ function! Prompt(prompt_text, ...)
 endfunction
 
 function! PathPrompt(prompt_text, ...)
-	let l:value = ''
-	if a:0 == 0
-		let l:value = Prompt(a:prompt_text)
-	elseif a:0 == 1
-		let l:value = Prompt(a:prompt_text, a:1)
-	else
-		let l:value = Prompt(a:prompt_text, a:1, a:2)
-	endif
-
+	let l:value = call('Prompt', [a:prompt_text] + a:000)
 	if l:value ==# ''
 		let l:value = '%'
 	endif
 	return l:value
-endfunction
-
-function! Clear()
-	echon "\r\r"
-	echon ''
 endfunction
 
 " Session {
@@ -801,7 +805,7 @@ set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessiono
 
 function! GetSessionFileInfo()
 	let l:session_dir = expand($HOME . '/.cache/sessions/')
-	let l:session_filename = l:session_dir . substitute(trim(GetRootPath(), '/', 1), '/', '-', 'g') . '-session.vim'
+	let l:session_filename = l:session_dir . substitute(trim(GetFileroot(), '/', 1), '/', '-', 'g') . '-session.vim'
 	return [l:session_dir, l:session_filename]
 endfunction
 
@@ -842,6 +846,12 @@ let g:Lf_ShowDevIcons = 0
 let g:Lf_StlColorscheme = 'powerline'
 let g:Lf_StlSeparator = {'left': '', 'right': ''}
 let g:Lf_Ctags = 'ctags --fields=+liaS --extras=+q --langmap=c:.c.h,vim:.vim.vimrc'
+" Suppress qualified tags in function/buftag views so each function
+" appears exactly once (--extras=+q in g:Lf_Ctags would otherwise emit
+" both "helper" and "main.helper" for every Go function).
+let g:Lf_CtagsFuncOpts = {
+			\ 'go': '--go-kinds=f --extras=-q',
+			\}
 let g:Lf_PreviewResult = {
 			\ 'File': 0,
 			\ 'Buffer': 0,
@@ -879,7 +889,8 @@ vmap <silent><Leader>a <Plug>CtrlSFVwordExec
 " vim-visual-multi {
 let g:VM_maps = {}
 let g:VM_maps['Select Operator'] = 'gs'
-" let g:VM_set_statusline = 0
+let g:VM_set_statusline = 0
+let g:VM_silent_exit = 1
 " }
 
 " vim9-stargate {
@@ -964,30 +975,20 @@ let g:gutentags_resolve_symlinks = 1
 let g:gutentags_define_advanced_commands = 1
 " }
 
-" git-lens.vim {
-let g:GIT_LENS_ENABLED = 1
-let g:GIT_LENS_CONFIG = {
-			\ 'blame_delay': 200,
-			\ 'blame_wrap': v:false,
-			\ }
-" }
-
-" auto-pairs {
-let g:AutoPairsMapCh = 1
-
-augroup AutoPairs
+" lexima.vim {
+" Default rules handle (), [], {}, "", '', ``, and triple-quote pairs.
+" Backspace inside an empty pair deletes both characters.
+augroup Lexima
 	autocmd!
 
-	" Don't treat double quotes as pairs in vim
-	autocmd FileType vim let b:AutoPairs = {'(':')', '[':']', '{':'}', "'":"'", '```':'```', '"""':'"""', "'''":"'''", "`":"`"}
+	" Don't pair double quotes in vim files (vim uses " as comment leader)
+	autocmd FileType vim call lexima#add_rule(#{
+				\   char: '"',
+				\   input: '"',
+				\   input_after: '',
+				\   filetype: ['vim'],
+				\ })
 augroup END
-" }
-
-" vim_current_word {
-let g:vim_current_word#highlight_delay = 200
-
-highlight CurrentWord cterm=underline ctermbg=237 gui=underline guibg=#3A3A3A
-highlight CurrentWordTwins ctermbg=237 guibg=#3A3A3A
 " }
 
 " vim-signature {
@@ -1006,7 +1007,7 @@ function! OnLspSetup()
 	let l:lspOpts = #{
 				\   aleSupport: v:false,
 				\   autoComplete: v:true,
-				\   autoHighlight: v:false,
+				\   autoHighlight: v:true,
 				\   autoHighlightDiags: v:true,
 				\   autoPopulateDiags: v:false,
 				\   completionMatcher: 'case',
@@ -1070,7 +1071,25 @@ function! OnLspSetup()
 				\    '--header-insertion-decorators'
 				\  ]
 				\ },
-				\ #{name: 'gopls',
+				\#{name: 'rust-analyzer',
+				\   filetype: ['rust'],
+				\   path: 'rust-analyzer',
+				\   args: [],
+				\   workspaceConfig: {
+				\     'rust-analyzer': {
+				\       'checkOnSave': {
+				\         'command': 'clippy',
+				\       },
+				\       'procMacro': {
+				\         'enable': v:true,
+				\       },
+				\       'cargo': {
+				\         'allFeatures': v:true,
+				\       },
+				\     },
+				\   },
+				\ },
+				\#{name: 'gopls',
 				\   filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
 				\   path: 'gopls',
 				\   args: ['serve'],
@@ -1106,6 +1125,11 @@ function! OnLspSetup()
 				\     },
 				\   }
 				\ },
+				\#{name: 'typescript-language-server',
+				\   filetype: ['javascript', 'typescript'],
+				\   path: 'typescript-language-server',
+				\   args: ['--stdio'],
+				\ },
 				\ #{name: 'pylsp',
 				\   filetype: 'python',
 				\   path: 'pylsp',
@@ -1134,7 +1158,7 @@ function! OnLspSetup()
 				\   path: 'lua-language-server',
 				\   args: [],
 				\ },
-				\ #{name: 'bash-language-server',
+				\#{name: 'bash-language-server',
 				\   filetype: 'sh',
 				\   path: 'bash-language-server',
 				\   args: ['start']
@@ -1144,14 +1168,19 @@ function! OnLspSetup()
 				\   path: 'vim-language-server',
 				\   args: ['--stdio']
 				\ },
+				\#{name: 'marksman',
+				\   filetype: ['markdown'],
+				\   path: 'marksman',
+				\   args: ['server']
+				\ },
+				\#{name: 'yaml-language-server',
+				\   filetype: ['yaml'],
+				\   path: 'yaml-language-server',
+				\   args: ['--stdio'],
+				\ },
 				\#{name: 'vscode-json-language-server',
 				\   filetype: ['json'],
 				\   path: 'vscode-json-language-server',
-				\   args: ['--stdio']
-				\ },
-				\#{name: 'vscode-markdown-language-server',
-				\   filetype: ['markdown'],
-				\   path: 'vscode-markdown-language-server',
 				\   args: ['--stdio']
 				\ }
 				\]
@@ -1191,7 +1220,7 @@ augroup Lsp
 
 	autocmd User LspSetup call OnLspSetup()
 	autocmd User LspAttached call OnLspAttached()
-	autocmd BufWritePre * :LspFormat
+	autocmd BufWritePre * if exists(':LspFormat') | LspFormat | endif
 augroup END
 " }
 
@@ -1211,12 +1240,6 @@ imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 " }
 
-" vim-better-whitespace {
-let g:better_whitespace_filetypes_blacklist = ['diff', 'git', 'gitcommit', 'qf', 'help', 'ctrlsf']
-
-nnoremap <silent><Leader><Space> :StripWhitespace<CR>
-" }
-
 " asyncrun.vim {
 let g:asyncrun_exit = 'silent! botright copen 10 | cbottom'
 
@@ -1232,7 +1255,7 @@ nnoremap <F4> :AsyncRun<Space>
 " Don't need to install these if you are running a recent version of Vim
 let g:markdown_syntax_conceal = 0
 let g:markdown_minlines = 100
-let g:markdown_fenced_languages = ['c', 'cpp', 'go', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'json']
+let g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'yaml', 'json']
 " }
 
 " Terminal {
@@ -1240,8 +1263,8 @@ if !has('gui_running')
 	augroup CheckFileChanges
 		autocmd!
 
-		" Check file changes outside vim when in xterm
-		autocmd CursorHold,CursorHoldI,BufEnter,WinEnter * if getcmdtype() ==# '' | checktime | endif
+		" Check file changes outside vim (terminal/TTY/kmscon)
+		autocmd CursorHold,WinEnter,FocusGained * if getcmdtype() ==# '' | checktime | endif
 	augroup END
 endif
 " }
