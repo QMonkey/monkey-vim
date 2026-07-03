@@ -20,9 +20,7 @@ Window/split management is delegated to tmux or your terminal emulator's native 
 
 ## Screenshot
 
-- **xterm vim**
-
-![xterm vim](pictures/xterm_vim.png "xterm vim")
+![vim](pictures/xterm_vim.png "vim")
 
 ## Requirements
 
@@ -45,29 +43,21 @@ git clone https://github.com/QMonkey/monkey-vim.git
 |---|---|---|
 | curl | Plugin manager bootstrap | Yes |
 | git | Plugin manager, vim-fugitive | Yes |
-| [fd](https://github.com/sharkdp/fd) | LeaderF file search backend | Yes |
-| [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) | ctrlsf code search backend | Yes |
+| [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) | ctrlsf code search + LeaderF Rg backend | Yes |
 | universal-ctags | gutentags tag generation | Yes |
 | cmake | Build LeaderF C extension | Yes (compile-time only) |
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get install curl git fd-find ripgrep universal-ctags cmake
+sudo apt-get install curl git ripgrep universal-ctags cmake
 
 # Arch Linux
-sudo pacman -S curl git fd ripgrep ctags cmake
+sudo pacman -S curl git ripgrep ctags cmake
 
 # macOS
-brew install curl git fd ripgrep universal-ctags cmake
+brew install curl git ripgrep universal-ctags cmake
 ```
-
-#### 2.2 Fonts
-
-[Nerd Font](https://github.com/ryanoasis/nerd-fonts) (e.g. Hack Nerd Font) is recommended for Powerline icons in the status line.
-
-- [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
-
-#### 2.3 LSP servers
+#### 2.2 LSP servers
 
 Language Server Protocol support is provided by [yegappan/lsp](https://github.com/yegappan/lsp). Install the servers for languages you use:
 
@@ -76,7 +66,7 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 | C/C++ | clangd | `sudo apt-get install clangd` or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip install python-lsp-server` |
-| Rust | rust-analyzer | `rustup component add rust-analyzer` or `brew install rust-analyzer` |
+| Rust | rust-analyzer | `rustup component add rust-analyzer` |
 | Lua | lua-language-server | `sudo apt-get install lua-language-server` or `brew install lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
 | Vim | vim-language-server | `npm install -g vim-language-server` |
@@ -86,7 +76,7 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
 | Markdown | marksman | `sudo apt-get install marksman` or `brew install marksman` |
 
-#### 2.4 C/C++
+#### 2.3 C/C++
 
 ```bash
 # Ubuntu
@@ -96,14 +86,14 @@ sudo apt-get install gcc g++ clangd clang-format
 brew install gcc llvm clang-format
 ```
 
-#### 2.5 Go
+#### 2.4 Go
 
 ```bash
 # Install the latest version of Go, then:
 go install golang.org/x/tools/gopls@latest
 ```
 
-#### 2.6 Python
+#### 2.5 Python
 
 ```bash
 pip install python-lsp-server
@@ -111,30 +101,28 @@ pip install python-lsp-server
 pip install autopep8 flake8 pylint
 ```
 
-#### 2.7 JavaScript / TypeScript
+#### 2.6 JavaScript / TypeScript
 
 ```bash
 # Install LSP server
 npm install -g typescript-language-server typescript
 ```
 
-#### 2.8 Rust
+#### 2.7 Rust
 
 ```bash
 # Install rust-analyzer via rustup
 rustup component add rust-analyzer
-# Or via brew
-brew install rust-analyzer
 ```
 
-#### 2.9 YAML
+#### 2.8 YAML
 
 ```bash
 # Install LSP server
 npm install -g yaml-language-server
 ```
 
-#### 2.10 Markdown
+#### 2.9 Markdown
 
 Preview Markdown in browser via WSL/glow:
 ```bash
@@ -145,6 +133,12 @@ brew install glow  # or: go install github.com/charmbracelet/glow@latest
 # Option 2: Open in Windows browser (WSL only)
 # :!explorer.exe %
 ```
+
+#### 2.10 Fonts (optional)
+
+Vim uses common Unicode characters (⎇, │, 🔒, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) (e.g. Hack Nerd Font) is optional if you prefer the Powerline-style look.
+
+- [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
 
 ### 3. Install monkey-vim
 
@@ -231,9 +225,9 @@ kmscon supports true color (24-bit). monkey-vim detects this automatically via `
 
 If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with molokai's `rehash256` palette for accurate color approximation.
 
-#### 4.5 Fonts
+#### 4.5 Fonts (optional)
 
-kmscon uses the system's built-in font renderer. For Powerline icons in the status line, ensure a Nerd Font is available:
+kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a Nerd Font:
 
 ```bash
 # Download and install Hack Nerd Font system-wide
@@ -697,18 +691,6 @@ set shiftwidth=4
 set expandtab
 ```
 
-## Recommended settings
-
-- [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
-
-- Use vim to view man doc in shell, put this in your bashrc:
-
-```bash
-export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
-```
-
-## FAQ
-
 - Vim clipboard integration
 
 monkey-vim sets `clipboard=unnamed,unnamedplus` so vim's yank/delete automatically syncs to the system clipboard. Copied text persists in the system clipboard after vim exits (the system clipboard is owned by the display server / Wayland compositor / terminal, not by vim).
@@ -721,8 +703,12 @@ If you use a standalone clipboard manager (optional):
 | [cliphist](https://github.com/sentriz/cliphist) | Wayland | Clipboard history for wlroots-based compositors |
 | Built-in | macOS/WSL | System clipboard persists by default — no extra tool needed |
 
-- [FAQ](https://github.com/QMonkey/monkey-vim/wiki/FAQ)
+## Recommended settings
 
-## Configuration
+- [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-If you have any problem or suggestion with monkey-vim, welcome to give me an [issue](https://github.com/QMonkey/monkey-vim/issues)
+- Use vim to view man doc in shell, put this in your bashrc:
+
+```bash
+export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
+```
