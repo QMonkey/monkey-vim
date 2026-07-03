@@ -461,7 +461,7 @@ function! LightLineGitInfo()
 		endif
 		let l:branch = FugitiveHead()
 		if l:branch !=# ''
-			call add(l:parts, " " . l:branch)
+			call add(l:parts, "⎇ " . l:branch)
 		endif
 	catch
 	endtry
@@ -546,6 +546,7 @@ function! s:VM_Enter()
 	call lightline#highlight()
 	call lightline#update()
 endfunction
+
 function! s:VM_Leave()
 	if !empty(s:saved_normal_left)
 		let g:lightline#colorscheme#powerline#palette.normal.left[0] = s:saved_normal_left
@@ -554,12 +555,12 @@ function! s:VM_Leave()
 	call lightline#highlight()
 	call lightline#update()
 endfunction
+
 augroup VMLightLine
 	autocmd!
 	autocmd User visual_multi_start silent call s:VM_Enter()
 	autocmd User visual_multi_exit  silent call s:VM_Leave()
 augroup END
-
 " }
 
 " Color support {
