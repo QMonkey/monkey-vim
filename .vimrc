@@ -20,7 +20,6 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 
 	augroup Init
 		autocmd!
-
 		autocmd VimEnter * PlugInstall | source $MYVIMRC
 		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p') | call InitClangFormat()
 	augroup END
@@ -118,7 +117,6 @@ set relativenumber number
 
 augroup RelativeNumber
 	autocmd!
-
 	" Only display relativenumber in active normal mode buffer
 	autocmd WinEnter,InsertLeave * set relativenumber
 	autocmd WinLeave,InsertEnter * set norelativenumber number
@@ -136,7 +134,6 @@ set cursorline
 
 augroup CursorLine
 	autocmd!
-
 	" Disable cursorline in insert mode
 	autocmd InsertEnter * set nocursorline
 	autocmd InsertLeave * set cursorline
@@ -222,21 +219,18 @@ set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 " Restore cursor to previous editing position
 augroup RestoreCursorPosition
 	autocmd!
-
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
 augroup END
 
 " Clear jumplist on vim startup
 augroup Jumplist
 	autocmd!
-
 	autocmd VimEnter * :clearjumps
 augroup END
 
 " FileType {
 augroup FileTypeGroup
 	autocmd!
-
 	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 	autocmd FileType json,yaml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 	autocmd FileType javascript,typescript setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
@@ -269,7 +263,6 @@ endfunc
 " Docset {
 augroup Docset
 	autocmd!
-
 	autocmd FileType man,help setlocal nolist
 
 	" Use :LspHover as the default docset
@@ -288,7 +281,6 @@ endfunction
 
 augroup AutoResize
 	autocmd!
-
 	autocmd VimResized * call ResizeAllTab()
 augroup END
 
@@ -309,7 +301,6 @@ set foldlevel=99
 " Use indent style fold for python and yaml
 augroup LanguageFold
 	autocmd!
-
 	autocmd FileType python,yaml setlocal foldmethod=indent
 augroup END
 
@@ -708,7 +699,6 @@ nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohl<CR>
 " Disbale paste mode when leaving insert mode
 augroup PasteMode
 	autocmd!
-
 	autocmd InsertLeave * setlocal nopaste
 augroup END
 " }
@@ -749,7 +739,6 @@ endfunction
 
 augroup SplitExplorer
 	autocmd!
-
 	autocmd FileType dirvish silent! unmap <buffer>a
 	autocmd FileType dirvish silent! unmap <buffer>A
 	autocmd FileType dirvish silent! unmap <buffer>i
@@ -872,7 +861,6 @@ nnoremap <Leader>rs :Obsession!<CR>
 
 augroup Session
 	autocmd!
-
 	autocmd VimEnter * nested call RestoreSession()
 augroup END
 " }
@@ -907,7 +895,6 @@ let g:Lf_PreviewResult = {
 
 augroup LeaderF
 	autocmd!
-
 	nmap <silent><C-t> :LeaderfBufTag<CR>
 	nmap <silent><C-y> :LeaderfFunction<CR>
 	nmap <silent><C-e> :LeaderfLine<CR>
@@ -978,7 +965,6 @@ nnoremap <silent><Leader>cr :Rooter<CR>
 
 augroup ChangeRoot
 	autocmd!
-
 	" Change the working directory on vim startup
 	autocmd VimEnter * :Rooter
 augroup END
@@ -987,7 +973,6 @@ augroup END
 " Ctags {
 augroup Ctags
 	autocmd!
-
 	" Highlight .tags file as tags file
 	autocmd BufNewFile,BufRead *.tags setfiletype tags
 augroup END
@@ -1020,7 +1005,6 @@ let g:gutentags_define_advanced_commands = 1
 " Backspace inside an empty pair deletes both characters.
 augroup Lexima
 	autocmd!
-
 	" Don't pair double quotes in vim files (vim uses " as comment leader)
 	autocmd FileType vim call lexima#add_rule(#{
 				\   char: '"',
@@ -1257,7 +1241,6 @@ endfunction
 
 augroup Lsp
 	autocmd!
-
 	autocmd User LspSetup call OnLspSetup()
 	autocmd User LspAttached call OnLspAttached()
 	autocmd BufWritePre * if exists(':LspFormat') | LspFormat | endif
@@ -1302,7 +1285,6 @@ let g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'type
 if !has('gui_running')
 	augroup CheckFileChanges
 		autocmd!
-
 		" Check file changes outside vim (terminal/TTY/kmscon)
 		autocmd CursorHold,WinEnter,FocusGained * if getcmdtype() ==# '' | checktime | endif
 	augroup END
