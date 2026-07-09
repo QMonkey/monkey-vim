@@ -152,25 +152,27 @@ vim
 
 ### 4. kmscon 安装与使用（可选）
 
-[kmscon](https://github.com/dvdhrm/kmscon) 是基于 Linux KMS/DRM 的系统级终端，替代传统的 Linux tty，提供完整的 Unicode 支持、multi-seat 能力和真彩色渲染。它是 monkey-vim 在无头服务器上的绝佳搭档。
+[kmscon](https://github.com/kmscon/kmscon) 是基于 Linux KMS/DRM 的系统级终端，替代传统的 Linux tty，提供完整的 Unicode 支持、multi-seat 能力和真彩色渲染。它是 monkey-vim 在无头服务器上的绝佳搭档。
 
 #### 4.1 安装 kmscon
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu/Debian（旧版，不含 terminfo）
 sudo apt-get install kmscon
 
 # Arch Linux
 sudo pacman -S kmscon
 
-# 从源码编译
-git clone https://github.com/dvdhrm/kmscon.git
+# 从源码编译（需要 meson、ninja 和 ncurses 提供的 tic）
+git clone https://github.com/kmscon/kmscon.git
 cd kmscon
-./autogen.sh
-./configure --prefix=/usr
-make
-sudo make install
+meson setup builddir/
+meson install -C builddir/
 ```
+
+从源码编译时会自动通过 `tic` 编译并安装 kmscon 的 terminfo 条目，vim 无需任何 `TERM` 变通即可正确检测终端能力。默认安装 prefix 为 `/usr/local`，如需安装到系统路径请在 meson setup 时追加 `--prefix=/usr`。
+
+在较旧的系统上，`libtsm` 等依赖版本可能不满足编译要求。此时使用包管理器版本并通过 4.3 节的 `TERM` 变通方案即可。
 
 #### 4.2 用 kmscon 替代 tty（永久生效）
 
@@ -186,46 +188,45 @@ sudo mkdir -p /etc/systemd/system/getty.target.wants
 sudo ln -s /usr/lib/systemd/system/kmsconvt@.service \
     /etc/systemd/system/getty.target.wants/kmsconvt@tty1.service
 
+# 覆写 ExecStart 使用 kmscon 自带的终端类型
+sudo systemctl edit kmsconvt@tty1.service
+```
+
+添加以下覆写内容：
+
+```ini
+[Service]
+ExecStart=
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
+    --login -- /sbin/agetty -o '-p -- \\u' - --noclear %I kmscon
+```
+
+最后的 `kmscon` 参数告诉 agetty 设置 `TERM=kmscon`，与编译时安装的 terminfo 条目匹配。
+
+```bash
 # 在 tty1 上启动 kmscon
 sudo systemctl start kmsconvt@tty1.service
 ```
 
 重启后，按 `Ctrl+Alt+F1` 即可切换到支持真彩色和 Unicode 的 kmscon 终端。可按需对 tty2–tty6 重复相同操作。
 
-如需保留自动登录功能（例如在无头开发服务器上）：
-
-```bash
-# 覆写 kmscon 服务以启用自动登录
-sudo systemctl edit kmsconvt@tty1.service
-
-# 添加以下内容：
-[Service]
-ExecStart=
-ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
-    --login -- /usr/bin/agetty --autologin 你的用户名 --noclear %I
-```
-
-配置后 `Ctrl+Alt+F1` 将直接进入 kmscon 会话，支持 vim 的真彩色和完整 Unicode 渲染。
-
-#### 4.3 在 kmscon 中运行 vim
-
-手动方式，用于单次会话：
-
-```bash
-# 在空闲 tty 上启动 kmscon 并直接运行 vim
-sudo kmscon --login -- /usr/bin/vim
-
-# 或切换到已有的 kmscon 会话并启动 vim
-sudo kmscon --switch
-```
-
-#### 4.4 颜色支持
+#### 4.3 真彩色支持
 
 kmscon 支持真彩色（24-bit）。monkey-vim 通过 `has('termguicolors')` 自动检测并使用 GUI 颜色渲染。
 
+如果通过包管理器安装的 kmscon 版本较旧（不含 terminfo）或 terminfo 条目缺失，vim 会报错 `E558: Terminal entry not found in terminfo`。此时在 shell 配置中添加以下内容即可：
+
+```bash
+# 添加到 shell 配置文件中（~/.bashrc、~/.zshrc 等）
+export TERM=xterm-256color
+export COLORTERM=truecolor
+```
+
+`COLORTERM=truecolor` 必须在 `TERM=xterm-256color` 时设置，否则 vim 无法检测到真彩色支持。注意使用 `xterm-256color` 替代 kmscon 原生 terminfo 可能导致一定的终端刷新异常。如需最佳体验，请从源码编译获取原生 terminfo 条目。
+
 如果在传统 Linux tty（tty1–tty63）上运行，monkey-vim 将自动降级到 256 色模式，并启用 molokai 的 `rehash256` 调色板以准确逼近主题颜色。
 
-#### 4.5 字体（可选）
+#### 4.4 字体（可选）
 
 kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，可选择性安装 Nerd Font：
 
