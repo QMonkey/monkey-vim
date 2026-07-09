@@ -171,10 +171,10 @@ set directory=$HOME/.vim/swap//
 set jumpoptions+=stack
 
 " Share vim clipboard with system clipboard
-if has('unnamedplus')
+if has('unnamedplus') && !empty($DISPLAY)
 	" When possible use + register for copy-paste
 	set clipboard=unnamed,unnamedplus
-else
+elseif !empty($DISPLAY)
 	" On Mac and Windows, use * register for copy-paste
 	set clipboard=unnamed
 endif
@@ -336,13 +336,14 @@ let g:lightline = {
 			\ 'colorscheme': 'powerline',
 			\ 'active': {
 			\   'left': [['mode', 'paste'], ['vminfo', 'gitinfo', 'filename']],
-			\   'right': [['lineinfo'], ['percent'], ['filetype', 'fileencoding', 'fileformat']]
+			\   'right': [['lineinfo'], ['percent'], ['searchcount', 'filetype', 'fileencoding', 'fileformat']]
 			\ },
 			\ 'inactive': {
 			\   'left': [['mode', 'filename']],
 			\   'right': []
 			\ },
 			\ 'component_function': {
+			\   'searchcount': 'LightLineSearchCount',
 			\   'gitinfo': 'LightLineGitInfo',
 			\   'vminfo': 'LightLineVMInfo',
 			\   'filename': 'LightLineFilename',
@@ -492,6 +493,23 @@ function! LightLineLineInfo()
 	return winwidth(0) > 70 ? printf('%3d/%-d :%-2d', line('.'), line('$'), col('.')) : ''
 endfunction
 
+function! LightLineSearchCount()
+	if s:GetWindowType() != 0
+		return ''
+	endif
+	if !v:hlsearch || @/ ==# ''
+		return ''
+	endif
+	let l:count = searchcount()
+	if l:count.total == 0
+		return ''
+	endif
+	if l:count.incomplete == 1
+		return printf('[?/??]')
+	endif
+	return printf('[%d/%d]', l:count.current, l:count.total)
+endfunction
+
 function! LightLineMode()
 	let l:window_type = s:GetWindowType()
 	if l:window_type != 0
@@ -639,6 +657,12 @@ function! Quit()
 	let l:last_winnr = winnr('#')
 	let l:window_type = s:GetWindowType()
 
+	if &diff && l:last_winnr && bufname(winbufnr(l:last_winnr)) =~# '^fugitive:'
+		execute l:last_winnr . 'wincmd w'
+		quit
+		return
+	endif
+
 	quit
 
 	if l:window_type == 1 || l:window_type == 2
@@ -649,15 +673,26 @@ function! Quit()
 endfunction
 " }
 
+function! OpenPrompt(prompt, cmd)
+	let l:name = Strip(input(a:prompt, '', 'file'))
+	if l:name !=# ''
+		execute a:cmd ' ' . fnameescape(l:name)
+	endif
+endfunction
+
+function! Strip(input_string)
+	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+endfunction
+
 " Buffer {
-nnoremap <silent><Leader>o :execute 'edit' Prompt('New buffer name: ', '', 'file')<CR>
+nnoremap <silent><Leader>o :call OpenPrompt('New buffer name: ', 'edit')<CR>
 
 nnoremap <silent>[b :bprevious<CR>
 nnoremap <silent>]b :bnext<CR>
 " }
 
 " Tab {
-nnoremap <silent><Leader>t :execute 'tabnew' PathPrompt('New tab name: ', '', 'file')<CR>
+nnoremap <silent><Leader>t :call OpenPrompt('New tab name: ', 'tabnew')<CR>
 nnoremap <silent>[t :tabprevious<CR>
 nnoremap <silent>]t :tabnext<CR>
 nnoremap <Leader>1 1gt
@@ -678,8 +713,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :execute 'split' PathPrompt('New split name: ', '', 'file')<CR>
-nnoremap <silent><Leader>v :execute 'vsplit' PathPrompt('New vsplit name: ', '', 'file')<CR>
+nnoremap <silent><Leader>s :call OpenPrompt('New split name: ', 'split')<CR>
+nnoremap <silent><Leader>v :call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
 " }
 
 " F1 ~ F10 {
@@ -691,10 +726,10 @@ nnoremap <silent><F2> :CtrlSFToggle<CR>
 nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
 nnoremap <silent>cop :set invpaste<CR>
 nnoremap <silent>col :set invlist<CR>
-nnoremap <silent>con :nohl<CR>
-nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohl<CR>
+nnoremap <silent>con :nohlsearch<CR>
+nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohlsearch<CR>
 " <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
-nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohl<CR>
+nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohlsearch<CR>
 
 " Disbale paste mode when leaving insert mode
 augroup PasteMode
@@ -800,34 +835,6 @@ let g:qf_auto_quit = 1
 nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
 nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 " }
-
-function! Strip(input_string)
-	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
-endfunction
-
-" Prompt({prompt_text} [, {default_value} [, {completion_type}]])
-" More completion_type, please refer :h command-completion
-function! Prompt(prompt_text, ...)
-	call inputsave()
-	let l:value = ''
-	if a:0 == 0
-		let l:value = input(a:prompt_text)
-	elseif a:0 == 1
-		let l:value = input(a:prompt_text, a:1)
-	else
-		let l:value = input(a:prompt_text, a:1, a:2)
-	endif
-	call inputrestore()
-	return Strip(l:value)
-endfunction
-
-function! PathPrompt(prompt_text, ...)
-	let l:value = call('Prompt', [a:prompt_text] + a:000)
-	if l:value ==# ''
-		let l:value = '%'
-	endif
-	return l:value
-endfunction
 
 " Session {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
