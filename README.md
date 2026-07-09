@@ -152,25 +152,27 @@ vim
 
 ### 4. kmscon setup (optional)
 
-[kmscon](https://github.com/dvdhrm/kmscon) is a Linux KMS/DRM-based system console that replaces the legacy tty with full Unicode support, multi-seat capability, and true color rendering. It is an excellent companion for monkey-vim on headless servers.
+[kmscon](https://github.com/kmscon/kmscon) is a Linux KMS/DRM-based system console that replaces the legacy tty with full Unicode support, multi-seat capability, and true color rendering. It is an excellent companion for monkey-vim on headless servers.
 
 #### 4.1 Install kmscon
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu/Debian (older versions without terminfo)
 sudo apt-get install kmscon
 
 # Arch Linux
 sudo pacman -S kmscon
 
-# Build from source
-git clone https://github.com/dvdhrm/kmscon.git
+# Build from source (requires meson, ninja, and ncurses for tic)
+git clone https://github.com/kmscon/kmscon.git
 cd kmscon
-./autogen.sh
-./configure --prefix=/usr
-make
-sudo make install
+meson setup builddir/
+meson install -C builddir/
 ```
+
+Building from source automatically compiles and installs the kmscon terminfo entry via `tic`, so vim can detect terminal capabilities correctly without any `TERM` workaround. The default prefix is `/usr/local`; append `--prefix=/usr` to the meson setup command to install system-wide.
+
+On older systems, dependencies like `libtsm` may be too old to satisfy the build requirements. In that case, use the package manager version and apply the `TERM` workaround in section 4.3.
 
 #### 4.2 Replace tty with kmscon (permanent)
 
@@ -186,46 +188,45 @@ sudo mkdir -p /etc/systemd/system/getty.target.wants
 sudo ln -s /usr/lib/systemd/system/kmsconvt@.service \
     /etc/systemd/system/getty.target.wants/kmsconvt@tty1.service
 
+# Override ExecStart to use kmscon's own terminal type
+sudo systemctl edit kmsconvt@tty1.service
+```
+
+Add the following override:
+
+```ini
+[Service]
+ExecStart=
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
+    --login -- /sbin/agetty -o '-p -- \\u' - --noclear %I kmscon
+```
+
+The last argument `kmscon` tells agetty to set `TERM=kmscon`, which matches the terminfo entry installed during build.
+
+```bash
 # Start kmscon on tty1
 sudo systemctl start kmsconvt@tty1.service
 ```
 
 After reboot, press `Ctrl+Alt+F1` to switch to the kmscon-enhanced tty1. You can repeat this for tty2–tty6 as needed.
 
-To preserve the ability to run a text-based autologin (e.g. for a headless coding server):
-
-```bash
-# Override the kmscon service to enable autologin
-sudo systemctl edit kmsconvt@tty1.service
-
-# Add the following lines:
-[Service]
-ExecStart=
-ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
-    --login -- /usr/bin/agetty --autologin your-username --noclear %I
-```
-
-Then `Ctrl+Alt+F1` will drop you directly into a kmscon session with vim-ready true color and Unicode.
-
-#### 4.3 Run vim inside kmscon
-
-Manually, for a one-off session:
-
-```bash
-# Start kmscon on a spare tty and run vim directly
-sudo kmscon --login -- /usr/bin/vim
-
-# Or switch to an existing kmscon session and launch vim
-sudo kmscon --switch
-```
-
-#### 4.4 Color support
+#### 4.3 True color support
 
 kmscon supports true color (24-bit). monkey-vim detects this automatically via `has('termguicolors')` and renders GUI colors directly.
 
+If kmscon was installed via package manager (older versions without terminfo) or the terminfo entry is missing, vim may fail with `E558: Terminal entry not found in terminfo`. In that case, add the following to your shell profile:
+
+```bash
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+export TERM=xterm-256color
+export COLORTERM=truecolor
+```
+
+The `COLORTERM=truecolor` is required so vim still detects true color support when `TERM` is set to `xterm-256color`. Note that using `xterm-256color` instead of kmscon's native terminfo may cause minor display artifacts in vim due to terminal capability mismatches. For the best experience, build from source to get the native terminfo entry.
+
 If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with molokai's `rehash256` palette for accurate color approximation.
 
-#### 4.5 Fonts (optional)
+#### 4.4 Fonts (optional)
 
 kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a Nerd Font:
 
