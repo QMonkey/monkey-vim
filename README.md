@@ -140,7 +140,21 @@ Vim uses common Unicode characters (⎇, │, 🔒, ▸, ·, ¬) and works witho
 
 - [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
 
-### 3. Install monkey-vim
+### 3. Health check
+
+Verify that all required dependencies and optional LSP servers are available:
+
+```bash
+./checkhealth.sh
+```
+
+Pass `--install` to automatically install missing required dependencies (supports apt/pacman/brew):
+
+```bash
+./checkhealth.sh --install
+```
+
+### 4. Install monkey-vim
 
 - Linux, Mac, WSL, and kmscon
 
@@ -150,7 +164,7 @@ ln -s $(pwd)/.vimrc ~/.vimrc
 vim
 ```
 
-### 4. kmscon setup (optional)
+### 5. kmscon setup (optional)
 
 [kmscon](https://github.com/kmscon/kmscon) is a Linux KMS/DRM-based system console that replaces the legacy tty with full Unicode support, multi-seat capability, and true color rendering. It is an excellent companion for monkey-vim on headless servers.
 
