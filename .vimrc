@@ -13,6 +13,14 @@
 " }
 
 " Init {
+" Require Vim 9.0+, not Neovim
+if v:version < 900 || has('nvim')
+	echohl Error
+	echo "monkey-vim requires Vim 9.0 or later. Neovim is not supported."
+	echohl None
+	finish
+endif
+
 " Install vim-plug if not present
 if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 	let s:path = expand('/.vim/autoload/plug.vim')
@@ -22,6 +30,7 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 		autocmd!
 		autocmd VimEnter * PlugInstall | source $MYVIMRC
 		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p') | call InitClangFormat()
+		autocmd VimEnter * echohl Title | echo 'monkey-vim is ready! Run :PlugStatus to verify plugins.' | echohl None
 	augroup END
 endif
 
@@ -862,7 +871,7 @@ function! RestoreSession()
 endfunction
 
 " Backup
-nnoremap <Leader>bs :call BackupSession()<CR>
+nnoremap <Leader>ws :call BackupSession()<CR>
 " Remove
 nnoremap <Leader>rs :Obsession!<CR>
 
@@ -875,7 +884,6 @@ augroup END
 " LeaderF {
 let g:Lf_PythonVersion = 3
 let g:Lf_ShortcutF = '<C-p>'
-let g:Lf_ShortcutB = '<C-m>'
 let g:Lf_WindowPosition = 'popup'
 let g:Lf_ShowDevIcons = 0
 let g:Lf_StlColorscheme = 'powerline'
@@ -902,9 +910,10 @@ let g:Lf_PreviewResult = {
 
 augroup LeaderF
 	autocmd!
-	nmap <silent><C-t> :LeaderfBufTag<CR>
-	nmap <silent><C-y> :LeaderfFunction<CR>
-	nmap <silent><C-e> :LeaderfLine<CR>
+	nnoremap <silent><Leader>b :LeaderfBuffer<CR>
+	nnoremap <silent><Leader>y :LeaderfBufTag<CR>
+	nnoremap <silent><Leader>f :LeaderfFunction<CR>
+	nnoremap <silent><Leader>e :LeaderfLine<CR>
 augroup END
 " }
 
@@ -916,8 +925,8 @@ let g:ctrlsf_extra_backend_args = {
 			\ }
 let g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
 
-nmap <silent><Leader>a <Plug>CtrlSFCwordExec
-vmap <silent><Leader>a <Plug>CtrlSFVwordExec
+nnoremap <silent><Leader>a <Plug>CtrlSFCwordExec
+vnoremap <silent><Leader>a <Plug>CtrlSFVwordExec
 " }
 
 " vim-visual-multi {
@@ -949,10 +958,10 @@ highlight StargateErrorMessage ctermfg=167 guifg=#E36659
 " }
 
 " vim-subversive {
-nmap s <plug>(SubversiveSubstitute)
-xmap s <plug>(SubversiveSubstitute)
-nmap ss <plug>(SubversiveSubstituteLine)
-nmap S <plug>(SubversiveSubstituteToEndOfLine)
+nnoremap s <plug>(SubversiveSubstitute)
+xnoremap s <plug>(SubversiveSubstitute)
+nnoremap ss <plug>(SubversiveSubstituteLine)
+nnoremap S <plug>(SubversiveSubstituteToEndOfLine)
 " }
 
 " FastFold {
@@ -1255,10 +1264,6 @@ augroup END
 " }
 
 " vim-vsnip {
-" Expand
-imap <expr> <C-j> vsnip#expandable() ? '<Plug>(vsnip-expand)' : '<C-j>'
-smap <expr> <C-j> vsnip#expandable() ? '<Plug>(vsnip-expand)' : '<C-j>'
-
 " Expand or jump
 imap <expr> <C-l> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
 smap <expr> <C-l> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
