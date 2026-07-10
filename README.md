@@ -164,11 +164,25 @@ ln -s $(pwd)/.vimrc ~/.vimrc
 vim
 ```
 
-### 5. kmscon setup (optional)
+### 5. Update project
+
+```bash
+cd monkey-vim
+git pull
+```
+
+```vim
+:PlugInstall
+:PlugUpdate
+:PlugUpgrade
+:PlugClean
+```
+
+### 6. kmscon setup (optional)
 
 [kmscon](https://github.com/kmscon/kmscon) is a Linux KMS/DRM-based system console that replaces the legacy tty with full Unicode support, multi-seat capability, and true color rendering. It is an excellent companion for monkey-vim on headless servers.
 
-#### 4.1 Install kmscon
+#### 6.1 Install kmscon
 
 ```bash
 # Ubuntu/Debian (older versions without terminfo)
@@ -186,9 +200,9 @@ meson install -C builddir/
 
 Building from source automatically compiles and installs the kmscon terminfo entry via `tic`, so vim can detect terminal capabilities correctly without any `TERM` workaround. The default prefix is `/usr/local`; append `--prefix=/usr` to the meson setup command to install system-wide.
 
-On older systems, dependencies like `libtsm` may be too old to satisfy the build requirements. In that case, use the package manager version and apply the `TERM` workaround in section 4.3.
+On older systems, dependencies like `libtsm` may be too old to satisfy the build requirements. In that case, use the package manager version and apply the `TERM` workaround in section 6.3.
 
-#### 4.2 Replace tty with kmscon (permanent)
+#### 6.2 Replace tty with kmscon (permanent)
 
 To make kmscon the default system console instead of the legacy tty/getty, replace agetty with kmscon on the desired tty:
 
@@ -224,7 +238,7 @@ sudo systemctl start kmsconvt@tty1.service
 
 After reboot, press `Ctrl+Alt+F1` to switch to the kmscon-enhanced tty1. You can repeat this for tty2–tty6 as needed.
 
-#### 4.3 True color support
+#### 6.3 True color support
 
 kmscon supports true color (24-bit). monkey-vim detects this automatically via `has('termguicolors')` and renders GUI colors directly.
 
@@ -240,7 +254,7 @@ The `COLORTERM=truecolor` is required so vim still detects true color support wh
 
 If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with molokai's `rehash256` palette for accurate color approximation.
 
-#### 4.4 Fonts (optional)
+#### 6.4 Fonts (optional)
 
 kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a Nerd Font:
 
@@ -249,20 +263,6 @@ kmscon uses the system's built-in font renderer. If you prefer Powerline-style i
 wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip
 sudo unzip -o Hack.zip -d /usr/share/fonts/truetype/hack
 sudo fc-cache -fv
-```
-
-## Update project
-
-```bash
-cd monkey-vim
-git pull
-```
-
-```vim
-:PlugInstall
-:PlugUpdate
-:PlugUpgrade
-:PlugClean
 ```
 
 ## Plugin list
@@ -429,10 +429,11 @@ Leader+gh           Show current line diagnostics
 
 ```
 Ctrl+p      Search files
-Ctrl+m      Search buffers
-Ctrl+t      Search buffer tags
-Ctrl+y      Search function in buffer
-Ctrl+e      Search line in buffer
+
+Leader+b    Search buffers
+Leader+y    Search buffer tags
+Leader+f    Search function in buffer
+Leader+e    Search line in buffer
 ```
 
 #### 1.10 Fold
@@ -516,7 +517,7 @@ F4      Async run arbitrary command
 #### 1.16 Others
 
 ```
-Leader+bs       Save session
+Leader+ws       Save session
 Leader+rs       Remove session
 
 '.              Jump to last changes
@@ -540,8 +541,7 @@ Leader+l            Toggle location list
 #### 2.1 Snippets (vim-vsnip)
 
 ```
-Ctrl+j      Expand snippet or jump to next placeholder
-Ctrl+l      Expand snippet or jump forward
+Ctrl+l      Expand snippet
 Tab         Jump to next placeholder
 Shift+Tab   Jump to previous placeholder
 ```
