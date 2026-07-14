@@ -271,6 +271,8 @@ sudo fc-cache -fv
 |---|---|
 | [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol client |
 | [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | Snippet engine |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP snippet integration |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | Snippet collection |
 | [Yggdroot/LeaderF](https://github.com/Yggdroot/LeaderF) | Fuzzy file/buffer/tag finder |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | Async code search (rg/ag backend) |
 | [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | Async command runner |
@@ -295,6 +297,7 @@ sudo fc-cache -fv
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | Improved `*` / `#` search |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | Visual marks |
 | [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | Auto-change working directory |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim) | Git commit browser |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list helpers |
 
 ## Keyboard shortcut
@@ -308,21 +311,22 @@ The "Leader" key below means comma key.
 #### 1.1 Remap
 
 ```
-s       Replace a motion/text object with clipboard content (e.g. siw)
-S       Replace from cursor to end of line with clipboard content
+s       Replace a motion/text object with clipboard content (see §1.7)
+S       Replace from cursor to end of line with clipboard content (see §1.7)
 Y       Copy from the cursor position to the end of the line, same as y$
 H       To the first non-blank character of the line, same as ^
 L       To the last character of the line, same as $
 U       Redo, same as Ctrl-r
 ;       Enter command line mode, same as :
-q       Quit current window, same as :q
+q       Quit current window (with special handling for diff/fugitive/quickfix)
 Shift+q  Quit vim, same as :qa
 t       Recording, same as the original q (normal and visual mode)
 
 j       Move down one display line (gj), works on wrapped lines
 k       Move up one display line (gk), works on wrapped lines
-f       Search 1 char to jump (stargate)
-F       Search 2 consecutive chars to jump (stargate)
+f       Search 1 char to jump with hints (stargate)
+F       Search 2 consecutive chars to jump with hints (stargate)
+gs      Select words/regions for multi-cursor editing (vim-visual-multi)
 ```
 
 The following remaps work in both Insert mode and Command-line mode:
@@ -425,6 +429,8 @@ Leader+rn           Rename symbol
 Leader+gh           Show current line diagnostics
 ```
 
+Files are auto-formatted on save via LSP. Completion is enabled by default — LSP-powered suggestions appear automatically as you type. `K` uses `:LspHover` as the keyword program for most filetypes.
+
 #### 1.9 File/Buffer/Tag navigation (LeaderF)
 
 ```
@@ -446,6 +452,7 @@ zc      Close one fold under the cursor
 zo      Open one fold under the cursor
 zR      Open all folds
 zM      Close all folds
+zuz     Manually update all folds (FastFold)
 ```
 
 #### 1.11 Marks (vim-signature)
@@ -478,6 +485,9 @@ m<BS>       Remove all markers
 m?          Open location list and display markers from current buffer
 ```
 
+`:SignatureToggle`  Show/hide marks without deleting them  
+`:SignatureRefresh`  Re-sync marks and signs if they go out of sync
+
 #### 1.12 Dirvish (Directory viewer, replaces netrw)
 
 ```
@@ -490,6 +500,10 @@ a           Open in horizontal split
 i           Open in vertical split
 t           Open in new tab
 -           Go up one directory
+A/I/O       Disabled (use a/i/o instead)
+x           Add files to arglist
+R           Reload directory view
+:Shdo       Generate shell script from lines (e.g., :%Shdo)
 ```
 
 #### 1.13 Code search (ctrlsf)
@@ -510,31 +524,71 @@ cs+surroundA+surroundB      Change surround A to B
 #### 1.15 Async run
 
 ```
-F3      Async make
+F3      Async make (replaces built-in :make with asyncrun)
 F4      Async run arbitrary command
 ```
+
+The `:Make` command runs `make` asynchronously — it doesn't block Vim. The quickfix window opens automatically on completion.
 
 #### 1.16 Others
 
 ```
 Leader+ws       Save session
 Leader+rs       Remove session
+```
 
+Sessions are saved to `~/.cache/sessions/`. On Vim startup, a session is automatically restored from this directory.
+
+```
 '.              Jump to last changes
 ''              To the position before the latest jump, or where the last "m'" or "m`" command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
 Ctrl+^          Edit the alternate file. Mostly the alternate file is the previously edited file
 cod             Toggle diff
-cop             Toggle paste
+cop             Toggle paste (auto-disabled on leaving insert mode)
 col             Toggle list
 con             Clear search highlight
-Leader+cr       Change project root
+Leader+cr       Change project root (manual only, no auto-chdir on file open)
 Leader+space        Strip trailing whitespace
 Leader+Leader+space  Strip trailing whitespace + \\r (DOS newlines)
 Leader+q            Toggle quickfix
 Leader+l            Toggle location list
 ```
+
+In quickfix/location windows (ack-style mappings):
+- `o`/`Enter` — Open entry (file + line)
+- `go` — Open in horizontal split
+- `gO` — Open and focus new window
+- `t` — Open in new tab
+- `T` — Open in new tab (keep quickfix focused)
+- `q` — Close quickfix window
+
+Quickfix windows auto-resize to fit content (max 10 lines), auto-close when empty, and are placed at the bottom.
+
+Note: `gdefault` is set, so `:s` performs global substitution (all matches per line) by default. The jumplist is cleared on each Vim startup (`clearjumps`) to avoid cross-project contamination. `jumpoptions+=stack` makes the jumplist behave like the tagstack.
+
+#### 1.17 Auto-insert file headers
+
+New `.sh` and `.py` files get a shebang line automatically inserted:
+- `.sh` → `#!/usr/bin/env bash`
+- `.py` → `#!/usr/bin/env python3`
+
+#### 1.18 Match-up (extended % matching)
+
+```
+%       Go forward to next matching word (cycles back from close to open)
+g%      Go backward to previous matching word
+[%      Go to previous outer open word (start of surrounding block)
+]%      Go to next surrounding close word (end of surrounding block)
+z%      Go inside nearest inner contained block
+i%      Inside of any block (text object)
+a%      Around any block (text object)
+```
+
+#### 1.19 Lexima (auto-close pairs)
+
+Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''`, ` ``` `. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
 
 ### 2. Insert mode
 
@@ -579,8 +633,8 @@ S           Replace from cursor to end of line with clipboard content
 #### 3.4 Easy motion (vim9-stargate)
 
 ```
-f       Search 1 character to jump to specific word
-F       Search 2 consecutive characters to jump (reverse direction)
+f       Search 1 character to jump with hints (stargate)
+F       Search 2 consecutive characters to jump with hints (stargate)
 ```
 
 #### 3.5 Code search (ctrlsf)
@@ -651,18 +705,40 @@ Ctrl+e  Jump to the end of the command line
 
 " Search marks
 :LeaderfMarks [QUERY]
+
+" Search lines in buffer
+:LeaderfLine [QUERY]
+
+" Search MRU files
+:LeaderfMru [QUERY]
+
+" Interactive ripgrep search
+:LeaderfRgInteractive [QUERY]
+
+" Search command history
+:LeaderfHistoryCmd
+
+" Search help tags
+:LeaderfHelp [QUERY]
 ```
 
 ## Use git in vim
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
 
+#### Core
+
 ```vim
 " Run an arbitrary git command. Similar to :!git [args] but chdir to the repository tree first.
-" Recommended over :Gstatus, :Gcommit, :Gdiff, etc.
 :Git [args]
 
-" Common examples:
+" Short alias for :Git
+:G [args]
+```
+
+#### Common examples
+
+```vim
 :Git status
 :Git diff
 :Git commit
@@ -670,20 +746,240 @@ Ctrl+e  Jump to the end of the command line
 :Git blame
 :Git pull
 :Git push
-:Git checkout %
-
-" More help, please refer the video
-https://github.com/tpope/vim-fugitive#screencasts
-
-" or the official doc
-:h fugitive.txt
 ```
+
+#### Staging / Writing / Blame
+
+```vim
+" Stage file (git add)
+:Gwrite
+" Stage and quit
+:Gwq
+
+" Delete file from git and buffer
+:GDelete
+" Delete from git, keep buffer
+:GRemove
+" Rename / move file
+:GMove {dest}
+
+" Blame current file in a scroll-bound split
+:Git blame
+```
+
+#### Diffs
+
+```vim
+" Diff against index (staging area)
+:Gdiffsplit
+" Diff against HEAD (last commit)
+:Gdiffsplit HEAD
+" Always vertical
+:Gvdiffsplit
+```
+
+#### Log and search
+
+```vim
+" git-log into quickfix list
+:Gclog
+" git-log into location list
+:Gllog
+" git-grep into quickfix list
+:Ggrep [args]
+
+" Browse file/commit in GitHub
+:GBrowse
+" Copy URL to clipboard
+:GBrowse!
+```
+
+#### Git status buffer keymaps
+
+In the `:Git` status buffer:
+- `s` — Stage file
+- `u` — Unstage file
+- `-` — Stage/unstage toggle
+- `X` — Discard changes
+- `=` — Toggle inline diff
+- `cc` — Commit
+- `ca` — Amend last commit
+- `cf` — Fixup commit
+- `cs` — Squash commit
+- `crc` — Revert commit
+- `coo` — Checkout file
+- `dd` — `:Gdiffsplit`
+- `dv` — `:Gvdiffsplit`
+- `gq` — Close status window
+
+More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencasts
 
 ### 2. Git commit browser: [gv.vim](https://github.com/junegunn/gv.vim)
 
 ```vim
 " Open git commit browser
 :GV
+" List commits affecting current file only
+:GV!
+" Fill location list with revisions of current file
+:GV?
+```
+
+### 3. Git diff gutter: [vim-gitgutter](https://github.com/airblade/vim-gitgutter)
+
+```vim
+" Jump to next/previous hunk
+]c / [c
+
+" Preview / stage / undo current hunk
+:GitGutterPreviewHunk
+:GitGutterStageHunk
+:GitGutterUndoHunk
+
+" Fold all unchanged lines
+:GitGutterFold
+
+" Load all hunks into quickfix
+:GitGutterQuickFix
+```
+
+## Useful Vim commands
+
+### 1. vim-eunuch (UNIX shell helpers)
+
+```vim
+" Write all modified buffers in all windows
+:W (:wall)
+
+" Write file with sudo privileges
+:SudoWrite
+
+" Edit file with sudo
+:SudoEdit {file}
+
+" Delete file from disk and buffer
+:Delete
+" Delete file from disk, keep buffer
+:Remove
+
+" Rename / move file
+:Rename {dest}
+
+" Copy file
+:Copy {dest}
+
+" Change permissions
+:Chmod {mode}
+
+" Create directory (incl. parents)
+:Mkdir {dir}
+"Mkdir on its own creates the current file's parent dir
+
+" Find files (results in quickfix)
+:Cfind {args}
+```
+
+### 2. asyncrun.vim
+
+```vim
+" Run command asynchronously (doesn't block Vim)
+:AsyncRun {cmd}
+
+" Options:
+" -program=make    — set program name for output formatting
+" -cwd=<root>      — run from project root
+" -save=2          — auto-save all modified files
+" -silent          — suppress quickfix popup
+" -mode=term       — run in terminal window
+
+" Stop running job
+:AsyncStop
+
+" Make (custom command from monkey-vim)
+:Make [args]
+```
+
+### 3. CtrlSF
+
+```vim
+" Search recursively in current directory for the pattern
+" Jump to the first result unless ! is given.
+:CtrlSF[!] [PATTERN] [path]
+
+" Reopen CtrlSF window
+:CtrlSFOpen
+
+" Close CtrlSF window
+:CtrlSFClose
+```
+
+### 4. Gutentags
+
+```vim
+" Generate tags for current file
+:GutentagsUpdate
+
+" Generate tags for current project
+:GutentagsUpdate!
+```
+
+### 5. vim-qf (Quickfix helpers)
+
+```vim
+" Keep only matching entries in qf/loc list
+:Keep {pattern}
+
+" Remove matching entries
+:Reject {pattern}
+
+" Save current qf/loc list by name
+:SaveList {name}
+
+" Load named list
+:LoadList {name}
+
+" Execute command on every file in list
+:Dofile {cmd}
+
+" Execute command on every line in list
+:Doline {cmd}
+```
+
+### 6. vim-obsession (Session management)
+
+```vim
+" Start/update session in ~/.cache/sessions/
+:Obsession {file}
+
+" Toggle pause/resume session tracking
+:Obsession
+
+" Stop and delete session file
+:Obsession!
+```
+
+### 7. LSP commands (yegappan/lsp)
+
+```vim
+" Symbol search across entire workspace
+:LspSymbolSearch [query]
+
+" Show outline of current file
+:LspOutline
+
+" Show symbols in popup
+:LspDocumentSymbol
+
+" Switch between source and header
+:LspSwitchSourceHeader
+
+" Show/server status
+:LspShowAllServers
+
+" Workspace management
+:LspWorkspaceAddFolder {folder}
+:LspWorkspaceRemoveFolder {folder}
+:LspWorkspaceListFolders
 ```
 
 ## Precautions
