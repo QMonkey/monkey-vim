@@ -45,7 +45,9 @@ function! InitClangFormat()
 				\ 'UseTab: Always',
 				\ 'BreakBeforeBraces: Linux',
 				\ 'AllowShortIfStatementsOnASingleLine: false',
-				\ 'IndentCaseLabels: false'
+				\ 'IndentCaseLabels: false',
+				\ 'PointerAlignment: Left',
+				\ 'SortIncludes: false'
 				\ ]
 	call writefile(l:lines, l:clang_format)
 endfunction
@@ -61,30 +63,37 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 " Plugins {
 Plug 'tomasr/molokai'
 Plug 'itchyny/lightline.vim'
+
 Plug 'Yggdroot/LeaderF', {'do': ':LeaderfInstallCExtension'}
 Plug 'dyng/ctrlsf.vim'
-Plug 'mg979/vim-visual-multi'
-Plug 'justinmk/vim-dirvish'
-Plug 'tpope/vim-obsession'
-Plug 'monkoose/vim9-stargate'
-Plug 'wellle/targets.vim'
-Plug 'michaeljsmith/vim-indent-object'
-Plug 'svermeulen/vim-subversive'
-Plug 'Konfekt/FastFold'
-Plug 'haya14busa/vim-asterisk'
-Plug 'skywind3000/asyncrun.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'yegappan/lsp'
-Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
+Plug 'skywind3000/asyncrun.vim'
+
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'airblade/vim-gitgutter'
+
+Plug 'monkoose/vim9-stargate'
+Plug 'svermeulen/vim-subversive'
+Plug 'haya14busa/vim-asterisk'
+Plug 'mg979/vim-visual-multi'
+Plug 'Konfekt/FastFold'
+
+Plug 'wellle/targets.vim'
+Plug 'michaeljsmith/vim-indent-object'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
+
 Plug 'cohama/lexima.vim'
 Plug 'andymass/vim-matchup'
-Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-eunuch'
+
+Plug 'yegappan/lsp'
+Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
+
+Plug 'justinmk/vim-dirvish'
+Plug 'kshenoy/vim-signature'
+Plug 'tpope/vim-obsession'
 Plug 'romainl/vim-qf'
 " }
 
@@ -135,8 +144,6 @@ augroup END
 " Show the cursor position all the time
 set ruler
 
-set showmatch
-
 " Cursorline {
 " Highlight current line
 set cursorline
@@ -157,6 +164,8 @@ set smartcase
 
 " Show search count message when searching
 set shortmess-=S shortmess+=s
+
+set showmatch
 
 " The ":substitute" flag 'g' is default on. This means that
 " all matches in a line are substituted instead of one. When a 'g' flag
@@ -225,18 +234,6 @@ set ttimeoutlen=10
 set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
-" Restore cursor to previous editing position
-augroup RestoreCursorPosition
-	autocmd!
-	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
-augroup END
-
-" Clear jumplist on vim startup
-augroup Jumplist
-	autocmd!
-	autocmd VimEnter * :clearjumps
-augroup END
-
 " FileType {
 augroup FileTypeGroup
 	autocmd!
@@ -253,7 +250,7 @@ augroup END
 function! AutoInsertFileHead()
 	" Shell
 	if &filetype ==# 'sh'
-		call setline(1, '#!/bin/bash')
+		call setline(1, '#!/usr/bin/env bash')
 		call cursor(line('$'), 0)
 		put = ''
 	endif
@@ -327,6 +324,18 @@ set hidden
 
 " Auto reload file changes outside vim
 set autoread
+
+" Restore cursor to previous editing position
+augroup RestoreCursorPosition
+	autocmd!
+	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+augroup END
+
+" Clear jumplist on vim startup
+augroup Jumplist
+	autocmd!
+	autocmd VimEnter * :clearjumps
+augroup END
 
 " No bells
 set belloff=all
@@ -584,11 +593,8 @@ augroup END
 " Color support {
 " Use true color when the terminal supports it
 if has('termguicolors')
+	" True color: Vim renders GUI colors (guifg/guibg) directly
 	set termguicolors
-endif
-
-if &termguicolors
-" True color: Vim renders GUI colors (guifg/guibg) directly
 else
 	" Fallback: 256-color mode for terminals without true color support
 	set t_Co=256
@@ -799,124 +805,6 @@ augroup END
 
 " }
 
-" vim-asterisk {
-map *  <Plug>(asterisk-z*)
-map g* <Plug>(asterisk-gz*)
-map #  <Plug>(asterisk-z#)
-map g# <Plug>(asterisk-gz#)
-" }
-
-" QuickFix {
-function! QuickFixToggle(type, cmd)
-	let l:ftype = &filetype
-	let l:last_winnr = winnr('#')
-	let l:buffer_count_before = BufferCount()
-	if a:type ==# 'quickfix' || a:type ==# 'q'
-		silent! cclose
-	elseif a:type ==# 'location' || a:type ==# 'l'
-		silent! lclose
-	endif
-
-	if BufferCount() == l:buffer_count_before
-		execute a:cmd
-	else
-		if l:ftype is# 'qf'
-			silent! execute l:last_winnr . 'wincmd w'
-		endif
-	endif
-endfunction
-
-function! BufferCount()
-	return len(tabpagebuflist())
-endfunction
-" }
-
-" vim-qf {
-let g:qf_mapping_ack_style = 1
-let g:qf_window_bottom = 1
-let g:qf_loclist_window_bottom = 1
-let g:qf_auto_resize = 1
-let g:qf_max_height = 10
-let g:qf_auto_open_quickfix = 0
-let g:qf_auto_open_loclist = 0
-let g:qf_auto_quit = 1
-
-nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
-nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
-" }
-
-" Session {
-set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
-
-function! GetSessionFileInfo()
-	let l:session_dir = expand($HOME . '/.cache/sessions/')
-	let l:session_filename = l:session_dir . substitute(trim(GetFileroot(), '/', 1), '/', '-', 'g') . '-session.vim'
-	return [l:session_dir, l:session_filename]
-endfunction
-
-function! BackupSession()
-	let l:session_info = GetSessionFileInfo()
-	let l:session_dir = l:session_info[0]
-	let l:session_filename = l:session_info[1]
-	call mkdir(l:session_dir, 'p')
-	execute 'Obsession' l:session_filename
-endfunction
-
-function! RestoreSession()
-	let l:session_info = GetSessionFileInfo()
-	let l:session_filename = l:session_info[1]
-	if argc() == 0 && filereadable(l:session_filename)
-		execute 'source' l:session_filename
-	endif
-endfunction
-
-" Backup
-nnoremap <Leader>ws :call BackupSession()<CR>
-" Remove
-nnoremap <Leader>rs :Obsession!<CR>
-
-augroup Session
-	autocmd!
-	autocmd VimEnter * nested call RestoreSession()
-augroup END
-" }
-
-" LeaderF {
-let g:Lf_PythonVersion = 3
-let g:Lf_ShortcutF = '<C-p>'
-let g:Lf_WindowPosition = 'popup'
-let g:Lf_ShowDevIcons = 0
-let g:Lf_StlColorscheme = 'powerline'
-let g:Lf_StlSeparator = {'left': '', 'right': ''}
-let g:Lf_Ctags = 'ctags --fields=+liaS --extras=+q --langmap=c:.c.h,vim:.vim.vimrc'
-" Suppress qualified tags in function/buftag views so each function
-" appears exactly once (--extras=+q in g:Lf_Ctags would otherwise emit
-" both "helper" and "main.helper" for every Go function).
-let g:Lf_CtagsFuncOpts = {
-			\ 'go': '--go-kinds=f --extras=-q',
-			\}
-let g:Lf_PreviewResult = {
-			\ 'File': 0,
-			\ 'Buffer': 0,
-			\ 'Mru': 0,
-			\ 'Tag': 0,
-			\ 'BufTag': 0,
-			\ 'Function': 0,
-			\ 'Line': 0,
-			\ 'Colorscheme': 1,
-			\ 'Rg': 0,
-			\ 'Gtags': 0
-			\}
-
-augroup LeaderF
-	autocmd!
-	nnoremap <silent><Leader>b :LeaderfBuffer<CR>
-	nnoremap <silent><Leader>y :LeaderfBufTag<CR>
-	nnoremap <silent><Leader>f :LeaderfFunction<CR>
-	nnoremap <silent><Leader>e :LeaderfLine<CR>
-augroup END
-" }
-
 " ctrlsf.vim {
 let g:ctrlsf_confirm_save = 0
 let g:ctrlsf_extra_backend_args = {
@@ -927,47 +815,6 @@ let g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
 
 nnoremap <silent><Leader>a <Plug>CtrlSFCwordExec
 vnoremap <silent><Leader>a <Plug>CtrlSFVwordExec
-" }
-
-" vim-visual-multi {
-let g:VM_maps = {}
-let g:VM_maps['Select Operator'] = 'gs'
-let g:VM_set_statusline = 0
-let g:VM_silent_exit = 1
-" }
-
-" vim9-stargate {
-let g:stargate_name = 'QMonkey'
-
-" For 1 character to search before showing hints
-noremap f <Cmd>call stargate#OKvim(1)<CR>
-" For 2 consecutive characters to search
-noremap F <Cmd>call stargate#OKvim(2)<CR>
-
-highlight StargateFocus ctermfg=101 guifg=#958C6A
-highlight StargateDesaturate ctermfg=238 guifg=#49423F
-highlight StargateError ctermfg=167 guifg=#D35B4B
-highlight StargateLabels ctermfg=179 ctermbg=234 guifg=#CAA247 guibg=#171E2C
-highlight StargateErrorLabels ctermfg=179 ctermbg=52 guifg=#CAA247 guibg=#551414
-highlight StargateMain cterm=bold ctermfg=199 gui=bold guifg=#F2119C
-highlight StargateSecondary cterm=bold ctermfg=49 gui=bold guifg=#11EB9C
-highlight StargateShip ctermfg=233 ctermbg=234 guifg=#111111 guibg=#CAA247
-highlight StargateVIM9000 cterm=bold ctermfg=233 ctermbg=139 gui=bold guifg=#111111 guibg=#B2809F
-highlight StargateMessage ctermfg=143 guifg=#A5B844
-highlight StargateErrorMessage ctermfg=167 guifg=#E36659
-" }
-
-" vim-subversive {
-nnoremap s <plug>(SubversiveSubstitute)
-xnoremap s <plug>(SubversiveSubstitute)
-nnoremap ss <plug>(SubversiveSubstituteLine)
-nnoremap S <plug>(SubversiveSubstituteToEndOfLine)
-" }
-
-" FastFold {
-" Only update fold after type zx or zX
-let g:fastfold_fold_command_suffixes = ['x', 'X', 'a', 'A']
-let g:fastfold_fold_movement_commands = []
 " }
 
 " vim-rooter {
@@ -1014,6 +861,173 @@ let g:gutentags_generate_on_write = 1
 let g:gutentags_background_update = 1
 let g:gutentags_resolve_symlinks = 1
 let g:gutentags_define_advanced_commands = 1
+" }
+
+" vim-qf {
+let g:qf_mapping_ack_style = 1
+let g:qf_window_bottom = 1
+let g:qf_loclist_window_bottom = 1
+let g:qf_auto_resize = 1
+let g:qf_max_height = 10
+let g:qf_auto_open_quickfix = 0
+let g:qf_auto_open_loclist = 0
+let g:qf_auto_quit = 1
+
+function! QuickFixToggle(type, cmd)
+	let l:ftype = &filetype
+	let l:last_winnr = winnr('#')
+	let l:buffer_count_before = BufferCount()
+	if a:type ==# 'quickfix' || a:type ==# 'q'
+		silent! cclose
+	elseif a:type ==# 'location' || a:type ==# 'l'
+		silent! lclose
+	endif
+
+	if BufferCount() == l:buffer_count_before
+		execute a:cmd
+	else
+		if l:ftype is# 'qf'
+			silent! execute l:last_winnr . 'wincmd w'
+		endif
+	endif
+endfunction
+
+function! BufferCount()
+	return len(tabpagebuflist())
+endfunction
+
+nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
+nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
+" }
+
+" Session {
+set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
+
+function! GetSessionFileInfo()
+	let l:session_dir = expand($HOME . '/.cache/sessions/')
+	let l:session_filename = l:session_dir . substitute(trim(GetFileroot(), '/', 1), '/', '-', 'g') . '-session.vim'
+	return [l:session_dir, l:session_filename]
+endfunction
+
+function! BackupSession()
+	let l:session_info = GetSessionFileInfo()
+	let l:session_dir = l:session_info[0]
+	let l:session_filename = l:session_info[1]
+	call mkdir(l:session_dir, 'p')
+	execute 'Obsession' l:session_filename
+endfunction
+
+function! RestoreSession()
+	let l:session_info = GetSessionFileInfo()
+	let l:session_filename = l:session_info[1]
+	if argc() == 0 && filereadable(l:session_filename)
+		execute 'source' l:session_filename
+	endif
+endfunction
+
+" Backup
+nnoremap <Leader>ws :call BackupSession()<CR>
+" Remove
+nnoremap <Leader>rs :Obsession!<CR>
+
+augroup Session
+	autocmd!
+	autocmd VimEnter * nested call RestoreSession()
+augroup END
+" }
+
+" asyncrun.vim {
+let g:asyncrun_exit = 'silent! botright copen 10 | cbottom'
+
+" Asynchronous Make command
+command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
+
+nnoremap <F3> :Make<Space>
+nnoremap <F4> :AsyncRun<Space>
+" }
+
+" LeaderF {
+let g:Lf_PythonVersion = 3
+let g:Lf_ShortcutF = '<C-p>'
+let g:Lf_WindowPosition = 'popup'
+let g:Lf_ShowDevIcons = 0
+let g:Lf_StlColorscheme = 'powerline'
+let g:Lf_StlSeparator = {'left': '', 'right': ''}
+let g:Lf_Ctags = 'ctags --fields=+liaS --extras=+q --langmap=c:.c.h,vim:.vim.vimrc'
+" Suppress qualified tags in function/buftag views so each function
+" appears exactly once (--extras=+q in g:Lf_Ctags would otherwise emit
+" both "helper" and "main.helper" for every Go function).
+let g:Lf_CtagsFuncOpts = {
+			\ 'go': '--go-kinds=f --extras=-q',
+			\}
+let g:Lf_PreviewResult = {
+			\ 'File': 0,
+			\ 'Buffer': 0,
+			\ 'Mru': 0,
+			\ 'Tag': 0,
+			\ 'BufTag': 0,
+			\ 'Function': 0,
+			\ 'Line': 0,
+			\ 'Colorscheme': 1,
+			\ 'Rg': 0,
+			\ 'Gtags': 0
+			\}
+
+augroup LeaderF
+	autocmd!
+	nnoremap <silent><Leader>b :LeaderfBuffer<CR>
+	nnoremap <silent><Leader>y :LeaderfBufTag<CR>
+	nnoremap <silent><Leader>f :LeaderfFunction<CR>
+	nnoremap <silent><Leader>e :LeaderfLine<CR>
+augroup END
+" }
+
+" vim9-stargate {
+let g:stargate_name = 'QMonkey'
+
+" For 1 character to search before showing hints
+noremap f <Cmd>call stargate#OKvim(1)<CR>
+" For 2 consecutive characters to search
+noremap F <Cmd>call stargate#OKvim(2)<CR>
+
+highlight StargateFocus ctermfg=101 guifg=#958C6A
+highlight StargateDesaturate ctermfg=238 guifg=#49423F
+highlight StargateError ctermfg=167 guifg=#D35B4B
+highlight StargateLabels ctermfg=179 ctermbg=234 guifg=#CAA247 guibg=#171E2C
+highlight StargateErrorLabels ctermfg=179 ctermbg=52 guifg=#CAA247 guibg=#551414
+highlight StargateMain cterm=bold ctermfg=199 gui=bold guifg=#F2119C
+highlight StargateSecondary cterm=bold ctermfg=49 gui=bold guifg=#11EB9C
+highlight StargateShip ctermfg=233 ctermbg=234 guifg=#111111 guibg=#CAA247
+highlight StargateVIM9000 cterm=bold ctermfg=233 ctermbg=139 gui=bold guifg=#111111 guibg=#B2809F
+highlight StargateMessage ctermfg=143 guifg=#A5B844
+highlight StargateErrorMessage ctermfg=167 guifg=#E36659
+" }
+
+" vim-subversive {
+nnoremap s <plug>(SubversiveSubstitute)
+xnoremap s <plug>(SubversiveSubstitute)
+nnoremap ss <plug>(SubversiveSubstituteLine)
+nnoremap S <plug>(SubversiveSubstituteToEndOfLine)
+" }
+
+" vim-asterisk {
+map *  <Plug>(asterisk-z*)
+map g* <Plug>(asterisk-gz*)
+map #  <Plug>(asterisk-z#)
+map g# <Plug>(asterisk-gz#)
+" }
+
+" vim-visual-multi {
+let g:VM_maps = {}
+let g:VM_maps['Select Operator'] = 'gs'
+let g:VM_set_statusline = 0
+let g:VM_silent_exit = 1
+" }
+
+" FastFold {
+" Only update fold after type zx or zX
+let g:fastfold_fold_command_suffixes = ['x', 'X', 'a', 'A']
+let g:fastfold_fold_movement_commands = []
 " }
 
 " lexima.vim {
@@ -1076,7 +1090,9 @@ function! OnLspSetup()
 				\   popupBorderSignatureHelp: v:false,
 				\   popupHighlightSignatureHelp: 'Pmenu',
 				\   popupHighlight: 'Normal',
+				\   popupHighlightCompletion: 'Pmenu',
 				\   semanticHighlight: v:true,
+				\   semanticHighlightDelay: 300,
 				\   showDiagInBalloon: v:true,
 				\   showDiagInPopup: v:true,
 				\   showDiagOnStatusLine: v:true,
@@ -1103,18 +1119,24 @@ function! OnLspSetup()
 				\  path: 'clangd',
 				\  args: [
 				\    '--background-index',
+				\    '--background-index-priority=background',
 				\    '--clang-tidy',
+				\    '--cross-file-rename',
 				\    '--all-scopes-completion=true',
 				\    '--completion-style=detailed',
 				\    '--function-arg-placeholders=true',
 				\    '--header-insertion=iwyu',
-				\    '--header-insertion-decorators'
-				\  ]
+				\    '--header-insertion-decorators',
+				\    '--limit-references=0',
+				\    '--limit-results=0'
+				\  ],
+				\  syncInit: v:true
 				\ },
 				\#{name: 'rust-analyzer',
 				\   filetype: ['rust'],
 				\   path: 'rust-analyzer',
 				\   args: [],
+				\   syncInit: v:true,
 				\   workspaceConfig: {
 				\     'rust-analyzer': {
 				\       'checkOnSave': {
@@ -1132,12 +1154,13 @@ function! OnLspSetup()
 				\#{name: 'gopls',
 				\   filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
 				\   path: 'gopls',
-				\   args: ['serve'],
+				\   syncInit: v:true,
 				\   rootSearch: ['go.work', 'go.mod'],
 				\   workspaceConfig: {
 				\     'gopls': {
 				\       'analyses': {
 				\         'nilness': v:true,
+				\         'shadow': v:true,
 				\         'unusedparams': v:true,
 				\         'unusedwrite': v:true,
 				\         'useany': v:true,
@@ -1169,16 +1192,33 @@ function! OnLspSetup()
 				\   filetype: ['javascript', 'typescript'],
 				\   path: 'typescript-language-server',
 				\   args: ['--stdio'],
+				\   syncInit: v:true,
+				\   rootSearch: ['tsconfig.json', 'jsconfig.json', 'package.json'],
+				\   workspaceConfig: {
+				\     'typescript': {
+				\       'suggest': {'completeFunctionCalls': v:true},
+				\     },
+				\     'javascript': {
+				\       'suggest': {'completeFunctionCalls': v:true},
+				\     },
+				\   },
 				\ },
 				\ #{name: 'pylsp',
 				\   filetype: 'python',
 				\   path: 'pylsp',
 				\   args: [],
+				\   rootSearch: ['pyproject.toml', 'setup.py', 'setup.cfg', '.git/'],
 				\   workspaceConfig: {
 				\     'pylsp': {
 				\       'plugins': {
+				\         'black': {'enabled': v:true},
 				\         'pylint': {
 				\           'enabled': v:false
+				\         },
+				\         'pycodestyle': {
+				\           'enabled': v:true,
+				\           'maxLineLength': 120,
+				\           'ignore': ['E501', 'W503'],
 				\         },
 				\         'rope_autoimport': {
 				\           'enabled': v:true,
@@ -1201,7 +1241,14 @@ function! OnLspSetup()
 				\#{name: 'bash-language-server',
 				\   filetype: 'sh',
 				\   path: 'bash-language-server',
-				\   args: ['start']
+				\   args: ['start'],
+				\   rootSearch: ['.shellcheckrc', '.git/'],
+				\   workspaceConfig: {
+				\     'bashIde': {
+				\       'globPattern': '**/*@(.sh|.inc|.bash|.command|.bashrc|.bash_profile|.profile)',
+				\       'includeAllWorkspaceSymbols': v:true,
+				\     },
+				\   },
 				\ },
 				\#{name: 'vim-language-server',
 				\   filetype: 'vim',
@@ -1211,12 +1258,24 @@ function! OnLspSetup()
 				\#{name: 'marksman',
 				\   filetype: ['markdown'],
 				\   path: 'marksman',
-				\   args: ['server']
+				\   args: ['server'],
+				\   rootSearch: ['.marksman.toml', '.git/'],
 				\ },
 				\#{name: 'yaml-language-server',
 				\   filetype: ['yaml'],
 				\   path: 'yaml-language-server',
 				\   args: ['--stdio'],
+				\   workspaceConfig: {
+				\     'yaml': {
+				\       'schemaStore': {
+				\         'enable': v:true,
+				\         'url': 'https://www.schemastore.org/api/json/catalog.json',
+				\       },
+				\       'completion': v:true,
+				\       'hover': v:true,
+				\       'validate': v:true,
+				\     },
+				\   },
 				\ },
 				\#{name: 'vscode-json-language-server',
 				\   filetype: ['json'],
@@ -1275,16 +1334,6 @@ imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 " }
 
-" asyncrun.vim {
-let g:asyncrun_exit = 'silent! botright copen 10 | cbottom'
-
-" Asynchronous Make command
-command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
-
-nnoremap <F3> :Make<Space>
-nnoremap <F4> :AsyncRun<Space>
-" }
-
 " vim-markdown {
 " tpope/vim-markdown
 " Don't need to install these if you are running a recent version of Vim
@@ -1295,10 +1344,21 @@ let g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'type
 
 " Terminal {
 if !has('gui_running')
+	if &t_fe == ''
+		" Enable focus event tracking for terminal vim.
+		" Most terminal terminfo entries lack Ss/Se capability definitions,
+		" causing t_fe/t_fd to remain empty. Set them manually so that
+		" FocusGained/FocusLost autocommands work (e.g. for checktime).
+		let &t_fe = "\<Esc>[?1004h"
+		let &t_fd = "\<Esc>[?1004l"
+		execute "set <FocusGained>=\<Esc>[I"
+		execute "set <FocusLost>=\<Esc>[O"
+	endif
+
 	augroup CheckFileChanges
 		autocmd!
 		" Check file changes outside vim (terminal/TTY/kmscon)
-		autocmd CursorHold,WinEnter,FocusGained * if getcmdtype() ==# '' | checktime | endif
+		autocmd FocusGained,BufWinEnter,WinEnter,CursorHold * if getcmdtype() ==# '' | checktime | endif
 	augroup END
 endif
 " }
