@@ -271,6 +271,8 @@ sudo fc-cache -fv
 |---|---|
 | [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol 客户端 |
 | [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | 代码片段引擎 |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP 片段集成 |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 常用代码片段集合 |
 | [Yggdroot/LeaderF](https://github.com/Yggdroot/LeaderF) | 模糊文件/缓冲/tag 查找 |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | 异步代码搜索（rg/ag 后端） |
 | [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | 异步命令执行 |
@@ -295,6 +297,7 @@ sudo fc-cache -fv
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | 增强 `*` / `#` 搜索 |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | 可视化书签 |
 | [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | 自动切换工作目录 |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim) | Git 提交浏览器 |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list 增强 |
 
 ## 快捷键
@@ -308,21 +311,22 @@ sudo fc-cache -fv
 #### 1.1 按键修改
 
 ```
-s       用剪贴板的内容替换文本对象选中的字符串（如 siw 替换当前词）
-S       用剪贴板的内容替换当前光标到行尾的文本
+s       用剪贴板的内容替换文本对象选中的字符串（详见§1.7）
+S       用剪贴板的内容替换当前光标到行尾的文本（详见§1.7）
 Y       复制到行尾，相当于"y$"命令
 H       跳到当前行第一个非空字符,相当于"^"命令
 L       跳到当前行最后一个字符,相当于"$"命令
 U       Redo，相当于"Ctrl-r"
 ;       进入命令行模式，相当于":"键
-q       退出窗口，相当于命令":q"
+q       退出窗口（含 diff/fugitive/quickfix 特殊处理）
 Shift+q  退出vim，相当于命令":qa"
 t       记录操作，相当于原来的q（普通模式和可视化模式）
 
 j       移至下一显示行（gj），在折行中正常移动
 k       移至上一显示行（gk），在折行中正常移动
-f       搜索 1 个字符跳转（stargate）
-F       搜索 2 个连续字符跳转（stargate）
+f       搜索 1 个字符跳转（stargate 带提示）
+F       搜索 2 个连续字符跳转（stargate 带提示）
+gs      选择单词/区域进行多光标编辑（vim-visual-multi）
 ```
 
 以下按键在插入模式和命令行模式下均适用：
@@ -425,6 +429,9 @@ Leader+rn           重命名符号
 Leader+gh           显示当前行诊断
 ```
 
+文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。  
+`K` 使用 `:LspHover` 作为大多数文件类型的关键字程序。
+
 #### 1.9 文件/缓冲/Tag 导航（LeaderF）
 
 ```
@@ -446,6 +453,7 @@ zc      关闭光标下的折叠
 zo      打开光标下的折叠
 zR      打开所有折叠
 zM      关闭所有折叠
+zuz     手动更新所有折叠（FastFold）
 ```
 
 #### 1.11 Marks（vim-signature）
@@ -478,6 +486,9 @@ m<BS>       删除所有自定义标记
 m?          在Location List里，查看当前buffer的所有自定义标记
 ```
 
+`:SignatureToggle`   显示/隐藏标记（不删除）  
+`:SignatureRefresh`  标记与 sign 不同步时重新同步
+
 #### 1.12 Dirvish（目录浏览器，替代netrw）
 
 ```
@@ -490,6 +501,10 @@ a           在水平分屏打开
 i           在垂直分屏打开
 t           在新标签页打开
 -           返回上一级目录
+A/I/O       已禁用（请使用 a/i/o 代替）
+x           将文件添加到 arglist
+R           刷新目录视图
+:Shdo       根据行内容生成 shell 脚本（如 :%Shdo）
 ```
 
 #### 1.13 代码搜索（ctrlsf）
@@ -510,16 +525,22 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 #### 1.15 异步运行
 
 ```
-F3      异步 Make
+F3      异步 Make（使用 asyncrun 替代阻塞的内置 :make）
 F4      异步运行任意命令
 ```
+
+`:Make` 命令异步执行 `make`，不会阻塞 Vim。完成后快速修复窗口自动打开。
 
 #### 1.16 其他
 
 ```
 Leader+ws       保存session
 Leader+rs       删除session
+```
 
+Session 保存到 `~/.cache/sessions/`。Vim 启动时自动从此目录恢复 session。
+
+```
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
@@ -529,12 +550,48 @@ cod             切换diff模式
 cop             切换paste模式
 col             切换list模式
 con             清除搜索高亮
-Leader+cr       切换到当前文件所在项目根路径
+Leader+cr       切换到当前文件所在项目根路径（手动触发，不会自动切换）
+cop             切换粘贴模式（退出插入模式时自动关闭）
 Leader+space        去除行尾空白字符（:substitute）
 Leader+Leader+space  去除行尾空白字符 + \\r（DOS 换行符）
 Leader+q            打开/关闭quickfix
 Leader+l            打开/关闭location list
 ```
+
+在 quickfix/location 窗口中（ack 风格映射）：
+- `o`/`Enter` — 打开条目（文件+行号）
+- `go` — 在水平分屏中打开
+- `gO` — 打开并聚焦新窗口
+- `t` — 在新标签页中打开
+- `T` — 在新标签页中打开（保持 quickfix 聚焦）
+- `q` — 关闭 quickfix 窗口
+
+Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，始终置于底部。
+
+注意：`gdefault` 已设置，`:s` 默认执行全局替换（每行所有匹配）。  
+每次启动 Vim 时会清除跳转列表（`clearjumps`），避免跨项目污染。`jumpoptions+=stack` 使跳转列表行为类似标签栈。
+
+#### 1.17 自动插入文件头
+
+新建 `.sh` 和 `.py` 文件会自动插入 shebang 行：
+- `.sh` → `#!/usr/bin/env bash`
+- `.py` → `#!/usr/bin/env python3`
+
+#### 1.18 Match-up（增强 % 匹配跳转）
+
+```
+%       正向跳转到下一个匹配词（闭合处循环回到开头）
+g%      反向跳转到上一个匹配词
+[%      跳转到上一个外部左括号
+]%      跳转到下一个外部右括号
+z%      进入最近的内层块
+i%      任意块的内部（文本对象）
+a%      任意块的范围（文本对象）
+```
+
+#### 1.19 Lexima（自动配对括号）
+
+Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''`、` `` `` `。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
 
 ### 2. 插入模式
 
@@ -578,7 +635,7 @@ S           用剪贴板内容替换光标到行尾
 
 ```
 f           搜索1个字符并跳转
-F           搜索2个连续字符并跳转（反向）
+F           搜索2个连续字符并跳转（stargate 带提示）
 ```
 
 #### 3.5 代码搜索（ctrlsf）
@@ -648,17 +705,40 @@ Ctrl+e  跳到命令行最后
 
 " 搜索 Marks
 :LeaderfMarks [QUERY]
+
+" 搜索行
+:LeaderfLine [QUERY]
+
+" 搜索最近使用的文件
+:LeaderfMru [QUERY]
+
+" 交互式 ripgrep 搜索
+:LeaderfRgInteractive [QUERY]
+
+" 搜索命令历史
+:LeaderfHistoryCmd
+
+" 搜索 help 标签
+:LeaderfHelp [QUERY]
 ```
 
 ## 在vim中使用git
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
 
+#### 核心命令
+
 ```vim
 " 相当于:!git [args]，但会先自动切换到仓库根目录。推荐使用 :Git 而非 :Gstatus, :Gcommit, :Gdiff 等
 :Git [args]
 
-" 常用示例：
+" :Git 的缩写
+:G [args]
+```
+
+#### 常用示例
+
+```vim
 :Git status
 :Git diff
 :Git commit
@@ -666,20 +746,239 @@ Ctrl+e  跳到命令行最后
 :Git blame
 :Git pull
 :Git push
-:Git checkout %
-
-" 详细教程请参考以下视频
-https://github.com/tpope/vim-fugitive#screencasts
-
-" 或官方文档
-:h fugitive.txt
 ```
+
+#### 暂存 / 写 / 追溯
+
+```vim
+" 暂存当前文件 (git add)
+:Gwrite
+" 暂存并退出
+:Gwq
+
+" 从 git 和 buffer 中删除文件
+:GDelete
+" 从 git 中删除，保留 buffer
+:GRemove
+" 重命名 / 移动文件
+:GMove {dest}
+
+" 在滚动同步的分屏中查看 blame
+:Git blame
+```
+
+#### 差异对比
+
+```vim
+" 与暂存区对比
+:Gdiffsplit
+" 与 HEAD 对比
+:Gdiffsplit HEAD
+" 始终垂直分屏
+:Gvdiffsplit
+```
+
+#### 日志与搜索
+
+```vim
+" git-log 放入 quickfix
+:Gclog
+" git-log 放入 location list
+:Gllog
+" git-grep 放入 quickfix
+:Ggrep [args]
+
+" 在 GitHub 浏览器中打开当前文件/提交
+:GBrowse
+" 复制 URL 到剪贴板
+:GBrowse!
+```
+
+#### Git status 窗口快捷键
+
+在 `:Git` 打开的 status 窗口内：
+- `s` — 暂存文件
+- `u` — 取消暂存
+- `-` — 切换暂存
+- `X` — 丢弃修改
+- `=` — 切换内联差异
+- `cc` — 提交
+- `ca` — 修改上次提交
+- `cf` — fixup 提交
+- `cs` — squash 提交
+- `crc` — 还原提交
+- `coo` — 检出文件
+- `dd` — `:Gdiffsplit`
+- `dv` — `:Gvdiffsplit`
+- `gq` — 关闭 status 窗口
+
+更多帮助：`:h fugitive.txt` 或 https://github.com/tpope/vim-fugitive#screencasts
 
 ### 2. Git 提交浏览器：[gv.vim](https://github.com/junegunn/gv.vim)
 
 ```vim
 " 打开 Git 提交浏览器
 :GV
+" 只列出当前文件的提交
+:GV!
+" 将当前文件的版本历史放入 location list
+:GV?
+```
+
+### 3. Git 差异标记：[vim-gitgutter](https://github.com/airblade/vim-gitgutter)
+
+```vim
+" 跳转到下一个/上一个修改块
+]c / [c
+
+" 预览 / 暂存 / 撤销当前修改块
+:GitGutterPreviewHunk
+:GitGutterStageHunk
+:GitGutterUndoHunk
+
+" 折叠所有未修改行
+:GitGutterFold
+
+" 将所有修改块加载到 quickfix
+:GitGutterQuickFix
+```
+
+## 常用 Vim 命令
+
+### 1. vim-eunuch（UNIX Shell 辅助）
+
+```vim
+" 写入所有窗口中修改过的 buffer
+:W (:wall)
+
+" 使用 root 权限保存文件
+:SudoWrite
+
+" 使用 root 权限编辑文件
+:SudoEdit {file}
+
+" 从磁盘和 buffer 中删除文件
+:Delete
+" 从磁盘中删除文件，保留 buffer
+:Remove
+
+" 重命名 / 移动文件
+:Rename {dest}
+
+" 复制文件
+:Copy {dest}
+
+" 修改文件权限
+:Chmod {mode}
+
+" 创建目录（含父目录）
+:Mkdir {dir}
+" 单独 :Mkdir 创建当前文件所在的目录
+
+" 查找文件（结果放入 quickfix）
+:Cfind {args}
+```
+
+### 2. asyncrun.vim
+
+```vim
+" 异步运行命令（不阻塞 Vim）
+:AsyncRun {cmd}
+
+" 常用选项：
+" -program=make    — 设置程序名称，影响输出格式
+" -cwd=<root>      — 在项目根目录运行
+" -save=2          — 自动保存所有修改过的文件
+" -silent          — 不弹出 quickfix 窗口
+" -mode=term       — 在终端窗口中运行
+
+" 停止正在运行的任务
+:AsyncStop
+
+" Make 命令（monkey-vim 自定义）
+:Make [args]
+```
+
+### 3. CtrlSF
+
+```vim
+" 递归搜索当前目录中包含 PATTERN 的代码
+:CtrlSF[!] [PATTERN] [path]
+
+" 重新打开 CtrlSF 窗口
+:CtrlSFOpen
+
+" 关闭 CtrlSF 窗口
+:CtrlSFClose
+```
+
+### 4. Gutentags
+
+```vim
+" 为当前文件生成tag
+:GutentagsUpdate
+
+" 为整个工程生成tag
+:GutentagsUpdate!
+```
+
+### 5. vim-qf（Quickfix 增强）
+
+```vim
+" 只保留匹配的条目
+:Keep {pattern}
+
+" 删除匹配的条目
+:Reject {pattern}
+
+" 按名称保存当前列表
+:SaveList {name}
+
+" 加载已命名的列表
+:LoadList {name}
+
+" 对列表中的每个文件执行命令
+:Dofile {cmd}
+
+" 对列表中的每一行执行命令
+:Doline {cmd}
+```
+
+### 6. vim-obsession（Session 管理）
+
+```vim
+" 开始/更新 session（保存到 ~/.cache/sessions/）
+:Obsession {file}
+
+" 暂停/恢复 session 追踪
+:Obsession
+
+" 停止并删除 session 文件
+:Obsession!
+```
+
+### 7. LSP 命令（yegappan/lsp）
+
+```vim
+" 在整个工作区搜索符号
+:LspSymbolSearch [查询]
+
+" 显示当前文件大纲
+:LspOutline
+
+" 在弹窗中显示文件符号
+:LspDocumentSymbol
+
+" 在源码和头文件之间切换
+:LspSwitchSourceHeader
+
+" 显示所有 server 状态
+:LspShowAllServers
+
+" 工作区管理
+:LspWorkspaceAddFolder {folder}
+:LspWorkspaceRemoveFolder {folder}
+:LspWorkspaceListFolders
 ```
 
 ## 注意事项
