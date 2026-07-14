@@ -183,7 +183,7 @@ DEPS_BY_GROUP["JavaScript/TypeScript"]="node typescript-language-server tsc"
 DEPS_BY_GROUP["JSON"]="node vscode-json-language-server"
 DEPS_BY_GROUP["YAML"]="node yaml-language-server"
 DEPS_BY_GROUP["Markdown"]="marksman"
-DEPS_BY_GROUP["Optional tools"]="glow gcc g++"
+DEPS_BY_GROUP["Optional tools"]="glow"
 
 # ──────────────────── main ────────────────────
 
