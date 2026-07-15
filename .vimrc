@@ -156,7 +156,7 @@ augroup CursorLine
 augroup END
 " }
 
-" Search in time
+" Search in real time
 set incsearch
 set hlsearch
 set ignorecase
@@ -746,7 +746,7 @@ nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohlsearch<CR>
 " <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
 nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohlsearch<CR>
 
-" Disbale paste mode when leaving insert mode
+" Disable paste mode when leaving insert mode
 augroup PasteMode
 	autocmd!
 	autocmd InsertLeave * setlocal nopaste
@@ -1130,13 +1130,11 @@ function! OnLspSetup()
 				\    '--limit-references=0',
 				\    '--limit-results=0'
 				\  ],
-				\  syncInit: v:true
 				\ },
 				\#{name: 'rust-analyzer',
 				\   filetype: ['rust'],
 				\   path: 'rust-analyzer',
 				\   args: [],
-				\   syncInit: v:true,
 				\   workspaceConfig: {
 				\     'rust-analyzer': {
 				\       'checkOnSave': {
@@ -1154,7 +1152,6 @@ function! OnLspSetup()
 				\#{name: 'gopls',
 				\   filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
 				\   path: 'gopls',
-				\   syncInit: v:true,
 				\   rootSearch: ['go.work', 'go.mod'],
 				\   workspaceConfig: {
 				\     'gopls': {
@@ -1192,7 +1189,6 @@ function! OnLspSetup()
 				\   filetype: ['javascript', 'typescript'],
 				\   path: 'typescript-language-server',
 				\   args: ['--stdio'],
-				\   syncInit: v:true,
 				\   rootSearch: ['tsconfig.json', 'jsconfig.json', 'package.json'],
 				\   workspaceConfig: {
 				\     'typescript': {
