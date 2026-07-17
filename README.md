@@ -252,7 +252,7 @@ export COLORTERM=truecolor
 
 The `COLORTERM=truecolor` is required so vim still detects true color support when `TERM` is set to `xterm-256color`. Note that using `xterm-256color` instead of kmscon's native terminfo may cause minor display artifacts in vim due to terminal capability mismatches. For the best experience, build from source to get the native terminfo entry.
 
-If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with molokai's `rehash256` palette for accurate color approximation.
+If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with sonokai's dark palette for accurate color approximation.
 
 #### 6.4 Fonts (optional)
 
@@ -277,7 +277,7 @@ sudo fc-cache -fv
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | Async code search (rg/ag backend) |
 | [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | Async command runner |
 | [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | Status line |
-| [tomasr/molokai](https://github.com/tomasr/molokai) | Colorscheme |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | Colorscheme |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | Multiple cursors |
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | Easy motion (replaces vim-sneak) |
 | [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git wrapper |
