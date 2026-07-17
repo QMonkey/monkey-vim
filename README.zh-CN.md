@@ -252,7 +252,7 @@ export COLORTERM=truecolor
 
 `COLORTERM=truecolor` 必须在 `TERM=xterm-256color` 时设置，否则 vim 无法检测到真彩色支持。注意使用 `xterm-256color` 替代 kmscon 原生 terminfo 可能导致一定的终端刷新异常。如需最佳体验，请从源码编译获取原生 terminfo 条目。
 
-如果在传统 Linux tty（tty1–tty63）上运行，monkey-vim 将自动降级到 256 色模式，并启用 molokai 的 `rehash256` 调色板以准确逼近主题颜色。
+如果在传统 Linux tty（tty1–tty63）上运行，monkey-vim 将自动降级到 256 色模式，并使用 sonokai 的深色调色板以准确逼近主题颜色。
 
 #### 6.4 字体（可选）
 
@@ -277,7 +277,7 @@ sudo fc-cache -fv
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | 异步代码搜索（rg/ag 后端） |
 | [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | 异步命令执行 |
 | [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | 状态栏 |
-| [tomasr/molokai](https://github.com/tomasr/molokai) | 配色方案 |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | 配色方案 |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | 多光标编辑 |
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | 快速跳转（替代 vim-sneak） |
 | [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git 集成 |
