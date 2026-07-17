@@ -61,7 +61,7 @@ let g:plug_timeout = 300
 call plug#begin(expand($HOME . '/.vim/bundle'))
 
 " Plugins {
-Plug 'tomasr/molokai'
+Plug 'sainnhe/sonokai'
 Plug 'itchyny/lightline.vim'
 
 Plug 'Yggdroot/LeaderF', {'do': ':LeaderfInstallCExtension'}
@@ -351,7 +351,7 @@ set laststatus=2
 
 " lightline.vim {
 let g:lightline = {
-			\ 'colorscheme': 'powerline',
+			\ 'colorscheme': 'sonokai',
 			\ 'active': {
 			\   'left': [['mode', 'paste'], ['vminfo', 'gitinfo', 'filename']],
 			\   'right': [['lineinfo'], ['percent'], ['searchcount', 'filetype', 'fileencoding', 'fileformat']]
@@ -568,15 +568,15 @@ endfunction
 
 let s:saved_normal_left = []
 function! s:VM_Enter()
-	let s:saved_normal_left = copy(g:lightline#colorscheme#powerline#palette.normal.left[0])
-	let g:lightline#colorscheme#powerline#palette.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+	let s:saved_normal_left = copy(g:lightline#colorscheme#sonokai#palette.normal.left[0])
+	let g:lightline#colorscheme#sonokai#palette.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
 	call lightline#highlight()
 	call lightline#update()
 endfunction
 
 function! s:VM_Leave()
 	if !empty(s:saved_normal_left)
-		let g:lightline#colorscheme#powerline#palette.normal.left[0] = s:saved_normal_left
+		let g:lightline#colorscheme#sonokai#palette.normal.left[0] = s:saved_normal_left
 		let s:saved_normal_left = []
 	endif
 	call lightline#highlight()
@@ -608,17 +608,21 @@ else
 endif
 " }
 
-" molokai {
+" sonokai {
 " Should be set before :colorscheme
-let g:molokai_original = 1
-if !&termguicolors
-	" Rehash 256-color palette for better approximation of GUI colors.
-	" Not needed when termguicolors is on, since true GUI colors are used.
-	let g:rehash256 = 1
-endif
+let g:sonokai_style = 'andromeda'
+let g:sonokai_better_performance = 1
+let g:sonokai_diagnostic_text_highlight = 1
+let g:sonokai_diagnostic_virtual_text = 'colored'
+let g:sonokai_dim_inactive_windows = 1
 
 set background=dark
-colorscheme molokai
+colorscheme sonokai
+
+" sonokai explicitly defines MatchParenCur/MatchWord,
+" which blocks vim-matchup's hi def link. Re-link them.
+highlight! link MatchParenCur MatchParen
+highlight! link MatchWord MatchParen
 " }
 
 " Key map {
@@ -802,7 +806,6 @@ augroup SplitExplorer
 	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
 	autocmd FileType dirvish noremap <silent><buffer>t :call dirvish#open('tabedit', 0)<CR>
 augroup END
-
 " }
 
 " ctrlsf.vim {
