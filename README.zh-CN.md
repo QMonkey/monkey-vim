@@ -983,23 +983,15 @@ Ctrl+e  跳到命令行最后
 
 ## 注意事项
 
-- monkey-vim默认tab的缩进为8个字符，不使用space替代tab。如果你喜欢tab缩进为4个字符，并且使用space替代tab。你可以将以下vim配置
+- **缩进规则** — monkey-vim 按文件类型应用缩进设置：
 
-```vim
-set tabstop=8
-set softtabstop=8
-set shiftwidth=8
-set noexpandtab
-```
+| 文件类型 | 风格 | 宽度 |
+|---|---|---|
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql` | 硬制表符 (`noexpandtab`) | 4 |
+| `rust`, `python`, `markdown` | 空格 (`expandtab`) | 4 |
+| `javascript`, `typescript`, `lua`, `yaml`, `json` | 空格 (`expandtab`) | 2 |
 
-改为
-
-```vim
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set expandtab
-```
+全局默认使用 4 宽度硬制表符。如需自定义，可在引入 monkey-vim 配置后通过 `FileType` 自动命令覆盖。
 
 - Vim 剪贴板集成
 
