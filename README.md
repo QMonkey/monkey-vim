@@ -984,23 +984,15 @@ More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencast
 
 ## Precautions
 
-- monkey-vim defaults to 8-width tab indentation using hard tabs. If you prefer 4-width spaces, change:
+- **Indentation convention** — monkey-vim applies indent settings per filetype:
 
-```vim
-set tabstop=8
-set softtabstop=8
-set shiftwidth=8
-set noexpandtab
-```
+| Filetype | Style | Width |
+|---|---|---|
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql` | Hard tab (`noexpandtab`) | 4 |
+| `rust`, `python`, `markdown` | Spaces (`expandtab`) | 4 |
+| `javascript`, `typescript`, `lua`, `yaml`, `json` | Spaces (`expandtab`) | 2 |
 
-to
-
-```vim
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set expandtab
-```
+The global default is 4-width hard tabs. To customize, override the `FileType` autocmds in your own vimrc after sourcing monkey-vim's.
 
 - Vim clipboard integration
 
