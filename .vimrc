@@ -41,7 +41,7 @@ function! InitClangFormat()
 	endif
 	let l:lines = [
 				\ 'BasedOnStyle: LLVM',
-				\ 'IndentWidth: 8',
+				\ 'IndentWidth: 4',
 				\ 'UseTab: Always',
 				\ 'BreakBeforeBraces: Linux',
 				\ 'AllowShortIfStatementsOnASingleLine: false',
@@ -206,11 +206,11 @@ set autoindent
 set smarttab
 
 " Size of a hard tabstop
-set tabstop=8
-set softtabstop=8
+set tabstop=4
+set softtabstop=4
 
 " Size of an "indent"
-set shiftwidth=8
+set shiftwidth=4
 
 " Never use space to replace tab
 set noexpandtab
@@ -237,9 +237,12 @@ set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 " FileType {
 augroup FileTypeGroup
 	autocmd!
-	autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-	autocmd FileType json,yaml setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
-	autocmd FileType javascript,typescript setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	" Tab indent, 4-width: C, C++, Go, Bash, VimL, SQL
+	autocmd FileType c,cpp,go,sh,vim,sql setlocal noexpandtab tabstop=4 shiftwidth=4 softtabstop=4
+	" Space indent, 4-width: Rust, Python, Markdown
+	autocmd FileType rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+	" Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
+	autocmd FileType javascript,typescript,lua,yaml,json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 
 	autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
 
