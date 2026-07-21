@@ -20,7 +20,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 
 ## 截图
 
-![vim](pictures/xterm_vim.png "vim")
+![vim](pictures/vim.png "vim")
 
 ## 要求
 

@@ -20,7 +20,7 @@ Window/split management is delegated to tmux or your terminal emulator's native 
 
 ## Screenshot
 
-![vim](pictures/xterm_vim.png "vim")
+![vim](pictures/vim.png "vim")
 
 ## Requirements
 
