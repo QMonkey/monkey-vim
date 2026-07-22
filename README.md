@@ -65,16 +65,16 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 |---|---|---|
 | C/C++ | clangd | `sudo apt-get install clangd` or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
-| Python | python-lsp-server | `pip install python-lsp-server` |
+| Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
-| Lua | lua-language-server | `sudo apt-get install lua-language-server` or `brew install lua-language-server` |
+| Lua | lua-language-server | `brew install lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
 | Vim | vim-language-server | `npm install -g vim-language-server` |
 | JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
-| Markdown | marksman | `sudo apt-get install marksman` or `brew install marksman` |
+| Markdown | marksman | `brew install marksman` |
 
 #### 2.3 C/C++
 
@@ -96,9 +96,9 @@ go install golang.org/x/tools/gopls@latest
 #### 2.5 Python
 
 ```bash
-pip install python-lsp-server
+pip3 install python-lsp-server
 # Optional: formatters/linters
-pip install autopep8 flake8 pylint
+pip3 install autopep8 flake8 pylint
 ```
 
 #### 2.6 JavaScript / TypeScript
@@ -136,9 +136,7 @@ brew install glow  # or: go install github.com/charmbracelet/glow@latest
 
 #### 2.10 Fonts (optional)
 
-Vim uses common Unicode characters (⎇, │, 🔒, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) (e.g. Hack Nerd Font) is optional if you prefer the Powerline-style look.
-
-- [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
+Vim uses common Unicode characters (⎇, │, 🔒, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
 
 ### 3. Health check
 
@@ -256,14 +254,7 @@ If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades 
 
 #### 6.4 Fonts (optional)
 
-kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a Nerd Font:
-
-```bash
-# Download and install Hack Nerd Font system-wide
-wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip
-sudo unzip -o Hack.zip -d /usr/share/fonts/truetype/hack
-sudo fc-cache -fv
-```
+kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a system monospace font of your choice.
 
 ## Plugin list
 
@@ -275,7 +266,6 @@ sudo fc-cache -fv
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | Snippet collection |
 | [Yggdroot/LeaderF](https://github.com/Yggdroot/LeaderF) | Fuzzy file/buffer/tag finder |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | Async code search (rg/ag backend) |
-| [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | Async command runner |
 | [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | Status line |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | Colorscheme |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | Multiple cursors |
@@ -347,8 +337,8 @@ Ctrl+d  Delete forward (Del)
 ```
 F1      Open CtrlSF search prompt
 F2      Toggle CtrlSF search window
-F3      Open async Make prompt
-F4      Open AsyncRun prompt
+F3      Open a terminal at the bottom
+F4      Toggle terminal buffer (open/hide)
 ```
 
 #### 1.3 Buffer
@@ -521,14 +511,14 @@ ds+surroundA                Delete surround A
 cs+surroundA+surroundB      Change surround A to B
 ```
 
-#### 1.15 Async run
+#### 1.15 Terminal
 
 ```
-F3      Async make (replaces built-in :make with asyncrun)
-F4      Async run arbitrary command
+F3      Open a terminal buffer
+F4      Toggle terminal buffer (open/hide)
 ```
 
-The `:Make` command runs `make` asynchronously — it doesn't block Vim. The quickfix window opens automatically on completion.
+F3 opens a new terminal at the bottom. F4 toggles the terminal — hides it without killing the job, reopens the same terminal on demand.
 
 #### 1.16 Others
 
@@ -879,27 +869,7 @@ More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencast
 :Cfind {args}
 ```
 
-### 2. asyncrun.vim
-
-```vim
-" Run command asynchronously (doesn't block Vim)
-:AsyncRun {cmd}
-
-" Options:
-" -program=make    — set program name for output formatting
-" -cwd=<root>      — run from project root
-" -save=2          — auto-save all modified files
-" -silent          — suppress quickfix popup
-" -mode=term       — run in terminal window
-
-" Stop running job
-:AsyncStop
-
-" Make (custom command from monkey-vim)
-:Make [args]
-```
-
-### 3. CtrlSF
+### 2. CtrlSF
 
 ```vim
 " Search recursively in current directory for the pattern

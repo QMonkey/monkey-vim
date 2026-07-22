@@ -65,16 +65,16 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 |---|---|---|
 | C/C++ | clangd | `sudo apt-get install clangd` 或 `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
-| Python | python-lsp-server | `pip install python-lsp-server` |
+| Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
-| Lua | lua-language-server | `sudo apt-get install lua-language-server` 或 `brew install lua-language-server` |
+| Lua | lua-language-server | `brew install lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
 | Vim | vim-language-server | `npm install -g vim-language-server` |
 | JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
-| Markdown | marksman | `sudo apt-get install marksman` 或 `brew install marksman` |
+| Markdown | marksman | `brew install marksman` |
 
 #### 2.3 C/C++
 
@@ -96,9 +96,9 @@ go install golang.org/x/tools/gopls@latest
 #### 2.5 Python
 
 ```bash
-pip install python-lsp-server
+pip3 install python-lsp-server
 # 可选：代码格式化与检查工具
-pip install autopep8 flake8 pylint
+pip3 install autopep8 flake8 pylint
 ```
 
 #### 2.6 JavaScript / TypeScript
@@ -136,9 +136,7 @@ brew install glow  # 或：go install github.com/charmbracelet/glow@latest
 
 #### 2.10 字体（可选）
 
-Vim 使用的 Unicode 字符（⎇, │, 🔒, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)（如 Hack Nerd Font）。
-
-- [Hack Nerd Font](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack)
+Vim 使用的 Unicode 字符（⎇, │, 🔒, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)。
 
 ### 3. 健康检查
 
@@ -256,14 +254,7 @@ export COLORTERM=truecolor
 
 #### 6.4 字体（可选）
 
-kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，可选择性安装 Nerd Font：
-
-```bash
-# 下载并安装 Hack Nerd Font 到系统目录（可选）
-wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip
-sudo unzip -o Hack.zip -d /usr/share/fonts/truetype/hack
-sudo fc-cache -fv
-```
+kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，安装任意系统等宽字体即可。
 
 ## 插件列表
 
@@ -275,7 +266,6 @@ sudo fc-cache -fv
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 常用代码片段集合 |
 | [Yggdroot/LeaderF](https://github.com/Yggdroot/LeaderF) | 模糊文件/缓冲/tag 查找 |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | 异步代码搜索（rg/ag 后端） |
-| [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) | 异步命令执行 |
 | [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | 状态栏 |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | 配色方案 |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | 多光标编辑 |
@@ -347,8 +337,8 @@ Ctrl+d  向前删除    (Del)
 ```
 F1      打开 CtrlSF 搜索提示
 F2      切换 CtrlSF 搜索窗口
-F3      异步 Make
-F4      异步执行任意命令
+F3      打开终端窗口
+F4      切换终端窗口（打开/隐藏）
 ```
 
 #### 1.3 缓冲
@@ -522,14 +512,14 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.15 异步运行
+#### 1.15 终端
 
 ```
-F3      异步 Make（使用 asyncrun 替代阻塞的内置 :make）
-F4      异步运行任意命令
+F3      打开终端窗口
+F4      切换终端窗口（打开/隐藏）
 ```
 
-`:Make` 命令异步执行 `make`，不会阻塞 Vim。完成后快速修复窗口自动打开。
+F3 在底部新建一个终端。F4 切换终端 — 隐藏时不终止进程，再次打开时复用同一终端。
 
 #### 1.16 其他
 
@@ -879,27 +869,7 @@ Ctrl+e  跳到命令行最后
 :Cfind {args}
 ```
 
-### 2. asyncrun.vim
-
-```vim
-" 异步运行命令（不阻塞 Vim）
-:AsyncRun {cmd}
-
-" 常用选项：
-" -program=make    — 设置程序名称，影响输出格式
-" -cwd=<root>      — 在项目根目录运行
-" -save=2          — 自动保存所有修改过的文件
-" -silent          — 不弹出 quickfix 窗口
-" -mode=term       — 在终端窗口中运行
-
-" 停止正在运行的任务
-:AsyncStop
-
-" Make 命令（monkey-vim 自定义）
-:Make [args]
-```
-
-### 3. CtrlSF
+### 2. CtrlSF
 
 ```vim
 " 递归搜索当前目录中包含 PATTERN 的代码
