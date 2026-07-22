@@ -356,17 +356,16 @@ set laststatus=2
 let g:lightline = {
 			\ 'colorscheme': 'sonokai',
 			\ 'active': {
-			\   'left': [['mode', 'paste'], ['vminfo', 'gitinfo', 'filename']],
-			\   'right': [['lineinfo'], ['percent'], ['searchcount', 'filetype', 'fileencoding', 'fileformat']]
+			\   'left': [['mode', 'paste'], ['gitinfo', 'filename']],
+			\   'right': [['lineinfo'], ['percent'], ['searchinfo', 'filetype', 'fileencoding', 'fileformat']]
 			\ },
 			\ 'inactive': {
 			\   'left': [['mode', 'filename']],
 			\   'right': []
 			\ },
 			\ 'component_function': {
-			\   'searchcount': 'LightLineSearchCount',
 			\   'gitinfo': 'LightLineGitInfo',
-			\   'vminfo': 'LightLineVMInfo',
+			\   'searchinfo': 'LightLineSearchOrVM',
 			\   'filename': 'LightLineFilename',
 			\   'fileformat': 'LightLineFileformat',
 			\   'filetype': 'LightLineFiletype',
@@ -514,8 +513,19 @@ function! LightLineLineInfo()
 	return winwidth(0) > 70 ? printf('%3d/%-d :%-2d', line('.'), line('$'), col('.')) : ''
 endfunction
 
-function! LightLineSearchCount()
+function! LightLineSearchOrVM()
 	if s:GetWindowType() != 0
+		return ''
+	endif
+	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+		let l:vm = VMInfos()
+		if !empty(l:vm)
+			let l:result = l:vm.ratio
+			if !empty(@/)
+				let l:result .= '  /' . @/
+			endif
+			return l:result
+		endif
 		return ''
 	endif
 	if !v:hlsearch || @/ ==# ''
@@ -540,7 +550,7 @@ function! LightLineMode()
 	endif
 
 	if exists('b:VM_Selection') && !empty(b:VM_Selection)
-		return 'VM'
+		return 'V-MULTI'
 	endif
 
 	return winwidth(0) > 60 ? lightline#mode() : ''
@@ -550,24 +560,6 @@ endfunction
 " vim-visual-multi lightline integration {
 highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
 highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
-
-function! LightLineVMInfo()
-	if s:GetWindowType() != 0
-		return ''
-	endif
-	if !exists('b:VM_Selection') || empty(b:VM_Selection)
-		return ''
-	endif
-	let l:vm = VMInfos()
-	if empty(l:vm)
-		return ''
-	endif
-	let l:result = l:vm.ratio
-	if !empty(@/)
-		let l:result .= '  /' . @/
-	endif
-	return l:result
-endfunction
 
 let s:saved_normal_left = []
 function! s:VM_Enter()
