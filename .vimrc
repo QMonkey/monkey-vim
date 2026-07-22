@@ -737,7 +737,7 @@ function! TerminalToggle()
 	endif
 endfunction
 
-nnoremap <F3> :terminal<Space>
+nnoremap <F3> :botright terminal<Space>
 nnoremap <silent> <F4> :call TerminalToggle()<CR>
 tnoremap <silent> <F4> <C-\><C-n>:call TerminalToggle()<CR>
 " }
