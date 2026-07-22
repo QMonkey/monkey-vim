@@ -68,8 +68,6 @@ Plug 'Yggdroot/LeaderF', {'do': ':LeaderfInstallCExtension'}
 Plug 'dyng/ctrlsf.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'skywind3000/asyncrun.vim'
-
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'airblade/vim-gitgutter'
 
@@ -661,11 +659,32 @@ cnoremap <C-e> <End>
 cnoremap <C-h> <BackSpace>
 cnoremap <C-d> <Del>
 
-nnoremap <silent>q :call Quit()<CR>
-nnoremap <silent><S-q> :quitall<CR>
+function! s:SendExitToAllTerminals()
+  for l:buf in getbufinfo()
+    if get(l:buf, 'buftype') ==# 'terminal' && term_getstatus(l:buf.bufnr) =~# 'running'
+      call term_sendkeys(l:buf.bufnr, "exit\<CR>")
+    endif
+  endfor
+endfunction
 
-nnoremap t q
-vnoremap t q
+function! s:AllOtherWindowsAreTerminals()
+  let l:cur = winnr()
+  for l:wn in range(1, winnr('$'))
+    if l:wn == l:cur
+      continue
+    endif
+    let l:bufnr = winbufnr(l:wn)
+    if getbufvar(l:bufnr, '&buftype') !=# 'terminal'
+      return 0
+    endif
+  endfor
+  return 1
+endfunction
+
+function! QuitAll()
+	call s:SendExitToAllTerminals()
+	silent! quitall!
+endfunction
 
 function! Quit()
 	let l:last_winnr = winnr('#')
@@ -677,6 +696,15 @@ function! Quit()
 		return
 	endif
 
+	if s:AllOtherWindowsAreTerminals()
+		call QuitAll()
+		return
+	endif
+
+	if &buftype ==# 'terminal' && term_getstatus(bufnr()) =~# 'running'
+		call term_sendkeys(bufnr(), "exit\<CR>")
+	endif
+
 	quit
 
 	if l:window_type == 1 || l:window_type == 2
@@ -685,6 +713,33 @@ function! Quit()
 		endif
 	endif
 endfunction
+
+nnoremap <silent> q :call Quit()<CR>
+nnoremap <silent> <S-q> :call QuitAll()<CR>
+
+nnoremap t q
+vnoremap t q
+" }
+
+" Terminal {
+function! TerminalToggle()
+	if exists('t:terminal_bufnr') && bufexists(t:terminal_bufnr) && term_getstatus(t:terminal_bufnr) =~# 'running'
+		let l:winid = bufwinid(t:terminal_bufnr)
+		if l:winid != -1
+			execute win_id2win(l:winid) . 'hide'
+		else
+			execute 'botright sbuffer ' . t:terminal_bufnr
+			call feedkeys("i", 't')
+		endif
+	else
+		botright terminal
+		let t:terminal_bufnr = bufnr('%')
+	endif
+endfunction
+
+nnoremap <F3> :terminal<Space>
+nnoremap <silent> <F4> :call TerminalToggle()<CR>
+tnoremap <silent> <F4> <C-\><C-n>:call TerminalToggle()<CR>
 " }
 
 function! OpenPrompt(prompt, cmd)
@@ -932,16 +987,6 @@ augroup Session
 	autocmd!
 	autocmd VimEnter * nested call RestoreSession()
 augroup END
-" }
-
-" asyncrun.vim {
-let g:asyncrun_exit = 'silent! botright copen 10 | cbottom'
-
-" Asynchronous Make command
-command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
-
-nnoremap <F3> :Make<Space>
-nnoremap <F4> :AsyncRun<Space>
 " }
 
 " LeaderF {
@@ -1312,7 +1357,7 @@ augroup Lsp
 	autocmd!
 	autocmd User LspSetup call OnLspSetup()
 	autocmd User LspAttached call OnLspAttached()
-	autocmd BufWritePre * if exists(':LspFormat') | LspFormat | endif
+	autocmd BufWritePre * if !empty(lsp#buffer#CurbufGetServer('documentFormatting')) | LspFormat | endif
 augroup END
 " }
 
@@ -1336,7 +1381,7 @@ let g:markdown_minlines = 100
 let g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'yaml', 'json']
 " }
 
-" Terminal {
+" Terminal env {
 if !has('gui_running')
 	if &t_fe == ''
 		" Enable focus event tracking for terminal vim.
