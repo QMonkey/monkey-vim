@@ -40,12 +40,13 @@ git clone https://github.com/QMonkey/monkey-vim.git
 #### 2.1 Common tools
 
 | Tool | Purpose | Required |
-|---|---|---|
+|---|---|---|---|
 | curl | Plugin manager bootstrap | Yes |
 | git | Plugin manager, vim-fugitive | Yes |
 | [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) | ctrlsf code search + LeaderF Rg backend | Yes |
 | universal-ctags | gutentags tag generation | Yes |
 | cmake | Build LeaderF C extension | Yes (compile-time only) |
+| node | Runtime for npm-based LSP servers | No (needed for JS/TS/JSON/YAML/Shell/Vim LSP) |
 
 ```bash
 # Ubuntu/Debian
@@ -63,18 +64,20 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 
 | Language | LSP Server | Install |
 |---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd` or `brew install llvm` |
+| C/C++ | clangd | `sudo apt-get install clangd`, `sudo pacman -S clang`, or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
-| Lua | lua-language-server | `brew install lua-language-server` |
+| Lua | lua-language-server | `brew install lua-language-server` or `sudo pacman -S lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
 | Vim | vim-language-server | `npm install -g vim-language-server` |
 | JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
-| Markdown | marksman | `brew install marksman` |
+| Markdown | marksman | `brew install marksman` or `sudo pacman -S marksman` |
+
+> Node.js is required for all `npm install -g` entries above. Install it via your system package manager (`sudo apt-get install nodejs`, `sudo pacman -S nodejs`, `brew install node`) or from [nodejs.org](https://nodejs.org/).
 
 #### 2.3 C/C++
 
@@ -82,8 +85,11 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 # Ubuntu
 sudo apt-get install gcc g++ clangd clang-format
 
+# Arch Linux
+sudo pacman -S gcc clang
+
 # macOS
-brew install gcc llvm clang-format
+brew install gcc llvm
 ```
 
 #### 2.4 Go
@@ -96,8 +102,9 @@ go install golang.org/x/tools/gopls@latest
 #### 2.5 Python
 
 ```bash
+# Python 3 is required (install via system package manager if not present)
 pip3 install python-lsp-server
-# Optional: formatters/linters
+# Optional: formatters/linters (not tracked by checkhealth.sh)
 pip3 install autopep8 flake8 pylint
 ```
 
@@ -111,7 +118,7 @@ npm install -g typescript-language-server typescript
 #### 2.7 Rust
 
 ```bash
-# Install rust-analyzer via rustup
+# Install rustup (includes rustc & cargo), then:
 rustup component add rust-analyzer
 ```
 
@@ -128,7 +135,9 @@ Preview Markdown in browser via WSL/glow:
 ```bash
 # Option 1: glow (terminal Markdown renderer)
 # https://github.com/charmbracelet/glow
-brew install glow  # or: go install github.com/charmbracelet/glow@latest
+brew install glow       # macOS / Linuxbrew
+sudo pacman -S glow     # Arch Linux
+go install github.com/charmbracelet/glow@latest  # any platform with Go
 
 # Option 2: Open in Windows browser (WSL only)
 # :!explorer.exe %
@@ -146,7 +155,7 @@ Verify that all required dependencies and optional LSP servers are available:
 ./checkhealth.sh
 ```
 
-Pass `--install` to automatically install missing required dependencies (supports apt/pacman/brew):
+Pass `--install` to automatically install missing dependencies (required tools + optional LSP servers). Supports apt/pacman/brew, npm, pip, go install, and rustup:
 
 ```bash
 ./checkhealth.sh --install

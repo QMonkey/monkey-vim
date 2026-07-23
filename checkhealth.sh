@@ -128,6 +128,56 @@ install_pkg() {
 	esac
 }
 
+install_optional_bin() {
+	local bin="$1"
+	local ok=true
+	case "$bin" in
+		rg)
+			install_pkg "$(pkg_name "$bin")" || cargo install ripgrep 2>/dev/null || ok=false
+			;;
+		gopls)
+			go install golang.org/x/tools/gopls@latest
+			;;
+		pylsp)
+			pip3 install python-lsp-server
+			;;
+		rust-analyzer)
+			rustup component add rust-analyzer
+			;;
+		bash-language-server)
+			npm install -g bash-language-server
+			;;
+		vim-language-server)
+			npm install -g vim-language-server
+			;;
+		typescript-language-server)
+			npm install -g typescript-language-server typescript
+			;;
+		tsc)
+			npm install -g typescript
+			;;
+		vscode-json-language-server)
+			npm install -g vscode-langservers-extracted
+			;;
+		yaml-language-server)
+			npm install -g yaml-language-server
+			;;
+		lua-language-server)
+			install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
+			;;
+		glow)
+			install_pkg "$(pkg_name "$bin")" || brew install glow 2>/dev/null || go install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
+			;;
+		marksman)
+			install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
+			;;
+		*)
+			install_pkg "$(pkg_name "$bin")" || ok=false
+			;;
+	esac
+	$ok
+}
+
 get_install_hint() {
 	case "$OS" in
 	debian) echo "sudo apt-get install ${*}" ;;
@@ -150,13 +200,40 @@ REQUIRED["cmake"]="cmake"
 declare -A APT_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="universal-ctags"
+	["clangd"]="clangd"
+	["clang-format"]="clang-format"
+	["gcc"]="gcc"
+	["g++"]="g++"
+	["go"]="golang-go"
+	["python3"]="python3"
+	["node"]="nodejs"
 )
 declare -A PACMAN_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="ctags"
+	["clangd"]="clang"
+	["clang-format"]="clang"
+	["gcc"]="gcc"
+	["g++"]="gcc"
+	["go"]="go"
+	["python3"]="python"
+	["node"]="nodejs"
+	["lua-language-server"]="lua-language-server"
+	["marksman"]="marksman"
+	["glow"]="glow"
 )
 declare -A BREW_NAMES=(
 	["ctags"]="universal-ctags"
+	["clangd"]="llvm"
+	["clang-format"]="llvm"
+	["gcc"]="gcc"
+	["g++"]="gcc"
+	["go"]="go"
+	["python3"]="python"
+	["node"]="node"
+	["lua-language-server"]="lua-language-server"
+	["marksman"]="marksman"
+	["glow"]="glow"
 )
 
 pkg_name() {
@@ -226,6 +303,34 @@ if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 		echo -e "${GREEN}Done.${NC}"
 	else
 		echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
+	fi
+	echo ""
+fi
+
+if $INSTALL_MODE; then
+	MISSING_OPTIONAL=()
+	for group in "C/C++" "Go" "Python" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
+		for bin in ${DEPS_BY_GROUP[$group]}; do
+			if ! command -v "$bin" &>/dev/null; then
+				MISSING_OPTIONAL+=("$bin")
+			fi
+		done
+	done
+
+	if [[ ${#MISSING_OPTIONAL[@]} -gt 0 ]]; then
+		echo -e "${YELLOW}Installing optional LSP servers & tools: ${MISSING_OPTIONAL[*]}...${NC}"
+		for bin in "${MISSING_OPTIONAL[@]}"; do
+			echo -e "  ${YELLOW}→ installing ${bin}...${NC}"
+			if install_optional_bin "$bin"; then
+				echo -e "  ${GREEN}✓ ${bin} installed${NC}"
+			else
+				echo -e "  ${RED}✗ failed to install ${bin}${NC}"
+				echo -e "    hint: $(get_install_hint "${bin}")"
+			fi
+		done
+		echo -e "${GREEN}Done with optional installs.${NC}"
+	else
+		echo -e "${GREEN}All optional LSP servers & tools already installed.${NC}"
 	fi
 	echo ""
 fi
