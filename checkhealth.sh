@@ -402,8 +402,10 @@ echo ""
 # ──── config files ────
 echo -e "${BOLD}Config files${NC}"
 VIMRC="${HOME}/.vimrc"
+REPO_DIR=""
 if [[ -L "$VIMRC" ]]; then
 	TARGET=$(readlink -f "$VIMRC" 2>/dev/null || readlink "$VIMRC")
+	REPO_DIR=$(dirname "$TARGET")
 	echo -e "  ${PASS} .vimrc → ${TARGET}"
 elif [[ -f "$VIMRC" ]]; then
 	echo -e "  ${WARN} .vimrc exists but is not a symlink"
@@ -412,10 +414,17 @@ else
 	ALL_PASSED=false
 fi
 
-if [ -f "${HOME}/.clang-format" ]; then
+if [[ -n "$REPO_DIR" ]]; then
+	if [[ -L "${HOME}/.clang-format" ]]; then
+		CF_TARGET=$(readlink -f "${HOME}/.clang-format")
+		echo -e "  ${PASS} .clang-format → ${CF_TARGET}"
+	elif [[ -f "${HOME}/.clang-format" ]]; then
+		echo -e "  ${WARN} .clang-format exists but is not a symlink (run: ln -sf ${REPO_DIR}/configs/.clang-format ~/.clang-format)"
+	else
+		echo -e "  ${WARN} .clang-format not found (run: ln -sf ${REPO_DIR}/configs/.clang-format ~/.clang-format)"
+	fi
+elif [[ -f "${HOME}/.clang-format" ]]; then
 	echo -e "  ${PASS} .clang-format exists"
-else
-	echo -e "  ${WARN} .clang-format not found (auto-created on first vim launch)"
 fi
 
 SWAP_DIR="${HOME}/.vim/swap"

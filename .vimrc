@@ -29,28 +29,10 @@ if empty(glob($HOME . '/.vim/autoload/plug.vim'))
 	augroup Init
 		autocmd!
 		autocmd VimEnter * PlugInstall | source $MYVIMRC
-		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p') | call InitClangFormat()
+		autocmd VimEnter * call mkdir($HOME . '/.vim/swap/', 'p')
 		autocmd VimEnter * echohl Title | echo 'monkey-vim is ready! Run :PlugStatus to verify plugins.' | echohl None
 	augroup END
 endif
-
-function! InitClangFormat()
-	let l:clang_format = $HOME . '/.clang-format'
-	if filereadable(l:clang_format)
-		return
-	endif
-	let l:lines = [
-				\ 'BasedOnStyle: LLVM',
-				\ 'IndentWidth: 4',
-				\ 'UseTab: Always',
-				\ 'BreakBeforeBraces: Linux',
-				\ 'AllowShortIfStatementsOnASingleLine: false',
-				\ 'IndentCaseLabels: false',
-				\ 'PointerAlignment: Left',
-				\ 'SortIncludes: false'
-				\ ]
-	call writefile(l:lines, l:clang_format)
-endfunction
 " }
 
 " vim-plug {
