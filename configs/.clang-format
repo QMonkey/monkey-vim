@@ -5,4 +5,4 @@ BreakBeforeBraces: Linux
 AllowShortIfStatementsOnASingleLine: false
 IndentCaseLabels: false
 PointerAlignment: Left
-SortIncludes: false
+SortIncludes: true

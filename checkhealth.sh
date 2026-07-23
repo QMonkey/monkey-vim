@@ -410,7 +410,7 @@ if [[ -L "$VIMRC" ]]; then
 elif [[ -f "$VIMRC" ]]; then
 	echo -e "  ${WARN} .vimrc exists but is not a symlink"
 else
-	echo -e "  ${FAIL} .vimrc not found (run: ln -s $(pwd)/.vimrc ~/.vimrc)"
+	echo -e "  ${FAIL} .vimrc not found (run: ln -sf $(pwd)/.vimrc ~/.vimrc)"
 	ALL_PASSED=false
 fi
 

@@ -167,7 +167,7 @@ Pass `--install` to automatically install missing dependencies (required tools +
 
 ```bash
 cd monkey-vim
-ln -s $(pwd)/.vimrc ~/.vimrc
+ln -sf $(pwd)/.vimrc ~/.vimrc
 ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # global clang-format style (optional)
 vim
 ```
