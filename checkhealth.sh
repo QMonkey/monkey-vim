@@ -139,28 +139,28 @@ install_optional_bin() {
 			go install golang.org/x/tools/gopls@latest
 			;;
 		pylsp)
-			pip3 install python-lsp-server
+			sudo pip3 install python-lsp-server
 			;;
 		rust-analyzer)
 			rustup component add rust-analyzer
 			;;
 		bash-language-server)
-			npm install -g bash-language-server
+			sudo npm install -g bash-language-server
 			;;
 		vim-language-server)
-			npm install -g vim-language-server
+			sudo npm install -g vim-language-server
 			;;
 		typescript-language-server)
-			npm install -g typescript-language-server typescript
+			sudo npm install -g typescript-language-server typescript
 			;;
 		tsc)
-			npm install -g typescript
+			sudo npm install -g typescript
 			;;
 		vscode-json-language-server)
-			npm install -g vscode-langservers-extracted
+			sudo npm install -g vscode-langservers-extracted
 			;;
 		yaml-language-server)
-			npm install -g yaml-language-server
+			sudo npm install -g yaml-language-server
 			;;
 		lua-language-server)
 			install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
