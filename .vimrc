@@ -1258,6 +1258,7 @@ function! OnLspSetup()
 				\   filetype: 'lua',
 				\   path: 'lua-language-server',
 				\   args: [],
+				\   rootSearch: ['.luarc.json', '.luarc.jsonc', '.git/'],
 				\ },
 				\#{name: 'bash-language-server',
 				\   filetype: 'sh',
