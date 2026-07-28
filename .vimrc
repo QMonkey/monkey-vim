@@ -257,6 +257,7 @@ augroup Docset
 	" Use :LspHover as the default docset
 	autocmd FileType * setlocal keywordprg=:LspHover
 	autocmd FileType c,man setlocal keywordprg=:Man
+	autocmd FileType c let $MANSECT = '2:3:1:4:5:6:7:8:9'
 	autocmd FileType vim,help setlocal keywordprg=:help
 augroup END
 " }
@@ -642,57 +643,78 @@ cnoremap <C-h> <BackSpace>
 cnoremap <C-d> <Del>
 
 function! s:SendExitToAllTerminals()
-  for l:buf in getbufinfo()
-    if get(l:buf, 'buftype') ==# 'terminal' && term_getstatus(l:buf.bufnr) =~# 'running'
-      call term_sendkeys(l:buf.bufnr, "exit\<CR>")
-    endif
-  endfor
+	for l:buf in getbufinfo()
+		if get(l:buf, 'buftype') ==# 'terminal' && term_getstatus(l:buf.bufnr) =~# 'running'
+			call term_sendkeys(l:buf.bufnr, "exit\<CR>")
+		endif
+	endfor
 endfunction
 
-function! s:AllOtherWindowsAreTerminals()
-  let l:cur = winnr()
-  for l:wn in range(1, winnr('$'))
-    if l:wn == l:cur
-      continue
-    endif
-    let l:bufnr = winbufnr(l:wn)
-    if getbufvar(l:bufnr, '&buftype') !=# 'terminal'
-      return 0
-    endif
-  endfor
-  return 1
+function! s:IsAuxiliaryWindow(winnr)
+	let l:bufnr = winbufnr(a:winnr)
+	if l:bufnr == -1 | return 1 | endif
+	if getwinvar(a:winnr, '&previewwindow') | return 1 | endif
+	if getbufvar(l:bufnr, '&buftype') ==# 'quickfix' | return 1 | endif
+	if getbufvar(l:bufnr, '&buftype') ==# 'help' | return 1 | endif
+	if getbufvar(l:bufnr, '&buftype') ==# 'terminal' | return 1 | endif
+	if getbufvar(l:bufnr, '&buftype') ==# 'nofile' && getbufvar(l:bufnr, '&filetype') ==# 'man' | return 1 | endif
+	if getbufvar(l:bufnr, '&buftype') ==# 'nofile' && bufname(l:bufnr) ==# '' && !getbufvar(l:bufnr, '&modified') | return 1 | endif
+	return 0
+endfunction
+
+function! s:FocusToValidWindow()
+	if !s:IsAuxiliaryWindow(winnr())
+		return
+	endif
+	for l:wn in range(1, winnr('$'))
+		if !s:IsAuxiliaryWindow(l:wn)
+			execute l:wn . 'wincmd w'
+			return
+		endif
+	endfor
+endfunction
+
+function! s:CloseFugitiveDiff()
+	if !&diff | return 0 | endif
+	for l:wn in range(1, winnr('$'))
+		if bufname(winbufnr(l:wn)) =~# '^fugitive:'
+			execute l:wn . 'wincmd w'
+			quit
+			return 1
+		endif
+	endfor
+	return 0
 endfunction
 
 function! QuitAll()
 	call s:SendExitToAllTerminals()
-	silent! quitall!
+	silent! confirm quitall!
 endfunction
 
 function! Quit()
-	let l:last_winnr = winnr('#')
-	let l:window_type = s:GetWindowType()
-
-	if &diff && l:last_winnr && bufname(winbufnr(l:last_winnr)) =~# '^fugitive:'
-		execute l:last_winnr . 'wincmd w'
-		quit
-		return
-	endif
-
-	if s:AllOtherWindowsAreTerminals()
-		call QuitAll()
-		return
-	endif
+	if s:CloseFugitiveDiff() | return | endif
 
 	if &buftype ==# 'terminal' && term_getstatus(bufnr()) =~# 'running'
 		call term_sendkeys(bufnr(), "exit\<CR>")
 	endif
 
-	quit
-
-	if l:window_type == 1 || l:window_type == 2
-		if win_id2win(win_getid(l:last_winnr))
-			silent! execute l:last_winnr . 'wincmd w'
+	let l:will_be_only_aux = 1
+	let l:has_other_window = 0
+	let l:cur = winnr()
+	for l:wn in range(1, winnr('$'))
+		if l:wn == l:cur | continue | endif
+		let l:has_other_window = 1
+		if !s:IsAuxiliaryWindow(l:wn)
+			let l:will_be_only_aux = 0
+			break
 		endif
+	endfor
+
+	if !l:has_other_window || l:will_be_only_aux
+		call QuitAll()
+	else
+		quit
+		call s:FocusToValidWindow()
 	endif
 endfunction
 
