@@ -40,13 +40,12 @@ git clone https://github.com/QMonkey/monkey-vim.git
 #### 2.1 Common tools
 
 | Tool | Purpose | Required |
-|---|---|---|---|
+|---|---|---|
 | curl | Plugin manager bootstrap | Yes |
 | git | Plugin manager, vim-fugitive | Yes |
-| [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) | ctrlsf code search + LeaderF Rg backend | Yes |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf code search + LeaderF Rg backend | Yes |
 | universal-ctags | gutentags tag generation | Yes |
 | cmake | Build LeaderF C extension | Yes (compile-time only) |
-| node | Runtime for npm-based LSP servers | No (needed for JS/TS/JSON/YAML/Shell/Vim LSP) |
 
 ```bash
 # Ubuntu/Debian
@@ -83,7 +82,7 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 
 ```bash
 # Ubuntu
-sudo apt-get install gcc g++ clangd clang-format
+sudo apt-get install gcc g++ clangd
 
 # Arch Linux
 sudo pacman -S gcc clang
