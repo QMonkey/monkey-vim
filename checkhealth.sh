@@ -201,7 +201,6 @@ declare -A APT_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="universal-ctags"
 	["clangd"]="clangd"
-	["clang-format"]="clang-format"
 	["gcc"]="gcc"
 	["g++"]="g++"
 	["go"]="golang-go"
@@ -212,7 +211,6 @@ declare -A PACMAN_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="ctags"
 	["clangd"]="clang"
-	["clang-format"]="clang"
 	["gcc"]="gcc"
 	["g++"]="gcc"
 	["go"]="go"
@@ -225,7 +223,6 @@ declare -A PACMAN_NAMES=(
 declare -A BREW_NAMES=(
 	["ctags"]="universal-ctags"
 	["clangd"]="llvm"
-	["clang-format"]="llvm"
 	["gcc"]="gcc"
 	["g++"]="gcc"
 	["go"]="go"
@@ -249,7 +246,7 @@ pkg_name() {
 # ──────────── language-grouped optional deps ────────────
 
 declare -A DEPS_BY_GROUP
-DEPS_BY_GROUP["C/C++"]="gcc g++ clangd clang-format"
+DEPS_BY_GROUP["C/C++"]="gcc g++ clangd"
 DEPS_BY_GROUP["Go"]="go gopls"
 DEPS_BY_GROUP["Python"]="python3 pylsp"
 DEPS_BY_GROUP["Rust"]="cargo rust-analyzer"
@@ -343,7 +340,7 @@ echo ""
 if ! $INSTALL_MODE; then
 	declare -A INSTALL_HINTS
 	INSTALL_HINTS["clangd"]="$(get_install_hint clangd)  # or clangd-15+"
-	INSTALL_HINTS["clang-format"]="$(get_install_hint clang-format)"
+
 	INSTALL_HINTS["gcc"]="$(get_install_hint gcc)"
 	INSTALL_HINTS["g++"]="$(get_install_hint g++)"
 	INSTALL_HINTS["go"]="https://go.dev/dl/"
@@ -412,19 +409,6 @@ elif [[ -f "$VIMRC" ]]; then
 else
 	echo -e "  ${FAIL} .vimrc not found (run: ln -sf $(pwd)/.vimrc ~/.vimrc)"
 	ALL_PASSED=false
-fi
-
-if [[ -n "$REPO_DIR" ]]; then
-	if [[ -L "${HOME}/.clang-format" ]]; then
-		CF_TARGET=$(readlink -f "${HOME}/.clang-format")
-		echo -e "  ${PASS} .clang-format → ${CF_TARGET}"
-	elif [[ -f "${HOME}/.clang-format" ]]; then
-		echo -e "  ${WARN} .clang-format exists but is not a symlink (run: ln -sf ${REPO_DIR}/configs/.clang-format ~/.clang-format)"
-	else
-		echo -e "  ${WARN} .clang-format not found (run: ln -sf ${REPO_DIR}/configs/.clang-format ~/.clang-format)"
-	fi
-elif [[ -f "${HOME}/.clang-format" ]]; then
-	echo -e "  ${PASS} .clang-format exists"
 fi
 
 SWAP_DIR="${HOME}/.vim/swap"
