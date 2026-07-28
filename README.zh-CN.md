@@ -40,13 +40,12 @@ git clone https://github.com/QMonkey/monkey-vim.git
 #### 2.1 通用工具
 
 | 工具 | 用途 | 是否必须 |
-|---|---|---|---|
+|---|---|---|
 | curl | 插件管理器引导 | 是 |
 | git | 插件管理器、vim-fugitive | 是 |
-| [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) | ctrlsf 代码搜索 + LeaderF Rg 后端 | 是 |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + LeaderF Rg 后端 | 是 |
 | universal-ctags | gutentags 标签生成 | 是 |
 | cmake | 编译 LeaderF C 扩展 | 是（仅编译时） |
-| node | npm 安装的 LSP 服务器的运行环境 | 否（JS/TS/JSON/YAML/Shell/Vim 需要） |
 
 ```bash
 # Ubuntu/Debian
@@ -83,7 +82,7 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 
 ```bash
 # Ubuntu
-sudo apt-get install gcc g++ clangd clang-format
+sudo apt-get install gcc g++ clangd
 
 # Arch Linux
 sudo pacman -S gcc clang
