@@ -121,7 +121,24 @@ sudo_cmd() {
 install_pkg() {
 	if ! $INSTALL_MODE; then return 1; fi
 	case "$OS" in
-	debian) sudo_cmd apt-get install -y "$@" ;;
+	debian)
+		case "$*" in
+		*fzf*|*bat*|*delta*)
+			if command -v brew &>/dev/null; then
+				brew install "$@"
+			else
+				if ! command -v brew &>/dev/null; then
+					/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+					eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
+					brew install "$@" || sudo_cmd apt-get install -y "$@"
+				fi
+			fi
+			;;
+		*)
+			sudo_cmd apt-get install -y "$@"
+			;;
+		esac
+		;;
 	arch) sudo_cmd pacman -S --noconfirm "$@" ;;
 	macos) brew install "$@" ;;
 	*) return 1 ;;
@@ -180,7 +197,17 @@ install_optional_bin() {
 
 get_install_hint() {
 	case "$OS" in
-	debian) echo "sudo apt-get install ${*}" ;;
+	debian)
+		for p in "$@"; do
+			case "$p" in
+			fzf|bat|git-delta|bat-musl|delta)
+				echo "brew install ${*}"
+				return
+				;;
+			esac
+		done
+		echo "sudo apt-get install ${*}"
+		;;
 	arch) echo "sudo pacman -S ${*}" ;;
 	macos) echo "brew install ${*}" ;;
 	*) echo "install ${*} manually" ;;
@@ -194,12 +221,19 @@ REQUIRED["curl"]="curl"
 REQUIRED["git"]="git"
 REQUIRED["rg"]="ripgrep"
 REQUIRED["ctags"]="universal-ctags"
-REQUIRED["cmake"]="cmake"
+REQUIRED["fzf"]="fzf"
+
+declare -A RECOMMENDED=()
+RECOMMENDED["bat"]="bat"
+RECOMMENDED["delta"]="git-delta"
 
 # packages for each OS (maps binary -> package name)
 declare -A APT_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="universal-ctags"
+	["fzf"]="fzf"
+	["bat"]="bat"
+	["delta"]="git-delta"
 	["clangd"]="clangd"
 	["gcc"]="gcc"
 	["g++"]="g++"
@@ -210,6 +244,9 @@ declare -A APT_NAMES=(
 declare -A PACMAN_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="ctags"
+	["fzf"]="fzf"
+	["bat"]="bat"
+	["delta"]="git-delta"
 	["clangd"]="clang"
 	["gcc"]="gcc"
 	["g++"]="gcc"
@@ -222,6 +259,9 @@ declare -A PACMAN_NAMES=(
 )
 declare -A BREW_NAMES=(
 	["ctags"]="universal-ctags"
+	["fzf"]="fzf"
+	["bat"]="bat"
+	["delta"]="git-delta"
 	["clangd"]="llvm"
 	["gcc"]="gcc"
 	["g++"]="gcc"
@@ -282,7 +322,7 @@ echo ""
 # ──── required tools ────
 echo -e "${BOLD}Required tools${NC}"
 MISSING_REQUIRED=()
-for bin in curl git rg ctags cmake; do
+for bin in curl git rg ctags fzf; do
 	if check_bin "$bin" "${REQUIRED[$bin]}"; then
 		:
 	else
@@ -296,6 +336,36 @@ if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 	echo -e "${YELLOW}Installing: ${MISSING_REQUIRED[*]}...${NC}"
 	pkgs=()
 	for b in "${MISSING_REQUIRED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
+	if install_pkg "${pkgs[@]}"; then
+		echo -e "${GREEN}Done.${NC}"
+	else
+		echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
+	fi
+	echo ""
+fi
+
+# ──── recommended tools ────
+echo -e "${BOLD}Recommended tools${NC}"
+echo "  (Missing won't block monkey-vim, but will degrade preview experience)"
+MISSING_RECOMMENDED=()
+for bin in bat delta; do
+	if check_bin "$bin" "${RECOMMENDED[$bin]}"; then
+		:
+	else
+		if [[ "$bin" == "bat" ]] && command -v batcat &>/dev/null; then
+			echo -e "    ${PASS} batcat (Debian alias for bat)"
+		else
+			echo -e "    ${FAIL} ${RECOMMENDED[$bin]}"
+			MISSING_RECOMMENDED+=("$bin")
+		fi
+	fi
+done
+echo ""
+
+if $INSTALL_MODE && [[ ${#MISSING_RECOMMENDED[@]} -gt 0 ]]; then
+	echo -e "${YELLOW}Installing: ${MISSING_RECOMMENDED[*]}...${NC}"
+	pkgs=()
+	for b in "${MISSING_RECOMMENDED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
 	if install_pkg "${pkgs[@]}"; then
 		echo -e "${GREEN}Done.${NC}"
 	else
