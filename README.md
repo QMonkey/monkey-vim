@@ -1,59 +1,59 @@
 # monkey-vim
 
-其他语言版本：[English](README.md)
+Read this in other languages: [简体中文](README.zh-CN.md)
 
-## 简介
+## Introduction
 
-monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
+The project monkey-vim, aims to make a powerful and fast terminal-native IDE.
 
-**定位：** monkey-vim 面向纯终端环境 —— 不支持 GUI、gvim，不内建终端复用。适用环境：
+**Positioning:** monkey-vim targets pure terminal environments — no GUI, no gvim, no built-in terminal multiplexing. Use it in:
 
-| 环境 | 说明 |
+| Environment | Description |
 |---|---|
-| Linux 终端 | xterm, kitty, alacritty, wezterm, gnome-terminal 等 |
-| macOS 终端 | Terminal.app, iTerm2, kitty 等 |
-| WSL | Windows Subsystem for Linux（推荐 WSL2） |
-| 服务器 TTY | 原生 Linux 控制台（tty1–tty63），256 色降级 |
-| kmscon | Kernel Mode Setting 控制台 —— 支持真彩色和 Unicode 的现代 TTY 替代方案 |
+| Linux Terminal | xterm, kitty, alacritty, wezterm, gnome-terminal, etc. |
+| macOS Terminal | Terminal.app, iTerm2, kitty, etc. |
+| WSL | Windows Subsystem for Linux (WSL2 recommended) |
+| Server TTY | Bare Linux console (tty1–tty63), 256-color fallback |
+| kmscon | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support |
 
-窗口/分屏管理交给 tmux 或终端模拟器的原生标签页。
+Window/split management is delegated to tmux or your terminal emulator's native tabs.
 
-## 截图
+## Screenshot
 
 ![vim](pictures/vim.png "vim")
 
-## 要求
+## Requirements
 
 - vim 9.0+
-- 终端环境（不支持 GUI / gvim）
+- A terminal environment (no GUI / gvim support)
 
-## 安装步骤
+## Installation
 
-### 1. clone到本地
+### 1. Git clone
 
 ```bash
 git clone https://github.com/QMonkey/monkey-vim.git
 ```
 
-### 2. 安装依赖
+### 2. Install dependencies
 
-#### 2.1 通用工具
+#### 2.1 Common tools
 
-| 工具 | 用途 | 是否必须 |
+| Tool | Purpose | Required |
 |---|---|---|
-| curl | 插件管理器引导 | 是 |
-| git | 插件管理器、vim-fugitive | 是 |
-| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + fzf.vim 文件搜索 | 是 |
-| universal-ctags | gutentags 标签生成 | 是 |
-| [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | 模糊搜索器（fzf.vim 依赖） | 是 |
-| [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
-| [delta](https://github.com/dandavison/delta) | Git diff 增强预览（fugitive, fzf） | 推荐 |
+| curl | Plugin manager bootstrap | Yes |
+| git | Plugin manager, vim-fugitive | Yes |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf code search + fzf.vim file search | Yes |
+| universal-ctags | gutentags tag generation | Yes |
+| [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | Fuzzy finder (fzf.vim) | Yes |
+| [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
+| [delta](https://github.com/dandavison/delta) | Enhanced git diff preview (fugitive, fzf) | Recommended |
 
 ```bash
-# Ubuntu/Debian — apt 提供的 fzf/bat/delta 版本可能过旧，推荐使用 brew
+# Ubuntu/Debian — apt packages may be outdated for fzf/bat/delta, use brew
 sudo apt-get install curl git ripgrep universal-ctags
 
-# 在较旧的 Debian/Ubuntu 上安装 fzf, bat, delta，请使用 Homebrew：
+# For fzf, bat, delta on older Debian/Ubuntu, use Homebrew:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install fzf bat git-delta
@@ -64,26 +64,26 @@ sudo pacman -S curl git ripgrep ctags fzf bat git-delta
 # macOS
 brew install curl git ripgrep universal-ctags fzf bat git-delta
 ```
-#### 2.2 LSP 服务器
+#### 2.2 LSP servers
 
-Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/lsp) 插件提供。请根据需要安装对应语言的服务器：
+Language Server Protocol support is provided by [yegappan/lsp](https://github.com/yegappan/lsp). Install the servers for languages you use:
 
-| 语言 | LSP 服务器 | 安装方式 |
+| Language | LSP Server | Install |
 |---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`、`sudo pacman -S clang` 或 `brew install llvm` |
+| C/C++ | clangd | `sudo apt-get install clangd`, `sudo pacman -S clang`, or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
-| Lua | lua-language-server | `brew install lua-language-server` 或 `sudo pacman -S lua-language-server` |
+| Lua | lua-language-server | `brew install lua-language-server` or `sudo pacman -S lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
 | Vim | vim-language-server | `npm install -g vim-language-server` |
 | JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
 | JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
-| Markdown | marksman | `brew install marksman` 或 `sudo pacman -S marksman` |
+| Markdown | marksman | `brew install marksman` or `sudo pacman -S marksman` |
 
-> 所有 `npm install -g` 安装方式都需要 Node.js。通过系统包管理器（`sudo apt-get install nodejs`、`sudo pacman -S nodejs`、`brew install node`）或 [nodejs.org](https://nodejs.org/) 安装。
+> Node.js is required for all `npm install -g` entries above. Install it via your system package manager (`sudo apt-get install nodejs`, `sudo pacman -S nodejs`, `brew install node`) or from [nodejs.org](https://nodejs.org/).
 
 #### 2.3 C/C++
 
@@ -101,84 +101,84 @@ brew install gcc llvm
 #### 2.4 Go
 
 ```bash
-# 请安装最新版本的 go，然后：
+# Install the latest version of Go, then:
 go install golang.org/x/tools/gopls@latest
 ```
 
 #### 2.5 Python
 
 ```bash
-# 需要 Python 3（如未安装请先通过系统包管理器安装）
+# Python 3 is required (install via system package manager if not present)
 pip3 install python-lsp-server
-# 可选：代码格式化与检查工具（checkhealth.sh 不检查这些）
+# Optional: formatters/linters (not tracked by checkhealth.sh)
 pip3 install autopep8 flake8 pylint
 ```
 
 #### 2.6 JavaScript / TypeScript
 
 ```bash
-# 安装 LSP 服务器
+# Install LSP server
 npm install -g typescript-language-server typescript
 ```
 
 #### 2.7 Rust
 
 ```bash
-# 安装 rustup（包含 rustc 和 cargo），然后：
+# Install rustup (includes rustc & cargo), then:
 rustup component add rust-analyzer
 ```
 
 #### 2.8 YAML
 
 ```bash
-# 安装 LSP 服务器
+# Install LSP server
 npm install -g yaml-language-server
 ```
 
 #### 2.9 Markdown
 
-终端/WSL 下预览 Markdown：
+Preview Markdown in browser via WSL/glow:
 ```bash
-# 方案一：glow（终端 Markdown 渲染器）
+# Option 1: glow (terminal Markdown renderer)
 # https://github.com/charmbracelet/glow
 brew install glow       # macOS / Linuxbrew
 sudo pacman -S glow     # Arch Linux
-go install github.com/charmbracelet/glow@latest  # 任意平台（需安装 Go）
+go install github.com/charmbracelet/glow@latest  # any platform with Go
 
-# 方案二：在 Windows 浏览器中打开（仅 WSL）
+# Option 2: Open in Windows browser (WSL only)
 # :!explorer.exe %
 ```
 
-#### 2.10 字体（可选）
+#### 2.10 Fonts (optional)
 
-Vim 使用的 Unicode 字符（⎇, │, 🔒, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)。
+Vim uses common Unicode characters (⎇, │, 🔒, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
 
-### 3. 健康检查
+### 3. Health check
 
-验证所有必需依赖和可选 LSP server 是否就绪：
+Verify that all required dependencies and optional LSP servers are available:
 
 ```bash
 ./checkhealth.sh
 ```
 
-加 `--install` 可自动安装缺失的依赖（必需工具 + 可选 LSP 服务器）。支持 apt/pacman/brew、npm、pip、go install 和 rustup：
+Pass `--install` to automatically install missing dependencies (required tools + optional LSP servers). Supports apt/pacman/brew, npm, pip, go install, and rustup:
 
 ```bash
 ./checkhealth.sh --install
 ```
 
-### 4. 安装
+### 4. Install monkey-vim
 
-- Linux、Mac、WSL 和 kmscon
+- Linux, Mac, WSL, and kmscon
 
 ```bash
 cd monkey-vim
 ln -sf $(pwd)/.vimrc ~/.vimrc
-ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # 全局 clang-format 风格（可选）
+ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # global clang-format style (optional)
 vim
 ```
 
-### 5. 更新
+### 5. Update project
 
 ```bash
 cd monkey-vim
@@ -192,49 +192,49 @@ git pull
 :PlugClean
 ```
 
-### 6. kmscon 安装与使用（可选）
+### 6. kmscon setup (optional)
 
-[kmscon](https://github.com/kmscon/kmscon) 是基于 Linux KMS/DRM 的系统级终端，替代传统的 Linux tty，提供完整的 Unicode 支持、multi-seat 能力和真彩色渲染。它是 monkey-vim 在无头服务器上的绝佳搭档。
+[kmscon](https://github.com/kmscon/kmscon) is a Linux KMS/DRM-based system console that replaces the legacy tty with full Unicode support, multi-seat capability, and true color rendering. It is an excellent companion for monkey-vim on headless servers.
 
-#### 6.1 安装 kmscon
+#### 6.1 Install kmscon
 
 ```bash
-# Ubuntu/Debian（旧版，不含 terminfo）
+# Ubuntu/Debian (older versions without terminfo)
 sudo apt-get install kmscon
 
 # Arch Linux
 sudo pacman -S kmscon
 
-# 从源码编译（需要 meson、ninja 和 ncurses 提供的 tic）
+# Build from source (requires meson, ninja, and ncurses for tic)
 git clone https://github.com/kmscon/kmscon.git
 cd kmscon
 meson setup builddir/
 meson install -C builddir/
 ```
 
-从源码编译时会自动通过 `tic` 编译并安装 kmscon 的 terminfo 条目，vim 无需任何 `TERM` 变通即可正确检测终端能力。默认安装 prefix 为 `/usr/local`，如需安装到系统路径请在 meson setup 时追加 `--prefix=/usr`。
+Building from source automatically compiles and installs the kmscon terminfo entry via `tic`, so vim can detect terminal capabilities correctly without any `TERM` workaround. The default prefix is `/usr/local`; append `--prefix=/usr` to the meson setup command to install system-wide.
 
-在较旧的系统上，`libtsm` 等依赖版本可能不满足编译要求。此时使用包管理器版本并通过 6.3 节的 `TERM` 变通方案即可。
+On older systems, dependencies like `libtsm` may be too old to satisfy the build requirements. In that case, use the package manager version and apply the `TERM` workaround in section 6.3.
 
-#### 6.2 用 kmscon 替代 tty（永久生效）
+#### 6.2 Replace tty with kmscon (permanent)
 
-让 kmscon 取代传统的 tty/getty 成为默认系统控制台：
+To make kmscon the default system console instead of the legacy tty/getty, replace agetty with kmscon on the desired tty:
 
 ```bash
-# 停止 tty1 上原有的 getty
+# Stop the existing getty on tty1
 sudo systemctl stop getty@tty1.service
 sudo systemctl disable getty@tty1.service
 
-# 为 tty1 创建 kmscon systemd 服务
+# Create a kmscon service for tty1
 sudo mkdir -p /etc/systemd/system/getty.target.wants
 sudo ln -s /usr/lib/systemd/system/kmsconvt@.service \
     /etc/systemd/system/getty.target.wants/kmsconvt@tty1.service
 
-# 覆写 ExecStart 使用 kmscon 自带的终端类型
+# Override ExecStart to use kmscon's own terminal type
 sudo systemctl edit kmsconvt@tty1.service
 ```
 
-添加以下覆写内容：
+Add the following override:
 
 ```ini
 [Service]
@@ -243,549 +243,549 @@ ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
     --login -- /sbin/agetty -o '-p -- \\u' - --noclear %I kmscon
 ```
 
-最后的 `kmscon` 参数告诉 agetty 设置 `TERM=kmscon`，与编译时安装的 terminfo 条目匹配。
+The last argument `kmscon` tells agetty to set `TERM=kmscon`, which matches the terminfo entry installed during build.
 
 ```bash
-# 在 tty1 上启动 kmscon
+# Start kmscon on tty1
 sudo systemctl start kmsconvt@tty1.service
 ```
 
-重启后，按 `Ctrl+Alt+F1` 即可切换到支持真彩色和 Unicode 的 kmscon 终端。可按需对 tty2–tty6 重复相同操作。
+After reboot, press `Ctrl+Alt+F1` to switch to the kmscon-enhanced tty1. You can repeat this for tty2–tty6 as needed.
 
-#### 6.3 真彩色支持
+#### 6.3 True color support
 
-kmscon 支持真彩色（24-bit）。monkey-vim 通过 `has('termguicolors')` 自动检测并使用 GUI 颜色渲染。
+kmscon supports true color (24-bit). monkey-vim detects this automatically via `has('termguicolors')` and renders GUI colors directly.
 
-如果通过包管理器安装的 kmscon 版本较旧（不含 terminfo）或 terminfo 条目缺失，vim 会报错 `E558: Terminal entry not found in terminfo`。此时在 shell 配置中添加以下内容即可：
+If kmscon was installed via package manager (older versions without terminfo) or the terminfo entry is missing, vim may fail with `E558: Terminal entry not found in terminfo`. In that case, add the following to your shell profile:
 
 ```bash
-# 添加到 shell 配置文件中（~/.bashrc、~/.zshrc 等）
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
 export TERM=xterm-256color
 export COLORTERM=truecolor
 ```
 
-`COLORTERM=truecolor` 必须在 `TERM=xterm-256color` 时设置，否则 vim 无法检测到真彩色支持。注意使用 `xterm-256color` 替代 kmscon 原生 terminfo 可能导致一定的终端刷新异常。如需最佳体验，请从源码编译获取原生 terminfo 条目。
+The `COLORTERM=truecolor` is required so vim still detects true color support when `TERM` is set to `xterm-256color`. Note that using `xterm-256color` instead of kmscon's native terminfo may cause minor display artifacts in vim due to terminal capability mismatches. For the best experience, build from source to get the native terminfo entry.
 
-如果在传统 Linux tty（tty1–tty63）上运行，monkey-vim 将自动降级到 256 色模式，并使用 sonokai 的深色调色板以准确逼近主题颜色。
+If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with sonokai's dark palette for accurate color approximation.
 
-#### 6.4 字体（可选）
+#### 6.4 Fonts (optional)
 
-kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，安装任意系统等宽字体即可。
+kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a system monospace font of your choice.
 
-## 插件列表
+## Plugin list
 
-| 插件 | 用途 |
+| Plugin | Purpose |
 |---|---|
-| [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol 客户端 |
-| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | 代码片段引擎 |
-| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP 片段集成 |
-| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 常用代码片段集合 |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim) | 模糊文件/缓冲/tag 查找 |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | 异步代码搜索（rg/ag 后端） |
-| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | 状态栏 |
-| [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | 配色方案 |
-| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | 多光标编辑 |
-| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | 快速跳转（替代 vim-sneak） |
-| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git 集成 |
-| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git 差异标记 |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | 自动生成 ctags |
-| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | 目录浏览器（替代 netrw） |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround) | 围绕字符编辑 |
-| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | 使用剪贴板替换 |
-| [andymass/vim-matchup](https://github.com/andymass/vim-matchup) | 增强 % 匹配跳转 |
-| [wellle/targets.vim](https://github.com/wellle/targets.vim) | 更多文本对象 |
-| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象 |
-| [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | 自动配对括号 |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | 使插件映射支持 `.` 重复 |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX Shell 辅助命令（:W sudo保存等） |
-| [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session 管理 |
-| [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | 大文件折叠性能优化 |
-| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | 增强 `*` / `#` 搜索 |
-| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | 可视化书签 |
-| [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | 自动切换工作目录 |
-| [junegunn/gv.vim](https://github.com/junegunn/gv.vim) | Git 提交浏览器 |
-| [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list 增强 |
+| [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol client |
+| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | Snippet engine |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP snippet integration |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | Snippet collection |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim) | Fuzzy file/buffer/tag finder |
+| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | Async code search (rg/ag backend) |
+| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | Status line |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | Colorscheme |
+| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | Multiple cursors |
+| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | Easy motion (replaces vim-sneak) |
+| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git wrapper |
+| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git diff in sign column |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | Automatic ctags generation |
+| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | Directory viewer (replaces netrw) |
+| [tpope/vim-surround](https://github.com/tpope/vim-surround) | Surround text with parens/quotes/etc |
+| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | Substitute with clipboard |
+| [andymass/vim-matchup](https://github.com/andymass/vim-matchup) | Extended % matching |
+| [wellle/targets.vim](https://github.com/wellle/targets.vim) | Additional text objects |
+| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects |
+| [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | Auto-close brackets/parens |
+| [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | Repeat plugin maps with `.` |
+| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX shell helpers (:W for sudo write) |
+| [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session management |
+| [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | Faster folding for large files |
+| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | Improved `*` / `#` search |
+| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | Visual marks |
+| [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | Auto-change working directory |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim) | Git commit browser |
+| [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list helpers |
 
-## 快捷键
-
-```
-以下所有"Leader"键，都代表","键
-```
-
-### 1. 正常模式
-
-#### 1.1 按键修改
+## Keyboard shortcut
 
 ```
-s       用剪贴板的内容替换文本对象选中的字符串（详见§1.7）
-S       用剪贴板的内容替换当前光标到行尾的文本（详见§1.7）
-Y       复制到行尾，相当于"y$"命令
-H       跳到当前行第一个非空字符,相当于"^"命令
-L       跳到当前行最后一个字符,相当于"$"命令
-U       Redo，相当于"Ctrl-r"
-;       进入命令行模式，相当于":"键
-q       退出窗口（含 diff/fugitive/quickfix 特殊处理）
-Shift+q  退出vim，相当于命令":qa"
-t       记录操作，相当于原来的q（普通模式和可视化模式）
-
-j       移至下一显示行（gj），在折行中正常移动
-k       移至上一显示行（gk），在折行中正常移动
-f       搜索 1 个字符跳转（stargate 带提示）
-F       搜索 2 个连续字符跳转（stargate 带提示）
-gs      选择单词/区域进行多光标编辑（vim-visual-multi）
+The "Leader" key below means comma key.
 ```
 
-以下按键在插入模式和命令行模式下均适用：
+### 1. Normal mode
+
+#### 1.1 Remap
 
 ```
-Ctrl+p  上移        (Up)
-Ctrl+n  下移        (Down)
-Ctrl+b  左移        (Left)
-Ctrl+f  右移        (Right)
-Ctrl+a  跳到行首    (Home)
-Ctrl+e  跳到行尾    (End)
-Ctrl+h  退格        (BackSpace)
-Ctrl+d  向前删除    (Del)
+s       Replace a motion/text object with clipboard content (see §1.7)
+S       Replace from cursor to end of line with clipboard content (see §1.7)
+Y       Copy from the cursor position to the end of the line, same as y$
+H       To the first non-blank character of the line, same as ^
+L       To the last character of the line, same as $
+U       Redo, same as Ctrl-r
+;       Enter command line mode, same as :
+q       Quit current window (with special handling for diff/fugitive/quickfix)
+Shift+q  Quit vim, same as :qa
+t       Recording, same as the original q (normal and visual mode)
+
+j       Move down one display line (gj), works on wrapped lines
+k       Move up one display line (gk), works on wrapped lines
+f       Search 1 char to jump with hints (stargate)
+F       Search 2 consecutive chars to jump with hints (stargate)
+gs      Select words/regions for multi-cursor editing (vim-visual-multi)
+```
+
+The following remaps work in both Insert mode and Command-line mode:
+
+```
+Ctrl+p  Move up        (Up)
+Ctrl+n  Move down      (Down)
+Ctrl+b  Move left      (Left)
+Ctrl+f  Move right     (Right)
+Ctrl+a  Jump to start  (Home)
+Ctrl+e  Jump to end    (End)
+Ctrl+h  Backspace      (BackSpace)
+Ctrl+d  Delete forward (Del)
 ```
 
 #### 1.2 F1 ~ F4
 
 ```
-F1      打开 CtrlSF 搜索提示
-F2      切换 CtrlSF 搜索窗口
-F3      打开终端窗口
-F4      切换终端窗口（打开/隐藏）
+F1      Open CtrlSF search prompt
+F2      Toggle CtrlSF search window
+F3      Open a terminal at the bottom
+F4      Toggle terminal buffer (open/hide)
 ```
 
-#### 1.3 缓冲
+#### 1.3 Buffer
 
 ```
-Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
-[+b         切换到上一个缓冲
-]+b         切换到下一个缓冲
+Leader+o    Open a new buffer with given file path in current window
+[+b         Jump to previous buffer
+]+b         Jump to next buffer
 ```
 
-#### 1.4 分屏
+#### 1.4 Split
 
 ```
-Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
-Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
+Leader+s    Open a horizontal split with given file path in current window
+Leader+v    Open a vertical split with given file path in current window
 
-Ctrl+h      跳转到左窗口
-Ctrl+j      跳转到下窗口
-Ctrl+k      跳转到上窗口
-Ctrl+l      跳转到右窗口
-Leader+z    窗口放大/恢复
+Ctrl+h      Jump to the left split
+Ctrl+j      Jump to the below split
+Ctrl+k      Jump to the above split
+Ctrl+l      Jump to the right split
+Leader+z    Toggle zoom
 ```
 
 #### 1.5 Tab
 
 ```
-Leader+t      输入打开的文件路径，并创建一个新tab窗口
+Leader+t    Open a tab with given file path in current window
 
-[+t         切换到上一个tab窗口
-]+t         切换到下一个tab窗口
-Leader+1~9  切换到第1~9个tab窗口
-Leader+[    切换到第一个tab窗口
-Leader+]    切换到最后一个tab窗口
+[+t         Jump to previous tab
+]+t         Jump to next tab
+Leader+1~9  Jump to the 1~9 tab
+Leader+[    Jump to first tab
+Leader+]    Jump to last tab
 ```
 
-#### 1.6 查找（vim-asterisk）
+#### 1.6 Search (vim-asterisk)
 
-按 `*` 或 `#` 会高亮光标下的所有单词但不跳转。再次按下则正常跳转。
-
-```
-*       高亮当前词，不跳转（再按跳转）
-g*      同上，部分匹配
-#       同上，反向
-g#      同上，反向部分匹配
-```
-
-#### 1.7 替换（vim-subversive）
+Pressing `*` or `#` highlights all occurrences of the word under cursor without moving. Press again to jump normally.
 
 ```
-s{文本对象}  用剪贴板内容替换一个文本对象（如 siw 替换当前词）
-ss          用剪贴板内容替换当前整行
-S           用剪贴板内容替换从光标到行尾
+*       Highlight current word without moving (press again to jump)
+g*      Same as *, partial match
+#       Same as *, search backward
+g#      Same as g*, search backward
 ```
 
-#### 1.8 LSP（Language Server Protocol）
+#### 1.7 Replace (vim-subversive)
 
 ```
-K                   查看光标所在符号的文档说明
-gh                  在弹出窗口中显示文档
-
-gd                  跳转到定义
-gc                  跳转到声明
-gt                  跳转到类型定义
-gi                  跳转到实现
-gr                  查看引用
-
-Leader+gd           预览定义
-Leader+gc           预览声明
-Leader+gt           预览类型定义
-Leader+gi           预览实现
-Leader+gr           预览引用
-
-Leader+rn           重命名符号
-[d                  上一个诊断
-]d                  下一个诊断
-[D                  第一个诊断
-]D                  最后一个诊断
-Leader+gh           显示当前行诊断
+s{textobj}  Replace a text object with clipboard content (e.g. siw to replace current word)
+ss          Replace entire current line with clipboard content
+S           Replace from cursor to end of line with clipboard content
 ```
 
-文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。  
-`K` 使用 `:LspHover` 作为大多数文件类型的关键字程序。
-
-#### 1.9 文件/缓冲/Tag 导航（fzf.vim）
+#### 1.8 LSP (Language Server Protocol)
 
 ```
-Ctrl+p      搜索文件
+K                   Hover documentation for symbol under cursor
+gh                  Show hover in popup
 
-Leader+b    搜索缓冲（C-d 删除，Enter 打开）
-Leader+y    搜索当前文件Tag
-Leader+f    搜索当前文件函数
-Leader+e    搜索当前文件行
+gd                  Go to definition
+gc                  Go to declaration
+gt                  Go to type definition
+gi                  Go to implementation
+gr                  Show references
+
+Leader+gd           Peek definition
+Leader+gc           Peek declaration
+Leader+gt           Peek type definition
+Leader+gi           Peek implementation
+Leader+gr           Peek references
+
+Leader+rn           Rename symbol
+[d                  Previous diagnostic
+]d                  Next diagnostic
+[D                  First diagnostic
+]D                  Last diagnostic
+Leader+gh           Show current line diagnostics
+```
+
+Files are auto-formatted on save via LSP. Completion is enabled by default — LSP-powered suggestions appear automatically as you type. `K` uses `:LspHover` as the keyword program for most filetypes.
+
+#### 1.9 File/Buffer/Tag navigation (fzf.vim)
+
+```
+Ctrl+p      Search files
+
+Leader+b    Search buffers (C-d to delete, Enter to open)
+Leader+y    Search buffer tags
+Leader+f    Search function in buffer
+Leader+e    Search line in buffer
 ```
 
 #### 1.10 Fold
 
-以下是 Vim 内建折叠按键，由 FastFold 插件优化大文件性能：
+These are standard Vim built-in keys enhanced by FastFold for performance:
 
 ```
-za      当光标下的折叠打开时，关闭它。当折叠关闭时，打开它
-zc      关闭光标下的折叠
-zo      打开光标下的折叠
-zR      打开所有折叠
-zM      关闭所有折叠
-zuz     手动更新所有折叠（FastFold）
+za      When on a closed fold, open it. When on an open fold, close it and set 'foldenable'
+zc      Close one fold under the cursor
+zo      Open one fold under the cursor
+zR      Open all folds
+zM      Close all folds
+zuz     Manually update all folds (FastFold)
 ```
 
-#### 1.11 Marks（vim-signature）
+#### 1.11 Marks (vim-signature)
 
 ```
-m[a-zA-Z]   添加/删除标记
-m,          添加下一个可用的标记
-m.          如果当前行没有标记，添加下一个可用标记。否则，删除第一个标记
+m[a-zA-Z]   Toggle mark and display it in the leftmost column
+m,          Place the next available mark
+m.          If no mark on line, place the next available mark. Otherwise, remove (first) existing mark
 
-dm[a-zA-Z]  删除标记[a-zA-Z]
-m-          删除当前行的所有标记
-m<Space>    删除当前buffer的所有标记
+dm[a-zA-Z]  Delete mark[a-zA-Z]
+m-          Delete all marks in current line
+m<Space>    Delete all marks in current buffer
 
-'[a-zA-Z]   跳转到标记[a-zA-Z]
-]`          跳转到下一个标记
-[`          跳转到上一个标记
-`]          根据字母序列跳转到下一个标记
-`[          根据字母序列跳转到上一个标记
-m/          在Location List里，查看当前buffer的所有标记
+'[a-zA-Z]   Jump to the mark
+]`          Jump to next mark
+[`          Jump to prev mark
+`]          Jump by alphabetical order to next mark
+`[          Jump by alphabetical order to prev mark
+m/          View all marks in Location List
 
-m[0-9]      添加/删除自定义标记!@#$%^&*()
+m[0-9]      Toggle the corresponding marker !@#$%^&*()
 
-m<S-[0-9]>  删除相应的自定义标记
-m<BS>       删除所有自定义标记
+m<S-[0-9]>  Remove all markers of the same type
+m<BS>       Remove all markers
 
-]-          跳转到下一个相同类型的自定义标记
-[-          跳转到上一个相同类型的自定义标记
-]=          跳转到下一个自定义标记
-[=          跳转到上一个自定义标记
-m?          在Location List里，查看当前buffer的所有自定义标记
+]-          Jump to next line having a marker of the same type
+[-          Jump to prev line having a marker of the same type
+]=          Jump to next line having a marker of any type
+[=          Jump to prev line having a marker of any type
+m?          Open location list and display markers from current buffer
 ```
 
-`:SignatureToggle`   显示/隐藏标记（不删除）  
-`:SignatureRefresh`  标记与 sign 不同步时重新同步
+`:SignatureToggle`  Show/hide marks without deleting them  
+`:SignatureRefresh`  Re-sync marks and signs if they go out of sync
 
-#### 1.12 Dirvish（目录浏览器，替代netrw）
-
-```
--           在当前窗口打开文件所在的文件夹
-~           在当前窗口打开项目根路径或用户主目录
-
-<CR>        进入目录或打开文件
-o           在当前窗口打开
-a           在水平分屏打开
-i           在垂直分屏打开
-t           在新标签页打开
--           返回上一级目录
-A/I/O       已禁用（请使用 a/i/o 代替）
-x           将文件添加到 arglist
-R           刷新目录视图
-:Shdo       根据行内容生成 shell 脚本（如 :%Shdo）
-```
-
-#### 1.13 代码搜索（ctrlsf）
+#### 1.12 Dirvish (Directory viewer, replaces netrw)
 
 ```
-Leader+a        当前目录搜索光标所在的词
+-           Open file directory in current window
+~           Open project root or home directory in current window
+
+<CR>        Enter directory or open file
+o           Open in current window (edit)
+a           Open in horizontal split
+i           Open in vertical split
+t           Open in new tab
+-           Go up one directory
+A/I/O       Disabled (use a/i/o instead)
+x           Add files to arglist
+R           Reload directory view
+:Shdo       Generate shell script from lines (e.g., :%Shdo)
 ```
 
-#### 1.14 围绕字符编辑（vim-surround）
+#### 1.13 Code search (ctrlsf)
 
 ```
-ys+textobj+surroundA        在textobj指定的范围增A围绕字符
-yss+surroundA               在当前行增加A围绕字符
-ds+surroundA                删除A围绕字符
-cs+surroundA+surroundB      将A围绕字符改成B围绕字符
+Leader+a        Search current word in current directory
 ```
 
-#### 1.15 终端
+#### 1.14 Surround (vim-surround)
 
 ```
-F3      打开终端窗口
-F4      切换终端窗口（打开/隐藏）
+ys+textobj+surroundA        Add surround A for the region of textobj
+yss+surroundA               Add surround A for current line
+ds+surroundA                Delete surround A
+cs+surroundA+surroundB      Change surround A to B
 ```
 
-F3 在底部新建一个终端。F4 切换终端 — 隐藏时不终止进程，再次打开时复用同一终端。
-
-#### 1.16 其他
+#### 1.15 Terminal
 
 ```
-Leader+ws       保存session
-Leader+rs       删除session
+F3      Open a terminal buffer
+F4      Toggle terminal buffer (open/hide)
 ```
 
-Session 保存到 `~/.cache/sessions/`。Vim 启动时自动从此目录恢复 session。
+F3 opens a new terminal at the bottom. F4 toggles the terminal — hides it without killing the job, reopens the same terminal on demand.
+
+#### 1.16 Others
 
 ```
-'.              最后一次变更的地方
-''              跳回来的地方（最近两个位置跳转）
-Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
-Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
-Ctrl+^          打开上次编辑的文件
-cod             切换diff模式
-cop             切换paste模式
-col             切换list模式
-con             清除搜索高亮
-Leader+cr       切换到当前文件所在项目根路径（手动触发，不会自动切换）
-cop             切换粘贴模式（退出插入模式时自动关闭）
-Leader+space        去除行尾空白字符（:substitute）
-Leader+Leader+space  去除行尾空白字符 + \\r（DOS 换行符）
-Leader+q            打开/关闭quickfix
-Leader+l            打开/关闭location list
+Leader+ws       Save session
+Leader+rs       Remove session
 ```
 
-在 quickfix/location 窗口中（ack 风格映射）：
-- `o`/`Enter` — 打开条目（文件+行号）
-- `go` — 在水平分屏中打开
-- `gO` — 打开并聚焦新窗口
-- `t` — 在新标签页中打开
-- `T` — 在新标签页中打开（保持 quickfix 聚焦）
-- `q` — 关闭 quickfix 窗口
+Sessions are saved to `~/.cache/sessions/`. On Vim startup, a session is automatically restored from this directory.
 
-Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，始终置于底部。
+```
+'.              Jump to last changes
+''              To the position before the latest jump, or where the last "m'" or "m`" command was given
+Ctrl+o          Go to [count] Older cursor position in jump list
+Ctrl+i          Go to [count] newer cursor position in jump list
+Ctrl+^          Edit the alternate file. Mostly the alternate file is the previously edited file
+cod             Toggle diff
+cop             Toggle paste (auto-disabled on leaving insert mode)
+col             Toggle list
+con             Clear search highlight
+Leader+cr       Change project root (manual only, no auto-chdir on file open)
+Leader+space        Strip trailing whitespace
+Leader+Leader+space  Strip trailing whitespace + \\r (DOS newlines)
+Leader+q            Toggle quickfix
+Leader+l            Toggle location list
+```
 
-注意：`gdefault` 已设置，`:s` 默认执行全局替换（每行所有匹配）。  
-每次启动 Vim 时会清除跳转列表（`clearjumps`），避免跨项目污染。`jumpoptions+=stack` 使跳转列表行为类似标签栈。
+In quickfix/location windows (ack-style mappings):
+- `o`/`Enter` — Open entry (file + line)
+- `go` — Open in horizontal split
+- `gO` — Open and focus new window
+- `t` — Open in new tab
+- `T` — Open in new tab (keep quickfix focused)
+- `q` — Close quickfix window
 
-#### 1.17 自动插入文件头
+Quickfix windows auto-resize to fit content (max 10 lines), auto-close when empty, and are placed at the bottom.
 
-新建 `.sh` 和 `.py` 文件会自动插入 shebang 行：
+Note: `gdefault` is set, so `:s` performs global substitution (all matches per line) by default. The jumplist is cleared on each Vim startup (`clearjumps`) to avoid cross-project contamination. `jumpoptions+=stack` makes the jumplist behave like the tagstack.
+
+#### 1.17 Auto-insert file headers
+
+New `.sh` and `.py` files get a shebang line automatically inserted:
 - `.sh` → `#!/usr/bin/env bash`
 - `.py` → `#!/usr/bin/env python3`
 
-#### 1.18 Match-up（增强 % 匹配跳转）
+#### 1.18 Match-up (extended % matching)
 
 ```
-%       正向跳转到下一个匹配词（闭合处循环回到开头）
-g%      反向跳转到上一个匹配词
-[%      跳转到上一个外部左括号
-]%      跳转到下一个外部右括号
-z%      进入最近的内层块
-i%      任意块的内部（文本对象）
-a%      任意块的范围（文本对象）
+%       Go forward to next matching word (cycles back from close to open)
+g%      Go backward to previous matching word
+[%      Go to previous outer open word (start of surrounding block)
+]%      Go to next surrounding close word (end of surrounding block)
+z%      Go inside nearest inner contained block
+i%      Inside of any block (text object)
+a%      Around any block (text object)
 ```
 
-#### 1.19 Lexima（自动配对括号）
+#### 1.19 Lexima (auto-close pairs)
 
-Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''`、` `` `` `。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
+Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''`, ` ``` `. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
 
-### 2. 插入模式
+### 2. Insert mode
 
-#### 2.1 代码片段（vim-vsnip）
-
-```
-Ctrl+l      展开代码片段
-Tab         跳转到下一个占位符
-Shift+Tab   跳转到上一个占位符
-```
-
-### 3. 可视化模式
-
-#### 3.1 按键修改
+#### 2.1 Snippets (vim-vsnip)
 
 ```
-s       用剪贴板的内容替换选中文本
-;       进入命令行模式，相当于":"键
-<       减少缩进，保持选中
->       增加缩进，保持选中
+Ctrl+l      Expand snippet
+Tab         Jump to next placeholder
+Shift+Tab   Jump to previous placeholder
 ```
 
-#### 3.2 查找
+### 3. Visual mode
+
+#### 3.1 Remap
 
 ```
-*       正向查找选中的字符串（标准 vim 行为，由 vim-asterisk 增强）
-#       逆向查找选中的字符串（标准 vim 行为，由 vim-asterisk 增强）
+s       Replace selected text with clipboard content
+;       Enter command line mode, same as :
+<       Decrease indent, keep selection
+>       Increase indent, keep selection
 ```
 
-#### 3.3 替换
+#### 3.2 Search
 
 ```
-# '\r'代表换行
-
-s{文本对象}  用剪贴板内容替换文本对象（如 siw）
-ss          用剪贴板内容替换当前整行
-S           用剪贴板内容替换光标到行尾
+*       Search selected text forward (standard vim behavior, enhanced by vim-asterisk)
+#       Search selected text backward (standard vim behavior, enhanced by vim-asterisk)
 ```
 
-#### 3.4 快速跳转（vim9-stargate）
+#### 3.3 Replace
 
 ```
-f           搜索1个字符并跳转
-F           搜索2个连续字符并跳转（stargate 带提示）
+# '\r' standard for newline
+
+s{textobj}  Replace a text object with clipboard content (e.g. siw)
+ss          Replace entire current line with clipboard content
+S           Replace from cursor to end of line with clipboard content
 ```
 
-#### 3.5 代码搜索（ctrlsf）
+
+
+#### 3.4 Easy motion (vim9-stargate)
 
 ```
-Leader+a        当前目录搜索选中字符串
+f       Search 1 character to jump with hints (stargate)
+F       Search 2 consecutive characters to jump with hints (stargate)
 ```
 
-#### 3.6 围绕字符编辑（vim-surround）
+#### 3.5 Code search (ctrlsf)
 
 ```
-S+surroundA     选中字符串增加A围绕字符
+Leader+a        Search selected text in current directory
 ```
 
-### 4. 命令行模式
+#### 3.6 Surround (vim-surround)
 
 ```
-Ctrl+p  上一条命令
-Ctrl+n  下一条命令
-Ctrl+a  跳到命令行最前
-Ctrl+e  跳到命令行最后
+S+surroundA     Add surround A for selected text (vim-surround built-in)
 ```
 
-## 常用命令
+### 4. Command line mode
 
-### 1. W（vim-eunuch）
+```
+Ctrl+p  Previous command
+Ctrl+n  Next command
+Ctrl+a  Jump to the begin of the command line
+Ctrl+e  Jump to the end of the command line
+```
+
+## Useful command
+
+### 1. W (vim-eunuch)
 
 ```vim
-" 使用root权限保存文件
+" Save file with root permission
 :W
 ```
 
 ### 2. CtrlSF
 
 ```vim
-" 递归搜索当前目录中包含 PATTERN 的代码
+" Search recursively in current directory for the pattern
+" Jump to the first result unless ! is given.
 :CtrlSF[!] [PATTERN]
 ```
 
 ### 3. GutentagsUpdate
 
 ```vim
-" 为当前文件生成tag
+" Generate tags for current file
 :GutentagsUpdate
 
-" 为整个工程生成tag
+" Generate tags for current project
 :GutentagsUpdate!
 ```
 
 ### 4. fzf.vim
 
 ```vim
-" 搜索文件
+" Search files
 :Files [QUERY]
 
-" 搜索 git 跟踪的文件
-:GFiles [QUERY]          " 或 :GitFiles
-:GFiles?                 " 显示 git 状态
+" Search git-tracked files
+:GFiles [QUERY]          " or :GitFiles
+:GFiles?                 " show git status
 
-" 搜索缓冲区（C-d 删除，Enter 打开）
+" Search buffers (C-d to delete, Enter to open)
 :Buffers [QUERY]
 
-" 搜索已加载缓冲区中的行
+" Search lines in loaded buffers
 :Lines [QUERY]
 
-" 搜索当前文件的行
+" Search lines in current buffer
 :BLines [QUERY]
 
-" 搜索项目 tags
+" Search tags in the project
 :Tags [QUERY]
 
-" 搜索当前文件 tags
+" Search buffer tags
 :BTags [QUERY]
 
-" 交互式 grep（ripgrep）
-:Rg [QUERY]              " 或 :RG（全屏结果）
+" Interactive grep (ripgrep)
+:Rg [QUERY]              " or :RG for full-screen results
 
-" 使用 ag（Silver Searcher）搜索
+" Search with ag (Silver Searcher)
 :Ag [QUERY]
 
-" 搜索文件历史
+" Search file history
 :History [QUERY]
 
-" 搜索命令历史
+" Search command history
 :History:
 
-" 搜索搜索历史
+" Search search history
 :History/
 
-" 搜索 Marks
+" Search marks
 :Marks
 
-" 搜索当前缓冲区 Marks
+" Search buffer-local marks
 :BMarks
 
-" 搜索跳转历史
+" Search jumps
 :Jumps
 
-" 搜索变更历史
+" Search changes
 :Changes
 
-" 搜索 help 标签
+" Search help tags
 :Helptags [QUERY]
 
-" 搜索窗口
+" Search windows
 :Windows
 
-" 搜索 git 提交（当前文件）
-:Commits [QUERY]         " :BCommits 搜索缓冲区提交
+" Search git commits (current file)
+:Commits [QUERY]         " :BCommits for buffer commits
 
-" 搜索命令
+" Search commands
 :Commands
 
-" 搜索键盘映射
+" Search key mappings
 :Maps
 
-" 搜索文件类型
+" Search filetypes
 :Filetypes
 
-" 搜索 Snippets（UltiSnips）
+" Search snippets (UltiSnips)
 :Snippets
 
-" 搜索配色方案
+" Search colorschemes
 :Colors
 
-" 搜索文件（locate）
+" Search files via locate
 :Locate [QUERY]
 ```
 
-## 在vim中使用git
+## Use git in vim
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
 
-#### 核心命令
+#### Core
 
 ```vim
-" 相当于:!git [args]，但会先自动切换到仓库根目录。推荐使用 :Git 而非 :Gstatus, :Gcommit, :Gdiff 等
+" Run an arbitrary git command. Similar to :!git [args] but chdir to the repository tree first.
 :Git [args]
 
-" :Git 的缩写
+" Short alias for :Git
 :G [args]
 ```
 
-#### 常用示例
+#### Common examples
 
 ```vim
 :Git status
@@ -797,248 +797,249 @@ Ctrl+e  跳到命令行最后
 :Git push
 ```
 
-#### 暂存 / 写 / 追溯
+#### Staging / Writing / Blame
 
 ```vim
-" 暂存当前文件 (git add)
+" Stage file (git add)
 :Gwrite
-" 暂存并退出
+" Stage and quit
 :Gwq
 
-" 从 git 和 buffer 中删除文件
+" Delete file from git and buffer
 :GDelete
-" 从 git 中删除，保留 buffer
+" Delete from git, keep buffer
 :GRemove
-" 重命名 / 移动文件
+" Rename / move file
 :GMove {dest}
 
-" 在滚动同步的分屏中查看 blame
+" Blame current file in a scroll-bound split
 :Git blame
 ```
 
-#### 差异对比
+#### Diffs
 
 ```vim
-" 与暂存区对比
+" Diff against index (staging area)
 :Gdiffsplit
-" 与 HEAD 对比
+" Diff against HEAD (last commit)
 :Gdiffsplit HEAD
-" 始终垂直分屏
+" Always vertical
 :Gvdiffsplit
 ```
 
-#### 日志与搜索
+#### Log and search
 
 ```vim
-" git-log 放入 quickfix
+" git-log into quickfix list
 :Gclog
-" git-log 放入 location list
+" git-log into location list
 :Gllog
-" git-grep 放入 quickfix
+" git-grep into quickfix list
 :Ggrep [args]
 
-" 在 GitHub 浏览器中打开当前文件/提交
+" Browse file/commit in GitHub
 :GBrowse
-" 复制 URL 到剪贴板
+" Copy URL to clipboard
 :GBrowse!
 ```
 
-#### Git status 窗口快捷键
+#### Git status buffer keymaps
 
-在 `:Git` 打开的 status 窗口内：
-- `s` — 暂存文件
-- `u` — 取消暂存
-- `-` — 切换暂存
-- `X` — 丢弃修改
-- `=` — 切换内联差异
-- `cc` — 提交
-- `ca` — 修改上次提交
-- `cf` — fixup 提交
-- `cs` — squash 提交
-- `crc` — 还原提交
-- `coo` — 检出文件
+In the `:Git` status buffer:
+- `s` — Stage file
+- `u` — Unstage file
+- `-` — Stage/unstage toggle
+- `X` — Discard changes
+- `=` — Toggle inline diff
+- `cc` — Commit
+- `ca` — Amend last commit
+- `cf` — Fixup commit
+- `cs` — Squash commit
+- `crc` — Revert commit
+- `coo` — Checkout file
 - `dd` — `:Gdiffsplit`
 - `dv` — `:Gvdiffsplit`
-- `gq` — 关闭 status 窗口
+- `gq` — Close status window
 
-更多帮助：`:h fugitive.txt` 或 https://github.com/tpope/vim-fugitive#screencasts
+More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencasts
 
-### 2. Git 提交浏览器：[gv.vim](https://github.com/junegunn/gv.vim)
+### 2. Git commit browser: [gv.vim](https://github.com/junegunn/gv.vim)
 
 ```vim
-" 打开 Git 提交浏览器
+" Open git commit browser
 :GV
-" 只列出当前文件的提交
+" List commits affecting current file only
 :GV!
-" 将当前文件的版本历史放入 location list
+" Fill location list with revisions of current file
 :GV?
 ```
 
-### 3. Git 差异标记：[vim-gitgutter](https://github.com/airblade/vim-gitgutter)
+### 3. Git diff gutter: [vim-gitgutter](https://github.com/airblade/vim-gitgutter)
 
 ```vim
-" 跳转到下一个/上一个修改块
+" Jump to next/previous hunk
 ]c / [c
 
-" 预览 / 暂存 / 撤销当前修改块
+" Preview / stage / undo current hunk
 :GitGutterPreviewHunk
 :GitGutterStageHunk
 :GitGutterUndoHunk
 
-" 折叠所有未修改行
+" Fold all unchanged lines
 :GitGutterFold
 
-" 将所有修改块加载到 quickfix
+" Load all hunks into quickfix
 :GitGutterQuickFix
 ```
 
-## 常用 Vim 命令
+## Useful Vim commands
 
-### 1. vim-eunuch（UNIX Shell 辅助）
+### 1. vim-eunuch (UNIX shell helpers)
 
 ```vim
-" 写入所有窗口中修改过的 buffer
+" Write all modified buffers in all windows
 :W (:wall)
 
-" 使用 root 权限保存文件
+" Write file with sudo privileges
 :SudoWrite
 
-" 使用 root 权限编辑文件
+" Edit file with sudo
 :SudoEdit {file}
 
-" 从磁盘和 buffer 中删除文件
+" Delete file from disk and buffer
 :Delete
-" 从磁盘中删除文件，保留 buffer
+" Delete file from disk, keep buffer
 :Remove
 
-" 重命名 / 移动文件
+" Rename / move file
 :Rename {dest}
 
-" 复制文件
+" Copy file
 :Copy {dest}
 
-" 修改文件权限
+" Change permissions
 :Chmod {mode}
 
-" 创建目录（含父目录）
+" Create directory (incl. parents)
 :Mkdir {dir}
-" 单独 :Mkdir 创建当前文件所在的目录
+"Mkdir on its own creates the current file's parent dir
 
-" 查找文件（结果放入 quickfix）
+" Find files (results in quickfix)
 :Cfind {args}
 ```
 
 ### 2. CtrlSF
 
 ```vim
-" 递归搜索当前目录中包含 PATTERN 的代码
+" Search recursively in current directory for the pattern
+" Jump to the first result unless ! is given.
 :CtrlSF[!] [PATTERN] [path]
 
-" 重新打开 CtrlSF 窗口
+" Reopen CtrlSF window
 :CtrlSFOpen
 
-" 关闭 CtrlSF 窗口
+" Close CtrlSF window
 :CtrlSFClose
 ```
 
 ### 4. Gutentags
 
 ```vim
-" 为当前文件生成tag
+" Generate tags for current file
 :GutentagsUpdate
 
-" 为整个工程生成tag
+" Generate tags for current project
 :GutentagsUpdate!
 ```
 
-### 5. vim-qf（Quickfix 增强）
+### 5. vim-qf (Quickfix helpers)
 
 ```vim
-" 只保留匹配的条目
+" Keep only matching entries in qf/loc list
 :Keep {pattern}
 
-" 删除匹配的条目
+" Remove matching entries
 :Reject {pattern}
 
-" 按名称保存当前列表
+" Save current qf/loc list by name
 :SaveList {name}
 
-" 加载已命名的列表
+" Load named list
 :LoadList {name}
 
-" 对列表中的每个文件执行命令
+" Execute command on every file in list
 :Dofile {cmd}
 
-" 对列表中的每一行执行命令
+" Execute command on every line in list
 :Doline {cmd}
 ```
 
-### 6. vim-obsession（Session 管理）
+### 6. vim-obsession (Session management)
 
 ```vim
-" 开始/更新 session（保存到 ~/.cache/sessions/）
+" Start/update session in ~/.cache/sessions/
 :Obsession {file}
 
-" 暂停/恢复 session 追踪
+" Toggle pause/resume session tracking
 :Obsession
 
-" 停止并删除 session 文件
+" Stop and delete session file
 :Obsession!
 ```
 
-### 7. LSP 命令（yegappan/lsp）
+### 7. LSP commands (yegappan/lsp)
 
 ```vim
-" 在整个工作区搜索符号
-:LspSymbolSearch [查询]
+" Symbol search across entire workspace
+:LspSymbolSearch [query]
 
-" 显示当前文件大纲
+" Show outline of current file
 :LspOutline
 
-" 在弹窗中显示文件符号
+" Show symbols in popup
 :LspDocumentSymbol
 
-" 在源码和头文件之间切换
+" Switch between source and header
 :LspSwitchSourceHeader
 
-" 显示所有 server 状态
+" Show/server status
 :LspShowAllServers
 
-" 工作区管理
+" Workspace management
 :LspWorkspaceAddFolder {folder}
 :LspWorkspaceRemoveFolder {folder}
 :LspWorkspaceListFolders
 ```
 
-## 注意事项
+## Precautions
 
-- **缩进规则** — monkey-vim 按文件类型应用缩进设置：
+- **Indentation convention** — monkey-vim applies indent settings per filetype:
 
-| 文件类型 | 风格 | 宽度 |
+| Filetype | Style | Width |
 |---|---|---|
-| `c`, `cpp`, `go`, `sh`, `vim`, `sql` | 硬制表符 (`noexpandtab`) | 4 |
-| `rust`, `python`, `markdown` | 空格 (`expandtab`) | 4 |
-| `javascript`, `typescript`, `lua`, `yaml`, `json` | 空格 (`expandtab`) | 2 |
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql` | Hard tab (`noexpandtab`) | 4 |
+| `rust`, `python`, `markdown` | Spaces (`expandtab`) | 4 |
+| `javascript`, `typescript`, `lua`, `yaml`, `json` | Spaces (`expandtab`) | 2 |
 
-全局默认使用 4 宽度硬制表符。如需自定义，可在引入 monkey-vim 配置后通过 `FileType` 自动命令覆盖。
+The global default is 4-width hard tabs. To customize, override the `FileType` autocmds in your own vimrc after sourcing monkey-vim's.
 
-- Vim 剪贴板集成
+- Vim clipboard integration
 
-monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操作会自动同步到系统剪贴板。退出 vim 后，复制的内容仍然保留在系统剪贴板中（系统剪贴板由显示服务器/Wayland 合成器/终端管理，不受 vim 退出影响）。
+monkey-vim sets `clipboard=unnamed,unnamedplus` so vim's yank/delete automatically syncs to the system clipboard. Copied text persists in the system clipboard after vim exits (the system clipboard is owned by the display server / Wayland compositor / terminal, not by vim).
 
-如需独立的剪贴板管理工具（可选）：
+If you use a standalone clipboard manager (optional):
 
-| 工具 | 平台 | 用途 |
+| Tool | Platform | Purpose |
 |---|---|---|
-| [parcellite](https://parcellite.sourceforge.net/) | X11 | 轻量级剪贴板管理器，支持持久化历史 |
-| [cliphist](https://github.com/sentriz/cliphist) | Wayland | wlroots 剪贴板历史管理 |
-| 系统自带 | macOS/WSL | 系统剪贴板默认持久化，无需额外工具 |
+| [parcellite](https://parcellite.sourceforge.net/) | X11 | Lightweight clipboard manager with persistent history |
+| [cliphist](https://github.com/sentriz/cliphist) | Wayland | Clipboard history for wlroots-based compositors |
+| Built-in | macOS/WSL | System clipboard persists by default — no extra tool needed |
 
-## 推荐设置
+## Recommended settings
 
-- [源码构建vim](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
+- [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
 
-- 在bashrc中加入以下Shell代码，即可在vim中查看man文档
+- Use vim to view man doc in shell, put this in your bashrc:
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
