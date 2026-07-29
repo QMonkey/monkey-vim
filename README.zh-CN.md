@@ -43,19 +43,26 @@ git clone https://github.com/QMonkey/monkey-vim.git
 |---|---|---|
 | curl | 插件管理器引导 | 是 |
 | git | 插件管理器、vim-fugitive | 是 |
-| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + LeaderF Rg 后端 | 是 |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + fzf.vim 文件搜索 | 是 |
 | universal-ctags | gutentags 标签生成 | 是 |
-| cmake | 编译 LeaderF C 扩展 | 是（仅编译时） |
+| [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | 模糊搜索器（fzf.vim 依赖） | 是 |
+| [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
+| [delta](https://github.com/dandavison/delta) | Git diff 增强预览（fugitive, fzf） | 推荐 |
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install curl git ripgrep universal-ctags cmake
+# Ubuntu/Debian — apt 提供的 fzf/bat/delta 版本可能过旧，推荐使用 brew
+sudo apt-get install curl git ripgrep universal-ctags
+
+# 在较旧的 Debian/Ubuntu 上安装 fzf, bat, delta，请使用 Homebrew：
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+brew install fzf bat git-delta
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags cmake
+sudo pacman -S curl git ripgrep ctags fzf bat git-delta
 
 # macOS
-brew install curl git ripgrep universal-ctags cmake
+brew install curl git ripgrep universal-ctags fzf bat git-delta
 ```
 #### 2.2 LSP 服务器
 
@@ -273,7 +280,7 @@ kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，�
 | [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | 代码片段引擎 |
 | [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP 片段集成 |
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 常用代码片段集合 |
-| [Yggdroot/LeaderF](https://github.com/Yggdroot/LeaderF) | 模糊文件/缓冲/tag 查找 |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim) | 模糊文件/缓冲/tag 查找 |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | 异步代码搜索（rg/ag 后端） |
 | [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | 状态栏 |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | 配色方案 |
@@ -431,12 +438,12 @@ Leader+gh           显示当前行诊断
 文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。  
 `K` 使用 `:LspHover` 作为大多数文件类型的关键字程序。
 
-#### 1.9 文件/缓冲/Tag 导航（LeaderF）
+#### 1.9 文件/缓冲/Tag 导航（fzf.vim）
 
 ```
 Ctrl+p      搜索文件
 
-Leader+b    搜索缓冲
+Leader+b    搜索缓冲（C-d 删除，Enter 打开）
 Leader+y    搜索当前文件Tag
 Leader+f    搜索当前文件函数
 Leader+e    搜索当前文件行
@@ -684,41 +691,84 @@ Ctrl+e  跳到命令行最后
 :GutentagsUpdate!
 ```
 
-### 4. LeaderF
+### 4. fzf.vim
 
 ```vim
 " 搜索文件
-:LeaderfFile [QUERY]
+:Files [QUERY]
 
-" 搜索缓冲区
-:LeaderfBuffer [QUERY]
+" 搜索 git 跟踪的文件
+:GFiles [QUERY]          " 或 :GitFiles
+:GFiles?                 " 显示 git 状态
+
+" 搜索缓冲区（C-d 删除，Enter 打开）
+:Buffers [QUERY]
+
+" 搜索已加载缓冲区中的行
+:Lines [QUERY]
+
+" 搜索当前文件的行
+:BLines [QUERY]
 
 " 搜索项目 tags
-:LeaderfTag [QUERY]
+:Tags [QUERY]
 
 " 搜索当前文件 tags
-:LeaderfBufTag [QUERY]
+:BTags [QUERY]
 
-" 搜索函数
-:LeaderfFunction [QUERY]
+" 交互式 grep（ripgrep）
+:Rg [QUERY]              " 或 :RG（全屏结果）
 
-" 搜索 Marks
-:LeaderfMarks [QUERY]
+" 使用 ag（Silver Searcher）搜索
+:Ag [QUERY]
 
-" 搜索行
-:LeaderfLine [QUERY]
-
-" 搜索最近使用的文件
-:LeaderfMru [QUERY]
-
-" 交互式 ripgrep 搜索
-:LeaderfRgInteractive [QUERY]
+" 搜索文件历史
+:History [QUERY]
 
 " 搜索命令历史
-:LeaderfHistoryCmd
+:History:
+
+" 搜索搜索历史
+:History/
+
+" 搜索 Marks
+:Marks
+
+" 搜索当前缓冲区 Marks
+:BMarks
+
+" 搜索跳转历史
+:Jumps
+
+" 搜索变更历史
+:Changes
 
 " 搜索 help 标签
-:LeaderfHelp [QUERY]
+:Helptags [QUERY]
+
+" 搜索窗口
+:Windows
+
+" 搜索 git 提交（当前文件）
+:Commits [QUERY]         " :BCommits 搜索缓冲区提交
+
+" 搜索命令
+:Commands
+
+" 搜索键盘映射
+:Maps
+
+" 搜索文件类型
+:Filetypes
+
+" 搜索 Snippets（UltiSnips）
+:Snippets
+
+" 搜索配色方案
+:Colors
+
+" 搜索文件（locate）
+:Locate [QUERY]
 ```
 
 ## 在vim中使用git
