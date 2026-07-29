@@ -46,7 +46,7 @@ call plug#begin(expand($HOME . '/.vim/bundle'))
 Plug 'sainnhe/sonokai'
 Plug 'itchyny/lightline.vim'
 
-Plug 'Yggdroot/LeaderF', {'do': ':LeaderfInstallCExtension'}
+Plug 'junegunn/fzf', {'do': {-> fzf#install()}} | Plug 'junegunn/fzf.vim'
 Plug 'dyng/ctrlsf.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
@@ -666,9 +666,9 @@ function! s:FocusToValidWindow()
 	if !s:IsAuxiliaryWindow(winnr())
 		return
 	endif
-	for l:wn in range(1, winnr('$'))
-		if !s:IsAuxiliaryWindow(l:wn)
-			execute l:wn . 'wincmd w'
+	for l:info in getwininfo()
+		if !s:IsAuxiliaryWindow(l:info.winnr)
+			call win_gotoid(l:info.winid)
 			return
 		endif
 	endfor
@@ -700,11 +700,11 @@ function! Quit()
 
 	let l:will_be_only_aux = 1
 	let l:has_other_window = 0
-	let l:cur = winnr()
-	for l:wn in range(1, winnr('$'))
-		if l:wn == l:cur | continue | endif
+	let l:cur = win_getid()
+	for l:info in getwininfo()
+		if l:info.winid == l:cur | continue | endif
 		let l:has_other_window = 1
-		if !s:IsAuxiliaryWindow(l:wn)
+		if !s:IsAuxiliaryWindow(l:info.winnr)
 			let l:will_be_only_aux = 0
 			break
 		endif
@@ -993,40 +993,40 @@ augroup Session
 augroup END
 " }
 
-" LeaderF {
-let g:Lf_PythonVersion = 3
-let g:Lf_ShortcutF = '<C-p>'
-let g:Lf_WindowPosition = 'popup'
-let g:Lf_ShowDevIcons = 0
-let g:Lf_StlColorscheme = 'powerline'
-let g:Lf_StlSeparator = {'left': '', 'right': ''}
-let g:Lf_Ctags = 'ctags --fields=+liaS --extras=+q --langmap=c:.c.h,vim:.vim.vimrc'
-" Suppress qualified tags in function/buftag views so each function
-" appears exactly once (--extras=+q in g:Lf_Ctags would otherwise emit
-" both "helper" and "main.helper" for every Go function).
-let g:Lf_CtagsFuncOpts = {
-			\ 'go': '--go-kinds=f --extras=-q',
-			\}
-let g:Lf_PreviewResult = {
-			\ 'File': 0,
-			\ 'Buffer': 0,
-			\ 'Mru': 0,
-			\ 'Tag': 0,
-			\ 'BufTag': 0,
-			\ 'Function': 0,
-			\ 'Line': 0,
-			\ 'Colorscheme': 1,
-			\ 'Rg': 0,
-			\ 'Gtags': 0
-			\}
+" fzf.vim {
+nnoremap <silent><C-p> :Files<CR>
+nnoremap <silent><Leader>b :call <SID>fzf_buffers()<CR>
+nnoremap <silent><Leader>y :BTags<CR>
+nnoremap <silent><Leader>f :BTags<CR>
+nnoremap <silent><Leader>e :BLines<CR>
 
-augroup LeaderF
-	autocmd!
-	nnoremap <silent><Leader>b :LeaderfBuffer<CR>
-	nnoremap <silent><Leader>y :LeaderfBufTag<CR>
-	nnoremap <silent><Leader>f :LeaderfFunction<CR>
-	nnoremap <silent><Leader>e :LeaderfLine<CR>
-augroup END
+function! s:fzf_buffers()
+	let g:__fzf_buffers_delete_file = tempname()
+	let spec = {
+				\ 'options': [
+				\	'--no-footer',
+				\	'--bind', 'ctrl-d:execute-silent(echo {} >> '.g:__fzf_buffers_delete_file.')+exclude',
+				\	'--bind', 'ctrl-alt-x:execute-silent(echo {} >> '.g:__fzf_buffers_delete_file.')+exclude',
+				\ ],
+				\ 'exit': function('s:buf_exit')
+				\}
+	call fzf#vim#buffers('', fzf#vim#with_preview(spec))
+endfunction
+
+function! s:buf_exit(code) abort
+	if exists('g:__fzf_buffers_delete_file')
+		let path = remove(g:, '__fzf_buffers_delete_file')
+		if filereadable(path)
+			for line in readfile(path)
+				let b = matchstr(line, '\[\zs\d\+\ze\]')
+				if !empty(b)
+					silent! execute 'bdelete' b
+				endif
+			endfor
+			call delete(path)
+		endif
+	endif
+endfunction
 " }
 
 " vim9-stargate {
