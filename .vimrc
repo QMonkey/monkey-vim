@@ -973,8 +973,8 @@ map <silent><Leader>gb :Git blame<CR>
 " }
 
 " gv.vim {
-map <silent><Leader>gl :GV<CR>
-map <silent><Leader>gL :GV!<CR>
+map <silent><Leader>gl :GV!<CR>
+map <silent><Leader>gL :GV<CR>
 " }
 
 " vim-gitgutter {
