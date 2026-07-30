@@ -677,7 +677,10 @@ endfunction
 function! s:CloseFugitiveDiff()
 	if !&diff | return 0 | endif
 	for l:wn in range(1, winnr('$'))
-		if bufname(winbufnr(l:wn)) =~# '^fugitive:'
+		let l:buf = winbufnr(l:wn)
+		let l:name = bufname(l:buf)
+		let l:bt = getbufvar(l:buf, '&buftype')
+		if l:name =~# '^fugitive:' || l:name =~# '^gitgutter:' || (empty(l:name) && l:bt ==# 'nofile')
 			execute l:wn . 'wincmd w'
 			quit
 			return 1
@@ -957,6 +960,33 @@ nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10'
 nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 " }
 
+" vim-fugitive {
+nnoremap <silent><Leader>gg :Git<CR>
+nnoremap <silent><Leader>gd :Gvdiffsplit!<CR>
+map <silent><Leader>gb :Git blame<CR>
+" }
+
+" gv.vim {
+map <silent><Leader>gl :GV<CR>
+map <silent><Leader>gL :GV!<CR>
+" }
+
+" vim-gitgutter {
+let g:gitgutter_map_keys = 0
+let g:gitgutter_preview_win_floating = 1
+
+nmap <Leader>hp <Plug>(GitGutterPreviewHunk)
+nmap <Leader>hs <Plug>(GitGutterStageHunk)
+nmap <Leader>hr <Plug>(GitGutterUndoHunk)
+nmap <Leader>hS :Git add %<CR>
+nmap <Leader>hR :Git checkout -- %<CR>
+nmap <Leader>hl :GitGutterQuickFixCurrentFile<CR>
+nmap <Leader>hq :GitGutterQuickFixCurrentFile<CR>
+nmap <Leader>hQ :GitGutterQuickFix<CR>
+nmap <silent>[h <Plug>(GitGutterPrevHunk)
+nmap <silent>]h <Plug>(GitGutterNextHunk)
+" }
+
 " Session {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
@@ -994,11 +1024,18 @@ augroup END
 " }
 
 " fzf.vim {
+let $FZF_DEFAULT_OPTS = '--layout=reverse'
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.9, 'yoffset': 0.5 } }
+
 nnoremap <silent><C-p> :Files<CR>
 nnoremap <silent><Leader>b :call <SID>fzf_buffers()<CR>
 nnoremap <silent><Leader>y :BTags<CR>
 nnoremap <silent><Leader>f :BTags<CR>
 nnoremap <silent><Leader>e :BLines<CR>
+
+imap <C-x><C-p> <Plug>(fzf-complete-path)
+imap <C-x><C-l> <Plug>(fzf-complete-line)
+imap <C-x><C-b> <Plug>(fzf-complete-buffer-line)
 
 function! s:fzf_buffers()
 	let g:__fzf_buffers_delete_file = tempname()
@@ -1342,12 +1379,6 @@ function! OnLspAttached()
 	nnoremap <silent><buffer>gt :LspGotoTypeDef<CR>
 	nnoremap <silent><buffer>gi :LspGotoImpl<CR>
 	nnoremap <silent><buffer>gr :LspShowReferences<CR>
-
-	nnoremap <silent><buffer><Leader>gd :LspPeekDefinition<CR>
-	nnoremap <silent><buffer><Leader>gc :LspPeekDeclaration<CR>
-	nnoremap <silent><buffer><Leader>gt :LspPeekTypeDef<CR>
-	nnoremap <silent><buffer><Leader>gi :LspPeekImpl<CR>
-	nnoremap <silent><buffer><Leader>gr :LspPeekReferences<CR>
 
 	nnoremap <silent><buffer>[d :LspDiagPrevWrap<CR>
 	nnoremap <silent><buffer>]d :LspDiagNextWrap<CR>
