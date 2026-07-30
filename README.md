@@ -893,6 +893,7 @@ Leader+gg       Open git status
 Leader+gl       Git commit browser for current file (GV!)
 Leader+gL       Open git commit browser (GV)
 Leader+gd       Vertical diff against index
+Leader+gD       Diff entire project against index
 Leader+gb       Git blame
 ```
 
