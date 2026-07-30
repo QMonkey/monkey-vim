@@ -1392,8 +1392,9 @@ function! OnLspAttached()
 	nnoremap <silent><buffer>gi :LspGotoImpl<CR>
 	nnoremap <silent><buffer>gr :LspShowReferences<CR>
 
-	nnoremap <silent><buffer>[d :LspDiagPrevWrap<CR>
-	nnoremap <silent><buffer>]d :LspDiagNextWrap<CR>
+	nnoremap <silent><buffer><Leader>d :LspDiag show<CR>
+	nnoremap <silent><buffer>[d :LspDiag prevWrap<CR>
+	nnoremap <silent><buffer>]d :LspDiag nextWrap<CR>
 	nnoremap <silent><buffer>[D :LspDiag first<CR>
 	nnoremap <silent><buffer>]D :LspDiag last<CR>
 	nnoremap <silent><buffer><Leader>gh :LspDiag! current<CR>
