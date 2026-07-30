@@ -968,7 +968,8 @@ nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
 
 " vim-fugitive {
 nnoremap <silent><Leader>gg :Git<CR>
-nnoremap <silent><Leader>gd :Gvdiffsplit!<CR>
+nnoremap <silent><Leader>gd :Gdiffsplit!<CR>
+nnoremap <silent><Leader>gD :Git diff<CR>
 map <silent><Leader>gb :Git blame<CR>
 " }
 
