@@ -609,6 +609,17 @@ Tab         跳转到下一个占位符
 Shift+Tab   跳转到上一个占位符
 ```
 
+#### 2.2 FZF 补全
+
+```
+Ctrl+x Ctrl+p   模糊文件路径补全（fzf）
+Ctrl+x Ctrl+l   模糊行补全（fzf）
+Ctrl+x Ctrl+b   模糊缓冲行补全（fzf）
+Ctrl+x Ctrl+f   内置文件名补全
+Ctrl+x Ctrl+n   内置关键字补全
+Ctrl+x Ctrl+o   内置全能补全
+```
+
 ### 3. 可视化模式
 
 #### 3.1 按键修改
@@ -874,22 +885,29 @@ Ctrl+e  跳到命令行最后
 :GV?
 ```
 
+#### 快捷键
+
+```
+Leader+gg       打开 Git 状态
+Leader+gl       打开 Git 提交浏览器（GV）
+Leader+gL       当前文件的提交浏览器（GV!）
+Leader+gd       与暂存区垂直差异对比
+Leader+gb       Git blame
+```
+
 ### 3. Git 差异标记：[vim-gitgutter](https://github.com/airblade/vim-gitgutter)
 
-```vim
-" 跳转到下一个/上一个修改块
-]c / [c
+#### 快捷键
 
-" 预览 / 暂存 / 撤销当前修改块
-:GitGutterPreviewHunk
-:GitGutterStageHunk
-:GitGutterUndoHunk
-
-" 折叠所有未修改行
-:GitGutterFold
-
-" 将所有修改块加载到 quickfix
-:GitGutterQuickFix
+```
+[h / ]h         跳转到上一个/下一个修改块
+Leader+hp       预览当前修改块
+Leader+hs       暂存当前修改块
+Leader+hr       撤销当前修改块
+Leader+hS       暂存整个文件
+Leader+hR       放弃文件所有修改
+Leader+hq       将当前文件的修改块加载到 quickfix
+Leader+hQ       将所有文件的修改块加载到 quickfix
 ```
 
 ## 常用 Vim 命令
