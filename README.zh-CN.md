@@ -889,8 +889,8 @@ Ctrl+e  跳到命令行最后
 
 ```
 Leader+gg       打开 Git 状态
-Leader+gl       打开 Git 提交浏览器（GV）
-Leader+gL       当前文件的提交浏览器（GV!）
+Leader+gl       当前文件的提交浏览器（GV!）
+Leader+gL       打开 Git 提交浏览器（GV）
 Leader+gd       与暂存区垂直差异对比
 Leader+gb       Git blame
 ```
