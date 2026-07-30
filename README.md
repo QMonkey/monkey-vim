@@ -606,6 +606,17 @@ Tab         Jump to next placeholder
 Shift+Tab   Jump to previous placeholder
 ```
 
+#### 2.2 FZF Completion
+
+```
+Ctrl+x Ctrl+p   Fuzzy file path completion (fzf)
+Ctrl+x Ctrl+l   Fuzzy line completion (fzf)
+Ctrl+x Ctrl+b   Fuzzy buffer line completion (fzf)
+Ctrl+x Ctrl+f   Built-in filename completion
+Ctrl+x Ctrl+n   Built-in keyword completion
+Ctrl+x Ctrl+o   Built-in omni completion
+```
+
 ### 3. Visual mode
 
 #### 3.1 Remap
@@ -874,22 +885,29 @@ More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencast
 :GV?
 ```
 
+#### Keymaps
+
+```
+Leader+gg       Open git status
+Leader+gl       Open git commit browser (GV)
+Leader+gL       Git commit browser for current file (GV!)
+Leader+gd       Vertical diff against index
+Leader+gb       Git blame
+```
+
 ### 3. Git diff gutter: [vim-gitgutter](https://github.com/airblade/vim-gitgutter)
 
-```vim
-" Jump to next/previous hunk
-]c / [c
+#### Keymaps
 
-" Preview / stage / undo current hunk
-:GitGutterPreviewHunk
-:GitGutterStageHunk
-:GitGutterUndoHunk
-
-" Fold all unchanged lines
-:GitGutterFold
-
-" Load all hunks into quickfix
-:GitGutterQuickFix
+```
+[h / ]h         Jump to previous/next hunk
+Leader+hp       Preview current hunk
+Leader+hs       Stage current hunk
+Leader+hr       Undo current hunk
+Leader+hS       Stage entire file
+Leader+hR       Discard all changes in file
+Leader+hq       Load hunks into quickfix (current file)
+Leader+hQ       Load hunks into quickfix (all files)
 ```
 
 ## Useful Vim commands
