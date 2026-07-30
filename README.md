@@ -433,6 +433,7 @@ Leader+rn           Rename symbol
 [D                  First diagnostic
 ]D                  Last diagnostic
 Leader+gh           Show current line diagnostics
+Leader+d            Show current buffer diagnostics
 ```
 
 Files are auto-formatted on save via LSP. Completion is enabled by default — LSP-powered suggestions appear automatically as you type. `K` uses `:LspHover` as the keyword program for most filetypes.
