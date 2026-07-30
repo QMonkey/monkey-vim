@@ -83,7 +83,6 @@ call plug#end()
 " Builtin packages {
 silent! packadd! comment
 silent! packadd! hlyank
-silent! packadd! nohlsearch
 
 " Enable 'Man' command
 source $VIMRUNTIME/ftplugin/man.vim
@@ -136,11 +135,17 @@ augroup CursorLine
 augroup END
 " }
 
-" Search in real time
+" Search {
 set incsearch
 set hlsearch
 set ignorecase
 set smartcase
+
+augroup Hlsearch
+	autocmd!
+	autocmd InsertEnter * if v:hlsearch | call feedkeys("\<cmd>nohlsearch\<cr>", 'm') | endif
+augroup END
+" }
 
 " Show search count message when searching
 set shortmess-=S shortmess+=s
@@ -209,6 +214,7 @@ set timeoutlen=1000
 set ttimeout
 " Unnoticeable small value
 set ttimeoutlen=10
+set updatetime=500
 
 " Show tab, eof and trail space
 set list
@@ -246,7 +252,7 @@ function! AutoInsertFileHead()
 	endif
 
 	call cursor(line('$'), 0)
-endfunc
+endfunction
 " }
 
 " Docset {
@@ -1025,7 +1031,13 @@ augroup END
 
 " fzf.vim {
 let $FZF_DEFAULT_OPTS = '--layout=reverse'
-let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.9, 'yoffset': 0.5 } }
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.9 } }
+let g:fzf_preview_window = ['right:60%']
+let g:fzf_action = {
+			\ 'ctrl-s': 'split',
+			\ 'ctrl-v': 'vsplit',
+			\ 'ctrl-t': 'tab split',
+			\ }
 
 nnoremap <silent><C-p> :Files<CR>
 nnoremap <silent><Leader>b :call <SID>fzf_buffers()<CR>
@@ -1045,9 +1057,9 @@ function! s:fzf_buffers()
 				\	'--bind', 'ctrl-d:execute-silent(echo {} >> '.g:__fzf_buffers_delete_file.')+exclude',
 				\	'--bind', 'ctrl-alt-x:execute-silent(echo {} >> '.g:__fzf_buffers_delete_file.')+exclude',
 				\ ],
-				\ 'exit': function('s:buf_exit')
+				\	'exit': function('s:buf_exit')
 				\}
-	call fzf#vim#buffers('', fzf#vim#with_preview(spec))
+	call fzf#vim#buffers('', fzf#vim#with_preview(spec, 'right:60%'))
 endfunction
 
 function! s:buf_exit(code) abort
