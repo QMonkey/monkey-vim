@@ -889,8 +889,8 @@ More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencast
 
 ```
 Leader+gg       Open git status
-Leader+gl       Open git commit browser (GV)
-Leader+gL       Git commit browser for current file (GV!)
+Leader+gl       Git commit browser for current file (GV!)
+Leader+gL       Open git commit browser (GV)
 Leader+gd       Vertical diff against index
 Leader+gb       Git blame
 ```
