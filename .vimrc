@@ -174,11 +174,11 @@ set directory=$HOME/.vim/swap//
 set jumpoptions+=stack
 
 " Share vim clipboard with system clipboard
-if has('unnamedplus') && !empty($DISPLAY)
+if has('unnamedplus') && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	" When possible use + register for copy-paste
 	set clipboard=unnamed,unnamedplus
-elseif !empty($DISPLAY)
-	" On Mac and Windows, use * register for copy-paste
+elseif !empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac')
+	" Use * register for copy-paste (X11 without +clipboard, or Mac)
 	set clipboard=unnamed
 endif
 
