@@ -77,7 +77,6 @@ Plug 'tpope/vim-obsession'
 Plug 'romainl/vim-qf'
 " }
 
-" Add plugins to &runtimepath
 call plug#end()
 
 " Builtin packages {
@@ -120,11 +119,9 @@ augroup RelativeNumber
 augroup END
 " }
 
-" Show the cursor position all the time
 set ruler
 
 " Cursorline {
-" Highlight current line
 set cursorline
 
 augroup CursorLine
@@ -164,10 +161,8 @@ set wildmode=list:longest,full
 " Complete options (disable preview scratch window, longest removed to aways show menu)
 set completeopt=menu,menuone
 
-" For regular expressions turn magic on, and you don't need to add '\' before some special meaning characters.
 set magic
 
-" Swap file directory
 set directory=$HOME/.vim/swap//
 
 " Make the jumplist behave like the tagstack
@@ -184,20 +179,15 @@ endif
 
 set smartindent
 
-" Indent at the same level of the previous line
 set autoindent
 
-" Make "tab" insert indents instead of tabs at the beginning of a line
 set smarttab
 
-" Size of a hard tabstop
 set tabstop=4
 set softtabstop=4
 
-" Size of an "indent"
 set shiftwidth=4
 
-" Never use space to replace tab
 set noexpandtab
 
 set textwidth=0
@@ -216,15 +206,12 @@ set ttimeout
 set ttimeoutlen=10
 set updatetime=500
 
-" Show tab, eof and trail space
 set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
 " FileType {
 augroup FileTypeGroup
 	autocmd!
-	" Tab indent, 4-width: C, C++, Go, Bash, VimL, SQL
-	autocmd FileType c,cpp,go,sh,vim,sql setlocal noexpandtab tabstop=4 shiftwidth=4 softtabstop=4
 	" Space indent, 4-width: Rust, Python, Markdown
 	autocmd FileType rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 	" Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
@@ -280,13 +267,10 @@ augroup AutoResize
 	autocmd VimResized * call ResizeAllTab()
 augroup END
 
-" Number of lines from vertical edge to start scrolling
 set scrolloff=7
 
-" Number of cols from horizontal edge to start scrolling
 set sidescrolloff=15
 
-" Number of cols to scroll at a time
 set sidescroll=1
 
 " Disable fold on startup
@@ -303,16 +287,12 @@ augroup END
 " Character width. Should never be enable!
 "set ambiwidth=double
 
-" Use both Unix, DOS and Mac file formats, but favor the Unix one for new files
 set fileformats=unix,dos,mac
 
-" Configure backspace so it acts as it should act
 set backspace=indent,eol,start
 
-" Allow switching away from a changed buffer without saving
 set hidden
 
-" Auto reload file changes outside vim
 set autoread
 
 " Restore cursor to previous editing position
@@ -327,16 +307,12 @@ augroup Jumplist
 	autocmd VimEnter * :clearjumps
 augroup END
 
-" No bells
 set belloff=all
 
-" Enable mouse in normal, visual and insert mode
 set mouse=nvi
 
-" Only if there are at least two tab pages
 set showtabline=1
 
-" Always show status line
 set laststatus=2
 
 " lightline.vim {
@@ -603,8 +579,10 @@ colorscheme sonokai
 
 " sonokai explicitly defines MatchParenCur/MatchWord,
 " which blocks vim-matchup's hi def link. Re-link them.
-highlight! link MatchParenCur MatchParen
-highlight! link MatchWord MatchParen
+highlight! link MatchParen Search
+highlight! link MatchParenCur Search
+highlight! link MatchWord Search
+highlight! link MatchWordCur Search
 " }
 
 " Key map {
@@ -821,7 +799,6 @@ augroup END
 " }
 
 " Zoom {
-" Zoom/Restore window
 function! ZoomToggle()
 	if exists('t:zoomed') && t:zoomed
 		execute t:zoom_winrestcmd
