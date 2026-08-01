@@ -1020,7 +1020,7 @@ let g:fzf_action = {
 nnoremap <silent><C-p> :Files<CR>
 nnoremap <silent><Leader>b :call <SID>fzf_buffers()<CR>
 nnoremap <silent><Leader>y :BTags<CR>
-nnoremap <silent><Leader>f :BTags<CR>
+nnoremap <silent><Leader>f :call <SID>fzf_lsp_doc_symbols([6, 9, 12])<CR>
 nnoremap <silent><Leader>e :BLines<CR>
 
 imap <C-x><C-p> <Plug>(fzf-complete-path)
@@ -1053,6 +1053,62 @@ function! s:buf_exit(code) abort
 			call delete(path)
 		endif
 	endif
+endfunction
+
+function! s:lsp_sym_sink(line) abort
+	let l:lnum = str2nr(split(a:line, "\t")[-1])
+	if l:lnum > 0
+		execute 'keepjumps normal!' l:lnum . 'G'
+	endif
+endfunction
+
+function! s:flatten_doc_symbols(syms, srv, bnr, kinds) abort
+	let l:out = []
+	let l:stack = reverse(copy(a:syms))
+	while !empty(l:stack)
+		let l:sym = remove(l:stack, -1)
+		let l:match = empty(a:kinds) || index(a:kinds, l:sym.kind) != -1
+		if l:match
+			let l:range = has_key(l:sym, 'location') ? l:sym.location.range : l:sym.selectionRange
+			if a:srv.needOffsetEncoding
+				call a:srv.decodeRange(a:bnr, l:range)
+			endif
+			call add(l:out, l:sym.name . "\t" . (l:range.start.line + 1))
+		endif
+		if has_key(l:sym, 'children') && !empty(l:sym.children)
+			for l:idx in range(len(l:sym.children) - 1, -1, -1)
+				call add(l:stack, l:sym.children[l:idx])
+			endfor
+		endif
+	endwhile
+	return l:out
+endfunction
+
+function! s:err(msg) abort
+	echohl ErrorMsg
+	echo a:msg
+	echohl None
+endfunction
+
+function! s:fzf_lsp_doc_symbols(types) abort
+	let l:srv = lsp#buffer#CurbufGetServer('documentSymbol')
+	if empty(l:srv) || !l:srv.running || !l:srv.ready
+		return s:err('No ready LSP server with documentSymbol support for this buffer')
+	endif
+	let l:reply = l:srv.rpc('textDocument/documentSymbol', {'textDocument': {'uri': lsp#util#LspFileToUri(expand('%:p'))}})
+	if empty(l:reply) || !has_key(l:reply, 'result') || empty(l:reply.result)
+		return s:err('No document symbols returned by the LSP server')
+	endif
+	if type(l:reply.result) != v:t_list
+		return
+	endif
+	let l:entries = s:flatten_doc_symbols(l:reply.result, l:srv, bufnr('%'), a:types)
+	call fzf#run(fzf#wrap('lspdoc', fzf#vim#with_preview({
+				\ 'source': l:entries,
+				\ 'sink': function('s:lsp_sym_sink'),
+				\ 'options': ['--delimiter=\t', '-n', '1', '--with-nth=1'],
+				\ 'placeholder': fzf#shellescape(expand('%:p')) . ':{2}',
+				\ }, 'right:60%:+{2}/2')))
 endfunction
 " }
 
