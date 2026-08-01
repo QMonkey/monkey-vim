@@ -140,7 +140,7 @@ set smartcase
 
 augroup Hlsearch
 	autocmd!
-	autocmd InsertEnter * if v:hlsearch | call feedkeys("\<cmd>nohlsearch\<cr>", 'm') | endif
+	autocmd InsertEnter * if v:hlsearch | call feedkeys("\<Cmd>nohlsearch\<CR>", 'm') | endif
 augroup END
 " }
 
@@ -204,7 +204,7 @@ set timeoutlen=1000
 set ttimeout
 " Unnoticeable small value
 set ttimeoutlen=10
-set updatetime=500
+set updatetime=300
 
 set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
