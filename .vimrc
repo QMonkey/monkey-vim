@@ -75,6 +75,7 @@ Plug 'justinmk/vim-dirvish'
 Plug 'kshenoy/vim-signature'
 Plug 'tpope/vim-obsession'
 Plug 'romainl/vim-qf'
+Plug 'ubaldot/vim9-conversion-aid'
 " }
 
 call plug#end()
@@ -223,23 +224,23 @@ augroup FileTypeGroup
 	autocmd FileType qf wincmd J
 augroup END
 
-function! AutoInsertFileHead()
-	" Shell
+def AutoInsertFileHead()
+	# Shell
 	if &filetype ==# 'sh'
-		call setline(1, '#!/usr/bin/env bash')
-		call cursor(line('$'), 0)
+		setline(1, '#!/usr/bin/env bash')
+		cursor(line('$'), 0)
 		put = ''
 	endif
 
-	" Python
+	# Python
 	if &filetype ==# 'python'
-		call setline(1, '#!/usr/bin/env python3')
-		call cursor(line('$'), 0)
+		setline(1, '#!/usr/bin/env python3')
+		cursor(line('$'), 0)
 		put = repeat(nr2char(10), 2)
 	endif
 
-	call cursor(line('$'), 0)
-endfunction
+	cursor(line('$'), 0)
+enddef
 " }
 
 " Docset {
@@ -256,11 +257,11 @@ augroup END
 " }
 
 " Resize splits when the window is resized
-function! ResizeAllTab()
-	let l:cur_tab = tabpagenr()
-	silent! execute 'tabdo wincmd ='
-	silent! execute 'tabnext ' . l:cur_tab
-endfunction
+def ResizeAllTab()
+	var cur_tab = tabpagenr()
+	silent! execute 'tabdo wincmd = '
+	silent! execute 'tabnext ' .. cur_tab
+enddef
 
 augroup AutoResize
 	autocmd!
@@ -316,96 +317,96 @@ set showtabline=1
 set laststatus=2
 
 " lightline.vim {
-let g:lightline = {
-			\ 'colorscheme': 'sonokai',
-			\ 'active': {
-			\   'left': [['mode', 'paste'], ['gitinfo', 'filename']],
-			\   'right': [['lineinfo'], ['percent'], ['searchinfo', 'filetype', 'fileencoding', 'fileformat']]
-			\ },
-			\ 'inactive': {
-			\   'left': [['mode', 'filename']],
-			\   'right': []
-			\ },
-			\ 'component_function': {
-			\   'gitinfo': 'LightLineGitInfo',
-			\   'searchinfo': 'LightLineSearchOrVM',
-			\   'filename': 'LightLineFilename',
-			\   'fileformat': 'LightLineFileformat',
-			\   'filetype': 'LightLineFiletype',
-			\   'fileencoding': 'LightLineFileencoding',
-			\   'percent': 'LightLinePercent',
-			\   'lineinfo': 'LightLineLineInfo',
-			\   'mode': 'LightLineMode',
-			\ },
-			\ 'component_expand': {
-			\   'tabs': 'lightline#tabs',
-			\ },
-			\ 'separator': {'left': '', 'right': ''},
-			\ 'subseparator': {'left': '│', 'right': '│'},
-			\ 'tab': {
-			\   'active': ['filename', 'modified'],
-			\   'inactive': ['filename', 'modified'],
-			\ },
-			\ 'tabline': {
-			\   'left': [['tabs']],
-			\   'right': []
-			\ },
-			\ 'tabline_separator': {'left': '', 'right': ''},
-			\ 'tabline_subseparator': {'left': '│', 'right': '│'},
-			\ }
+vim9cmd g:lightline = {
+		'colorscheme': 'sonokai',
+		'active': {
+			'left': [['mode', 'paste'], ['gitinfo', 'filename']],
+			'right': [['lineinfo'], ['percent'], ['searchinfo', 'filetype', 'fileencoding', 'fileformat']]
+		},
+		'inactive': {
+			'left': [['mode', 'filename']],
+			'right': []
+		},
+		'component_function': {
+			'gitinfo': 'LightLineGitInfo',
+			'searchinfo': 'LightLineSearchOrVM',
+			'filename': 'LightLineFilename',
+			'fileformat': 'LightLineFileformat',
+			'filetype': 'LightLineFiletype',
+			'fileencoding': 'LightLineFileencoding',
+			'percent': 'LightLinePercent',
+			'lineinfo': 'LightLineLineInfo',
+			'mode': 'LightLineMode',
+		},
+		'component_expand': {
+			'tabs': 'lightline#tabs',
+		},
+		'separator': {'left': '', 'right': ''},
+		'subseparator': {'left': '│', 'right': '│'},
+		'tab': {
+			'active': ['filename', 'modified'],
+			'inactive': ['filename', 'modified'],
+		},
+		'tabline': {
+			'left': [['tabs']],
+			'right': []
+		},
+		'tabline_separator': {'left': '', 'right': ''},
+		'tabline_subseparator': {'left': '│', 'right': '│'},
+	}
 
-function! s:LightLineModified()
+def s:LightLineModified(): string
 	return &filetype =~# 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-endfunction
+enddef
 
-function! s:LightLineReadonly()
+def s:LightLineReadonly(): string
 	return &filetype !~? 'help' && &readonly ? '🔒' : ''
-endfunction
+enddef
 
 " Cached window type: returns 0=normal, 1=location, 2=quickfix, 3=preview
 " Result is stored in w:window_type to avoid recomputation within the same
 " statusline refresh cycle. Invalidated on BufWinEnter/WinEnter.
-function! s:GetWindowType()
+def s:GetWindowType(): number
 	if exists('w:window_type')
 		return w:window_type
 	endif
 	if &previewwindow
-		let w:window_type = 3
-	elseif &filetype is# 'qf'
-		let l:cur_winnr = winnr()
-		if qf#IsQfWindow(l:cur_winnr)
-			let w:window_type = 2
-		elseif qf#IsLocWindow(l:cur_winnr)
-			let w:window_type = 1
+		w:window_type = 3
+	elseif &filetype ==# 'qf'
+		var cur_winnr = winnr()
+		if qf#IsQfWindow(cur_winnr)
+			w:window_type = 2
+		elseif qf#IsLocWindow(cur_winnr)
+			w:window_type = 1
 		else
-			let w:window_type = 0
+			w:window_type = 0
 		endif
 	else
-		let w:window_type = 0
+		w:window_type = 0
 	endif
 	return w:window_type
-endfunction
+enddef
 
 " Cached git file detection. Result is stored in b:is_git_file,
 " invalidated on BufEnter.
-function! s:IsGitFile()
+def s:IsGitFile(): number
 	if exists('b:is_git_file')
 		return b:is_git_file
 	endif
-	let b:is_git_file = 0
+	b:is_git_file = 0
 	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
 		return 0
 	endif
-	let l:fname = expand('%:t')
-	if l:fname ==# '' || l:fname =~# '\[Plugins\]'
+	var fname = expand('%:t')
+	if fname == '' || fname =~# '\[Plugins\]'
 		return 0
 	endif
-	if FugitiveExtractGitDir(resolve(expand('%'))) ==# ''
+	if g:FugitiveExtractGitDir(resolve(expand('%'))) == ''
 		return 0
 	endif
-	let b:is_git_file = 1
+	b:is_git_file = 1
 	return 1
-endfunction
+enddef
 
 " Invalidate per-buffer and per-window caches
 augroup LightLineCache
@@ -417,99 +418,99 @@ augroup END
 " Combined git status component: gutter summary + branch name.
 " Replaces LightLineGitGutter & LightLineFugitive; avoids calling
 " s:GetWindowType() / s:IsGitFile() / FugitiveExtractGitDir() twice.
-function! LightLineGitInfo()
+def LightLineGitInfo(): string
 	if s:GetWindowType() != 0
 		return ''
 	endif
 	if !s:IsGitFile()
 		return ''
 	endif
-	let l:parts = []
+	var l_parts = []
 	try
-		let l:s = GitGutterGetHunkSummary()
-		call add(l:parts, printf('+%d ~%d -%d', l:s[0], l:s[1], l:s[2]))
+		var s_summary = g:GitGutterGetHunkSummary()
+		add(l_parts, printf('+%d ~%d -%d', s_summary[0], s_summary[1], s_summary[2]))
 	catch
 	endtry
 	try
 		if getftype(expand('%')) ==# 'link'
-			call FugitiveDetect(resolve(expand('%')))
+			g:FugitiveDetect(resolve(expand('%')))
 		endif
-		let l:branch = FugitiveHead()
-		if l:branch !=# ''
-			call add(l:parts, "⎇ " . l:branch)
+		var branch = g:FugitiveHead()
+		if branch != ''
+			add(l_parts, '⎇ ' .. branch)
 		endif
 	catch
 	endtry
-	return join(l:parts, ' ')
-endfunction
+	return join(l_parts, ' ')
+enddef
 
-function! LightLineFilename()
+def LightLineFilename(): string
 	if s:GetWindowType() != 0
 		return ''
 	endif
-	let l:ro = s:LightLineReadonly()
-	let l:mod = s:LightLineModified()
-	let l:fname = expand('%:t')
-	if l:fname ==# ''
-		let l:fname = '[No Name]'
+	var ro = s:LightLineReadonly()
+	var mod = s:LightLineModified()
+	var fname = expand('%:t')
+	if fname == ''
+		fname = '[No Name]'
 	endif
-	return join(filter([l:ro, l:fname, l:mod], 'v:val !=# ""'), ' ')
-endfunction
+	return join(filter([ro, fname, mod], 'v:val != ""'), ' ')
+enddef
 
-function! LightLineFileformat()
+def LightLineFileformat(): string
 	return winwidth(0) > 70 ? &fileformat : ''
-endfunction
+enddef
 
-function! LightLineFiletype()
-	return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'unknown') : ''
-endfunction
+def LightLineFiletype(): string
+	return winwidth(0) > 70 ? (&filetype != '' ? &filetype : 'unknown') : ''
+enddef
 
-function! LightLineFileencoding()
-	return winwidth(0) > 70 ? (&fileencoding !=# '' ? &fileencoding : &encoding) : ''
-endfunction
+def LightLineFileencoding(): string
+	return winwidth(0) > 70 ? (&fileencoding != '' ? &fileencoding : &encoding) : ''
+enddef
 
-function! LightLinePercent()
+def LightLinePercent(): string
 	return winwidth(0) > 70 ? printf('%3d%%', (100 * line('.') / line('$'))) : ''
-endfunction
+enddef
 
-function! LightLineLineInfo()
-	return winwidth(0) > 70 ? printf('%3d/%-d :%-2d', line('.'), line('$'), col('.')) : ''
-endfunction
+def LightLineLineInfo(): string
+	return winwidth(0) > 70 ? printf('%3d/%-d : %-2d', line('.'), line('$'), col('.')) : ''
+enddef
 
-function! LightLineSearchOrVM()
+def LightLineSearchOrVM(): string
 	if s:GetWindowType() != 0
 		return ''
 	endif
 	if exists('b:VM_Selection') && !empty(b:VM_Selection)
-		let l:vm = VMInfos()
-		if !empty(l:vm)
-			let l:result = l:vm.ratio
+		var vm = g:VMInfos()
+		if !empty(vm)
+			var result = vm.ratio
 			if !empty(@/)
-				let l:result .= '  /' . @/
+				result ..= '  /' .. @/
 			endif
-			return l:result
+			return result
 		endif
 		return ''
 	endif
-	if !v:hlsearch || @/ ==# ''
+	if !v:hlsearch || @/ == ''
 		return ''
 	endif
-	let l:count = searchcount()
-	if l:count.total == 0
+	var count = searchcount()
+	if count.total == 0
 		return ''
 	endif
-	if l:count.incomplete == 1
+	if count.incomplete == 1
 		return printf('[?/??]')
 	endif
-	return printf('[%d/%d]', l:count.current, l:count.total)
-endfunction
+	return printf('[%d/%d]', count.current, count.total)
+enddef
 
-function! LightLineMode()
-	let l:window_type = s:GetWindowType()
-	if l:window_type != 0
-		return l:window_type == 3 ? 'Preview' :
-					\ l:window_type == 2 ? 'Quickfix' :
-					\ l:window_type == 1 ? 'Location' : ''
+def LightLineMode(): string
+	var window_type = s:GetWindowType()
+	if window_type != 0
+		return window_type == 3 ? 'Preview' :
+			 window_type == 2 ? 'Quickfix' :
+			 window_type == 1 ? 'Location' : ''
 	endif
 
 	if exists('b:VM_Selection') && !empty(b:VM_Selection)
@@ -517,7 +518,7 @@ function! LightLineMode()
 	endif
 
 	return winwidth(0) > 60 ? lightline#mode() : ''
-endfunction
+enddef
 " }
 
 " vim-visual-multi lightline integration {
@@ -525,21 +526,23 @@ highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guib
 highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
 
 let s:saved_normal_left = []
-function! s:VM_Enter()
-	let s:saved_normal_left = copy(g:lightline#colorscheme#sonokai#palette.normal.left[0])
-	let g:lightline#colorscheme#sonokai#palette.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
-	call lightline#highlight()
-	call lightline#update()
-endfunction
+def s:VM_Enter()
+	var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
+	s:saved_normal_left = copy(pal.normal.left[0])
+	pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+	lightline#highlight()
+	lightline#update()
+enddef
 
-function! s:VM_Leave()
+def s:VM_Leave()
 	if !empty(s:saved_normal_left)
-		let g:lightline#colorscheme#sonokai#palette.normal.left[0] = s:saved_normal_left
-		let s:saved_normal_left = []
+		var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
+		pal.normal.left[0] = s:saved_normal_left
+		s:saved_normal_left = []
 	endif
-	call lightline#highlight()
-	call lightline#update()
-endfunction
+	lightline#highlight()
+	lightline#update()
+enddef
 
 augroup VMLightLine
 	autocmd!
@@ -626,84 +629,104 @@ cnoremap <C-e> <End>
 cnoremap <C-h> <BackSpace>
 cnoremap <C-d> <Del>
 
-function! s:SendExitToAllTerminals()
-	for l:buf in getbufinfo()
-		if get(l:buf, 'buftype') ==# 'terminal' && term_getstatus(l:buf.bufnr) =~# 'running'
-			call term_sendkeys(l:buf.bufnr, "exit\<CR>")
+def s:SendExitToAllTerminals()
+	for buf in getbufinfo()
+		if get(buf, 'buftype') ==# 'terminal' && term_getstatus(buf.bufnr) =~# 'running'
+			term_sendkeys(buf.bufnr, "exit\<CR>")
 		endif
 	endfor
-endfunction
+enddef
 
-function! s:IsAuxiliaryWindow(winnr)
-	let l:bufnr = winbufnr(a:winnr)
-	if l:bufnr == -1 | return 1 | endif
-	if getwinvar(a:winnr, '&previewwindow') | return 1 | endif
-	if getbufvar(l:bufnr, '&buftype') ==# 'quickfix' | return 1 | endif
-	if getbufvar(l:bufnr, '&buftype') ==# 'help' | return 1 | endif
-	if getbufvar(l:bufnr, '&buftype') ==# 'terminal' | return 1 | endif
-	if getbufvar(l:bufnr, '&buftype') ==# 'nofile' && getbufvar(l:bufnr, '&filetype') ==# 'man' | return 1 | endif
-	if getbufvar(l:bufnr, '&buftype') ==# 'nofile' && bufname(l:bufnr) ==# '' && !getbufvar(l:bufnr, '&modified') | return 1 | endif
+def s:IsAuxiliaryWindow(winnr: number): number
+	var bufnr = winbufnr(winnr)
+	if bufnr == -1
+		return 1
+	endif
+	if getwinvar(winnr, '&previewwindow')
+		return 1
+	endif
+	if getbufvar(bufnr, '&buftype') ==# 'quickfix'
+		return 1
+	endif
+	if getbufvar(bufnr, '&buftype') ==# 'help'
+		return 1
+	endif
+	if getbufvar(bufnr, '&buftype') ==# 'terminal'
+		return 1
+	endif
+	if getbufvar(bufnr, '&buftype') ==# 'nofile' && getbufvar(bufnr, '&filetype') ==# 'man'
+		return 1
+	endif
+	if getbufvar(bufnr, '&buftype') ==# 'nofile' && bufname(bufnr) ==# '' && !getbufvar(bufnr, '&modified')
+		return 1
+	endif
 	return 0
-endfunction
+enddef
 
-function! s:FocusToValidWindow()
+def s:FocusToValidWindow()
 	if !s:IsAuxiliaryWindow(winnr())
 		return
 	endif
-	for l:info in getwininfo()
-		if !s:IsAuxiliaryWindow(l:info.winnr)
-			call win_gotoid(l:info.winid)
+	for info in getwininfo()
+		if !s:IsAuxiliaryWindow(info.winnr)
+			win_gotoid(info.winid)
 			return
 		endif
 	endfor
-endfunction
+enddef
 
-function! s:CloseFugitiveDiff()
-	if !&diff | return 0 | endif
-	for l:wn in range(1, winnr('$'))
-		let l:buf = winbufnr(l:wn)
-		let l:name = bufname(l:buf)
-		let l:bt = getbufvar(l:buf, '&buftype')
-		if l:name =~# '^fugitive:' || l:name =~# '^gitgutter:' || (empty(l:name) && l:bt ==# 'nofile')
-			execute l:wn . 'wincmd w'
+def s:CloseFugitiveDiff(): number
+	if !&diff
+		return 0
+	endif
+	for wn in range(1, winnr('$'))
+		var buf = winbufnr(wn)
+		var name = bufname(buf)
+		var bt = getbufvar(buf, '&buftype')
+		if name =~# '^fugitive:' || name =~# '^gitgutter:' || (empty(name) && bt ==# 'nofile')
+			execute wn .. 'wincmd w'
 			quit
 			return 1
 		endif
 	endfor
 	return 0
-endfunction
+enddef
 
-function! QuitAll()
-	call s:SendExitToAllTerminals()
+def QuitAll()
+	s:SendExitToAllTerminals()
 	silent! confirm quitall!
-endfunction
+enddef
 
-function! Quit()
-	if s:CloseFugitiveDiff() | return | endif
-
-	if &buftype ==# 'terminal' && term_getstatus(bufnr()) =~# 'running'
-		call term_sendkeys(bufnr(), "exit\<CR>")
+def Quit()
+	if s:CloseFugitiveDiff()
+		return
 	endif
 
-	let l:will_be_only_aux = 1
-	let l:has_other_window = 0
-	let l:cur = win_getid()
-	for l:info in getwininfo()
-		if l:info.winid == l:cur | continue | endif
-		let l:has_other_window = 1
-		if !s:IsAuxiliaryWindow(l:info.winnr)
-			let l:will_be_only_aux = 0
+	if &buftype ==# 'terminal' && term_getstatus(bufnr()) =~# 'running'
+		term_sendkeys(bufnr(), "exit\<CR>")
+	endif
+
+	var will_be_only_aux = 1
+	var has_other_window = 0
+	var cur = win_getid()
+	for info in getwininfo()
+		if info.winid == cur
+			continue
+		endif
+		has_other_window = 1
+		if !s:IsAuxiliaryWindow(info.winnr)
+			will_be_only_aux = 0
 			break
 		endif
 	endfor
 
-	if !l:has_other_window || l:will_be_only_aux
-		call QuitAll()
+	if !has_other_window || will_be_only_aux
+		g:QuitAll()
 	else
 		quit
-		call s:FocusToValidWindow()
+		s:FocusToValidWindow()
 	endif
-endfunction
+enddef
 
 nnoremap <silent> q :call Quit()<CR>
 nnoremap <silent> <S-q> :call QuitAll()<CR>
@@ -713,36 +736,36 @@ vnoremap t q
 " }
 
 " Terminal {
-function! TerminalToggle()
+def TerminalToggle()
 	if exists('t:terminal_bufnr') && bufexists(t:terminal_bufnr) && term_getstatus(t:terminal_bufnr) =~# 'running'
-		let l:winid = bufwinid(t:terminal_bufnr)
-		if l:winid != -1
-			execute win_id2win(l:winid) . 'hide'
+		var winid = bufwinid(t:terminal_bufnr)
+		if winid != -1
+			win_execute(winid, 'hide')
 		else
-			execute 'botright sbuffer ' . t:terminal_bufnr
-			call feedkeys("i", 't')
+			execute 'botright sbuffer ' .. t:terminal_bufnr
+			feedkeys("i", 't')
 		endif
 	else
 		botright terminal
-		let t:terminal_bufnr = bufnr('%')
+		t:terminal_bufnr = bufnr('%')
 	endif
-endfunction
+enddef
 
 nnoremap <F3> :botright terminal<Space>
 nnoremap <silent> <F4> :call TerminalToggle()<CR>
 tnoremap <silent> <F4> <C-\><C-n>:call TerminalToggle()<CR>
 " }
 
-function! OpenPrompt(prompt, cmd)
-	let l:name = Strip(input(a:prompt, '', 'file'))
-	if l:name !=# ''
-		execute a:cmd ' ' . fnameescape(l:name)
+def OpenPrompt(prompt: string, cmd: string)
+	var name = s:Strip(input(prompt, '', 'file'))
+	if name !=# ''
+		execute cmd .. ' ' .. fnameescape(name)
 	endif
-endfunction
+enddef
 
-function! Strip(input_string)
-	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
-endfunction
+def s:Strip(input_string: string): string
+	return substitute(input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+enddef
 
 " Buffer {
 nnoremap <silent><Leader>o :call OpenPrompt('New buffer name: ', 'edit')<CR>
@@ -799,17 +822,17 @@ augroup END
 " }
 
 " Zoom {
-function! ZoomToggle()
+def ZoomToggle()
 	if exists('t:zoomed') && t:zoomed
 		execute t:zoom_winrestcmd
-		let t:zoomed = 0
+		t:zoomed = 0
 	else
-		let t:zoom_winrestcmd = winrestcmd()
+		t:zoom_winrestcmd = winrestcmd()
 		resize
 		vertical resize
-		let t:zoomed = 1
+		t:zoomed = 1
 	endif
-endfunction
+enddef
 
 nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 " }
@@ -818,18 +841,18 @@ nnoremap <silent><Leader>z :call ZoomToggle()<CR>
 nnoremap <silent>- :execute 'Dirvish' expand('%:p:h')<CR>
 nnoremap <silent>~ :execute 'Dirvish' GetProjectOrHome()<CR>
 
-function! GetFileroot()
-	let l:root = FindRootDirectory()
-	if l:root ==# ''
-		let l:root = expand('%:p:h')
+def GetFileroot(): string
+	var root = g:FindRootDirectory()
+	if root ==# ''
+		root = expand('%:h')
 	endif
-	return l:root
-endfunction
+	return root
+enddef
 
-function! GetProjectOrHome()
-	let l:root = FindRootDirectory()
-	return l:root !=# '' ? l:root : expand('~')
-endfunction
+def GetProjectOrHome(): string
+	var root = g:FindRootDirectory()
+	return root !=# '' ? root : expand('~')
+enddef
 
 augroup SplitExplorer
 	autocmd!
@@ -916,28 +939,28 @@ let g:qf_auto_open_quickfix = 0
 let g:qf_auto_open_loclist = 0
 let g:qf_auto_quit = 1
 
-function! QuickFixToggle(type, cmd)
-	let l:ftype = &filetype
-	let l:last_winnr = winnr('#')
-	let l:buffer_count_before = BufferCount()
-	if a:type ==# 'quickfix' || a:type ==# 'q'
+def QuickFixToggle(type: string, cmd: string)
+	var ftype = &filetype
+	var last_winnr = winnr('#')
+	var buffer_count_before = s:BufferCount()
+	if type ==# 'quickfix' || type ==# 'q'
 		silent! cclose
-	elseif a:type ==# 'location' || a:type ==# 'l'
+	elseif type ==# 'location' || type ==# 'l'
 		silent! lclose
 	endif
 
-	if BufferCount() == l:buffer_count_before
-		execute a:cmd
+	if s:BufferCount() == buffer_count_before
+		execute cmd
 	else
-		if l:ftype is# 'qf'
-			silent! execute l:last_winnr . 'wincmd w'
+		if ftype ==# 'qf'
+			silent! execute last_winnr .. 'wincmd w'
 		endif
 	endif
-endfunction
+enddef
 
-function! BufferCount()
+def s:BufferCount(): number
 	return len(tabpagebuflist())
-endfunction
+enddef
 
 nnoremap <silent><Leader>q :call QuickFixToggle('q', 'silent! botright copen 10')<CR>
 nnoremap <silent><Leader>l :call QuickFixToggle('l', 'silent! lopen 10')<CR>
@@ -974,27 +997,27 @@ nmap <silent>]h <Plug>(GitGutterNextHunk)
 " Session {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
-function! GetSessionFileInfo()
-	let l:session_dir = expand($HOME . '/.cache/sessions/')
-	let l:session_filename = l:session_dir . substitute(trim(GetFileroot(), '/', 1), '/', '-', 'g') . '-session.vim'
-	return [l:session_dir, l:session_filename]
-endfunction
+def s:GetSessionFileInfo(): list<string>
+	var session_dir = expand($HOME .. '/.cache/sessions/')
+	var session_filename = session_dir .. substitute(trim(g:GetFileroot(), '/', 1), '/', '-', 'g') .. '-session.vim'
+	return [session_dir, session_filename]
+enddef
 
-function! BackupSession()
-	let l:session_info = GetSessionFileInfo()
-	let l:session_dir = l:session_info[0]
-	let l:session_filename = l:session_info[1]
-	call mkdir(l:session_dir, 'p')
-	execute 'Obsession' l:session_filename
-endfunction
+def BackupSession()
+	var session_info = s:GetSessionFileInfo()
+	var session_dir = session_info[0]
+	var session_filename = session_info[1]
+	mkdir(session_dir, 'p')
+	execute 'Obsession' session_filename
+enddef
 
-function! RestoreSession()
-	let l:session_info = GetSessionFileInfo()
-	let l:session_filename = l:session_info[1]
-	if argc() == 0 && filereadable(l:session_filename)
-		execute 'source' l:session_filename
+def RestoreSession()
+	var session_info = s:GetSessionFileInfo()
+	var session_filename = session_info[1]
+	if argc() == 0 && filereadable(session_filename)
+		execute 'source' session_filename
 	endif
-endfunction
+enddef
 
 " Backup
 nnoremap <Leader>ws :call BackupSession()<CR>
@@ -1027,89 +1050,91 @@ imap <C-x><C-p> <Plug>(fzf-complete-path)
 imap <C-x><C-l> <Plug>(fzf-complete-line)
 imap <C-x><C-b> <Plug>(fzf-complete-buffer-line)
 
-function! s:fzf_buffers()
-	let g:__fzf_buffers_delete_file = tempname()
-	let spec = {
-				\ 'options': [
-				\	'--no-footer',
-				\	'--bind', 'ctrl-d:execute-silent(echo {} >> '.g:__fzf_buffers_delete_file.')+exclude',
-				\	'--bind', 'ctrl-alt-x:execute-silent(echo {} >> '.g:__fzf_buffers_delete_file.')+exclude',
-				\ ],
-				\	'exit': function('s:buf_exit')
-				\}
-	call fzf#vim#buffers('', fzf#vim#with_preview(spec, 'right:60%'))
-endfunction
+def s:fzf_buffers()
+	g:__fzf_buffers_delete_file = tempname()
+	var spec = {
+		'options': [
+			'--no-footer',
+			'--bind', 'ctrl-d:execute-silent(echo {} >> ' .. g:__fzf_buffers_delete_file .. ')+exclude',
+			'--bind', 'ctrl-alt-x:execute-silent(echo {} >> ' .. g:__fzf_buffers_delete_file .. ')+exclude',
+		],
+		'exit': function('s:buf_exit')
+	}
+	fzf#vim#buffers('', fzf#vim#with_preview(spec, 'right:60%'))
+enddef
 
-function! s:buf_exit(code) abort
+def s:buf_exit(code: number)
 	if exists('g:__fzf_buffers_delete_file')
-		let path = remove(g:, '__fzf_buffers_delete_file')
+		var path = remove(g:, '__fzf_buffers_delete_file')
 		if filereadable(path)
 			for line in readfile(path)
-				let b = matchstr(line, '\[\zs\d\+\ze\]')
+				var b = matchstr(line, '\[\zs\d\+\ze\]')
 				if !empty(b)
-					silent! execute 'bdelete' b
+					silent execute 'bdelete ' .. b
 				endif
 			endfor
-			call delete(path)
+			delete(path)
 		endif
 	endif
-endfunction
+enddef
 
-function! s:lsp_sym_sink(line) abort
-	let l:lnum = str2nr(split(a:line, "\t")[-1])
-	if l:lnum > 0
-		execute 'keepjumps normal!' l:lnum . 'G'
+def s:lsp_sym_sink(line: string)
+	var lnum = str2nr(split(line, "\t")[-1])
+	if lnum > 0
+		execute 'keepjumps normal! ' .. lnum .. 'G'
 	endif
-endfunction
+enddef
 
-function! s:flatten_doc_symbols(syms, srv, bnr, kinds) abort
-	let l:out = []
-	let l:stack = reverse(copy(a:syms))
-	while !empty(l:stack)
-		let l:sym = remove(l:stack, -1)
-		let l:match = empty(a:kinds) || index(a:kinds, l:sym.kind) != -1
-		if l:match
-			let l:range = has_key(l:sym, 'location') ? l:sym.location.range : l:sym.selectionRange
-			if a:srv.needOffsetEncoding
-				call a:srv.decodeRange(a:bnr, l:range)
+def s:flatten_doc_symbols(syms: list<dict<any>>, srv: dict<any>, bnr: number, kinds: list<number>): list<string>
+	var out: list<string> = []
+	var stack = reverse(copy(syms))
+	while !empty(stack)
+		var sym = remove(stack, -1)
+		if empty(kinds) || index(kinds, sym.kind) != -1
+			var rng = has_key(sym, 'location') ? sym.location.range : sym.selectionRange
+			if srv.needOffsetEncoding
+				srv.decodeRange(bnr, rng)
 			endif
-			call add(l:out, l:sym.name . "\t" . (l:range.start.line + 1))
+			add(out, sym.name .. "\t" .. (rng.start.line + 1))
 		endif
-		if has_key(l:sym, 'children') && !empty(l:sym.children)
-			for l:idx in range(len(l:sym.children) - 1, -1, -1)
-				call add(l:stack, l:sym.children[l:idx])
+		if has_key(sym, 'children') && !empty(sym.children)
+			for idx in range(len(sym.children) - 1, -1, -1)
+				add(stack, sym.children[idx])
 			endfor
 		endif
 	endwhile
-	return l:out
-endfunction
+	return out
+enddef
 
-function! s:err(msg) abort
+def s:err(msg: string)
 	echohl ErrorMsg
-	echo a:msg
+	echo msg
 	echohl None
-endfunction
+enddef
 
-function! s:fzf_lsp_doc_symbols(types) abort
-	let l:srv = lsp#buffer#CurbufGetServer('documentSymbol')
-	if empty(l:srv) || !l:srv.running || !l:srv.ready
-		return s:err('No ready LSP server with documentSymbol support for this buffer')
-	endif
-	let l:reply = l:srv.rpc('textDocument/documentSymbol', {'textDocument': {'uri': lsp#util#LspFileToUri(expand('%:p'))}})
-	if empty(l:reply) || !has_key(l:reply, 'result') || empty(l:reply.result)
-		return s:err('No document symbols returned by the LSP server')
-	endif
-	if type(l:reply.result) != v:t_list
+def s:fzf_lsp_doc_symbols(types: list<number>)
+	var srv = lsp#buffer#CurbufGetServer('documentSymbol')
+	if empty(srv) || !srv.running || !srv.ready
+		s:err('No ready LSP server with documentSymbol support for this buffer')
 		return
 	endif
-	let l:entries = s:flatten_doc_symbols(l:reply.result, l:srv, bufnr('%'), a:types)
-	call fzf#run(fzf#wrap('lspdoc', fzf#vim#with_preview({
-				\ 'source': l:entries,
-				\ 'sink': function('s:lsp_sym_sink'),
-				\ 'options': ['--delimiter=\t', '-n', '1', '--with-nth=1'],
-				\ 'placeholder': fzf#shellescape(expand('%:p')) . ':{2}',
-				\ }, 'right:60%:+{2}/2')))
-endfunction
+	var reply = srv.rpc('textDocument/documentSymbol', {'textDocument': {'uri': lsp#util#LspFileToUri(expand('%:p'))}})
+	if empty(reply) || !has_key(reply, 'result') || empty(reply.result)
+		s:err('No document symbols returned by the LSP server')
+		return
+	endif
+	if type(reply.result) != v:t_list
+		return
+	endif
+	var entries = s:flatten_doc_symbols(reply.result, srv, bufnr('%'), types)
+	var opts = {
+		'source': entries,
+		'sink': function('s:lsp_sym_sink'),
+		'options': ['--delimiter=\t', '-n', '1', '--with-nth=1'],
+		'placeholder': fzf#shellescape(expand('%:p')) .. ':{2}',
+	}
+	fzf#run(fzf#wrap('lspdoc', fzf#vim#with_preview(opts, 'right:60%:+{2}/2')))
+enddef
 " }
 
 " vim9-stargate {
@@ -1187,239 +1212,238 @@ let g:SignatureMarkerTextHLDynamic = 1
 " }
 
 " lsp {
-function! OnLspSetup()
-	let l:lspOpts = #{
-				\   aleSupport: v:false,
-				\   autoComplete: v:true,
-				\   autoHighlight: v:true,
-				\   autoHighlightDiags: v:true,
-				\   autoPopulateDiags: v:false,
-				\   completionMatcher: 'case',
-				\   completionMatcherValue: 1,
-				\   completionTextEdit: v:false,
-				\   diagVirtualTextAlign: 'below',
-				\   diagVirtualTextWrap: 'wrap',
-				\   diagSignErrorText: 'E>',
-				\   diagSignHintText: 'H>',
-				\   diagSignInfoText: 'I>',
-				\   diagSignWarningText: 'W>',
-				\   echoSignature: v:false,
-				\   hideDisabledCodeActions: v:false,
-				\   highlightDiagInline: v:true,
-				\   hoverInPreview: v:false,
-				\   ignoreMissingServer: v:false,
-				\   keepFocusInDiags: v:true,
-				\   keepFocusInReferences: v:true,
-				\   noNewlineInCompletion: v:false,
-				\   omniComplete: v:false,
-				\   outlineOnRight: v:false,
-				\   outlineWinSize: 20,
-				\   popupBorder: v:true,
-				\   popupBorderHighlight: 'Title',
-				\   popupBorderHighlightPeek: 'Special',
-				\   popupBorderSignatureHelp: v:false,
-				\   popupHighlightSignatureHelp: 'Pmenu',
-				\   popupHighlight: 'Normal',
-				\   popupHighlightCompletion: 'Pmenu',
-				\   semanticHighlight: v:true,
-				\   semanticHighlightDelay: 300,
-				\   showDiagInBalloon: v:true,
-				\   showDiagInPopup: v:true,
-				\   showDiagOnStatusLine: v:true,
-				\   showDiagWithSign: v:true,
-				\   showDiagWithVirtualText: v:true,
-				\   showInlayHints: v:false,
-				\   showSignature: v:true,
-				\   snippetSupport: v:true,
-				\   ultisnipsSupport: v:false,
-				\   useBufferCompletion: v:false,
-				\   usePopupInCodeAction: v:false,
-				\   useQuickfixForLocations: v:false,
-				\   vsnipSupport: v:true,
-				\   bufferCompletionTimeout: 100,
-				\   customCompletionKinds: v:false,
-				\   completionKinds: {},
-				\   filterCompletionDuplicates: v:false,
-				\   condensedCompletionMenu: v:false,
-				\ }
+def OnLspSetup()
+	var lspOpts = {
+				   aleSupport: false,
+				   autoComplete: true,
+				   autoHighlight: true,
+				   autoHighlightDiags: true,
+				   autoPopulateDiags: false,
+				   completionMatcher: 'case',
+				   completionMatcherValue: 1,
+				   completionTextEdit: false,
+				   diagVirtualTextAlign: 'below',
+				   diagVirtualTextWrap: 'wrap',
+				   diagSignErrorText: 'E',
+				   diagSignHintText: 'H',
+				   diagSignInfoText: 'I',
+				   diagSignWarningText: 'W',
+				   echoSignature: false,
+				   hideDisabledCodeActions: false,
+				   highlightDiagInline: true,
+				   hoverInPreview: false,
+				   ignoreMissingServer: false,
+				   keepFocusInDiags: true,
+				   keepFocusInReferences: true,
+				   noNewlineInCompletion: false,
+				   omniComplete: false,
+				   outlineOnRight: false,
+				   outlineWinSize: 20,
+				   popupBorder: true,
+				   popupBorderHighlight: 'Title',
+				   popupBorderHighlightPeek: 'Special',
+				   popupBorderSignatureHelp: false,
+				   popupHighlightSignatureHelp: 'Pmenu',
+				   popupHighlight: 'Normal',
+				   popupHighlightCompletion: 'Pmenu',
+				   semanticHighlight: true,
+				   semanticHighlightDelay: 300,
+				   showDiagInBalloon: true,
+				   showDiagInPopup: true,
+				   showDiagOnStatusLine: true,
+				   showDiagWithSign: true,
+				   showDiagWithVirtualText: true,
+				   showInlayHints: false,
+				   showSignature: true,
+				   snippetSupport: true,
+				   ultisnipsSupport: false,
+				   useBufferCompletion: false,
+				   usePopupInCodeAction: false,
+				   useQuickfixForLocations: false,
+				   vsnipSupport: true,
+				   bufferCompletionTimeout: 100,
+				   customCompletionKinds: false,
+				   completionKinds: {},
+				   filterCompletionDuplicates: false,
+				   condensedCompletionMenu: false,
+				 }
 
-	let l:lspServers = [#{
-				\  name: 'clangd',
-				\  filetype: ['c', 'cpp'],
-				\  path: 'clangd',
-				\  args: [
-				\    '--background-index',
-				\    '--background-index-priority=background',
-				\    '--clang-tidy',
-				\    '--cross-file-rename',
-				\    '--all-scopes-completion=true',
-				\    '--completion-style=detailed',
-				\    '--function-arg-placeholders=true',
-				\    '--header-insertion=iwyu',
-				\    '--header-insertion-decorators',
-				\    '--limit-references=0',
-				\    '--limit-results=0'
-				\  ],
-				\ },
-				\#{name: 'rust-analyzer',
-				\   filetype: ['rust'],
-				\   path: 'rust-analyzer',
-				\   args: [],
-				\   workspaceConfig: {
-				\     'rust-analyzer': {
-				\       'checkOnSave': {
-				\         'command': 'clippy',
-				\       },
-				\       'procMacro': {
-				\         'enable': v:true,
-				\       },
-				\       'cargo': {
-				\         'allFeatures': v:true,
-				\       },
-				\     },
-				\   },
-				\ },
-				\#{name: 'gopls',
-				\   filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
-				\   path: 'gopls',
-				\   rootSearch: ['go.work', 'go.mod'],
-				\   workspaceConfig: {
-				\     'gopls': {
-				\       'analyses': {
-				\         'nilness': v:true,
-				\         'shadow': v:true,
-				\         'unusedparams': v:true,
-				\         'unusedwrite': v:true,
-				\         'useany': v:true,
-				\       },
-				\       'hoverKind': 'FullDocumentation',
-				\       'gofumpt': v:true,
-				\       'completeUnimported': v:true,
-				\       'staticcheck': v:true,
-				\       'usePlaceholders': v:true,
-				\       'completionDocumentation': v:true,
-				\       'codelenses': {
-				\         'generate': v:true,
-				\         'test': v:true,
-				\         'run_vulncheck_exp': v:true,
-				\       },
-				\       'hints': {
-				\         'assignVariableTypes': v:true,
-				\         'compositeLiteralFields': v:true,
-				\         'compositeLiteralTypes': v:true,
-				\         'constantValues': v:true,
-				\         'functionTypeParameters': v:true,
-				\         'parameterNames': v:true,
-				\         'rangeVariableTypes': v:true,
-				\       },
-				\     },
-				\   }
-				\ },
-				\#{name: 'typescript-language-server',
-				\   filetype: ['javascript', 'typescript'],
-				\   path: 'typescript-language-server',
-				\   args: ['--stdio'],
-				\   rootSearch: ['tsconfig.json', 'jsconfig.json', 'package.json'],
-				\   workspaceConfig: {
-				\     'typescript': {
-				\       'suggest': {'completeFunctionCalls': v:true},
-				\     },
-				\     'javascript': {
-				\       'suggest': {'completeFunctionCalls': v:true},
-				\     },
-				\   },
-				\ },
-				\ #{name: 'pylsp',
-				\   filetype: 'python',
-				\   path: 'pylsp',
-				\   args: [],
-				\   rootSearch: ['pyproject.toml', 'setup.py', 'setup.cfg', '.git/'],
-				\   workspaceConfig: {
-				\     'pylsp': {
-				\       'plugins': {
-				\         'black': {'enabled': v:true},
-				\         'pylint': {
-				\           'enabled': v:false
-				\         },
-				\         'pycodestyle': {
-				\           'enabled': v:true,
-				\           'maxLineLength': 120,
-				\           'ignore': ['E501', 'W503'],
-				\         },
-				\         'rope_autoimport': {
-				\           'enabled': v:true,
-				\           'completions': {
-				\             'enabled': v:true
-				\           },
-				\           'code_actions': {
-				\             'enabled': v:true
-				\           }
-				\         },
-				\       }
-				\     }
-				\   },
-				\ },
-				\#{name: 'lua-language-server',
-				\   filetype: 'lua',
-				\   path: 'lua-language-server',
-				\   args: [],
-				\   rootSearch: ['.luarc.json', '.luarc.jsonc', '.git/'],
-				\ },
-				\#{name: 'bash-language-server',
-				\   filetype: 'sh',
-				\   path: 'bash-language-server',
-				\   args: ['start'],
-				\   rootSearch: ['.shellcheckrc', '.git/'],
-				\   workspaceConfig: {
-				\     'bashIde': {
-				\       'globPattern': '**/*@(.sh|.inc|.bash|.command|.bashrc|.bash_profile|.profile)',
-				\       'includeAllWorkspaceSymbols': v:true,
-				\     },
-				\   },
-				\ },
-				\#{name: 'vim-language-server',
-				\   filetype: 'vim',
-				\   path: 'vim-language-server',
-				\   args: ['--stdio']
-				\ },
-				\#{name: 'marksman',
-				\   filetype: ['markdown'],
-				\   path: 'marksman',
-				\   args: ['server'],
-				\   rootSearch: ['.marksman.toml', '.git/'],
-				\ },
-				\#{name: 'yaml-language-server',
-				\   filetype: ['yaml'],
-				\   path: 'yaml-language-server',
-				\   args: ['--stdio'],
-				\   workspaceConfig: {
-				\     'yaml': {
-				\       'schemaStore': {
-				\         'enable': v:true,
-				\         'url': 'https://www.schemastore.org/api/json/catalog.json',
-				\       },
-				\       'completion': v:true,
-				\       'hover': v:true,
-				\       'validate': v:true,
-				\     },
-				\   },
-				\ },
-				\#{name: 'vscode-json-language-server',
-				\   filetype: ['json'],
-				\   path: 'vscode-json-language-server',
-				\   args: ['--stdio']
-				\ }
-				\]
+	var lspServers = [{
+				  name: 'clangd',
+				  filetype: ['c', 'cpp'],
+				  path: 'clangd',
+				  args: [
+				    '--background-index',
+				    '--background-index-priority = background',
+				    '--clang-tidy',
+				    '--cross-file-rename',
+				    '--all-scopes-completion = true',
+				    '--completion-style = detailed',
+				    '--function-arg-placeholders = true',
+				    '--header-insertion = iwyu',
+				    '--header-insertion-decorators',
+				    '--limit-references = 0',
+				    '--limit-results = 0'
+				  ],
+				 },
+				{name: 'rust-analyzer',
+				   filetype: ['rust'],
+				   path: 'rust-analyzer',
+				   args: [],
+				   workspaceConfig: {
+				     'rust-analyzer': {
+				       'checkOnSave': {
+				         'command': 'clippy',
+				       },
+				       'procMacro': {
+				         'enable': true,
+				       },
+				       'cargo': {
+				         'allFeatures': true,
+				       },
+				     },
+				   },
+				 },
+				{name: 'gopls',
+				   filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
+				   path: 'gopls',
+				   rootSearch: ['go.work', 'go.mod'],
+				   workspaceConfig: {
+				     'gopls': {
+				       'analyses': {
+				         'nilness': true,
+				         'shadow': true,
+				         'unusedparams': true,
+				         'unusedwrite': true,
+				         'useany': true,
+				       },
+				       'hoverKind': 'FullDocumentation',
+				       'gofumpt': true,
+				       'completeUnimported': true,
+				       'staticcheck': true,
+				       'usePlaceholders': true,
+				       'completionDocumentation': true,
+				       'codelenses': {
+				         'generate': true,
+				         'test': true,
+				         'run_vulncheck_exp': true,
+				       },
+				       'hints': {
+				         'assignVariableTypes': true,
+				         'compositeLiteralFields': true,
+				         'compositeLiteralTypes': true,
+				         'constantValues': true,
+				         'functionTypeParameters': true,
+				         'parameterNames': true,
+				         'rangeVariableTypes': true,
+				       },
+				     },
+				   }
+				 },
+				{name: 'typescript-language-server',
+				   filetype: ['javascript', 'typescript'],
+				   path: 'typescript-language-server',
+				   args: ['--stdio'],
+				   rootSearch: ['tsconfig.json', 'jsconfig.json', 'package.json'],
+				   workspaceConfig: {
+				     'typescript': {
+				       'suggest': {'completeFunctionCalls': true},
+				     },
+				     'javascript': {
+				       'suggest': {'completeFunctionCalls': true},
+				     },
+				   },
+				 },
+				 {name: 'pylsp',
+				   filetype: 'python',
+				   path: 'pylsp',
+				   args: [],
+				   rootSearch: ['pyproject.toml', 'setup.py', 'setup.cfg', '.git/'],
+				   workspaceConfig: {
+				     'pylsp': {
+				       'plugins': {
+				         'black': {'enabled': true},
+				         'pylint': {
+				           'enabled': false
+				         },
+				         'pycodestyle': {
+				           'enabled': true,
+				           'maxLineLength': 120,
+				           'ignore': ['E501', 'W503'],
+				         },
+				         'rope_autoimport': {
+				           'enabled': true,
+				           'completions': {
+				             'enabled': true
+				           },
+				           'code_actions': {
+				             'enabled': true
+				           }
+				         },
+				       }
+				     }
+				   },
+				 },
+				{name: 'lua-language-server',
+				   filetype: 'lua',
+				   path: 'lua-language-server',
+				   args: [],
+				   rootSearch: ['.luarc.json', '.luarc.jsonc', '.git/'],
+				 },
+				{name: 'bash-language-server',
+				   filetype: 'sh',
+				   path: 'bash-language-server',
+				   args: ['start'],
+				   rootSearch: ['.shellcheckrc', '.git/'],
+				   workspaceConfig: {
+				     'bashIde': {
+				       'globPattern': '**/*@(.sh|.inc|.bash|.command|.bashrc|.bash_profile|.profile)',
+				       'includeAllWorkspaceSymbols': true,
+				     },
+				   },
+				 },
+				{name: 'vim-language-server',
+				   filetype: 'vim',
+				   path: 'vim-language-server',
+				   args: ['--stdio']
+				 },
+				{name: 'marksman',
+				   filetype: ['markdown'],
+				   path: 'marksman',
+				   args: ['server'],
+				   rootSearch: ['.marksman.toml', '.git/'],
+				 },
+				{name: 'yaml-language-server',
+				   filetype: ['yaml'],
+				   path: 'yaml-language-server',
+				   args: ['--stdio'],
+				   workspaceConfig: {
+				     'yaml': {
+				       'schemaStore': {
+				         'enable': true,
+				         'url': 'https: //www.schemastore.org/api/json/catalog.json',
+				       },
+				       'completion': true,
+				       'hover': true,
+				       'validate': true,
+				     },
+				   },
+				 },
+				{name: 'vscode-json-language-server',
+				   filetype: ['json'],
+				   path: 'vscode-json-language-server',
+				   args: ['--stdio']
+				 }
+				]
 
-	call LspOptionsSet(l:lspOpts)
-	call LspAddServer(l:lspServers)
-endfunction
+	g:LspOptionsSet(lspOpts)
+	g:LspAddServer(lspServers)
+enddef
 
-function! OnLspAttached()
+def OnLspAttached()
 	setlocal formatexpr=lsp#lsp#FormatExpr()
 
 	nnoremap <silent><buffer>gh :LspHover<CR>
-
 	nnoremap <silent><buffer>gd :LspGotoDefinition<CR>
 	nnoremap <silent><buffer>gc :LspGotoDeclaration<CR>
 	nnoremap <silent><buffer>gt :LspGotoTypeDef<CR>
@@ -1434,7 +1458,7 @@ function! OnLspAttached()
 	nnoremap <silent><buffer><Leader>gh :LspDiag! current<CR>
 
 	nnoremap <silent><buffer><Leader>rn :LspRename<CR>
-endfunction
+enddef
 
 augroup Lsp
 	autocmd!
