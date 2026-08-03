@@ -226,6 +226,7 @@ REQUIRED["fzf"]="fzf"
 declare -A RECOMMENDED=()
 RECOMMENDED["bat"]="bat"
 RECOMMENDED["delta"]="git-delta"
+RECOMMENDED["global"]="global (GNU Global, for gtags)"
 
 # packages for each OS (maps binary -> package name)
 declare -A APT_NAMES=(
@@ -234,6 +235,7 @@ declare -A APT_NAMES=(
 	["fzf"]="fzf"
 	["bat"]="bat"
 	["delta"]="git-delta"
+	["global"]="global"
 	["clangd"]="clangd"
 	["gcc"]="gcc"
 	["g++"]="g++"
@@ -247,6 +249,7 @@ declare -A PACMAN_NAMES=(
 	["fzf"]="fzf"
 	["bat"]="bat"
 	["delta"]="git-delta"
+	["global"]="global"
 	["clangd"]="clang"
 	["gcc"]="gcc"
 	["g++"]="gcc"
@@ -262,6 +265,7 @@ declare -A BREW_NAMES=(
 	["fzf"]="fzf"
 	["bat"]="bat"
 	["delta"]="git-delta"
+	["global"]="global"
 	["clangd"]="llvm"
 	["gcc"]="gcc"
 	["g++"]="gcc"
@@ -346,9 +350,9 @@ fi
 
 # ──── recommended tools ────
 echo -e "${BOLD}Recommended tools${NC}"
-echo "  (Missing won't block monkey-vim, but will degrade preview experience)"
+echo "  (Missing won't block monkey-vim, but will degrade preview / gtags experience)"
 MISSING_RECOMMENDED=()
-for bin in bat delta; do
+for bin in bat delta global; do
 	if check_bin "$bin" "${RECOMMENDED[$bin]}"; then
 		:
 	else

@@ -45,13 +45,14 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | git | Plugin manager, vim-fugitive | Yes |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf code search + fzf.vim file search | Yes |
 | universal-ctags | gutentags tag generation | Yes |
+| [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation | Recommended |
 | [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | Fuzzy finder (fzf.vim) | Yes |
 | [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
 | [delta](https://github.com/dandavison/delta) | Enhanced git diff preview (fugitive, fzf) | Recommended |
 
 ```bash
 # Ubuntu/Debian — apt packages may be outdated for fzf/bat/delta, use brew
-sudo apt-get install curl git ripgrep universal-ctags
+sudo apt-get install curl git ripgrep universal-ctags global
 
 # For fzf, bat, delta on older Debian/Ubuntu, use Homebrew:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -59,10 +60,10 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install fzf bat git-delta
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags fzf bat git-delta
+sudo pacman -S curl git ripgrep ctags global fzf bat git-delta
 
 # macOS
-brew install curl git ripgrep universal-ctags fzf bat git-delta
+brew install curl git ripgrep universal-ctags global fzf bat git-delta
 ```
 #### 2.2 LSP servers
 
@@ -288,7 +289,7 @@ kmscon uses the system's built-in font renderer. If you prefer Powerline-style i
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | Easy motion (replaces vim-sneak) |
 | [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git wrapper |
 | [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git diff in sign column |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | Automatic ctags generation |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | Automatic ctags & gtags (GNU Global) generation |
 | [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | Directory viewer (replaces netrw) |
 | [tpope/vim-surround](https://github.com/tpope/vim-surround) | Surround text with parens/quotes/etc |
 | [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | Substitute with clipboard |
@@ -705,6 +706,11 @@ Ctrl+e  Jump to the end of the command line
 :GutentagsUpdate!
 ```
 
+If GNU Global (`gtags`/`global`) is installed, gutentags also generates the
+`GTAGS`/`GRTAGS`/`GPATH` databases in `~/.cache/tags/<project>/`.
+The gtags database is queried with the `:cs` commands, or
+directly with the `global` CLI.
+
 ### 4. fzf.vim
 
 ```vim
@@ -973,6 +979,9 @@ Leader+hQ       Load hunks into quickfix (all files)
 " Generate tags for current project
 :GutentagsUpdate!
 ```
+
+With GNU Global installed, gutentags additionally generates the gtags
+database (`GTAGS`/`GRTAGS`/`GPATH`) — query it with the `global` CLI.
 
 ### 5. vim-qf (Quickfix helpers)
 

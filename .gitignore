@@ -2,6 +2,11 @@
 *.tags
 tags
 
+# GNU Global (gtags) database
+GTAGS
+GRTAGS
+GPATH
+
 # Vim swap file
 *.swp
 *.swo

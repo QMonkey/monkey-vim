@@ -918,8 +918,32 @@ augroup Ctags
 augroup END
 # }
 
+# cscope {
+# Send :cs find results to the quickfix window instead of the interactive list.
+# Each query starts a new quickfix list ('-' flag); old lists remain in the
+# :colder stack.
+set cscopequickfix=s-,c-,d-,i-,t-,e-,f-,g-,a-
+
+# Clear the current quickfix and location lists before a query, so an empty
+# result also clears stale entries (cscope leaves the lists untouched when
+# nothing matches). Both :cscope and :lcscope fire the "cscope" event, so the
+# post-autocmds decide which window to open by checking list contents.
+augroup CscopeQuickfix
+	autocmd!
+	autocmd QuickfixCmdPre cscope call setqflist([], 'r') | call setloclist(0, [], 'r')
+	autocmd QuickfixCmdPost cscope if !empty(getloclist(0)) | lwindow | endif
+	autocmd QuickfixCmdPost cscope if !empty(getqflist()) | cwindow | endif
+augroup END
+# }
+
 # vim-gutentags {
-g:gutentags_modules = ['ctags']
+# GNU Global (gtags) is enabled automatically when both the gtags executable
+# and cscope support are available; otherwise only ctags is used.
+if executable('gtags') && has('cscope')
+	g:gutentags_modules = ['ctags', 'gtags_cscope']
+else
+	g:gutentags_modules = ['ctags']
+endif
 g:gutentags_project_root = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
 g:gutentags_cache_dir = expand($HOME .. '/.cache/tags')
 g:gutentags_ctags_tagfile = '.tags'
@@ -932,6 +956,7 @@ g:gutentags_ctags_extra_args = [
 	'--c++-kinds=+p',
 	'--python-kinds=+i',
 ]
+g:gutentags_auto_add_gtags_cscope = 1
 g:gutentags_generate_on_missing = 1
 g:gutentags_generate_on_new = 0
 g:gutentags_generate_on_write = 1

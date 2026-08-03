@@ -45,13 +45,14 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | git | 插件管理器、vim-fugitive | 是 |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + fzf.vim 文件搜索 | 是 |
 | universal-ctags | gutentags 标签生成 | 是 |
+| [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航 | 推荐 |
 | [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | 模糊搜索器（fzf.vim 依赖） | 是 |
 | [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
 | [delta](https://github.com/dandavison/delta) | Git diff 增强预览（fugitive, fzf） | 推荐 |
 
 ```bash
 # Ubuntu/Debian — apt 提供的 fzf/bat/delta 版本可能过旧，推荐使用 brew
-sudo apt-get install curl git ripgrep universal-ctags
+sudo apt-get install curl git ripgrep universal-ctags global
 
 # 在较旧的 Debian/Ubuntu 上安装 fzf, bat, delta，请使用 Homebrew：
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -59,10 +60,10 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install fzf bat git-delta
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags fzf bat git-delta
+sudo pacman -S curl git ripgrep ctags global fzf bat git-delta
 
 # macOS
-brew install curl git ripgrep universal-ctags fzf bat git-delta
+brew install curl git ripgrep universal-ctags global fzf bat git-delta
 ```
 #### 2.2 LSP 服务器
 
@@ -288,7 +289,7 @@ kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，�
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | 快速跳转（替代 vim-sneak） |
 | [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git 集成 |
 | [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git 差异标记 |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | 自动生成 ctags |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | 自动生成 ctags 与 gtags（GNU Global） |
 | [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | 目录浏览器（替代 netrw） |
 | [tpope/vim-surround](https://github.com/tpope/vim-surround) | 围绕字符编辑 |
 | [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | 使用剪贴板替换 |
@@ -705,6 +706,10 @@ Ctrl+e  跳到命令行最后
 :GutentagsUpdate!
 ```
 
+如果已安装 GNU Global（`gtags`/`global`），gutentags 还会在
+`~/.cache/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
+gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
+
 ### 4. fzf.vim
 
 ```vim
@@ -972,6 +977,9 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 " 为整个工程生成tag
 :GutentagsUpdate!
 ```
+
+安装 GNU Global 后，gutentags 还会额外生成 gtags 数据库
+（`GTAGS`/`GRTAGS`/`GPATH`）——可通过 `global` 命令行查询。
 
 ### 5. vim-qf（Quickfix 增强）
 
