@@ -357,22 +357,29 @@ g:lightline = {
 }
 
 def g:LightLineModified(): string
-	return &filetype =~# 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+	return &filetype =~# 'help\|man' ? '' : &modified ? '+' : &modifiable ? '' : '-'
 enddef
 
 def g:LightLineReadonly(): string
-	return &filetype !~? 'help' && &readonly ? '🔒' : ''
+	return &filetype !~? 'help\|man' && &readonly ? '🔒' : ''
 enddef
 
-# Cached window type: returns 0=normal, 1=location, 2=quickfix, 3=preview
-# Result is stored in w:window_type to avoid recomputation within the same
-# statusline refresh cycle. Invalidated on BufWinEnter/WinEnter.
+# Cached window type: returns 0=normal, 1=location, 2=quickfix,
+# 3=preview, 4=terminal, 5=help, 6=man, 7=nofile(no name)
 def GetWindowType(): number
 	if exists('w:window_type')
 		return w:window_type
 	endif
 	if &previewwindow
 		w:window_type = 3
+	elseif &buftype ==# 'terminal'
+		w:window_type = 4
+	elseif &filetype ==# 'help' || &buftype ==# 'help'
+		w:window_type = 5
+	elseif &buftype ==# 'nofile' && &filetype ==# 'man'
+		w:window_type = 6
+	elseif &buftype ==# 'nofile' && bufname('%') ==# '' && !&modified
+		w:window_type = 7
 	elseif &filetype ==# 'qf'
 		var cur_winnr = winnr()
 		if qf#IsQfWindow(cur_winnr)
@@ -427,26 +434,21 @@ def g:LightLineGitInfo(): string
 		return ''
 	endif
 	var l_parts = []
-	try
-		var s_summary = g:GitGutterGetHunkSummary()
-		add(l_parts, printf('+%d ~%d -%d', s_summary[0], s_summary[1], s_summary[2]))
-	catch
-	endtry
-	try
-		if getftype(expand('%')) ==# 'link'
-			g:FugitiveDetect(resolve(expand('%')))
-		endif
-		var branch = g:FugitiveHead()
-		if branch != ''
-			add(l_parts, '⎇ ' .. branch)
-		endif
-	catch
-	endtry
+	var s_summary = g:GitGutterGetHunkSummary()
+	add(l_parts, printf('+%d ~%d -%d', s_summary[0], s_summary[1], s_summary[2]))
+	if getftype(expand('%')) ==# 'link'
+		g:FugitiveDetect(resolve(expand('%')))
+	endif
+	var branch = g:FugitiveHead()
+	if branch != ''
+		add(l_parts, '⎇ ' .. branch)
+	endif
 	return join(l_parts, ' ')
 enddef
 
 def g:LightLineFilename(): string
-	if GetWindowType() != 0
+	var wt = GetWindowType()
+	if wt == 1 || wt == 2 || wt == 3
 		return ''
 	endif
 	var ro = g:LightLineReadonly()
@@ -509,9 +511,12 @@ enddef
 def g:LightLineMode(): string
 	var window_type = GetWindowType()
 	if window_type != 0
-		return window_type == 3 ? 'Preview' :
+		return window_type == 1 ? 'Location' :
 			window_type == 2 ? 'Quickfix' :
-			window_type == 1 ? 'Location' : ''
+			window_type == 3 ? 'Preview' :
+			window_type == 4 ? 'Terminal' :
+			window_type == 5 ? 'Help' :
+			window_type == 6 ? 'Man' : ''
 	endif
 
 	if exists('b:VM_Selection') && !empty(b:VM_Selection)
@@ -527,7 +532,7 @@ highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guib
 highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
 
 var saved_normal_left = []
-def VM_Enter()
+def VMEnter()
 	var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
 	saved_normal_left = copy(pal.normal.left[0])
 	pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
@@ -535,7 +540,7 @@ def VM_Enter()
 	lightline#update()
 enddef
 
-def VM_Leave()
+def VMLeave()
 	if !empty(saved_normal_left)
 		var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
 		pal.normal.left[0] = saved_normal_left
@@ -547,8 +552,8 @@ enddef
 
 augroup VMLightLine
 	autocmd!
-	autocmd User visual_multi_start silent VM_Enter()
-	autocmd User visual_multi_exit  silent VM_Leave()
+	autocmd User visual_multi_start silent VMEnter()
+	autocmd User visual_multi_exit  silent VMLeave()
 augroup END
 # }
 
@@ -737,6 +742,11 @@ vnoremap t q
 # }
 
 # Terminal {
+augroup TermSettings
+	autocmd!
+	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide | endif
+augroup END
+
 def TerminalToggle()
 	if exists('t:terminal_bufnr') && bufexists(t:terminal_bufnr) && term_getstatus(t:terminal_bufnr) =~# 'running'
 		var winid = bufwinid(t:terminal_bufnr)
@@ -776,7 +786,7 @@ nnoremap <silent>]b <Cmd>bnext<CR>
 # }
 
 # Tab {
-nnoremap <silent><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 'tabnew')<CR>
+nnoremap <silent><Leader><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 'tabnew')<CR>
 nnoremap <silent>[t <Cmd>tabprevious<CR>
 nnoremap <silent>]t <Cmd>tabnext<CR>
 nnoremap <Leader>1 <Cmd>1tabnext<CR>
@@ -797,8 +807,8 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
-nnoremap <silent><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
+nnoremap <silent><Leader><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
+nnoremap <silent><Leader><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
 # }
 
 # F1 ~ F10 {
@@ -1043,7 +1053,8 @@ g:fzf_action = {
 
 nnoremap <silent><C-p> <Cmd>Files<CR>
 nnoremap <silent><Leader>b <ScriptCmd>call FzfBuffers()<CR>
-nnoremap <silent><Leader>y <Cmd>BTags<CR>
+nnoremap <silent><Leader>t <Cmd>BTags<CR>
+nnoremap <silent><Leader>p <Cmd>Tags<CR>
 nnoremap <silent><Leader>f <ScriptCmd>call FzfLspDocSymbols([6, 9, 12])<CR>
 nnoremap <silent><Leader>e <Cmd>BLines<CR>
 
