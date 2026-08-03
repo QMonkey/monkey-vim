@@ -17,7 +17,7 @@ vim9script
 # Init {
 # Install vim-plug if not present
 if empty(glob($HOME .. '/.vim/autoload/plug.vim'))
-	var path = expand('/.vim/autoload/plug.vim')
+	var path = '/.vim/autoload/plug.vim'
 	silent execute '!curl' '-fLo' $HOME .. path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 
 	augroup Init
@@ -236,6 +236,14 @@ def AutoInsertFileHead()
 enddef
 # }
 
+# vim-markdown {
+# tpope/vim-markdown
+# Don't need to install these if you are running a recent version of Vim
+g:markdown_syntax_conceal = 0
+g:markdown_minlines = 100
+g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'yaml', 'json']
+# }
+
 # Docset {
 augroup Docset
 	autocmd!
@@ -244,7 +252,7 @@ augroup Docset
 	# Use :LspHover as the default docset
 	autocmd FileType * setlocal keywordprg=:LspHover
 	autocmd FileType c,man setlocal keywordprg=:Man
-	autocmd FileType c let $MANSECT = '2:3:1:4:5:6:7:8:9'
+	autocmd FileType c setenv('MANSECT', '2:3:1:4:5:6:7:8:9')
 	autocmd FileType vim,help setlocal keywordprg=:help
 augroup END
 # }
@@ -623,11 +631,11 @@ cnoremap <C-h> <BackSpace>
 cnoremap <C-d> <Del>
 
 def SendExitToAllTerminals()
-    for buf in getbufinfo()
-        if getbufvar(buf.bufnr, '&buftype') == 'terminal' && term_getstatus(buf.bufnr) =~ 'running'
-            term_sendkeys(buf.bufnr, "exit\<CR>")
-        endif
-    endfor
+	for buf in getbufinfo()
+		if getbufvar(buf.bufnr, '&buftype') == 'terminal' && term_getstatus(buf.bufnr) =~ 'running'
+			term_sendkeys(buf.bufnr, "exit\<CR>")
+		endif
+	endfor
 enddef
 
 def IsAuxiliaryWindow(winnr: number): number
@@ -721,8 +729,8 @@ def Quit()
 	endif
 enddef
 
-nnoremap <silent> q :call <SID>Quit()<CR>
-nnoremap <silent> <S-q> :call <SID>QuitAll()<CR>
+nnoremap <silent>q <ScriptCmd>call Quit()<CR>
+nnoremap <silent><S-q> <ScriptCmd>call QuitAll()<CR>
 
 nnoremap t q
 vnoremap t q
@@ -745,8 +753,8 @@ def TerminalToggle()
 enddef
 
 nnoremap <F3> :botright terminal<Space>
-nnoremap <silent> <F4> :call <SID>TerminalToggle()<CR>
-tnoremap <silent> <F4> <C-\><C-n>:call <SID>TerminalToggle()<CR>
+nnoremap <silent><F4> <ScriptCmd>call TerminalToggle()<CR>
+tnoremap <silent><F4> <C-\><C-n><ScriptCmd>call TerminalToggle()<CR>
 # }
 
 def OpenPrompt(prompt: string, cmd: string)
@@ -761,27 +769,27 @@ def Strip(input_string: string): string
 enddef
 
 # Buffer {
-nnoremap <silent><Leader>o :call <SID>OpenPrompt('New buffer name: ', 'edit')<CR>
+nnoremap <silent><Leader>o <ScriptCmd>call OpenPrompt('New buffer name: ', 'edit')<CR>
 
-nnoremap <silent>[b :bprevious<CR>
-nnoremap <silent>]b :bnext<CR>
+nnoremap <silent>[b <Cmd>bprevious<CR>
+nnoremap <silent>]b <Cmd>bnext<CR>
 # }
 
 # Tab {
-nnoremap <silent><Leader>t :call <SID>OpenPrompt('New tab name: ', 'tabnew')<CR>
-nnoremap <silent>[t :tabprevious<CR>
-nnoremap <silent>]t :tabnext<CR>
-nnoremap <Leader>1 1gt
-nnoremap <Leader>2 2gt
-nnoremap <Leader>3 3gt
-nnoremap <Leader>4 4gt
-nnoremap <Leader>5 5gt
-nnoremap <Leader>6 6gt
-nnoremap <Leader>7 7gt
-nnoremap <Leader>8 8gt
-nnoremap <Leader>9 9gt
-nnoremap <Leader>[ :tabfirst<CR>
-nnoremap <Leader>] :tablast<CR>
+nnoremap <silent><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 'tabnew')<CR>
+nnoremap <silent>[t <Cmd>tabprevious<CR>
+nnoremap <silent>]t <Cmd>tabnext<CR>
+nnoremap <Leader>1 <Cmd>1tabnext<CR>
+nnoremap <Leader>2 <Cmd>2tabnext<CR>
+nnoremap <Leader>3 <Cmd>3tabnext<CR>
+nnoremap <Leader>4 <Cmd>4tabnext<CR>
+nnoremap <Leader>5 <Cmd>5tabnext<CR>
+nnoremap <Leader>6 <Cmd>6tabnext<CR>
+nnoremap <Leader>7 <Cmd>7tabnext<CR>
+nnoremap <Leader>8 <Cmd>8tabnext<CR>
+nnoremap <Leader>9 <Cmd>9tabnext<CR>
+nnoremap <Leader>[ <Cmd>tabfirst<CR>
+nnoremap <Leader>] <Cmd>tablast<CR>
 # }
 
 # Split {
@@ -789,20 +797,20 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader>s :call <SID>OpenPrompt('New split name: ', 'split')<CR>
-nnoremap <silent><Leader>v :call <SID>OpenPrompt('New vsplit name: ', 'vsplit')<CR>
+nnoremap <silent><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
+nnoremap <silent><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
 # }
 
 # F1 ~ F10 {
 nmap <F1> <Plug>CtrlSFPrompt
-nnoremap <silent><F2> :CtrlSFToggle<CR>
+nnoremap <silent><F2> <Cmd>CtrlSFToggle<CR>
 # }
 
 # Toggle {
 nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
-nnoremap <silent>cop :set invpaste<CR>
-nnoremap <silent>col :set invlist<CR>
-nnoremap <silent>con :nohlsearch<CR>
+nnoremap <silent>cop <Cmd>set invpaste<CR>
+nnoremap <silent>col <Cmd>set invlist<CR>
+nnoremap <silent>con <Cmd>nohlsearch<CR>
 nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohlsearch<CR>
 # <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
 nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohlsearch<CR>
@@ -816,23 +824,23 @@ augroup END
 
 # Zoom {
 def ZoomToggle()
-    if exists('t:zoomed') && t:zoomed
-        execute t:zoom_winrestcmd
-        t:zoomed = false
-    else
-        t:zoom_winrestcmd = winrestcmd()
-        wincmd _
-        wincmd |
-        t:zoomed = true
-    endif
+	if exists('t:zoomed') && t:zoomed
+		execute t:zoom_winrestcmd
+		t:zoomed = false
+	else
+		t:zoom_winrestcmd = winrestcmd()
+		wincmd _
+		wincmd |
+		t:zoomed = true
+	endif
 enddef
 
-nnoremap <silent><Leader>z :call <SID>ZoomToggle()<CR>
+nnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
 # }
 
 # vim-dirvish {
-nnoremap <silent>- :execute 'Dirvish' expand('%:p:h')<CR>
-nnoremap <silent>~ :execute 'Dirvish' .. <SID>GetProjectOrHome()<CR>
+nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
+nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetProjectOrHome())<CR>
 
 def GetFileroot(): string
 	var root = g:FindRootDirectory()
@@ -883,7 +891,7 @@ g:rooter_change_directory_for_non_project_files = 'current'
 g:rooter_resolve_links = 1
 g:rooter_manual_only = 1
 
-nnoremap <silent><Leader>cr :Rooter<CR>
+nnoremap <silent><Leader>cr <Cmd>Rooter<CR>
 
 augroup ChangeRoot
 	autocmd!
@@ -955,20 +963,20 @@ def BufferCount(): number
 	return len(tabpagebuflist())
 enddef
 
-nnoremap <silent><Leader>q :call <SID>QuickFixToggle('q', 'silent! botright copen 10')<CR>
-nnoremap <silent><Leader>l :call <SID>QuickFixToggle('l', 'silent! lopen 10')<CR>
+nnoremap <silent><Leader>q <ScriptCmd>call QuickFixToggle('q', 'silent! botright copen 10')<CR>
+nnoremap <silent><Leader>l <ScriptCmd>call QuickFixToggle('l', 'silent! lopen 10')<CR>
 # }
 
 # vim-fugitive {
-nnoremap <silent><Leader>gg :Git<CR>
-nnoremap <silent><Leader>gd :Gdiffsplit!<CR>
-nnoremap <silent><Leader>gD :Git diff<CR>
-map <silent><Leader>gb :Git blame<CR>
+nnoremap <silent><Leader>gg <Cmd>Git<CR>
+nnoremap <silent><Leader>gd <Cmd>Gdiffsplit!<CR>
+nnoremap <silent><Leader>gD <Cmd>Git diff<CR>
+map <silent><Leader>gb <Cmd>Git blame<CR>
 # }
 
 # gv.vim {
-map <silent><Leader>gl :GV!<CR>
-map <silent><Leader>gL :GV<CR>
+map <silent><Leader>gl <Cmd>GV!<CR>
+map <silent><Leader>gL <Cmd>GV<CR>
 # }
 
 # vim-gitgutter {
@@ -1013,9 +1021,9 @@ def RestoreSession()
 enddef
 
 # Backup
-nnoremap <Leader>ws :call <SID>BackupSession()<CR>
+nnoremap <Leader>ws <ScriptCmd>call BackupSession()<CR>
 # Remove
-nnoremap <Leader>rs :Obsession!<CR>
+nnoremap <Leader>rs <Cmd>Obsession!<CR>
 
 augroup Session
 	autocmd!
@@ -1033,11 +1041,11 @@ g:fzf_action = {
 			\ 'ctrl-t': 'tab split',
 			\ }
 
-nnoremap <silent><C-p> :Files<CR>
-nnoremap <silent><Leader>b :call <SID>FzfBuffers()<CR>
-nnoremap <silent><Leader>y :BTags<CR>
-nnoremap <silent><Leader>f :call <SID>FzfLspDocSymbols([6, 9, 12])<CR>
-nnoremap <silent><Leader>e :BLines<CR>
+nnoremap <silent><C-p> <Cmd>Files<CR>
+nnoremap <silent><Leader>b <ScriptCmd>call FzfBuffers()<CR>
+nnoremap <silent><Leader>y <Cmd>BTags<CR>
+nnoremap <silent><Leader>f <ScriptCmd>call FzfLspDocSymbols([6, 9, 12])<CR>
+nnoremap <silent><Leader>e <Cmd>BLines<CR>
 
 imap <C-x><C-p> <Plug>(fzf-complete-path)
 imap <C-x><C-l> <Plug>(fzf-complete-line)
@@ -1202,10 +1210,10 @@ def OnLspSetup()
 		completionTextEdit: false,
 		diagVirtualTextAlign: 'below',
 		diagVirtualTextWrap: 'wrap',
-		diagSignErrorText: 'E',
-		diagSignHintText: 'H',
-		diagSignInfoText: 'I',
-		diagSignWarningText: 'W',
+		diagSignErrorText: 'E>',
+		diagSignHintText: 'H>',
+		diagSignInfoText: 'I>',
+		diagSignWarningText: 'W>',
 		echoSignature: false,
 		hideDisabledCodeActions: false,
 		highlightDiagInline: true,
@@ -1252,16 +1260,16 @@ def OnLspSetup()
 		path: 'clangd',
 		args: [
 			'--background-index',
-			'--background-index-priority = background',
+			'--background-index-priority=background',
 			'--clang-tidy',
 			'--cross-file-rename',
-			'--all-scopes-completion = true',
-			'--completion-style = detailed',
-			'--function-arg-placeholders = true',
-			'--header-insertion = iwyu',
+			'--all-scopes-completion=true',
+			'--completion-style=detailed',
+			'--function-arg-placeholders=true',
+			'--header-insertion=iwyu',
 			'--header-insertion-decorators',
-			'--limit-references = 0',
-			'--limit-results = 0'
+			'--limit-references=0',
+			'--limit-results=0'
 		],
 	},
 	{name: 'rust-analyzer',
@@ -1399,7 +1407,7 @@ def OnLspSetup()
 			'yaml': {
 				'schemaStore': {
 					'enable': true,
-					'url': 'https: //www.schemastore.org/api/json/catalog.json',
+					'url': 'https://www.schemastore.org/api/json/catalog.json',
 				},
 				'completion': true,
 				'hover': true,
@@ -1421,21 +1429,21 @@ enddef
 def OnLspAttached()
 	setlocal formatexpr=lsp#lsp#FormatExpr()
 
-	nnoremap <silent><buffer>gh :LspHover<CR>
-	nnoremap <silent><buffer>gd :LspGotoDefinition<CR>
-	nnoremap <silent><buffer>gc :LspGotoDeclaration<CR>
-	nnoremap <silent><buffer>gt :LspGotoTypeDef<CR>
-	nnoremap <silent><buffer>gi :LspGotoImpl<CR>
-	nnoremap <silent><buffer>gr :LspShowReferences<CR>
+	nnoremap <silent><buffer>gh <Cmd>LspHover<CR>
+	nnoremap <silent><buffer>gd <Cmd>LspGotoDefinition<CR>
+	nnoremap <silent><buffer>gc <Cmd>LspGotoDeclaration<CR>
+	nnoremap <silent><buffer>gt <Cmd>LspGotoTypeDef<CR>
+	nnoremap <silent><buffer>gi <Cmd>LspGotoImpl<CR>
+	nnoremap <silent><buffer>gr <Cmd>LspShowReferences<CR>
 
-	nnoremap <silent><buffer><Leader>d :LspDiag show<CR>
-	nnoremap <silent><buffer>[d :LspDiag prevWrap<CR>
-	nnoremap <silent><buffer>]d :LspDiag nextWrap<CR>
-	nnoremap <silent><buffer>[D :LspDiag first<CR>
-	nnoremap <silent><buffer>]D :LspDiag last<CR>
-	nnoremap <silent><buffer><Leader>gh :LspDiag! current<CR>
+	nnoremap <silent><buffer><Leader>d <Cmd>LspDiag show<CR>
+	nnoremap <silent><buffer>[d <Cmd>LspDiag prevWrap<CR>
+	nnoremap <silent><buffer>]d <Cmd>LspDiag nextWrap<CR>
+	nnoremap <silent><buffer>[D <Cmd>LspDiag first<CR>
+	nnoremap <silent><buffer>]D <Cmd>LspDiag last<CR>
+	nnoremap <silent><buffer><Leader>gh <Cmd>LspDiag! current<CR>
 
-	nnoremap <silent><buffer><Leader>rn :LspRename<CR>
+	nnoremap <silent><buffer><Leader>rn <Cmd>LspRename<CR>
 enddef
 
 augroup Lsp
@@ -1456,14 +1464,6 @@ imap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
 smap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
 imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
-# }
-
-# vim-markdown {
-# tpope/vim-markdown
-# Don't need to install these if you are running a recent version of Vim
-g:markdown_syntax_conceal = 0
-g:markdown_minlines = 100
-g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'yaml', 'json']
 # }
 
 # Terminal env {
