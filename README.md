@@ -368,8 +368,8 @@ Leader+o    Open a new buffer with given file path in current window
 #### 1.4 Split
 
 ```
-Leader+s    Open a horizontal split with given file path in current window
-Leader+v    Open a vertical split with given file path in current window
+Leader+Leader+s    Open a horizontal split with given file path in current window
+Leader+Leader+v    Open a vertical split with given file path in current window
 
 Ctrl+h      Jump to the left split
 Ctrl+j      Jump to the below split
@@ -381,7 +381,7 @@ Leader+z    Toggle zoom
 #### 1.5 Tab
 
 ```
-Leader+t    Open a tab with given file path in current window
+Leader+Leader+t    Open a tab with given file path in current window
 
 [+t         Jump to previous tab
 ]+t         Jump to next tab
@@ -444,7 +444,8 @@ Files are auto-formatted on save via LSP. Completion is enabled by default — L
 Ctrl+p      Search files
 
 Leader+b    Search buffers (C-d to delete, Enter to open)
-Leader+y    Search buffer tags
+Leader+t    Search buffer tags
+Leader+p    Search project tags
 Leader+f    Search function in buffer
 Leader+e    Search line in buffer
 ```
@@ -616,6 +617,7 @@ Ctrl+x Ctrl+b   Fuzzy buffer line completion (fzf)
 Ctrl+x Ctrl+f   Built-in filename completion
 Ctrl+x Ctrl+n   Built-in keyword completion
 Ctrl+x Ctrl+o   Built-in omni completion
+Ctrl+x Ctrl+]   Tag completion (fallback when LSP is slow/unavailable)
 ```
 
 ### 3. Visual mode
