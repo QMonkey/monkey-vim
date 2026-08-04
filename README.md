@@ -46,13 +46,14 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf code search + fzf.vim file search | Yes |
 | universal-ctags | gutentags tag generation | Yes |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation | Recommended |
+| [Pygments](https://pygments.org/) (`pygmentize`) | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.) | Recommended |
 | [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | Fuzzy finder (fzf.vim) | Yes |
 | [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
 | [delta](https://github.com/dandavison/delta) | Enhanced git diff preview (fugitive, fzf) | Recommended |
 
 ```bash
 # Ubuntu/Debian — apt packages may be outdated for fzf/bat/delta, use brew
-sudo apt-get install curl git ripgrep universal-ctags global
+sudo apt-get install curl git ripgrep universal-ctags global python3-pygments
 
 # For fzf, bat, delta on older Debian/Ubuntu, use Homebrew:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -60,10 +61,10 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install fzf bat git-delta
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags global fzf bat git-delta
+sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta
 
 # macOS
-brew install curl git ripgrep universal-ctags global fzf bat git-delta
+brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta
 ```
 #### 2.2 LSP servers
 
@@ -706,9 +707,11 @@ Ctrl+e  Jump to the end of the command line
 :GutentagsUpdate!
 ```
 
-If GNU Global (`gtags`/`global`) is installed, gutentags also generates the
-`GTAGS`/`GRTAGS`/`GPATH` databases in `~/.cache/tags/<project>/`.
-The gtags database is queried with the `:cs` commands, or
+If GNU Global (`gtags`/`global`) and Pygments (`pygmentize`) are installed,
+gutentags also generates the `GTAGS`/`GRTAGS`/`GPATH` databases in
+`~/.cache/tags/<project>/`. GNU Global provides native parsers for C/C++/Java,
+and falls back to Pygments for all other languages (Python, Go, Rust,
+JavaScript, etc.). The gtags database is queried with the `:cs` commands, or
 directly with the `global` CLI.
 
 ### 4. fzf.vim
