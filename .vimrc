@@ -919,27 +919,23 @@ augroup END
 # }
 
 # cscope {
-# Send :cs find results to the quickfix window instead of the interactive list.
-# Each query starts a new quickfix list ('-' flag); old lists remain in the
-# :colder stack.
 set cscopequickfix=s-,c-,d-,i-,t-,e-,f-,g-,a-
 
-# Clear the current quickfix and location lists before a query, so an empty
-# result also clears stale entries (cscope leaves the lists untouched when
-# nothing matches). Both :cscope and :lcscope fire the "cscope" event, so the
-# post-autocmds decide which window to open by checking list contents.
 augroup CscopeQuickfix
 	autocmd!
 	autocmd QuickfixCmdPre cscope call setqflist([], 'r') | call setloclist(0, [], 'r')
 	autocmd QuickfixCmdPost cscope if !empty(getloclist(0)) | lwindow | endif
 	autocmd QuickfixCmdPost cscope if !empty(getqflist()) | cwindow | endif
 augroup END
+
+nnoremap <silent>gs <Cmd>cscope find s <cword><CR>
+nnoremap <silent>gD <Cmd>cscope find g <cword><CR>
+nnoremap <silent>gR <Cmd>cscope find c <cword><CR>
 # }
 
 # vim-gutentags {
-# GNU Global (gtags) is enabled automatically when both the gtags executable
-# and cscope support are available; otherwise only ctags is used.
 if executable('gtags') && has('cscope')
+	$GTAGSLABEL = 'native-pygments'
 	g:gutentags_modules = ['ctags', 'gtags_cscope']
 else
 	g:gutentags_modules = ['ctags']
