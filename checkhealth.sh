@@ -227,6 +227,7 @@ declare -A RECOMMENDED=()
 RECOMMENDED["bat"]="bat"
 RECOMMENDED["delta"]="git-delta"
 RECOMMENDED["global"]="global (GNU Global, for gtags)"
+RECOMMENDED["pygmentize"]="pygments (gtags parser for non-C/C++ languages)"
 
 # packages for each OS (maps binary -> package name)
 declare -A APT_NAMES=(
@@ -236,6 +237,7 @@ declare -A APT_NAMES=(
 	["bat"]="bat"
 	["delta"]="git-delta"
 	["global"]="global"
+	["pygmentize"]="python3-pygments"
 	["clangd"]="clangd"
 	["gcc"]="gcc"
 	["g++"]="g++"
@@ -250,6 +252,7 @@ declare -A PACMAN_NAMES=(
 	["bat"]="bat"
 	["delta"]="git-delta"
 	["global"]="global"
+	["pygmentize"]="python-pygments"
 	["clangd"]="clang"
 	["gcc"]="gcc"
 	["g++"]="gcc"
@@ -352,7 +355,7 @@ fi
 echo -e "${BOLD}Recommended tools${NC}"
 echo "  (Missing won't block monkey-vim, but will degrade preview / gtags experience)"
 MISSING_RECOMMENDED=()
-for bin in bat delta global; do
+for bin in bat delta global pygmentize; do
 	if check_bin "$bin" "${RECOMMENDED[$bin]}"; then
 		:
 	else
