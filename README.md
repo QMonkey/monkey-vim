@@ -60,19 +60,27 @@ sudo apt-get install curl git ripgrep universal-ctags global python3-pygments
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install fzf bat git-delta
 
+# OpenSUSE
+sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta
+
+# CentOS (enable EPEL for ripgrep/ctags/global/pygments/fzf/bat/delta)
+sudo yum install epel-release
+sudo yum install curl git ripgrep universal-ctags global python3-pygments fzf bat git-delta
+
 # Arch Linux
 sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta
 
 # macOS
 brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta
 ```
+
 #### 2.2 LSP servers
 
 Language Server Protocol support is provided by [yegappan/lsp](https://github.com/yegappan/lsp). Install the servers for languages you use:
 
 | Language | LSP Server | Install |
 |---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`, `sudo pacman -S clang`, or `brew install llvm` |
+| C/C++ | clangd | `sudo apt-get install clangd`, `sudo zypper install clang`, `sudo yum install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
@@ -85,13 +93,19 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
 | Markdown | marksman | `brew install marksman` or `sudo pacman -S marksman` |
 
-> Node.js is required for all `npm install -g` entries above. Install it via your system package manager (`sudo apt-get install nodejs`, `sudo pacman -S nodejs`, `brew install node`) or from [nodejs.org](https://nodejs.org/).
+> Node.js is required for all `npm install -g` entries above. Install it via your system package manager (`sudo apt-get install nodejs`, `sudo zypper install nodejs`, `sudo yum install nodejs`, `sudo pacman -S nodejs`, `brew install node`) or from [nodejs.org](https://nodejs.org/).
 
 #### 2.3 C/C++
 
 ```bash
-# Ubuntu
+# Ubuntu/Debian
 sudo apt-get install gcc g++ clangd
+
+# OpenSUSE
+sudo zypper install gcc gcc-c++ clang
+
+# CentOS
+sudo yum install gcc gcc-c++ clang clang-tools-extra
 
 # Arch Linux
 sudo pacman -S gcc clang
@@ -145,7 +159,8 @@ Preview Markdown in browser via WSL/glow:
 # https://github.com/charmbracelet/glow
 brew install glow       # macOS / Linuxbrew
 sudo pacman -S glow     # Arch Linux
-go install github.com/charmbracelet/glow@latest  # any platform with Go
+sudo apt-get install glow  # Debian 13+
+go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS, or any platform with Go
 
 # Option 2: Open in Windows browser (WSL only)
 # :!explorer.exe %
@@ -163,7 +178,7 @@ Verify that all required dependencies and optional LSP servers are available:
 ./checkhealth.sh
 ```
 
-Pass `--install` to automatically install missing dependencies (required tools + optional LSP servers). Supports apt/pacman/brew, npm, pip, go install, and rustup:
+Pass `--install` to automatically install missing dependencies (required tools + optional LSP servers). Supports apt/zypper/yum/pacman/brew, npm, pip, go install, and rustup:
 
 ```bash
 ./checkhealth.sh --install
@@ -204,9 +219,13 @@ git pull
 # Ubuntu/Debian (older versions without terminfo)
 sudo apt-get install kmscon
 
+# OpenSUSE (Tumbleweed / Leap 15.x)
+sudo zypper install kmscon
+
 # Arch Linux
 sudo pacman -S kmscon
 
+# CentOS — not in official/EPEL repos, build from source below instead
 # Build from source (requires meson, ninja, and ncurses for tic)
 git clone https://github.com/kmscon/kmscon.git
 cd kmscon
@@ -299,7 +318,7 @@ kmscon uses the system's built-in font renderer. If you prefer Powerline-style i
 | [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects |
 | [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | Auto-close brackets/parens |
 | [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | Repeat plugin maps with `.` |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX shell helpers (:W for sudo write) |
+| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX shell helpers (:SudoWrite, :W, :Delete, etc.) |
 | [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session management |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | Faster folding for large files |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | Improved `*` / `#` search |
@@ -682,120 +701,6 @@ Ctrl+a  Jump to the begin of the command line
 Ctrl+e  Jump to the end of the command line
 ```
 
-## Useful command
-
-### 1. W (vim-eunuch)
-
-```vim
-" Save file with root permission
-:W
-```
-
-### 2. CtrlSF
-
-```vim
-" Search recursively in current directory for the pattern
-" Jump to the first result unless ! is given.
-:CtrlSF[!] [PATTERN]
-```
-
-### 3. GutentagsUpdate
-
-```vim
-" Generate tags for current file
-:GutentagsUpdate
-
-" Generate tags for current project
-:GutentagsUpdate!
-```
-
-If GNU Global (`gtags`/`global`) and Pygments (`pygmentize`) are installed,
-gutentags also generates the `GTAGS`/`GRTAGS`/`GPATH` databases in
-`~/.cache/tags/<project>/`. GNU Global provides native parsers for C/C++/Java,
-and falls back to Pygments for all other languages (Python, Go, Rust,
-JavaScript, etc.). The gtags database is queried with the `:cs` commands, or
-directly with the `global` CLI.
-
-### 4. fzf.vim
-
-```vim
-" Search files
-:Files [QUERY]
-
-" Search git-tracked files
-:GFiles [QUERY]          " or :GitFiles
-:GFiles?                 " show git status
-
-" Search buffers (C-d to delete, Enter to open)
-:Buffers [QUERY]
-
-" Search lines in loaded buffers
-:Lines [QUERY]
-
-" Search lines in current buffer
-:BLines [QUERY]
-
-" Search tags in the project
-:Tags [QUERY]
-
-" Search buffer tags
-:BTags [QUERY]
-
-" Interactive grep (ripgrep)
-:Rg [QUERY]              " or :RG for full-screen results
-
-" Search with ag (Silver Searcher)
-:Ag [QUERY]
-
-" Search file history
-:History [QUERY]
-
-" Search command history
-:History:
-
-" Search search history
-:History/
-
-" Search marks
-:Marks
-
-" Search buffer-local marks
-:BMarks
-
-" Search jumps
-:Jumps
-
-" Search changes
-:Changes
-
-" Search help tags
-:Helptags [QUERY]
-
-" Search windows
-:Windows
-
-" Search git commits (current file)
-:Commits [QUERY]         " :BCommits for buffer commits
-
-" Search commands
-:Commands
-
-" Search key mappings
-:Maps
-
-" Search filetypes
-:Filetypes
-
-" Search snippets (UltiSnips)
-:Snippets
-
-" Search colorschemes
-:Colors
-
-" Search files via locate
-:Locate [QUERY]
-```
-
 ## Use git in vim
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
@@ -930,8 +835,11 @@ Leader+hQ       Load hunks into quickfix (all files)
 ### 1. vim-eunuch (UNIX shell helpers)
 
 ```vim
-" Write all modified buffers in all windows
-:W (:wall)
+" Like :wall, but writes all windows rather than all buffers
+:W
+
+" Write all modified buffers
+:wall
 
 " Write file with sudo privileges
 :SudoWrite
@@ -955,7 +863,7 @@ Leader+hQ       Load hunks into quickfix (all files)
 
 " Create directory (incl. parents)
 :Mkdir {dir}
-"Mkdir on its own creates the current file's parent dir
+" Mkdir on its own creates the current file's parent dir
 
 " Find files (results in quickfix)
 :Cfind {args}
@@ -975,7 +883,7 @@ Leader+hQ       Load hunks into quickfix (all files)
 :CtrlSFClose
 ```
 
-### 4. Gutentags
+### 3. Gutentags
 
 ```vim
 " Generate tags for current file
@@ -985,8 +893,92 @@ Leader+hQ       Load hunks into quickfix (all files)
 :GutentagsUpdate!
 ```
 
-With GNU Global installed, gutentags additionally generates the gtags
-database (`GTAGS`/`GRTAGS`/`GPATH`) — query it with the `global` CLI.
+If GNU Global (`gtags`/`global`) and Pygments (`pygmentize`) are installed,
+gutentags also generates the `GTAGS`/`GRTAGS`/`GPATH` databases in
+`~/.cache/tags/<project>/`. GNU Global provides native parsers for C/C++/Java,
+and falls back to Pygments for all other languages (Python, Go, Rust,
+JavaScript, etc.). The gtags database is queried with the `:cs` commands, or
+directly with the `global` CLI.
+
+### 4. fzf.vim
+
+```vim
+" Search files
+:Files [QUERY]
+
+" Search git-tracked files
+:GFiles [QUERY]          " or :GitFiles
+:GFiles?                 " show git status
+
+" Search buffers (C-d to delete, Enter to open)
+:Buffers [QUERY]
+
+" Search lines in loaded buffers
+:Lines [QUERY]
+
+" Search lines in current buffer
+:BLines [QUERY]
+
+" Search tags in the project
+:Tags [QUERY]
+
+" Search buffer tags
+:BTags [QUERY]
+
+" Interactive grep (ripgrep)
+:Rg [QUERY]              " or :RG for full-screen results
+
+" Search with ag (Silver Searcher)
+:Ag [QUERY]
+
+" Search file history
+:History [QUERY]
+
+" Search command history
+:History:
+
+" Search search history
+:History/
+
+" Search marks
+:Marks
+
+" Search buffer-local marks
+:BMarks
+
+" Search jumps
+:Jumps
+
+" Search changes
+:Changes
+
+" Search help tags
+:Helptags [QUERY]
+
+" Search windows
+:Windows
+
+" Search git commits (current file)
+:Commits [QUERY]         " :BCommits for buffer commits
+
+" Search commands
+:Commands
+
+" Search key mappings
+:Maps
+
+" Search filetypes
+:Filetypes
+
+" Search snippets (UltiSnips)
+:Snippets
+
+" Search colorschemes
+:Colors
+
+" Search files via locate
+:Locate [QUERY]
+```
 
 ### 5. vim-qf (Quickfix helpers)
 
@@ -1071,11 +1063,234 @@ If you use a standalone clipboard manager (optional):
 | [cliphist](https://github.com/sentriz/cliphist) | Wayland | Clipboard history for wlroots-based compositors |
 | Built-in | macOS/WSL | System clipboard persists by default — no extra tool needed |
 
-## Recommended settings
+## Extra setup
 
-- [Build vim from source](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
+### Build vim from source
 
-- Use vim to view man doc in shell, put this in your bashrc:
+Build Vim from source for the latest version with full features: GTK3 GUI, Wayland/X11 support, and Lua/Python3/Perl/Ruby integration. Pick the display server you use: **Wayland** (listed first) or **X11**.
+
+> Note: Vim's Linux GUI is GTK-based — there is no Qt version, so the GTK3 packages below are required even on KDE (or any other Qt-based desktop). GTK3 apps run fine on any desktop environment.
+
+#### 1. Install dependencies
+
+> The `gpm` packages enable mouse support on the Linux text console (TTY), not on the desktop. Harmless to include.
+
+**Ubuntu/Debian**
+
+Wayland:
+
+```bash
+sudo apt-get install libgtk-3-dev \
+	libwayland-dev \
+	libatk1.0-dev \
+	libcairo2-dev \
+	libgpm-dev \
+	libncurses-dev \
+	python3-dev \
+	lua \
+	liblua-dev \
+	perl \
+	libperl-dev \
+	ruby \
+	ruby-dev
+```
+
+X11:
+
+```bash
+sudo apt-get install libgtk-3-dev \
+	libx11-dev \
+	libxt-dev \
+	libxpm-dev \
+	libatk1.0-dev \
+	libcairo2-dev \
+	libgpm-dev \
+	libncurses-dev \
+	python3-dev \
+	lua \
+	liblua-dev \
+	perl \
+	libperl-dev \
+	ruby \
+	ruby-dev
+```
+
+**OpenSUSE**
+
+Wayland:
+
+```bash
+sudo zypper install gtk3-devel \
+	wayland-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	clipboard
+```
+
+X11:
+
+```bash
+sudo zypper install gtk3-devel \
+	xorg-x11-devel \
+	libXpm-devel \
+	libXt-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	clipboard
+```
+
+**CentOS**
+
+Wayland:
+
+```bash
+sudo yum install gtk3-devel \
+	wayland-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	perl \
+	perl-devel \
+	perl-ExtUtils-ParseXS \
+	perl-ExtUtils-XSpp \
+	perl-ExtUtils-CBuilder \
+	perl-ExtUtils-Embed
+```
+
+X11:
+
+```bash
+sudo yum install gtk3-devel \
+	libX11-devel \
+	libXpm-devel \
+	libXt-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	perl \
+	perl-devel \
+	perl-ExtUtils-ParseXS \
+	perl-ExtUtils-XSpp \
+	perl-ExtUtils-CBuilder \
+	perl-ExtUtils-Embed
+```
+
+**Arch**
+
+Wayland:
+
+```bash
+sudo pacman -S gtk3 \
+	wayland \
+	gpm \
+	ncurses \
+	lua \
+	perl \
+	python \
+	ruby
+```
+
+X11:
+
+```bash
+sudo pacman -S gtk3 \
+	libx11 \
+	libxt \
+	libxpm \
+	gpm \
+	ncurses \
+	lua \
+	perl \
+	python \
+	ruby
+```
+
+**Mac** (native GUI, no Wayland/X11 needed)
+
+```bash
+brew install python \
+	python3 \
+	ruby \
+	lua \
+	atk \
+	cairo
+```
+
+#### 2. Compile and install
+
+**Wayland**
+
+```bash
+./configure --with-features=huge \
+	--enable-gui=gtk3 \
+	--enable-gpm \
+	--with-wayland \
+	--enable-python3interp \
+	--enable-luainterp \
+	--enable-perlinterp \
+	--enable-rubyinterp \
+	--enable-multibyte \
+	--enable-terminal \
+	--enable-fontset \
+	--enable-cscope \
+	--enable-fail-if-missing
+make
+sudo make install
+```
+
+> The GTK3 GUI auto-detects the Wayland backend at runtime; you can force it with `export GDK_BACKEND=wayland`. `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`) for terminal Vim, so clipboard access works even without the GUI.
+
+**X11**
+
+```bash
+./configure --with-features=huge \
+	--enable-gui=gtk3 \
+	--enable-gpm \
+	--with-x \
+	--enable-python3interp \
+	--enable-luainterp \
+	--enable-perlinterp \
+	--enable-rubyinterp \
+	--enable-multibyte \
+	--enable-terminal \
+	--enable-fontset \
+	--enable-cscope \
+	--enable-fail-if-missing
+make
+sudo make install
+```
+
+> `--with-x` adds X11 support (clipboard, drag & drop). Note that `--with-wayland` is on by default with `--with-features=huge`, and a single GTK3 build runs on both Wayland and X11 by auto-detecting the display server.
+
+**kmscon / text console** (no GUI)
+
+> The builds above also work in kmscon — the GUI is simply unused. On a console-only machine where you don't want the GUI libraries, build without a GUI instead: use `--enable-gui=no`, drop `--with-wayland` / `--with-x` and the `libgtk-3-dev` / Wayland / X11 packages. `--enable-gpm` keeps console mouse support, and `--enable-terminal` covers terminal mode.
+
+### Use vim to view man doc in shell
+
+Put this in your bashrc:
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"

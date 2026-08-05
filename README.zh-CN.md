@@ -52,26 +52,34 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 ```bash
 # Ubuntu/Debian — apt 提供的 fzf/bat/delta 版本可能过旧，推荐使用 brew
-sudo apt-get install curl git ripgrep universal-ctags global
+sudo apt-get install curl git ripgrep universal-ctags global python3-pygments
 
 # 在较旧的 Debian/Ubuntu 上安装 fzf, bat, delta，请使用 Homebrew：
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install fzf bat git-delta
 
+# OpenSUSE
+sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta
+
+# CentOS（部分软件包来自 EPEL）
+sudo yum install epel-release
+sudo yum install curl git ripgrep universal-ctags global python3-pygments fzf bat git-delta
+
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags global fzf bat git-delta
+sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta
 
 # macOS
-brew install curl git ripgrep universal-ctags global fzf bat git-delta
+brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta
 ```
+
 #### 2.2 LSP 服务器
 
 Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/lsp) 插件提供。请根据需要安装对应语言的服务器：
 
 | 语言 | LSP 服务器 | 安装方式 |
 |---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`、`sudo pacman -S clang` 或 `brew install llvm` |
+| C/C++ | clangd | `sudo apt-get install clangd`、`sudo zypper install clang`、`sudo yum install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
@@ -84,13 +92,19 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
 | Markdown | marksman | `brew install marksman` 或 `sudo pacman -S marksman` |
 
-> 所有 `npm install -g` 安装方式都需要 Node.js。通过系统包管理器（`sudo apt-get install nodejs`、`sudo pacman -S nodejs`、`brew install node`）或 [nodejs.org](https://nodejs.org/) 安装。
+> 所有 `npm install -g` 安装方式都需要 Node.js。通过系统包管理器（`sudo apt-get install nodejs`、`sudo zypper install nodejs`、`sudo yum install nodejs`、`sudo pacman -S nodejs`、`brew install node`）或 [nodejs.org](https://nodejs.org/) 安装。
 
 #### 2.3 C/C++
 
 ```bash
-# Ubuntu
+# Ubuntu/Debian
 sudo apt-get install gcc g++ clangd
+
+# OpenSUSE
+sudo zypper install gcc gcc-c++ clang
+
+# CentOS
+sudo yum install gcc gcc-c++ clang clang-tools-extra
 
 # Arch Linux
 sudo pacman -S gcc clang
@@ -144,7 +158,8 @@ npm install -g yaml-language-server
 # https://github.com/charmbracelet/glow
 brew install glow       # macOS / Linuxbrew
 sudo pacman -S glow     # Arch Linux
-go install github.com/charmbracelet/glow@latest  # 任意平台（需安装 Go）
+sudo apt-get install glow  # Debian 13+
+go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS，或任意平台（需安装 Go）
 
 # 方案二：在 Windows 浏览器中打开（仅 WSL）
 # :!explorer.exe %
@@ -162,7 +177,7 @@ Vim 使用的 Unicode 字符（⎇, │, 🔒, ▸, ·, ¬）无需额外字体�
 ./checkhealth.sh
 ```
 
-加 `--install` 可自动安装缺失的依赖（必需工具 + 可选 LSP 服务器）。支持 apt/pacman/brew、npm、pip、go install 和 rustup：
+加 `--install` 可自动安装缺失的依赖（必需工具 + 可选 LSP 服务器）。支持 apt/zypper/yum/pacman/brew、npm、pip、go install 和 rustup：
 
 ```bash
 ./checkhealth.sh --install
@@ -203,9 +218,13 @@ git pull
 # Ubuntu/Debian（旧版，不含 terminfo）
 sudo apt-get install kmscon
 
+# OpenSUSE（Tumbleweed / Leap 15.x）
+sudo zypper install kmscon
+
 # Arch Linux
 sudo pacman -S kmscon
 
+# CentOS — 官方与 EPEL 仓库均未提供，改用下方源码编译
 # 从源码编译（需要 meson、ninja 和 ncurses 提供的 tic）
 git clone https://github.com/kmscon/kmscon.git
 cd kmscon
@@ -298,7 +317,7 @@ kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，�
 | [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象 |
 | [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | 自动配对括号 |
 | [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | 使插件映射支持 `.` 重复 |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX Shell 辅助命令（:W sudo保存等） |
+| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX Shell 辅助命令（:SudoWrite、:W、:Delete 等） |
 | [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session 管理 |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | 大文件折叠性能优化 |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | 增强 `*` / `#` 搜索 |
@@ -682,116 +701,6 @@ Ctrl+a  跳到命令行最前
 Ctrl+e  跳到命令行最后
 ```
 
-## 常用命令
-
-### 1. W（vim-eunuch）
-
-```vim
-" 使用root权限保存文件
-:W
-```
-
-### 2. CtrlSF
-
-```vim
-" 递归搜索当前目录中包含 PATTERN 的代码
-:CtrlSF[!] [PATTERN]
-```
-
-### 3. GutentagsUpdate
-
-```vim
-" 为当前文件生成tag
-:GutentagsUpdate
-
-" 为整个工程生成tag
-:GutentagsUpdate!
-```
-
-如果已安装 GNU Global（`gtags`/`global`），gutentags 还会在
-`~/.cache/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
-gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
-
-### 4. fzf.vim
-
-```vim
-" 搜索文件
-:Files [QUERY]
-
-" 搜索 git 跟踪的文件
-:GFiles [QUERY]          " 或 :GitFiles
-:GFiles?                 " 显示 git 状态
-
-" 搜索缓冲区（C-d 删除，Enter 打开）
-:Buffers [QUERY]
-
-" 搜索已加载缓冲区中的行
-:Lines [QUERY]
-
-" 搜索当前文件的行
-:BLines [QUERY]
-
-" 搜索项目 tags
-:Tags [QUERY]
-
-" 搜索当前文件 tags
-:BTags [QUERY]
-
-" 交互式 grep（ripgrep）
-:Rg [QUERY]              " 或 :RG（全屏结果）
-
-" 使用 ag（Silver Searcher）搜索
-:Ag [QUERY]
-
-" 搜索文件历史
-:History [QUERY]
-
-" 搜索命令历史
-:History:
-
-" 搜索搜索历史
-:History/
-
-" 搜索 Marks
-:Marks
-
-" 搜索当前缓冲区 Marks
-:BMarks
-
-" 搜索跳转历史
-:Jumps
-
-" 搜索变更历史
-:Changes
-
-" 搜索 help 标签
-:Helptags [QUERY]
-
-" 搜索窗口
-:Windows
-
-" 搜索 git 提交（当前文件）
-:Commits [QUERY]         " :BCommits 搜索缓冲区提交
-
-" 搜索命令
-:Commands
-
-" 搜索键盘映射
-:Maps
-
-" 搜索文件类型
-:Filetypes
-
-" 搜索 Snippets（UltiSnips）
-:Snippets
-
-" 搜索配色方案
-:Colors
-
-" 搜索文件（locate）
-:Locate [QUERY]
-```
-
 ## 在vim中使用git
 
 ### 1. git for vim: [vim-fugitive](https://github.com/tpope/vim-fugitive)
@@ -926,8 +835,11 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 ### 1. vim-eunuch（UNIX Shell 辅助）
 
 ```vim
-" 写入所有窗口中修改过的 buffer
-:W (:wall)
+" 类似 :wall，但写入的是所有窗口而不是所有 buffer
+:W
+
+" 写入所有修改过的 buffer
+:wall
 
 " 使用 root 权限保存文件
 :SudoWrite
@@ -970,7 +882,7 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 :CtrlSFClose
 ```
 
-### 4. Gutentags
+### 3. Gutentags
 
 ```vim
 " 为当前文件生成tag
@@ -980,8 +892,89 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 :GutentagsUpdate!
 ```
 
-安装 GNU Global 后，gutentags 还会额外生成 gtags 数据库
-（`GTAGS`/`GRTAGS`/`GPATH`）——可通过 `global` 命令行查询。
+如果已安装 GNU Global（`gtags`/`global`），gutentags 还会在
+`~/.cache/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
+gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
+
+### 4. fzf.vim
+
+```vim
+" 搜索文件
+:Files [QUERY]
+
+" 搜索 git 跟踪的文件
+:GFiles [QUERY]          " 或 :GitFiles
+:GFiles?                 " 显示 git 状态
+
+" 搜索缓冲区（C-d 删除，Enter 打开）
+:Buffers [QUERY]
+
+" 搜索已加载缓冲区中的行
+:Lines [QUERY]
+
+" 搜索当前文件的行
+:BLines [QUERY]
+
+" 搜索项目 tags
+:Tags [QUERY]
+
+" 搜索当前文件 tags
+:BTags [QUERY]
+
+" 交互式 grep（ripgrep）
+:Rg [QUERY]              " 或 :RG（全屏结果）
+
+" 使用 ag（Silver Searcher）搜索
+:Ag [QUERY]
+
+" 搜索文件历史
+:History [QUERY]
+
+" 搜索命令历史
+:History:
+
+" 搜索搜索历史
+:History/
+
+" 搜索 Marks
+:Marks
+
+" 搜索当前缓冲区 Marks
+:BMarks
+
+" 搜索跳转历史
+:Jumps
+
+" 搜索变更历史
+:Changes
+
+" 搜索 help 标签
+:Helptags [QUERY]
+
+" 搜索窗口
+:Windows
+
+" 搜索 git 提交（当前文件）
+:Commits [QUERY]         " :BCommits 搜索缓冲区提交
+
+" 搜索命令
+:Commands
+
+" 搜索键盘映射
+:Maps
+
+" 搜索文件类型
+:Filetypes
+
+" 搜索 Snippets（UltiSnips）
+:Snippets
+
+" 搜索配色方案
+:Colors
+
+" 搜索文件（locate）
+:Locate [QUERY]
+```
 
 ### 5. vim-qf（Quickfix 增强）
 
@@ -1066,11 +1059,238 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 | [cliphist](https://github.com/sentriz/cliphist) | Wayland | wlroots 剪贴板历史管理 |
 | 系统自带 | macOS/WSL | 系统剪贴板默认持久化，无需额外工具 |
 
-## 推荐设置
+## 额外设置
 
-- [源码构建vim](https://github.com/QMonkey/monkey-vim/wiki/Build-Vim-from-source)
+### 源码构建 vim
 
-- 在bashrc中加入以下Shell代码，即可在vim中查看man文档
+从源码构建最新版 Vim，以获得完整功能：GTK3 图形界面、Wayland/X11 支持，以及 Lua/Python3/Perl/Ruby 集成。根据你使用的显示服务器选择：**Wayland**（列在前面）或 **X11**。
+
+> 注意：Vim 在 Linux 上的图形界面基于 GTK，没有 Qt 版本，因此即使在 KDE（或其他基于 Qt 的桌面）上，也需要安装下面的 GTK3 包。GTK3 程序可以在任何桌面环境下正常运行。
+
+#### 1. 安装依赖
+
+> `gpm` 相关包用于在 Linux 文本控制台（TTY）上启用鼠标支持，桌面上用不到，但包含它也无害。
+
+**Ubuntu/Debian**
+
+Wayland：
+
+```bash
+sudo apt-get install libgtk-3-dev \
+	libwayland-dev \
+	libatk1.0-dev \
+	libcairo2-dev \
+	libgpm-dev \
+	libncurses-dev \
+	python3-dev \
+	lua \
+	liblua-dev \
+	perl \
+	libperl-dev \
+	ruby \
+	ruby-dev
+```
+
+X11：
+
+```bash
+sudo apt-get install libgtk-3-dev \
+	libx11-dev \
+	libxt-dev \
+	libxpm-dev \
+	libatk1.0-dev \
+	libcairo2-dev \
+	libgpm-dev \
+	libncurses-dev \
+	python3-dev \
+	lua \
+	liblua-dev \
+	perl \
+	libperl-dev \
+	ruby \
+	ruby-dev
+```
+
+**OpenSUSE**
+
+Wayland：
+
+```bash
+sudo zypper install gtk3-devel \
+	wayland-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	clipboard
+```
+
+X11：
+
+```bash
+sudo zypper install gtk3-devel \
+	xorg-x11-devel \
+	libXpm-devel \
+	libXt-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	clipboard
+```
+
+**CentOS**
+
+Wayland：
+
+```bash
+sudo yum install gtk3-devel \
+	wayland-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	perl \
+	perl-devel \
+	perl-ExtUtils-ParseXS \
+	perl-ExtUtils-XSpp \
+	perl-ExtUtils-CBuilder \
+	perl-ExtUtils-Embed
+```
+
+X11：
+
+```bash
+sudo yum install gtk3-devel \
+	libX11-devel \
+	libXpm-devel \
+	libXt-devel \
+	atk-devel \
+	cairo-devel \
+	gpm-devel \
+	ncurses-devel \
+	python-devel \
+	python3-devel \
+	ruby-devel \
+	lua-devel \
+	perl \
+	perl-devel \
+	perl-ExtUtils-ParseXS \
+	perl-ExtUtils-XSpp \
+	perl-ExtUtils-CBuilder \
+	perl-ExtUtils-Embed
+```
+
+**Arch**
+
+Wayland：
+
+```bash
+sudo pacman -S gtk3 \
+	wayland \
+	gpm \
+	ncurses \
+	lua \
+	perl \
+	python \
+	ruby
+```
+
+X11：
+
+```bash
+sudo pacman -S gtk3 \
+	libx11 \
+	libxt \
+	libxpm \
+	gpm \
+	ncurses \
+	lua \
+	perl \
+	python \
+	ruby
+```
+
+**Mac**（原生图形界面，无需 Wayland/X11）
+
+```bash
+brew install python \
+	python3 \
+	ruby \
+	lua \
+	atk \
+	cairo
+```
+
+#### 2. 编译并安装
+
+**Wayland**
+
+```bash
+./configure --with-features=huge \
+	--enable-gui=gtk3 \
+	--enable-gpm \
+	--with-wayland \
+	--enable-python3interp \
+	--enable-luainterp \
+	--enable-perlinterp \
+	--enable-rubyinterp \
+	--enable-multibyte \
+	--enable-terminal \
+	--enable-fontset \
+	--enable-cscope \
+	--enable-fail-if-missing
+make
+sudo make install
+```
+
+> GTK3 图形界面在运行时自动检测 Wayland 后端；也可以强制指定：`export GDK_BACKEND=wayland`。`--with-wayland` 为终端版 Vim 启用原生 Wayland 支持（`+wayland`、`+wayland_clipboard`），即使不使用图形界面也能正常访问剪贴板。
+
+**X11**
+
+```bash
+./configure --with-features=huge \
+	--enable-gui=gtk3 \
+	--enable-gpm \
+	--with-x \
+	--enable-python3interp \
+	--enable-luainterp \
+	--enable-perlinterp \
+	--enable-rubyinterp \
+	--enable-multibyte \
+	--enable-terminal \
+	--enable-fontset \
+	--enable-cscope \
+	--enable-fail-if-missing
+make
+sudo make install
+```
+
+> `--with-x` 添加 X11 支持（剪贴板、拖放）。注意：`--with-features=huge` 时 `--with-wayland` 默认开启，且同一个 GTK3 构建在 Wayland 和 X11 下都能运行（运行时自动检测显示服务器）。
+
+**kmscon / 文本控制台**（无图形界面）
+
+> 上述构建同样适用于 kmscon——图形界面只是不会被使用。在纯控制台环境、不想安装 GUI 库时，可以改为无 GUI 构建：使用 `--enable-gui=no`，去掉 `--with-wayland`/`--with-x` 以及 `libgtk-3-dev`/Wayland/X11 相关包。`--enable-gpm` 保留控制台鼠标支持，`--enable-terminal` 覆盖终端模式。
+
+### 在vim中查看man文档
+
+在 bashrc 中加入以下内容：
+
+```bash
+export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
+```
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
