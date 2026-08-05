@@ -1273,7 +1273,7 @@ def OnLspSetup()
 		semanticHighlightDelay: 300,
 		showDiagInBalloon: true,
 		showDiagInPopup: true,
-		showDiagOnStatusLine: true,
+		showDiagOnStatusLine: false,
 		showDiagWithSign: true,
 		showDiagWithVirtualText: true,
 		showInlayHints: false,
