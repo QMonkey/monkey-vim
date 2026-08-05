@@ -540,6 +540,8 @@ F4      Toggle terminal buffer (open/hide)
 
 F3 opens a new terminal at the bottom. F4 toggles the terminal — hides it without killing the job, reopens the same terminal on demand.
 
+Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal mode, `<ScrollWheelUp>` and `<ScrollWheelDown>` scroll the terminal buffer.
+
 #### 1.16 Others
 
 ```
