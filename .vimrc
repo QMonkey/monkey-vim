@@ -708,10 +708,6 @@ def Quit()
 		return
 	endif
 
-	if &buftype ==# 'terminal' && term_getstatus(bufnr()) =~# 'running'
-		term_sendkeys(bufnr(), "exit\<CR>")
-	endif
-
 	var will_be_only_aux = 1
 	var has_other_window = 0
 	var cur = win_getid()
@@ -742,29 +738,33 @@ vnoremap t q
 # }
 
 # Terminal {
-augroup TermSettings
-	autocmd!
-	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide | endif
-augroup END
-
 def TerminalToggle()
+	var termrows = 20
 	if exists('t:terminal_bufnr') && bufexists(t:terminal_bufnr) && term_getstatus(t:terminal_bufnr) =~# 'running'
 		var winid = bufwinid(t:terminal_bufnr)
 		if winid != -1
 			win_execute(winid, 'hide')
 		else
 			execute 'botright sbuffer ' .. t:terminal_bufnr
+			execute 'resize ' .. termrows
 			feedkeys("i", 't')
 		endif
 	else
-		botright terminal
+		execute 'botright terminal ++rows=' .. termrows
 		t:terminal_bufnr = bufnr('%')
 	endif
 enddef
 
-nnoremap <F3> :botright terminal<Space>
+tnoremap <silent><ScrollWheelUp> <C-\><C-n><ScrollWheelUp>
+tnoremap <silent><ScrollWheelDown> <C-\><C-n><ScrollWheelDown>
+nnoremap <F3> :botright terminal ++rows=20<Space>
 nnoremap <silent><F4> <ScriptCmd>call TerminalToggle()<CR>
 tnoremap <silent><F4> <C-\><C-n><ScriptCmd>call TerminalToggle()<CR>
+
+augroup TermSettings
+	autocmd!
+	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide scrolloff=0 | endif
+augroup END
 # }
 
 def OpenPrompt(prompt: string, cmd: string)
@@ -834,10 +834,14 @@ augroup END
 
 # Zoom {
 def ZoomToggle()
-	if exists('t:zoomed') && t:zoomed
-		execute t:zoom_winrestcmd
+	if exists('t:zoomed') && t:zoomed && win_id2win(t:zoom_winid) != 0
+		if winnr('$') == t:zoom_wincount
+			execute t:zoom_winrestcmd
+		endif
 		t:zoomed = false
 	else
+		t:zoom_winid = win_getid()
+		t:zoom_wincount = winnr('$')
 		t:zoom_winrestcmd = winrestcmd()
 		wincmd _
 		wincmd |
@@ -846,6 +850,7 @@ def ZoomToggle()
 enddef
 
 nnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
+tnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
 # }
 
 # vim-dirvish {
@@ -921,16 +926,16 @@ augroup END
 # cscope {
 set cscopequickfix=s-,c-,d-,i-,t-,e-,f-,g-,a-
 
+nnoremap <silent>gs <Cmd>cscope find s <cword><CR>
+nnoremap <silent>gD <Cmd>cscope find g <cword><CR>
+nnoremap <silent>gR <Cmd>cscope find c <cword><CR>
+
 augroup CscopeQuickfix
 	autocmd!
 	autocmd QuickfixCmdPre cscope call setqflist([], 'r') | call setloclist(0, [], 'r')
 	autocmd QuickfixCmdPost cscope if !empty(getloclist(0)) | lwindow | endif
 	autocmd QuickfixCmdPost cscope if !empty(getqflist()) | cwindow | endif
 augroup END
-
-nnoremap <silent>gs <Cmd>cscope find s <cword><CR>
-nnoremap <silent>gD <Cmd>cscope find g <cword><CR>
-nnoremap <silent>gR <Cmd>cscope find c <cword><CR>
 # }
 
 # vim-gutentags {
