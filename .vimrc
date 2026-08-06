@@ -330,7 +330,7 @@ g:lightline = {
 	},
 	'component_function': {
 		'gitinfo': 'LightLineGitInfo',
-		'searchinfo': 'LightLineSearchOrVM',
+		'searchinfo': 'LightLineVMInfo',
 		'filename': 'LightLineFilename',
 		'fileformat': 'LightLineFileformat',
 		'filetype': 'LightLineFiletype',
@@ -434,8 +434,6 @@ def g:LightLineGitInfo(): string
 		return ''
 	endif
 	var l_parts = []
-	var s_summary = g:GitGutterGetHunkSummary()
-	add(l_parts, printf('+%d ~%d -%d', s_summary[0], s_summary[1], s_summary[2]))
 	if getftype(expand('%')) ==# 'link'
 		g:FugitiveDetect(resolve(expand('%')))
 	endif
@@ -443,6 +441,12 @@ def g:LightLineGitInfo(): string
 	if branch != ''
 		add(l_parts, '⎇ ' .. branch)
 	endif
+	var s_summary = g:GitGutterGetHunkSummary()
+	for item in [['+%d', s_summary[0]], ['~%d', s_summary[1]], ['-%d', s_summary[2]]]
+		if item[1] != 0
+			add(l_parts, printf(item[0], item[1]))
+		endif
+	endfor
 	return join(l_parts, ' ')
 enddef
 
@@ -480,7 +484,7 @@ def g:LightLineLineInfo(): string
 	return winwidth(0) > 70 ? printf('%3d/%-d : %-2d', line('.'), line('$'), col('.')) : ''
 enddef
 
-def g:LightLineSearchOrVM(): string
+def g:LightLineVMInfo(): string
 	if GetWindowType() != 0
 		return ''
 	endif
@@ -495,17 +499,7 @@ def g:LightLineSearchOrVM(): string
 		endif
 		return ''
 	endif
-	if !v:hlsearch || @/ == ''
-		return ''
-	endif
-	var count = searchcount()
-	if count.total == 0
-		return ''
-	endif
-	if count.incomplete == 1
-		return printf('[?/??]')
-	endif
-	return printf('[%d/%d]', count.current, count.total)
+	return ''
 enddef
 
 def g:LightLineMode(): string
