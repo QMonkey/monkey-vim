@@ -1067,9 +1067,9 @@ If you use a standalone clipboard manager (optional):
 
 ### Build vim from source
 
-Build Vim from source for the latest version with full features: GTK3 GUI, Wayland/X11 support, and Lua/Python3/Perl/Ruby integration. Pick the display server you use: **Wayland** (listed first) or **X11**.
+Build Vim from source for the latest version with full features: GTK4 GUI, Wayland/X11 support, and Lua/Python3/Perl/Ruby integration. Pick the display server you use: **Wayland** (listed first) or **X11**.
 
-> Note: Vim's Linux GUI is GTK-based — there is no Qt version, so the GTK3 packages below are required even on KDE (or any other Qt-based desktop). GTK3 apps run fine on any desktop environment.
+> Note: Vim's Linux GUI is GTK-based — there is no Qt version, so the GTK4 packages below are required even on KDE (or any other Qt-based desktop). GTK4 apps run fine on any desktop environment.
 
 #### 1. Install dependencies
 
@@ -1080,15 +1080,14 @@ Build Vim from source for the latest version with full features: GTK3 GUI, Wayla
 Wayland:
 
 ```bash
-sudo apt-get install libgtk-3-dev \
+sudo apt-get install libgtk-4-dev \
 	libwayland-dev \
-	libatk1.0-dev \
 	libcairo2-dev \
 	libgpm-dev \
 	libncurses-dev \
 	python3-dev \
 	lua \
-	liblua-dev \
+	liblua5.4-dev \
 	perl \
 	libperl-dev \
 	ruby \
@@ -1098,17 +1097,16 @@ sudo apt-get install libgtk-3-dev \
 X11:
 
 ```bash
-sudo apt-get install libgtk-3-dev \
+sudo apt-get install libgtk-4-dev \
 	libx11-dev \
 	libxt-dev \
 	libxpm-dev \
-	libatk1.0-dev \
 	libcairo2-dev \
 	libgpm-dev \
 	libncurses-dev \
 	python3-dev \
 	lua \
-	liblua-dev \
+	liblua5.4-dev \
 	perl \
 	libperl-dev \
 	ruby \
@@ -1120,9 +1118,8 @@ sudo apt-get install libgtk-3-dev \
 Wayland:
 
 ```bash
-sudo zypper install gtk3-devel \
+sudo zypper install gtk4-devel \
 	wayland-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
@@ -1130,35 +1127,34 @@ sudo zypper install gtk3-devel \
 	python3-devel \
 	ruby-devel \
 	lua-devel \
-	clipboard
+	wl-clipboard
 ```
 
 X11:
 
 ```bash
-sudo zypper install gtk3-devel \
+sudo zypper install gtk4-devel \
 	xorg-x11-devel \
 	libXpm-devel \
 	libXt-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
 	python-devel \
 	python3-devel \
 	ruby-devel \
-	lua-devel \
-	clipboard
+	lua-devel
 ```
 
 **CentOS**
 
+> Enable EPEL first: `sudo yum install epel-release`. The `gtk4-devel` package requires CentOS 8+ / EPEL 8+; it is not available on CentOS 7.
+
 Wayland:
 
 ```bash
-sudo yum install gtk3-devel \
+sudo yum install gtk4-devel \
 	wayland-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
@@ -1169,7 +1165,6 @@ sudo yum install gtk3-devel \
 	perl \
 	perl-devel \
 	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-XSpp \
 	perl-ExtUtils-CBuilder \
 	perl-ExtUtils-Embed
 ```
@@ -1177,11 +1172,10 @@ sudo yum install gtk3-devel \
 X11:
 
 ```bash
-sudo yum install gtk3-devel \
+sudo yum install gtk4-devel \
 	libX11-devel \
 	libXpm-devel \
 	libXt-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
@@ -1192,7 +1186,6 @@ sudo yum install gtk3-devel \
 	perl \
 	perl-devel \
 	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-XSpp \
 	perl-ExtUtils-CBuilder \
 	perl-ExtUtils-Embed
 ```
@@ -1202,7 +1195,7 @@ sudo yum install gtk3-devel \
 Wayland:
 
 ```bash
-sudo pacman -S gtk3 \
+sudo pacman -S gtk4 \
 	wayland \
 	gpm \
 	ncurses \
@@ -1215,7 +1208,7 @@ sudo pacman -S gtk3 \
 X11:
 
 ```bash
-sudo pacman -S gtk3 \
+sudo pacman -S gtk4 \
 	libx11 \
 	libxt \
 	libxpm \
@@ -1234,7 +1227,6 @@ brew install python \
 	python3 \
 	ruby \
 	lua \
-	atk \
 	cairo
 ```
 
@@ -1244,7 +1236,7 @@ brew install python \
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
+	--enable-gui=gtk4 \
 	--enable-gpm \
 	--with-wayland \
 	--enable-python3interp \
@@ -1260,13 +1252,13 @@ make
 sudo make install
 ```
 
-> The GTK3 GUI auto-detects the Wayland backend at runtime; you can force it with `export GDK_BACKEND=wayland`. `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`) for terminal Vim, so clipboard access works even without the GUI.
+> The GTK4 GUI auto-detects the Wayland backend at runtime; you can force it with `export GDK_BACKEND=wayland`. `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`) for terminal Vim, so clipboard access works even without the GUI.
 
 **X11**
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
+	--enable-gui=gtk4 \
 	--enable-gpm \
 	--with-x \
 	--enable-python3interp \
@@ -1282,11 +1274,30 @@ make
 sudo make install
 ```
 
-> `--with-x` adds X11 support (clipboard, drag & drop). Note that `--with-wayland` is on by default with `--with-features=huge`, and a single GTK3 build runs on both Wayland and X11 by auto-detecting the display server.
+> `--with-x` adds X11 support (clipboard, drag & drop). Note that `--with-wayland` is on by default with `--with-features=huge`, and a single GTK4 build runs on both Wayland and X11 by auto-detecting the display server.
 
 **kmscon / text console** (no GUI)
 
-> The builds above also work in kmscon — the GUI is simply unused. On a console-only machine where you don't want the GUI libraries, build without a GUI instead: use `--enable-gui=no`, drop `--with-wayland` / `--with-x` and the `libgtk-3-dev` / Wayland / X11 packages. `--enable-gpm` keeps console mouse support, and `--enable-terminal` covers terminal mode.
+```bash
+./configure --with-features=huge \
+	--enable-gui=no \
+	--enable-gpm \
+	--enable-python3interp \
+	--enable-luainterp \
+	--enable-perlinterp \
+	--enable-rubyinterp \
+	--enable-multibyte \
+	--enable-terminal \
+	--enable-fontset \
+	--enable-cscope \
+	--enable-fail-if-missing
+make
+sudo make install
+```
+
+> On a console-only machine, build without GUI libraries — drop `--with-wayland` / `--with-x` and the `libgtk-4-dev` / Wayland / X11 packages. `--enable-gpm` keeps console mouse support, and `--enable-terminal` covers terminal mode.
+>
+> Without `--with-wayland` or `--with-x`, Vim has no system clipboard integration. The `"*` and `"+` registers are unavailable; copy/paste is limited to internal Vim registers (`""`, `"0`–`"9`, etc.).
 
 ### Use vim to view man doc in shell
 
