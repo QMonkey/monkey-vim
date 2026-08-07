@@ -1063,9 +1063,9 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 
 ### 源码构建 vim
 
-从源码构建最新版 Vim，以获得完整功能：GTK3 图形界面、Wayland/X11 支持，以及 Lua/Python3/Perl/Ruby 集成。根据你使用的显示服务器选择：**Wayland**（列在前面）或 **X11**。
+从源码构建最新版 Vim，以获得完整功能：GTK4 图形界面、Wayland/X11 支持，以及 Lua/Python3/Perl/Ruby 集成。根据你使用的显示服务器选择：**Wayland**（列在前面）或 **X11**。
 
-> 注意：Vim 在 Linux 上的图形界面基于 GTK，没有 Qt 版本，因此即使在 KDE（或其他基于 Qt 的桌面）上，也需要安装下面的 GTK3 包。GTK3 程序可以在任何桌面环境下正常运行。
+> 注意：Vim 在 Linux 上的图形界面基于 GTK，没有 Qt 版本，因此即使在 KDE（或其他基于 Qt 的桌面）上，也需要安装下面的 GTK4 包。GTK4 程序可以在任何桌面环境下正常运行。
 
 #### 1. 安装依赖
 
@@ -1076,15 +1076,14 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 Wayland：
 
 ```bash
-sudo apt-get install libgtk-3-dev \
+sudo apt-get install libgtk-4-dev \
 	libwayland-dev \
-	libatk1.0-dev \
 	libcairo2-dev \
 	libgpm-dev \
 	libncurses-dev \
 	python3-dev \
 	lua \
-	liblua-dev \
+	liblua5.4-dev \
 	perl \
 	libperl-dev \
 	ruby \
@@ -1094,17 +1093,16 @@ sudo apt-get install libgtk-3-dev \
 X11：
 
 ```bash
-sudo apt-get install libgtk-3-dev \
+sudo apt-get install libgtk-4-dev \
 	libx11-dev \
 	libxt-dev \
 	libxpm-dev \
-	libatk1.0-dev \
 	libcairo2-dev \
 	libgpm-dev \
 	libncurses-dev \
 	python3-dev \
 	lua \
-	liblua-dev \
+	liblua5.4-dev \
 	perl \
 	libperl-dev \
 	ruby \
@@ -1116,9 +1114,8 @@ sudo apt-get install libgtk-3-dev \
 Wayland：
 
 ```bash
-sudo zypper install gtk3-devel \
+sudo zypper install gtk4-devel \
 	wayland-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
@@ -1126,35 +1123,34 @@ sudo zypper install gtk3-devel \
 	python3-devel \
 	ruby-devel \
 	lua-devel \
-	clipboard
+	wl-clipboard
 ```
 
 X11：
 
 ```bash
-sudo zypper install gtk3-devel \
+sudo zypper install gtk4-devel \
 	xorg-x11-devel \
 	libXpm-devel \
 	libXt-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
 	python-devel \
 	python3-devel \
 	ruby-devel \
-	lua-devel \
-	clipboard
+	lua-devel
 ```
 
 **CentOS**
 
+> 需要先启用 EPEL：`sudo yum install epel-release`。`gtk4-devel` 需要 CentOS 8+ / EPEL 8+，CentOS 7 不可用。
+
 Wayland：
 
 ```bash
-sudo yum install gtk3-devel \
+sudo yum install gtk4-devel \
 	wayland-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
@@ -1165,7 +1161,6 @@ sudo yum install gtk3-devel \
 	perl \
 	perl-devel \
 	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-XSpp \
 	perl-ExtUtils-CBuilder \
 	perl-ExtUtils-Embed
 ```
@@ -1173,11 +1168,10 @@ sudo yum install gtk3-devel \
 X11：
 
 ```bash
-sudo yum install gtk3-devel \
+sudo yum install gtk4-devel \
 	libX11-devel \
 	libXpm-devel \
 	libXt-devel \
-	atk-devel \
 	cairo-devel \
 	gpm-devel \
 	ncurses-devel \
@@ -1188,7 +1182,6 @@ sudo yum install gtk3-devel \
 	perl \
 	perl-devel \
 	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-XSpp \
 	perl-ExtUtils-CBuilder \
 	perl-ExtUtils-Embed
 ```
@@ -1198,7 +1191,7 @@ sudo yum install gtk3-devel \
 Wayland：
 
 ```bash
-sudo pacman -S gtk3 \
+sudo pacman -S gtk4 \
 	wayland \
 	gpm \
 	ncurses \
@@ -1211,7 +1204,7 @@ sudo pacman -S gtk3 \
 X11：
 
 ```bash
-sudo pacman -S gtk3 \
+sudo pacman -S gtk4 \
 	libx11 \
 	libxt \
 	libxpm \
@@ -1230,7 +1223,6 @@ brew install python \
 	python3 \
 	ruby \
 	lua \
-	atk \
 	cairo
 ```
 
@@ -1240,7 +1232,7 @@ brew install python \
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
+	--enable-gui=gtk4 \
 	--enable-gpm \
 	--with-wayland \
 	--enable-python3interp \
@@ -1256,13 +1248,13 @@ make
 sudo make install
 ```
 
-> GTK3 图形界面在运行时自动检测 Wayland 后端；也可以强制指定：`export GDK_BACKEND=wayland`。`--with-wayland` 为终端版 Vim 启用原生 Wayland 支持（`+wayland`、`+wayland_clipboard`），即使不使用图形界面也能正常访问剪贴板。
+> GTK4 图形界面在运行时自动检测 Wayland 后端；也可以强制指定：`export GDK_BACKEND=wayland`。`--with-wayland` 为终端版 Vim 启用原生 Wayland 支持（`+wayland`、`+wayland_clipboard`），即使不使用图形界面也能正常访问剪贴板。
 
 **X11**
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
+	--enable-gui=gtk4 \
 	--enable-gpm \
 	--with-x \
 	--enable-python3interp \
@@ -1278,11 +1270,30 @@ make
 sudo make install
 ```
 
-> `--with-x` 添加 X11 支持（剪贴板、拖放）。注意：`--with-features=huge` 时 `--with-wayland` 默认开启，且同一个 GTK3 构建在 Wayland 和 X11 下都能运行（运行时自动检测显示服务器）。
+> `--with-x` 添加 X11 支持（剪贴板、拖放）。注意：`--with-features=huge` 时 `--with-wayland` 默认开启，且同一个 GTK4 构建在 Wayland 和 X11 下都能运行（运行时自动检测显示服务器）。
 
 **kmscon / 文本控制台**（无图形界面）
 
-> 上述构建同样适用于 kmscon——图形界面只是不会被使用。在纯控制台环境、不想安装 GUI 库时，可以改为无 GUI 构建：使用 `--enable-gui=no`，去掉 `--with-wayland`/`--with-x` 以及 `libgtk-3-dev`/Wayland/X11 相关包。`--enable-gpm` 保留控制台鼠标支持，`--enable-terminal` 覆盖终端模式。
+```bash
+./configure --with-features=huge \
+	--enable-gui=no \
+	--enable-gpm \
+	--enable-python3interp \
+	--enable-luainterp \
+	--enable-perlinterp \
+	--enable-rubyinterp \
+	--enable-multibyte \
+	--enable-terminal \
+	--enable-fontset \
+	--enable-cscope \
+	--enable-fail-if-missing
+make
+sudo make install
+```
+
+> 在纯控制台环境、不想安装 GUI 库时，使用无 GUI 构建：去掉 `--with-wayland`/`--with-x` 以及 `libgtk-4-dev`/Wayland/X11 相关包。`--enable-gpm` 保留控制台鼠标支持，`--enable-terminal` 覆盖终端模式。
+>
+> 没有 `--with-wayland` 或 `--with-x` 时，Vim 没有系统剪贴板集成，`"*` 和 `"+` 寄存器不可用，复制/粘贴仅限于 Vim 内部寄存器（`""`、`"0`–`"9` 等）。
 
 ### 在vim中查看man文档
 
