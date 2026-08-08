@@ -40,7 +40,7 @@ plug#begin(expand($HOME .. '/.vim/bundle'))
 Plug 'sainnhe/sonokai'
 Plug 'itchyny/lightline.vim'
 
-Plug 'junegunn/fzf', {'do': {-> fzf#install()}} | Plug 'junegunn/fzf.vim'
+Plug 'junegunn/fzf' | Plug 'junegunn/fzf.vim'
 Plug 'dyng/ctrlsf.vim'
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
@@ -935,6 +935,25 @@ augroup END
 # vim-gutentags {
 if executable('gtags') && has('cscope')
 	$GTAGSLABEL = 'native-pygments'
+	var gtags_conf_candidates = [
+		'/usr/local/etc/gtags.conf',
+		'/etc/gtags.conf',
+		'/usr/share/gtags/gtags.conf',
+		'/usr/local/share/gtags/gtags.conf',
+		'/usr/local/opt/global/share/gtags/gtags.conf',
+		'/opt/homebrew/etc/gtags.conf',
+		'/opt/homebrew/share/gtags/gtags.conf',
+		'/opt/homebrew/opt/global/share/gtags/gtags.conf',
+	]
+	if !empty($GTAGSCONF)
+		insert(gtags_conf_candidates, $GTAGSCONF)
+	endif
+	for gtags_conf in gtags_conf_candidates
+		if filereadable(gtags_conf) && stridx(join(readfile(gtags_conf), "\n"), 'native-pygments:') >= 0
+			$GTAGSCONF = gtags_conf
+			break
+		endif
+	endfor
 	g:gutentags_modules = ['ctags', 'gtags_cscope']
 else
 	g:gutentags_modules = ['ctags']
