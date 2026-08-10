@@ -49,28 +49,29 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | 模糊搜索器（fzf.vim 依赖） | 是 |
 | [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
 | [delta](https://github.com/dandavison/delta) | Git diff 增强预览（fugitive, fzf） | 推荐 |
+| [Homebrew](https://brew.sh/) | 系统仓库缺失时的后备包管理器（lua-language-server、marksman、fzf 等） | 必须 |
 
 ```bash
-# Ubuntu/Debian — apt 提供的 fzf/bat/delta 版本可能过旧，推荐使用 brew
-sudo apt-get install curl git ripgrep universal-ctags global python3-pygments
-
-# 在较旧的 Debian/Ubuntu 上安装 fzf, bat, delta，请使用 Homebrew：
+# 安装 Homebrew（所有 Linux 发行版 — 用于安装系统仓库中缺失的工具）
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# Ubuntu/Debian
+sudo apt-get install curl git ripgrep universal-ctags global python3-pygments nodejs npm gcc
 brew install fzf bat git-delta
 
 # OpenSUSE
-sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta
+sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta nodejs npm gcc
 
 # CentOS（部分软件包来自 EPEL）
-sudo yum install epel-release
-sudo yum install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta
+sudo dnf install epel-release
+sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta nodejs npm gcc
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta
+sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta nodejs npm gcc
 
 # macOS
-brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta
+brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta node
 ```
 
 #### 2.2 LSP 服务器
@@ -79,7 +80,7 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 
 | 语言 | LSP 服务器 | 安装方式 |
 |---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`、`sudo zypper install clang`、`sudo yum install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
+| C/C++ | clangd | `sudo apt-get install clangd`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
@@ -92,8 +93,6 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
 | Markdown | marksman | `brew install marksman` 或 `sudo pacman -S marksman` |
 
-> 所有 `npm install -g` 安装方式都需要 Node.js。通过系统包管理器（`sudo apt-get install nodejs`、`sudo zypper install nodejs`、`sudo yum install nodejs`、`sudo pacman -S nodejs`、`brew install node`）或 [nodejs.org](https://nodejs.org/) 安装。
-
 #### 2.3 C/C++
 
 ```bash
@@ -104,7 +103,7 @@ sudo apt-get install gcc g++ clangd
 sudo zypper install gcc gcc-c++ clang
 
 # CentOS
-sudo yum install gcc gcc-c++ clang clang-tools-extra
+sudo dnf install gcc gcc-c++ clang clang-tools-extra
 
 # Arch Linux
 sudo pacman -S gcc clang
@@ -177,7 +176,7 @@ Vim 使用的 Unicode 字符（⎇, │, 🔒, ▸, ·, ¬）无需额外字体�
 ./checkhealth.sh
 ```
 
-加 `--install` 可自动安装缺失的依赖（必需工具 + 可选 LSP 服务器）。支持 apt/zypper/yum/pacman/brew、npm、pip、go install 和 rustup：
+加 `--install` 可自动安装缺失的依赖（必需工具 + 可选 LSP 服务器）。支持 apt/zypper/dnf/pacman/brew、npm、pip、go install 和 rustup：
 
 ```bash
 ./checkhealth.sh --install
