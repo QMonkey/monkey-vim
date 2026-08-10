@@ -65,7 +65,7 @@ sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf
 
 # CentOS (enable EPEL for ripgrep/ctags/global/pygments/fzf/bat/delta)
 sudo yum install epel-release
-sudo yum install curl git ripgrep universal-ctags global python3-pygments fzf bat git-delta
+sudo yum install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta
 
 # Arch Linux
 sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta
@@ -1067,26 +1067,28 @@ If you use a standalone clipboard manager (optional):
 
 ### Build vim from source
 
-Build Vim from source for the latest version with full features: GTK4 GUI, Wayland/X11 support, and Lua/Python3/Perl/Ruby integration. Pick the display server you use: **Wayland** (listed first) or **X11**.
+Build Vim from source for the latest version with full features: GTK3 GUI, Wayland/X11 support, and Lua/Python3/Perl/Ruby integration. Pick the display server you use: **Wayland** (listed first), **X11 & Wayland**, or **kmscon / text console**.
 
-> Note: Vim's Linux GUI is GTK-based — there is no Qt version, so the GTK4 packages below are required even on KDE (or any other Qt-based desktop). GTK4 apps run fine on any desktop environment.
+> Note: Vim's Linux GUI is GTK-based — there is no Qt version, so the GTK3 packages below are required even on KDE (or any other Qt-based desktop). GTK3 apps run fine on any desktop environment.
 
 #### 1. Install dependencies
 
 > The `gpm` packages enable mouse support on the Linux text console (TTY), not on the desktop. Harmless to include.
+> 
+> Optional CLI tools: `wl-clipboard` (Wayland, provides `wl-copy`/`wl-paste`), `xclip` or `xsel` (X11). Vim has built-in clipboard support via `--with-wayland` / `--with-x`, so these are only needed for command-line clipboard access outside Vim.
 
 **Ubuntu/Debian**
 
 Wayland:
 
 ```bash
-sudo apt-get install libgtk-4-dev \
+sudo apt-get install libgtk-3-dev \
 	libwayland-dev \
 	libcairo2-dev \
 	libgpm-dev \
 	libncurses-dev \
 	python3-dev \
-	lua \
+	lua5.4 \
 	liblua5.4-dev \
 	perl \
 	libperl-dev \
@@ -1094,18 +1096,19 @@ sudo apt-get install libgtk-4-dev \
 	ruby-dev
 ```
 
-X11:
+X11 & Wayland:
 
 ```bash
-sudo apt-get install libgtk-4-dev \
+sudo apt-get install libgtk-3-dev \
 	libx11-dev \
 	libxt-dev \
 	libxpm-dev \
+	libwayland-dev \
 	libcairo2-dev \
 	libgpm-dev \
 	libncurses-dev \
 	python3-dev \
-	lua \
+	lua5.4 \
 	liblua5.4-dev \
 	perl \
 	libperl-dev \
@@ -1118,7 +1121,7 @@ sudo apt-get install libgtk-4-dev \
 Wayland:
 
 ```bash
-sudo zypper install gtk4-devel \
+sudo zypper install gtk3-devel \
 	wayland-devel \
 	cairo-devel \
 	gpm-devel \
@@ -1126,14 +1129,14 @@ sudo zypper install gtk4-devel \
 	python-devel \
 	python3-devel \
 	ruby-devel \
-	lua-devel \
-	wl-clipboard
+	lua-devel
 ```
 
-X11:
+X11 & Wayland:
 
 ```bash
-sudo zypper install gtk4-devel \
+sudo zypper install gtk3-devel \
+	wayland-devel \
 	xorg-x11-devel \
 	libXpm-devel \
 	libXt-devel \
@@ -1148,12 +1151,12 @@ sudo zypper install gtk4-devel \
 
 **CentOS**
 
-> Enable EPEL first: `sudo yum install epel-release`. The `gtk4-devel` package requires CentOS 8+ / EPEL 8+; it is not available on CentOS 7.
+> Enable EPEL first: `sudo dnf install epel-release`. The `gtk3-devel` package requires CentOS 8+ / EPEL 8+; it is not available on CentOS 7. `lua-devel` requires CRB (CodeReady Builder) repository: `sudo dnf config-manager --set-enabled crb` (CentOS 9) or `sudo dnf config-manager --set-enabled powertools` (CentOS 8).
 
 Wayland:
 
 ```bash
-sudo yum install gtk4-devel \
+sudo dnf install gtk3-devel \
 	wayland-devel \
 	cairo-devel \
 	gpm-devel \
@@ -1169,10 +1172,11 @@ sudo yum install gtk4-devel \
 	perl-ExtUtils-Embed
 ```
 
-X11:
+X11 & Wayland:
 
 ```bash
-sudo yum install gtk4-devel \
+sudo dnf install gtk3-devel \
+	wayland-devel \
 	libX11-devel \
 	libXpm-devel \
 	libXt-devel \
@@ -1195,7 +1199,7 @@ sudo yum install gtk4-devel \
 Wayland:
 
 ```bash
-sudo pacman -S gtk4 \
+sudo pacman -S gtk3 \
 	wayland \
 	gpm \
 	ncurses \
@@ -1205,10 +1209,11 @@ sudo pacman -S gtk4 \
 	ruby
 ```
 
-X11:
+X11 & Wayland:
 
 ```bash
-sudo pacman -S gtk4 \
+sudo pacman -S gtk3 \
+	wayland \
 	libx11 \
 	libxt \
 	libxpm \
@@ -1236,7 +1241,7 @@ brew install python \
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk4 \
+	--enable-gui=gtk3 \
 	--enable-gpm \
 	--with-wayland \
 	--enable-python3interp \
@@ -1252,15 +1257,16 @@ make
 sudo make install
 ```
 
-> The GTK4 GUI auto-detects the Wayland backend at runtime; you can force it with `export GDK_BACKEND=wayland`. `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`) for terminal Vim, so clipboard access works even without the GUI.
+> The GTK3 GUI auto-detects the Wayland backend at runtime; you can force it with `export GDK_BACKEND=wayland`. `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`) for terminal Vim, so clipboard access works even without the GUI.
 
-**X11**
+**X11 & Wayland**
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk4 \
+	--enable-gui=gtk3 \
 	--enable-gpm \
 	--with-x \
+	--with-wayland \
 	--enable-python3interp \
 	--enable-luainterp \
 	--enable-perlinterp \
@@ -1274,7 +1280,7 @@ make
 sudo make install
 ```
 
-> `--with-x` adds X11 support (clipboard, drag & drop). Note that `--with-wayland` is on by default with `--with-features=huge`, and a single GTK4 build runs on both Wayland and X11 by auto-detecting the display server.
+> `--with-x` adds X11 support (clipboard, drag & drop); `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`). A single GTK3 build runs on both Wayland and X11 by auto-detecting the display server at runtime. Use this if you need both — e.g., WSLg (no Wayland clipboard), where clipboard goes through XWayland but display is Wayland.
 
 **kmscon / text console** (no GUI)
 
@@ -1295,7 +1301,7 @@ make
 sudo make install
 ```
 
-> On a console-only machine, build without GUI libraries — drop `--with-wayland` / `--with-x` and the `libgtk-4-dev` / Wayland / X11 packages. `--enable-gpm` keeps console mouse support, and `--enable-terminal` covers terminal mode.
+> On a console-only machine, build without GUI libraries — drop `--with-wayland` / `--with-x` and the `libgtk-3-dev` / Wayland / X11 packages. `--enable-gpm` keeps console mouse support, and `--enable-terminal` covers terminal mode.
 >
 > Without `--with-wayland` or `--with-x`, Vim has no system clipboard integration. The `"*` and `"+` registers are unavailable; copy/paste is limited to internal Vim registers (`""`, `"0`–`"9`, etc.).
 
