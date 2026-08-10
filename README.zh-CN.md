@@ -434,7 +434,7 @@ S           用剪贴板内容替换从光标到行尾
 K                   查看光标所在符号的文档说明
 gh                  在弹出窗口中显示文档
 
-gd                  跳转到定义
+gd                  跳转到定义（LSP 失败时 fallback 到 ctags）
 gc                  跳转到声明
 gt                  跳转到类型定义
 gi                  跳转到实现
@@ -451,14 +451,25 @@ Leader+rn           重命名符号
 ]d                  下一个诊断
 [D                  第一个诊断
 ]D                  最后一个诊断
-Leader+gh           显示当前行诊断
-Leader+d            显示当前缓冲区所有诊断
+Leader+gh           显示当前行诊断（弹窗）
+Leader+d            显示/隐藏当前缓冲区所有诊断（位置列表）
 ```
 
 文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。  
 `K` 使用 `:LspHover` 作为大多数文件类型的关键字程序。
 
-#### 1.9 文件/缓冲/Tag 导航（fzf.vim）
+#### 1.9 Cscope
+
+```
+gs                  查找光标所在符号（cscope）
+gD                  查找全局定义（cscope，失败时 fallback 到 ctags）
+gR                  查找调用者（cscope）
+```
+
+Cscope 支持 `c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型，结果放入 quickfix。  
+需要安装 `cscope` 并配合 `gtags-cscope` 生成数据库（gutentags 会自动生成）。
+
+#### 1.10 文件/缓冲/Tag 导航（fzf.vim）
 
 ```
 Ctrl+p      搜索文件
@@ -470,7 +481,7 @@ Leader+f    搜索当前文件函数
 Leader+e    搜索当前文件行
 ```
 
-#### 1.10 Fold
+#### 1.11 Fold
 
 以下是 Vim 内建折叠按键，由 FastFold 插件优化大文件性能：
 
@@ -483,7 +494,7 @@ zM      关闭所有折叠
 zuz     手动更新所有折叠（FastFold）
 ```
 
-#### 1.11 Marks（vim-signature）
+#### 1.12 Marks（vim-signature）
 
 ```
 m[a-zA-Z]   添加/删除标记
@@ -516,7 +527,7 @@ m?          在Location List里，查看当前buffer的所有自定义标记
 `:SignatureToggle`   显示/隐藏标记（不删除）  
 `:SignatureRefresh`  标记与 sign 不同步时重新同步
 
-#### 1.12 Dirvish（目录浏览器，替代netrw）
+#### 1.13 Dirvish（目录浏览器，替代netrw）
 
 ```
 -           在当前窗口打开文件所在的文件夹
@@ -534,13 +545,13 @@ R           刷新目录视图
 :Shdo       根据行内容生成 shell 脚本（如 :%Shdo）
 ```
 
-#### 1.13 代码搜索（ctrlsf）
+#### 1.14 代码搜索（ctrlsf）
 
 ```
 Leader+a        当前目录搜索光标所在的词
 ```
 
-#### 1.14 围绕字符编辑（vim-surround）
+#### 1.15 围绕字符编辑（vim-surround）
 
 ```
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
@@ -549,7 +560,7 @@ ds+surroundA                删除A围绕字符
 cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 ```
 
-#### 1.15 终端
+#### 1.16 终端
 
 ```
 F3      打开终端窗口
@@ -560,7 +571,7 @@ F3 在底部新建一个终端。F4 切换终端 — 隐藏时不终止进程，
 
 使用 `<Ctrl-\><Ctrl-n>` 从终端模式切换到普通模式。普通模式下 `<ScrollWheelUp>` 和 `<ScrollWheelDown>` 可滚动终端缓冲区。
 
-#### 1.16 其他
+#### 1.17 其他
 
 ```
 Leader+ws       保存session
@@ -600,13 +611,13 @@ Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，�
 注意：`gdefault` 已设置，`:s` 默认执行全局替换（每行所有匹配）。  
 每次启动 Vim 时会清除跳转列表（`clearjumps`），避免跨项目污染。`jumpoptions+=stack` 使跳转列表行为类似标签栈。
 
-#### 1.17 自动插入文件头
+#### 1.18 自动插入文件头
 
 新建 `.sh` 和 `.py` 文件会自动插入 shebang 行：
 - `.sh` → `#!/usr/bin/env bash`
 - `.py` → `#!/usr/bin/env python3`
 
-#### 1.18 Match-up（增强 % 匹配跳转）
+#### 1.19 Match-up（增强 % 匹配跳转）
 
 ```
 %       正向跳转到下一个匹配词（闭合处循环回到开头）
@@ -618,7 +629,7 @@ i%      任意块的内部（文本对象）
 a%      任意块的范围（文本对象）
 ```
 
-#### 1.19 Lexima（自动配对括号）
+#### 1.20 Lexima（自动配对括号）
 
 Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''`、` `` `` `。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
 
