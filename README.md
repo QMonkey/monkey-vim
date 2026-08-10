@@ -50,28 +50,29 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | Fuzzy finder (fzf.vim) | Yes |
 | [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
 | [delta](https://github.com/dandavison/delta) | Enhanced git diff preview (fugitive, fzf) | Recommended |
+| [Homebrew](https://brew.sh/) | Fallback package manager for tools not in system repos (lua-language-server, marksman, fzf) | Required |
 
 ```bash
-# Ubuntu/Debian — apt packages may be outdated for fzf/bat/delta, use brew
-sudo apt-get install curl git ripgrep universal-ctags global python3-pygments
-
-# For fzf, bat, delta on older Debian/Ubuntu, use Homebrew:
+# Install Homebrew (all Linux distros — required for tools not in system repos)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# Ubuntu/Debian
+sudo apt-get install curl git ripgrep universal-ctags global python3-pygments nodejs npm gcc
 brew install fzf bat git-delta
 
 # OpenSUSE
-sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta
+sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta nodejs npm gcc
 
 # CentOS (enable EPEL for ripgrep/ctags/global/pygments/fzf/bat/delta)
-sudo yum install epel-release
-sudo yum install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta
+sudo dnf install epel-release
+sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta nodejs npm gcc
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta
+sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta nodejs npm gcc
 
 # macOS
-brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta
+brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta node
 ```
 
 #### 2.2 LSP servers
@@ -80,7 +81,7 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 
 | Language | LSP Server | Install |
 |---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`, `sudo zypper install clang`, `sudo yum install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
+| C/C++ | clangd | `sudo apt-get install clangd`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
@@ -93,8 +94,6 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
 | Markdown | marksman | `brew install marksman` or `sudo pacman -S marksman` |
 
-> Node.js is required for all `npm install -g` entries above. Install it via your system package manager (`sudo apt-get install nodejs`, `sudo zypper install nodejs`, `sudo yum install nodejs`, `sudo pacman -S nodejs`, `brew install node`) or from [nodejs.org](https://nodejs.org/).
-
 #### 2.3 C/C++
 
 ```bash
@@ -105,7 +104,7 @@ sudo apt-get install gcc g++ clangd
 sudo zypper install gcc gcc-c++ clang
 
 # CentOS
-sudo yum install gcc gcc-c++ clang clang-tools-extra
+sudo dnf install gcc gcc-c++ clang clang-tools-extra
 
 # Arch Linux
 sudo pacman -S gcc clang
@@ -178,7 +177,7 @@ Verify that all required dependencies and optional LSP servers are available:
 ./checkhealth.sh
 ```
 
-Pass `--install` to automatically install missing dependencies (required tools + optional LSP servers). Supports apt/zypper/yum/pacman/brew, npm, pip, go install, and rustup:
+Pass `--install` to automatically install missing dependencies (required tools + optional LSP servers). Supports apt/zypper/dnf/pacman/brew, npm, pip, go install, and rustup:
 
 ```bash
 ./checkhealth.sh --install
