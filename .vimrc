@@ -22,8 +22,7 @@ if empty(glob($HOME .. '/.vim/autoload/plug.vim'))
 
 	augroup Init
 		autocmd!
-		autocmd VimEnter * PlugInstall | source $MYVIMRC
-		autocmd VimEnter * mkdir($HOME . '/.vim/swap/', 'p')
+		autocmd VimEnter * PlugInstall | source $MYVIMRC | mkdir($HOME . '/.vim/swap/', 'p')
 		autocmd VimEnter * echohl Title | echo 'monkey-vim is ready! Run :PlugStatus to verify plugins.' | echohl None
 	augroup END
 endif
@@ -1065,7 +1064,33 @@ def RestoreSession()
 	var session_info = GetSessionFileInfo()
 	var session_filename = session_info[1]
 	if argc() == 0 && filereadable(session_filename)
+		FixVim9SessionFile(session_filename)
 		execute 'source' session_filename
+	endif
+enddef
+
+def FixVim9SessionFile(file: string)
+	# Since Vim 9.2 (patch 9.2.0579) :mksession writes Vim9 script, but the
+	# Obsession plugin inserts legacy "let g:this_session = ..." lines which are
+	# not allowed in a Vim9 script (E1126).  Rewrite them without ":let".
+	if !filereadable(file)
+		return
+	endif
+	var lines = readfile(file)
+	if empty(lines) || lines[0] !=# 'vim9script'
+		return
+	endif
+	var changed = false
+	var i = 0
+	while i < len(lines)
+		if lines[i] =~# '^let g:this_'
+			lines[i] = substitute(lines[i], '^let ', '', '')
+			changed = true
+		endif
+		i += 1
+	endwhile
+	if changed
+		writefile(lines, file)
 	endif
 enddef
 
@@ -1076,6 +1101,8 @@ nnoremap <Leader>rs <Cmd>Obsession!<CR>
 
 augroup Session
 	autocmd!
+	# Obsession fires User Obsession after every persist; keep the saved file usable.
+	autocmd User Obsession FixVim9SessionFile(g:this_session)
 	autocmd VimEnter * ++nested RestoreSession()
 augroup END
 # }
