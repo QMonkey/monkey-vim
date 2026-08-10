@@ -123,33 +123,18 @@ sudo_cmd() {
 install_pkg() {
 	if ! $INSTALL_MODE; then return 1; fi
 	case "$OS" in
-	debian)
-		case "$*" in
-		*fzf*|*bat*|*delta*)
-			if command -v brew &>/dev/null; then
-				brew install "$@"
-			else
-				if ! command -v brew &>/dev/null; then
-					/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-					eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-					brew install "$@" || sudo_cmd apt-get install -y "$@"
-				fi
-			fi
-			;;
-		*)
-			sudo_cmd apt-get install -y "$@"
-			;;
-		esac
-		;;
-	arch) sudo_cmd pacman -S --noconfirm "$@" ;;
-	opensuse) sudo_cmd zypper --non-interactive install -y "$@" ;;
+	debian) sudo_cmd apt-get install -y "$@" || brew install "$@" ;;
+	arch) sudo_cmd pacman -S --noconfirm "$@" || brew install "$@" ;;
+	opensuse) sudo_cmd zypper --non-interactive install -y "$@" || brew install "$@" ;;
 	centos)
-		# Some tools (universal-ctags, global, fzf, bat, git-delta, pygments) come from EPEL
-		sudo_cmd yum install -y epel-release || true
-		sudo_cmd yum install -y "$@"
+		# Some tools (universal-ctags, global, global-ctags, fzf, bat, git-delta, pygments) come from EPEL
+		sudo_cmd dnf install -y epel-release || true
+		_args=("$@")
+		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
+		sudo_cmd dnf install -y "${_args[@]}" || brew install "$@"
 		;;
 	macos) brew install "$@" ;;
-	*) return 1 ;;
+	*) brew install "$@" 2>/dev/null || return 1 ;;
 	esac
 }
 
@@ -157,69 +142,60 @@ install_optional_bin() {
 	local bin="$1"
 	local ok=true
 	case "$bin" in
-		rg)
-			install_pkg "$(pkg_name "$bin")" || cargo install ripgrep 2>/dev/null || ok=false
-			;;
-		gopls)
-			go install golang.org/x/tools/gopls@latest
-			;;
-		pylsp)
-			sudo pip3 install python-lsp-server
-			;;
-		rust-analyzer)
-			rustup component add rust-analyzer
-			;;
-		bash-language-server)
-			sudo npm install -g bash-language-server
-			;;
-		vim-language-server)
-			sudo npm install -g vim-language-server
-			;;
-		typescript-language-server)
-			sudo npm install -g typescript-language-server typescript
-			;;
-		tsc)
-			sudo npm install -g typescript
-			;;
-		vscode-json-language-server)
-			sudo npm install -g vscode-langservers-extracted
-			;;
-		yaml-language-server)
-			sudo npm install -g yaml-language-server
-			;;
-		lua-language-server)
-			install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
-			;;
-		glow)
-			install_pkg "$(pkg_name "$bin")" || brew install glow 2>/dev/null || go install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
-			;;
-		marksman)
-			install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
-			;;
-		*)
-			install_pkg "$(pkg_name "$bin")" || ok=false
-			;;
+	rg)
+		install_pkg "$(pkg_name "$bin")" || cargo install ripgrep 2>/dev/null || ok=false
+		;;
+	gopls)
+		go install golang.org/x/tools/gopls@latest
+		;;
+	pylsp)
+		sudo pip3 install python-lsp-server
+		;;
+	rust-analyzer)
+		rustup component add rust-analyzer
+		;;
+	bash-language-server)
+		sudo npm install -g bash-language-server
+		;;
+	vim-language-server)
+		sudo npm install -g vim-language-server
+		;;
+	typescript-language-server)
+		sudo npm install -g typescript-language-server typescript
+		;;
+	tsc)
+		sudo npm install -g typescript
+		;;
+	vscode-json-language-server)
+		sudo npm install -g vscode-langservers-extracted
+		;;
+	yaml-language-server)
+		sudo npm install -g yaml-language-server
+		;;
+	lua-language-server)
+		install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
+		;;
+	glow)
+		install_pkg "$(pkg_name "$bin")" || brew install glow 2>/dev/null || go install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
+		;;
+	marksman)
+		install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
+		;;
+	*)
+		install_pkg "$(pkg_name "$bin")" || ok=false
+		;;
 	esac
 	$ok
 }
 
 get_install_hint() {
 	case "$OS" in
-	debian)
-		for p in "$@"; do
-			case "$p" in
-			fzf|bat|git-delta|bat-musl|delta)
-				echo "brew install ${*}"
-				return
-				;;
-			esac
-		done
-		echo "sudo apt-get install ${*}"
-		;;
-	arch) echo "sudo pacman -S ${*}" ;;
+	debian) echo "sudo apt-get install ${*}" ;;
 	opensuse) echo "sudo zypper install ${*}" ;;
-	centos) echo "sudo yum install ${*}" ;;
+	centos) echo "sudo dnf install ${*}" ;;
+	arch) echo "sudo pacman -S ${*}" ;;
 	macos) echo "brew install ${*}" ;;
+	linux-unknown) echo "install ${*} manually or 'brew install ${*}'" ;;
 	*) echo "install ${*} manually" ;;
 	esac
 }
@@ -288,6 +264,7 @@ declare -A BREW_NAMES=(
 	["lua-language-server"]="lua-language-server"
 	["marksman"]="marksman"
 	["glow"]="glow"
+	["pygmentize"]="pygments"
 )
 declare -A ZYPPER_NAMES=(
 	["rg"]="ripgrep"
@@ -369,7 +346,7 @@ echo -e "  OS: ${CYAN}$(uname -s)${NC}"
 case "$OS" in
 debian) echo -e "  Package manager: ${CYAN}apt${NC}" ;;
 opensuse) echo -e "  Package manager: ${CYAN}zypper${NC}" ;;
-centos) echo -e "  Package manager: ${CYAN}yum${NC}" ;;
+centos) echo -e "  Package manager: ${CYAN}dnf${NC}" ;;
 arch) echo -e "  Package manager: ${CYAN}pacman${NC}" ;;
 macos) echo -e "  Package manager: ${CYAN}homebrew${NC}" ;;
 *) echo -e "  ${WARN} Unsupported OS — install dependencies manually" ;;
@@ -384,7 +361,6 @@ for bin in curl git rg ctags fzf; do
 		:
 	else
 		MISSING_REQUIRED+=("$bin")
-		ALL_PASSED=false
 	fi
 done
 echo ""
@@ -394,11 +370,28 @@ if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 	pkgs=()
 	for b in "${MISSING_REQUIRED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
 	if install_pkg "${pkgs[@]}"; then
-		echo -e "${GREEN}Done.${NC}"
+		MISSING_REQUIRED=()
+		for bin in curl git rg ctags fzf; do
+			if command -v "$bin" &>/dev/null; then
+				echo -e "  ${PASS} ${REQUIRED[$bin]} installed"
+			else
+				MISSING_REQUIRED+=("$bin")
+				echo -e "  ${FAIL} ${REQUIRED[$bin]} still missing"
+			fi
+		done
+		if [[ ${#MISSING_REQUIRED[@]} -eq 0 ]]; then
+			echo -e "${GREEN}All required tools now available.${NC}"
+		else
+			echo -e "${RED}Run: $(get_install_hint "$(for b in "${MISSING_REQUIRED[@]}"; do pkg_name "$b"; done | tr '\n' ' ')")${NC}"
+		fi
 	else
-		echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
+		echo -e "${RED}Install command failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
 	fi
 	echo ""
+fi
+
+if [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
+	ALL_PASSED=false
 fi
 
 # ──── recommended tools ────
