@@ -920,7 +920,7 @@ augroup END
 set cscopequickfix=s-,c-,d-,i-,t-,e-,f-,g-,a-
 
 nnoremap <silent>gs <Cmd>cscope find s <cword><CR>
-nnoremap <silent>gD <Cmd>cscope find g <cword><CR>
+nnoremap <silent>gD <ScriptCmd>call GotoDefinition('cscope find g ' .. expand('<cword>'))<CR>
 nnoremap <silent>gR <Cmd>cscope find c <cword><CR>
 
 augroup CscopeQuickfix
@@ -1011,6 +1011,7 @@ def BufferCount(): number
 	return len(tabpagebuflist())
 enddef
 
+nnoremap <silent><Leader>d <ScriptCmd>call QuickFixToggle('l', 'LspDiag show')<CR>
 nnoremap <silent><Leader>q <ScriptCmd>call QuickFixToggle('q', 'silent! botright copen 10')<CR>
 nnoremap <silent><Leader>l <ScriptCmd>call QuickFixToggle('l', 'silent! lopen 10')<CR>
 # }
@@ -1322,7 +1323,7 @@ def OnLspSetup()
 		ultisnipsSupport: false,
 		useBufferCompletion: false,
 		usePopupInCodeAction: false,
-		useQuickfixForLocations: false,
+		useQuickfixForLocations: true,
 		vsnipSupport: true,
 		bufferCompletionTimeout: 100,
 		customCompletionKinds: false,
@@ -1503,17 +1504,27 @@ def OnLspSetup()
 	g:LspAddServer(lspServers)
 enddef
 
+# Fallback: use <C-]> (tag jump) when no LSP is attached
+nnoremap gd <C-]>
+
+def GotoDefinition(cmd: string)
+	var pos = getcurpos()
+	silent! execute cmd
+	if getcurpos()[: 1] == pos[: 1]
+		silent! execute 'tag ' .. expand('<cword>')
+	endif
+enddef
+
 def OnLspAttached()
 	setlocal formatexpr=lsp#lsp#FormatExpr()
 
 	nnoremap <silent><buffer>gh <Cmd>LspHover<CR>
-	nnoremap <silent><buffer>gd <Cmd>LspGotoDefinition<CR>
+	nnoremap <silent><buffer>gd <ScriptCmd>call GotoDefinition('LspGotoDefinition')<CR>
 	nnoremap <silent><buffer>gc <Cmd>LspGotoDeclaration<CR>
 	nnoremap <silent><buffer>gt <Cmd>LspGotoTypeDef<CR>
 	nnoremap <silent><buffer>gi <Cmd>LspGotoImpl<CR>
 	nnoremap <silent><buffer>gr <Cmd>LspShowReferences<CR>
 
-	nnoremap <silent><buffer><Leader>d <Cmd>LspDiag show<CR>
 	nnoremap <silent><buffer>[d <Cmd>LspDiag prevWrap<CR>
 	nnoremap <silent><buffer>]d <Cmd>LspDiag nextWrap<CR>
 	nnoremap <silent><buffer>[D <Cmd>LspDiag first<CR>
