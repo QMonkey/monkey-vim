@@ -168,6 +168,29 @@ if has('unnamedplus') && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('m
 elseif !empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac')
 	# Use * register for copy-paste (X11 without +clipboard, or Mac)
 	set clipboard=unnamed
+elseif !empty($TMUX)
+	# Fallback: KMScon/TTY fallback +/* registers to tmux buffers via clipboard provider
+	set clipboard=unnamed,unnamedplus
+
+	def TmuxAvailable(): bool
+		return !empty($TMUX)
+	enddef
+
+	def TmuxCopy(reg: string, type: string, lines: list<string>)
+		system('tmux load-buffer -w -', join(lines, "\n"))
+	enddef
+
+	def TmuxPaste(reg: string): list<any>
+		var content = system('tmux save-buffer -')
+		return ['v', split(content, "\n", true)]
+	enddef
+
+	v:clipproviders["tmux"] = {
+		available: TmuxAvailable,
+		copy: { '+': TmuxCopy, '*': TmuxCopy },
+		paste: { '+': TmuxPaste, '*': TmuxPaste },
+	}
+	set clipmethod=tmux
 endif
 
 set smartindent
