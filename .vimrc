@@ -937,6 +937,7 @@ if executable('gtags') && has('cscope')
 	var gtags_conf_candidates = [
 		'/usr/local/etc/gtags.conf',
 		'/etc/gtags.conf',
+		'/etc/gtags/gtags.conf',
 		'/usr/share/gtags/gtags.conf',
 		'/usr/local/share/gtags/gtags.conf',
 		'/usr/local/opt/global/share/gtags/gtags.conf',
