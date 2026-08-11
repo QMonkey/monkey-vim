@@ -128,6 +128,9 @@ scriptencoding utf-8
 set termencoding=utf-8
 set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
 set fileformats=unix,dos,mac
+
+# Character width. Should never be enable!
+#set ambiwidth=double
 # }
 
 # Number {
@@ -187,6 +190,7 @@ set directory=$HOME/.vim/swap//
 set jumpoptions+=stack
 # }
 
+# Clipboard {
 # Detect if running on a real console (kmscon/TTY/console) where the
 # GUI clipboard is unusable even if $DISPLAY/$WAYLAND_DISPLAY is set.
 # Return value: 0 = unknown (ignore this check), 1 = GUI terminal,
@@ -245,6 +249,7 @@ elseif !empty($TMUX)
 	set clipboard=unnamed,unnamedplus
 	set clipmethod=tmux
 endif
+# }
 
 # Indent {
 set smartindent
@@ -363,9 +368,6 @@ augroup LanguageFold
 	autocmd FileType python,yaml setlocal foldmethod=indent
 augroup END
 # }
-
-# Character width. Should never be enable!
-#set ambiwidth=double
 
 # Misc {
 set backspace=indent,eol,start
