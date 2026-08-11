@@ -36,37 +36,37 @@ g:plug_timeout = 300
 plug#begin(expand($HOME .. '/.vim/bundle'))
 
 # Plugins {
+# -- Theme / UI
 Plug 'sainnhe/sonokai'
 Plug 'itchyny/lightline.vim'
-
-Plug 'junegunn/fzf' | Plug 'junegunn/fzf.vim'
-Plug 'dyng/ctrlsf.vim'
-Plug 'airblade/vim-rooter'
-Plug 'ludovicchabant/vim-gutentags'
-Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
-Plug 'airblade/vim-gitgutter'
-
-Plug 'monkoose/vim9-stargate'
+# -- Editor
 Plug 'svermeulen/vim-subversive'
-Plug 'haya14busa/vim-asterisk'
-Plug 'mg979/vim-visual-multi'
-Plug 'Konfekt/FastFold'
-
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
-Plug 'tpope/vim-surround'
-Plug 'tpope/vim-repeat'
-
+Plug 'tpope/vim-surround' | Plug 'tpope/vim-repeat'
 Plug 'cohama/lexima.vim'
 Plug 'andymass/vim-matchup'
-Plug 'tpope/vim-eunuch'
-
+Plug 'Konfekt/FastFold'
+Plug 'kshenoy/vim-signature'
+# -- Navigation / Search
+Plug 'junegunn/fzf' | Plug 'junegunn/fzf.vim'
+Plug 'dyng/ctrlsf.vim'
+Plug 'monkoose/vim9-stargate'
+Plug 'haya14busa/vim-asterisk'
+# -- Git
+Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
+Plug 'airblade/vim-gitgutter'
+# -- Project
+Plug 'airblade/vim-rooter'
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'justinmk/vim-dirvish'
+Plug 'tpope/vim-obsession'
+# -- Code Intelligence
 Plug 'yegappan/lsp'
 Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
-
-Plug 'justinmk/vim-dirvish'
-Plug 'kshenoy/vim-signature'
-Plug 'tpope/vim-obsession'
+# -- Tools
+Plug 'mg979/vim-visual-multi'
+Plug 'tpope/vim-eunuch'
 Plug 'romainl/vim-qf'
 # }
 
@@ -84,6 +84,36 @@ g:loaded_netrw = 1
 g:loaded_netrwPlugin = 1
 # }
 
+# Color support {
+# Use true color when the terminal supports it
+if has('termguicolors')
+	# True color: Vim renders GUI colors (guifg/guibg) directly
+	set termguicolors
+else
+	# Fallback: 256-color mode for terminals without true color support
+	set t_Co=256
+
+	# Disable Background Color Erase (BCE) so that color schemes
+	# render properly when inside 256-color tmux and GNU screen.
+	# See http://snk.tuxfamily.org/log/vim-256color-bce.html
+	if &term =~# '256color'
+		set t_ut=
+	endif
+endif
+# }
+
+# sonokai {
+# Should be set before :colorscheme
+g:sonokai_style = 'andromeda'
+g:sonokai_better_performance = 1
+g:sonokai_diagnostic_text_highlight = 1
+g:sonokai_diagnostic_virtual_text = 'colored'
+g:sonokai_dim_inactive_windows = 1
+
+set background=dark
+colorscheme sonokai
+# }
+
 # Leader {
 g:mapleader = ','
 # }
@@ -91,18 +121,18 @@ g:mapleader = ','
 # Encoding {
 language message en_US.UTF-8
 set langmenu=en_US.UTF-8
-
 set encoding=utf-8
 scriptencoding utf-8
 
 # Only work in terminal vim
 set termencoding=utf-8
-
 set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
+set fileformats=unix,dos,mac
 # }
 
 # Number {
 set relativenumber number
+set ruler
 
 augroup RelativeNumber
 	autocmd!
@@ -111,8 +141,6 @@ augroup RelativeNumber
 	autocmd WinLeave,InsertEnter * set norelativenumber number
 augroup END
 # }
-
-set ruler
 
 # Cursorline {
 set cursorline
@@ -130,16 +158,6 @@ set incsearch
 set hlsearch
 set ignorecase
 set smartcase
-
-augroup Hlsearch
-	autocmd!
-	autocmd InsertEnter * if v:hlsearch | feedkeys("\<Cmd>nohlsearch\<CR>", 'm') | endif
-augroup END
-# }
-
-# Show search count message when searching
-set shortmess-=S shortmess+=s
-
 set showmatch
 
 # The ":substitute" flag 'g' is default on. This means that
@@ -148,71 +166,104 @@ set showmatch
 # of all or one match
 set gdefault
 
+# Show search count message when searching
+set shortmess-=S shortmess+=s
+
+augroup Hlsearch
+	autocmd!
+	autocmd InsertEnter * if v:hlsearch | feedkeys("\<Cmd>nohlsearch\<CR>", 'm') | endif
+augroup END
+# }
+
+# Completion {
 set wildmenu
 set wildmode=list:longest,full
-
-# Complete options (disable preview scratch window, longest removed to aways show menu)
-set completeopt=menu,menuone
-
 set magic
+set completeopt=menu,menuone
+# }
 
+# Swap {
 set directory=$HOME/.vim/swap//
-
-# Make the jumplist behave like the tagstack
 set jumpoptions+=stack
+# }
 
-# Share vim clipboard with system clipboard
-if has('unnamedplus') && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
-	# When possible use + register for copy-paste
-	set clipboard=unnamed,unnamedplus
-elseif !empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac')
-	# Use * register for copy-paste (X11 without +clipboard, or Mac)
-	set clipboard=unnamed
-elseif !empty($TMUX)
-	# Fallback: KMScon/TTY fallback +/* registers to tmux buffers via clipboard provider
-	set clipboard=unnamed,unnamedplus
+# Detect if running on a real console (kmscon/TTY/console) where the
+# GUI clipboard is unusable even if $DISPLAY/$WAYLAND_DISPLAY is set.
+# Return value: 0 = unknown (ignore this check), 1 = GUI terminal,
+# 2 = real console. Only determinable reliably inside tmux, where
+# GUI terminal emulators give /dev/pts/N and everything else
+# (tty, console, serial) is a real console.
+def ConsoleState(): number
+	if empty($TMUX)
+		return 0
+	endif
+	var tty = system('tmux display -p "#{client_tty}"')
+	if empty(tty)
+		return 0
+	endif
+	return tty !~# '\C^/dev/pts' ? 2 : 1
+enddef
 
-	def TmuxAvailable(): bool
-		return !empty($TMUX)
-	enddef
+def TmuxAvailable(): bool
+	return !empty($TMUX)
+enddef
 
-	def TmuxCopy(reg: string, type: string, lines: list<string>)
-		system('tmux load-buffer -w -', join(lines, "\n"))
-	enddef
+def TmuxCopy(reg: string, type: string, lines: list<string>)
+	system('tmux load-buffer -w -', join(lines, "\n"))
+enddef
 
-	def TmuxPaste(reg: string): list<any>
-		var content = system('tmux save-buffer -')
-		return ['v', split(content, "\n", true)]
-	enddef
+def TmuxPaste(reg: string): list<any>
+	var content = system('tmux save-buffer -')
+	return ['v', split(content, "\n", true)]
+enddef
 
+# tmux clipboard provider, used as +/* register fallback when the
+# GUI clipboard is unavailable (e.g. kmscon/TTY inside tmux).
+# Registered whenever tmux is present; only activated by
+# `set clipmethod=tmux` in the branch below.
+if !empty($TMUX)
 	v:clipproviders["tmux"] = {
 		available: TmuxAvailable,
 		copy: { '+': TmuxCopy, '*': TmuxCopy },
 		paste: { '+': TmuxPaste, '*': TmuxPaste },
 	}
+endif
+
+# Choose the clipboard backend for the +/* registers.
+# Use the GUI clipboard (X11/Wayland/macOS) when a display is
+# available and we are not on a real console (kmscon/TTY), where
+# the GUI clipboard is unusable; there, fall back to tmux buffers.
+if ConsoleState() != 2 && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
+	if has('unnamedplus')
+		# When possible use + register for copy-paste
+		set clipboard=unnamed,unnamedplus
+	else
+		# Use * register for copy-paste (X11 without +clipboard, or Mac)
+		set clipboard=unnamed
+	endif
+elseif !empty($TMUX)
+	set clipboard=unnamed,unnamedplus
 	set clipmethod=tmux
 endif
 
+# Indent {
 set smartindent
-
 set autoindent
-
 set smarttab
-
 set tabstop=4
 set softtabstop=4
-
 set shiftwidth=4
-
 set noexpandtab
-
 set textwidth=0
-
 set wrap
 set breakindent
+# }
 
+# Split {
 set splitright
+# }
 
+# Timing {
 # For mappings
 set timeout
 set timeoutlen=1000
@@ -221,9 +272,12 @@ set ttimeout
 # Unnoticeable small value
 set ttimeoutlen=10
 set updatetime=300
+# }
 
+# Display {
 set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
+# }
 
 # FileType {
 augroup FileTypeGroup
@@ -291,12 +345,13 @@ augroup AutoResize
 	autocmd VimResized * ResizeAllTab()
 augroup END
 
+# Scroll {
 set scrolloff=7
-
 set sidescrolloff=15
-
 set sidescroll=1
+# }
 
+# Fold {
 # Disable fold on startup
 set nofoldenable
 set foldmethod=syntax
@@ -307,17 +362,20 @@ augroup LanguageFold
 	autocmd!
 	autocmd FileType python,yaml setlocal foldmethod=indent
 augroup END
+# }
 
 # Character width. Should never be enable!
 #set ambiwidth=double
 
-set fileformats=unix,dos,mac
-
+# Misc {
 set backspace=indent,eol,start
-
 set hidden
-
 set autoread
+set belloff=all
+set mouse=nvi
+set showtabline=1
+set laststatus=2
+# }
 
 # Restore cursor to previous editing position
 augroup RestoreCursorPosition
@@ -330,14 +388,6 @@ augroup Jumplist
 	autocmd!
 	autocmd VimEnter * :clearjumps
 augroup END
-
-set belloff=all
-
-set mouse=nvi
-
-set showtabline=1
-
-set laststatus=2
 
 # lightline.vim {
 g:lightline = {
@@ -573,35 +623,7 @@ augroup VMLightLine
 augroup END
 # }
 
-# Color support {
-# Use true color when the terminal supports it
-if has('termguicolors')
-	# True color: Vim renders GUI colors (guifg/guibg) directly
-	set termguicolors
-else
-	# Fallback: 256-color mode for terminals without true color support
-	set t_Co=256
-
-	# Disable Background Color Erase (BCE) so that color schemes
-	# render properly when inside 256-color tmux and GNU screen.
-	# See http://snk.tuxfamily.org/log/vim-256color-bce.html
-	if &term =~# '256color'
-		set t_ut=
-	endif
-endif
-# }
-
-# sonokai {
-# Should be set before :colorscheme
-g:sonokai_style = 'andromeda'
-g:sonokai_better_performance = 1
-g:sonokai_diagnostic_text_highlight = 1
-g:sonokai_diagnostic_virtual_text = 'colored'
-g:sonokai_dim_inactive_windows = 1
-
-set background=dark
-colorscheme sonokai
-
+# vim-matchup {
 # sonokai explicitly defines MatchParenCur/MatchWord,
 # which blocks vim-matchup's hi def link. Re-link them.
 highlight! link MatchParen Search
@@ -879,19 +901,11 @@ tnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
 
 # vim-dirvish {
 nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
-nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetProjectOrHome())<CR>
+nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetFileRoot(expand('~')))<CR>
 
-def GetFileroot(): string
+def GetFileRoot(fallback: string): string
 	var root = g:FindRootDirectory()
-	if root ==# ''
-		root = expand('%:h')
-	endif
-	return root
-enddef
-
-def GetProjectOrHome(): string
-	var root = g:FindRootDirectory()
-	return root !=# '' ? root : expand('~')
+	return root !=# '' ? root : fallback
 enddef
 
 augroup SplitExplorer
@@ -1081,7 +1095,7 @@ set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessiono
 
 def GetSessionFileInfo(): list<string>
 	var session_dir = expand($HOME .. '/.cache/sessions/')
-	var session_filename = session_dir .. substitute(trim(GetFileroot(), '/', 1), '/', '-', 'g') .. '-session.vim'
+	var session_filename = session_dir .. substitute(trim(GetFileRoot(expand('%:h')), '/', 1), '/', '-', 'g') .. '-session.vim'
 	return [session_dir, session_filename]
 enddef
 
