@@ -701,22 +701,30 @@ def Quit()
 		return
 	endif
 
-	var will_be_only_aux = 1
-	var has_other_window = 0
+	var cur_tab = tabpagenr()
 	var cur = win_getid()
+	var has_other_window = 0
+	var total_valid = 0
+	var tab_valid = 0
+
 	for info in getwininfo()
 		if info.winid == cur
 			continue
 		endif
 		has_other_window = 1
 		if !IsAuxiliaryWindow(info.winnr)
-			will_be_only_aux = 0
-			break
+			total_valid += 1
+			if info.tabnr == cur_tab
+				tab_valid += 1
+			endif
 		endif
 	endfor
 
-	if !has_other_window || will_be_only_aux
+	if !has_other_window || total_valid == 0
 		QuitAll()
+	elseif tab_valid == 0
+		tabclose
+		FocusToValidWindow()
 	else
 		quit
 		FocusToValidWindow()
