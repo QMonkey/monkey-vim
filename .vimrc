@@ -191,21 +191,62 @@ set jumpoptions+=stack
 # }
 
 # Clipboard {
-# Detect if running on a real console (kmscon/TTY/console) where the
-# GUI clipboard is unusable even if $DISPLAY/$WAYLAND_DISPLAY is set.
-# Return value: 0 = unknown (ignore this check), 1 = GUI terminal,
-# 2 = real console. Only determinable reliably inside tmux, where
-# GUI terminal emulators give /dev/pts/N and everything else
-# (tty, console, serial) is a real console.
-def ConsoleState(): number
-	if empty($TMUX)
-		return 0
+# Detect the outermost terminal type by walking up the real process
+# tree from the current Vim (or its tmux client). A real console
+# (kmscon/TTY/console) makes the GUI clipboard unusable even if
+# $DISPLAY/$WAYLAND_DISPLAY is set.
+# Return value: 'physical_console' | 'pseudo_terminal' | 'remote_ssh' | 'no_tty' | 'unknown'
+def GetRootTerminalType(): string
+	var pid = getpid()
+	if !empty($TMUX)
+		var pid_str = trim(system('tmux display-message -p "#{client_pid}" 2>/dev/null'))
+		if pid_str =~ '^[0-9]\+$'
+			pid = str2nr(pid_str)
+		endif
 	endif
-	var tty = system('tmux display -p "#{client_tty}"')
-	if empty(tty)
-		return 0
+
+	var uname = trim(system('uname -s'))
+	if empty(uname) || uname =~? 'unknown'
+		return 'unknown'
 	endif
-	return tty !~# '\C^/dev/pts' ? 2 : 1
+
+	var last_tty = ''
+	for _ in range(10)
+		var line = trim(system('ps -o ppid=,tty=,comm= -p ' .. pid))
+		var parts = matchlist(line, '^\s*\(\S\+\)\s\+\(\S\+\)\s*\(.*\)$')
+		if empty(parts)
+			break
+		endif
+		var ppid = parts[1]
+		var tty = parts[2]
+		var comm = parts[3]
+		if comm ==# 'kmscon' || comm ==# 'login'
+			return 'physical_console'
+		endif
+		if tty != '' && tty != '?'
+			last_tty = tty
+		endif
+		if ppid == '' || str2nr(ppid) <= 1
+			break
+		endif
+		pid = str2nr(ppid)
+	endfor
+
+	if last_tty == ''
+		return 'no_tty'
+	endif
+	if uname =~? 'Linux'
+		if last_tty =~ '^tty[0-9]\+$'
+			return 'physical_console'
+		elseif last_tty =~ '^pts/'
+			return !empty($SSH_TTY) ? 'remote_ssh' : 'pseudo_terminal'
+		endif
+	endif
+	if uname =~? 'Darwin'
+		return last_tty ==# 'console' || last_tty ==# '/dev/console'
+			? 'physical_console' : 'pseudo_terminal'
+	endif
+	return 'unknown'
 enddef
 
 def TmuxAvailable(): bool
@@ -237,7 +278,7 @@ endif
 # Use the GUI clipboard (X11/Wayland/macOS) when a display is
 # available and we are not on a real console (kmscon/TTY), where
 # the GUI clipboard is unusable; there, fall back to tmux buffers.
-if ConsoleState() != 2 && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
+if GetRootTerminalType() != 'physical_console' && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	if has('unnamedplus')
 		# When possible use + register for copy-paste
 		set clipboard=unnamed,unnamedplus
