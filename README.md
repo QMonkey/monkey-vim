@@ -186,7 +186,7 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS, o
 
 #### 2.11 Fonts (optional)
 
-Vim uses common Unicode characters (⎇, │, 🔒, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
+Vim uses common Unicode characters (⎇, │, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
 
 ### 3. Health check
 
