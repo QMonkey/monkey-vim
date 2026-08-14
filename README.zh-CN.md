@@ -13,7 +13,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 | Linux 终端 | xterm, kitty, alacritty, wezterm, gnome-terminal 等 |
 | macOS 终端 | Terminal.app, iTerm2, kitty 等 |
 | WSL | Windows Subsystem for Linux（推荐 WSL2） |
-| 服务器 TTY | 原生 Linux 控制台（tty1–tty63），256 色降级 |
+| 服务器 TTY | 原生 Linux 控制台（tty1–tty63），Vim 内置 8/16 色高亮（sonokai 需 ≥256 色） |
 | kmscon | Kernel Mode Setting 控制台 —— 支持真彩色和 Unicode 的现代 TTY 替代方案 |
 
 窗口/分屏管理交给 tmux 或终端模拟器的原生标签页。
@@ -46,7 +46,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + fzf.vim 文件搜索 | 是 |
 | universal-ctags | gutentags 标签生成 | 是 |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航 | 推荐 |
-| [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | 模糊搜索器（fzf.vim 依赖） | 是 |
+| [fzf](https://github.com/junegunn/fzf) | 模糊搜索器（fzf.vim 依赖） | 是 |
 | [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
 | [delta](https://github.com/dandavison/delta) | Git diff 增强预览（fugitive, fzf） | 推荐 |
 | [Homebrew](https://brew.sh/) | 系统仓库缺失时的后备包管理器（lua-language-server、marksman、fzf 等） | 必须 |
@@ -277,11 +277,22 @@ sudo systemctl edit kmsconvt@tty1.service
 ```ini
 [Service]
 ExecStart=
-ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
-    --login -- /sbin/agetty -o '-p -- \\u' - --noclear %I kmscon
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --login -- /sbin/agetty -o '-p -- \\u' - kmscon
 ```
 
-最后的 `kmscon` 参数告诉 agetty 设置 `TERM=kmscon`，与编译时安装的 terminfo 条目匹配。
+最后一个参数 `kmscon` 是 agetty 的 `<termtype>` 位置参数，用于设置 `TERM=kmscon`，与编译时安装的 terminfo 条目匹配。
+
+由于 `kmscon` 这个 terminfo 条目从 **10.0.0** 才开始随源码提供，不同版本的终端类型设置也不同：
+
+```ini
+# kmscon 10.0.0+（自带 scripts/terminfo/kmscon.ti，默认 TERM=kmscon）
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --login -- /sbin/agetty -o '-p -- \\u' - kmscon
+
+# kmscon 9.x（没有 kmscon terminfo 条目，改用 xterm-256color）
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --login -- /sbin/agetty -o '-p -- \\u' - xterm-256color
+```
+
+如果你的 `agetty` 版本支持 `--noclear` 参数，可以在 `-` 之前加入它，以在登录提示符上保留 kmscon 启动画面；它纯粹是外观选项。
 
 ```bash
 # 在 tty1 上启动 kmscon
@@ -289,6 +300,26 @@ sudo systemctl start kmsconvt@tty1.service
 ```
 
 重启后，按 `Ctrl+Alt+F1` 即可切换到支持真彩色和 Unicode 的 kmscon 终端。可按需对 tty2–tty6 重复相同操作。
+
+**`start` 与 `enable` 的区别——常见坑。**
+
+`systemctl start` 只是运行一次单元，完全不读取 `[Install]` 段，因此不会触碰 `autovt@.service`。`systemctl enable` 会读取 `[Install]` 并创建符号链接，包括 `Alias=autovt@.service`。
+
+tty2–tty6 **并不**由 `getty.target.wants` 启动；systemd-logind 会把每个新激活的 VT 以 `autovt@ttyN.service` 的方式拉起，它通过 `autovt@.service` 这个别名来解析。Debian/Ubuntu 打包的 `kmsconvt@.service` 自带了该别名：
+
+```ini
+[Install]
+WantedBy=getty.target
+DefaultInstance=tty1
+Alias=autovt@.service
+```
+
+因此：
+
+- `systemctl enable kmsconvt@tty1.service` → 只影响 tty1（实例别名 `autovt@tty1.service`）。
+- `systemctl enable kmsconvt@.service`（模板，不带 ttyN）→ **所有 VT**，因为它会创建 `/etc/systemd/system/autovt@.service -> kmsconvt@.service`。
+
+上面的 `ln -s ... kmsconvt@tty1.service` + `start` 流程因此只作用于 tty1。如果发现 tty2–tty6 意外也变成了 kmscon，请检查残留的别名（回退方法见 6.5 节）。
 
 #### 6.3 真彩色支持
 
@@ -302,13 +333,63 @@ export TERM=xterm-256color
 export COLORTERM=truecolor
 ```
 
-`COLORTERM=truecolor` 必须在 `TERM=xterm-256color` 时设置，否则 vim 无法检测到真彩色支持。注意使用 `xterm-256color` 替代 kmscon 原生 terminfo 可能导致一定的终端刷新异常。如需最佳体验，请从源码编译获取原生 terminfo 条目。
+`COLORTERM=truecolor` 必须在 `TERM=xterm-256color` 时设置，否则 vim 无法检测到真彩色支持。注意使用 `xterm-256color` 替代 kmscon 原生 terminfo 可能导致一定的终端刷新异常。如需最佳体验，请从源码（10.0.0+）编译获取原生 terminfo 条目。
 
-如果在传统 Linux tty（tty1–tty63）上运行，monkey-vim 将自动降级到 256 色模式，并使用 sonokai 的深色调色板以准确逼近主题颜色。
+如果在 kmscon 中使用 tmux，tmux 会把 `$TERM` 覆盖为 `tmux` / `tmux-256color`。这是正常且正确的行为——**不要**改回去。tmux 会根据外层终端生成自己的内部 `TERM` 并对外暴露准确的能力，vim 等 ncurses 程序因此能正确工作。只有**外层**（进入 tmux 之前）的 `$TERM` 才重要：10.0.0+ 保持 `kmscon`，9.x 保持 `xterm-256color`。
+
+Linux 原生控制台（tty1–tty63，`TERM=linux`）只提供 8/16 色（`&t_Co < 256`），这会触发 sonokai 的守卫条件（`&t_Co < 256 -> finish`），从而保留 Vim 内置的 8/16 色高亮，保证代码仍可阅读。sonokai 本身并不要求真彩色——在任何 256 色终端上都能通过 `cterm` 调色板正常渲染——但它在可用颜色少于 256 时会拒绝加载。如需在物理控制台上获得完整的 sonokai 配色，请用 kmscon 替代 tty（见 6.2 节）或改用任意 256 色/真彩色终端。
+
+如果在裸 tty（非 kmscon）上运行 tmux，tmux 默认 `default-terminal=tmux-256color`，会向其中的所有程序宣称「256 色 + xterm 风格键序列」——即便底层控制台只有 8/16 色。monkey-vim 已经能识别这种情况（它向上遍历进程树，看到 tmux 客户端背后的真实 tty），并回退到 Vim 内置高亮，因此 vim 自身始终正确。但其他程序没有这层保护，可能输出控制台无法显示的 256 色转义序列。要让它们也正确，把 tmux 的终端类型设为与 8 色控制台匹配：
+
+```bash
+# 写入 ~/.tmux.conf —— 仅适用于在裸 Linux tty 上运行的 tmux
+set -g default-terminal "tmux"
+set -g terminal-overrides ",linux:colors=16"
+```
+
+第一行让 tmux 向程序宣称普通的 8 色终端；第二行告诉 tmux 底层 `linux` 控制台有 16 色（8 基础色 + 8 亮色），使其能合理降级。**不要**在 kmscon 或普通终端模拟器下运行 tmux 时添加这两行——那些场景 `tmux-256color` 才是正确的。
 
 #### 6.4 字体（可选）
 
 kmscon 使用系统内建的字体渲染器。如需 Powerline 风格图标，安装任意系统等宽字体即可。
+
+#### 6.5 回退到传统 tty/getty
+
+将虚拟控制台交还给 agetty：
+
+```bash
+# 停止 kmscon 实例
+sudo systemctl stop kmsconvt@tty1.service
+
+# 删除 6.2 节创建的 tty1 wants 链接
+sudo rm -f /etc/systemd/system/getty.target.wants/kmsconvt@tty1.service
+
+# 在 tty1 上恢复 getty
+sudo systemctl enable getty@tty1.service
+sudo systemctl start getty@tty1.service
+```
+
+如果之前执行过 `systemctl enable kmsconvt@.service`（模板），`autovt@.service` 别名现在指向 kmscon，会继续替换所有 VT。需要显式回退：
+
+```bash
+# 让 autovt@.service 指回 getty（去掉 kmscon 别名）
+sudo systemctl disable kmsconvt@.service
+sudo rm -f /etc/systemd/system/autovt@.service
+
+# 重新启用 getty（同时恢复 getty@tty1.service）
+sudo systemctl enable getty@.service
+
+# 重新加载，让 logind 对新激活的 VT 生效
+sudo systemctl daemon-reload
+```
+
+验证别名已指回 getty：
+
+```bash
+readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.service
+```
+
+应解析到 `getty@.service`。
 
 ## 插件列表
 
@@ -474,7 +555,7 @@ Leader+gh           显示当前行诊断（弹窗）
 Leader+d            显示/隐藏当前缓冲区所有诊断（位置列表）
 ```
 
-文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。  
+文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。
 `K` 使用 `:LspHover` 作为大多数文件类型的关键字程序。
 
 #### 1.9 Cscope
@@ -485,7 +566,7 @@ gD                  查找全局定义（cscope，失败时 fallback 到 ctags�
 gR                  查找调用者（cscope）
 ```
 
-Cscope 支持 `c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型，结果放入 quickfix。  
+Cscope 支持 `c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型，结果放入 quickfix。
 需要安装 `cscope` 并配合 `gtags-cscope` 生成数据库（gutentags 会自动生成）。
 
 #### 1.10 文件/缓冲/Tag 导航（fzf.vim）
@@ -543,7 +624,7 @@ m<BS>       删除所有自定义标记
 m?          在Location List里，查看当前buffer的所有自定义标记
 ```
 
-`:SignatureToggle`   显示/隐藏标记（不删除）  
+`:SignatureToggle`   显示/隐藏标记（不删除）
 `:SignatureRefresh`  标记与 sign 不同步时重新同步
 
 #### 1.13 Dirvish（目录浏览器，替代netrw）
@@ -627,7 +708,7 @@ Leader+l            打开/关闭location list
 
 Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，始终置于底部。
 
-注意：`gdefault` 已设置，`:s` 默认执行全局替换（每行所有匹配）。  
+注意：`gdefault` 已设置，`:s` 默认执行全局替换（每行所有匹配）。
 每次启动 Vim 时会清除跳转列表（`clearjumps`），避免跨项目污染。`jumpoptions+=stack` 使跳转列表行为类似标签栈。
 
 #### 1.18 自动插入文件头
@@ -650,7 +731,7 @@ a%      任意块的范围（文本对象）
 
 #### 1.20 Lexima（自动配对括号）
 
-Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''`、` `` `` `。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
+Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''`、```` ``` ````。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
 
 ### 2. 插入模式
 
@@ -1099,7 +1180,7 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 #### 1. 安装依赖
 
 > `gpm` 相关包用于在 Linux 文本控制台（TTY）上启用鼠标支持，桌面上用不到，但包含它也无害。
-> 
+>
 > 可选 CLI 工具：`wl-clipboard`（Wayland，提供 `wl-copy`/`wl-paste`）、`xclip` 或 `xsel`（X11）。Vim 通过 `--with-wayland` / `--with-x` 内建剪贴板支持，这些工具仅在 Vim 外部需要命令行剪贴板访问时使用。
 
 **Ubuntu/Debian**
