@@ -436,29 +436,32 @@ augroup END
 g:lightline = {
 	'colorscheme': 'sonokai',
 	'active': {
-		'left': [['mode', 'paste'], ['gitinfo', 'filename']],
+		'left': [['mode', 'paste'], ['gitinfo'], ['filename']],
 		'right': [['lineinfo'], ['percent'], ['searchinfo', 'filetype', 'fileencoding', 'fileformat']]
 	},
 	'inactive': {
-		'left': [['mode', 'filename']],
+		'left': [['mode'], ['filename']],
 		'right': []
 	},
 	'component_function': {
+		'mode': 'LightLineMode',
 		'gitinfo': 'LightLineGitInfo',
-		'searchinfo': 'LightLineVMInfo',
 		'filename': 'LightLineFilename',
+		'searchinfo': 'LightLineVMInfo',
 		'fileformat': 'LightLineFileformat',
 		'filetype': 'LightLineFiletype',
 		'fileencoding': 'LightLineFileencoding',
 		'percent': 'LightLinePercent',
 		'lineinfo': 'LightLineLineInfo',
-		'mode': 'LightLineMode',
 	},
 	'component_expand': {
 		'tabs': 'lightline#tabs',
 	},
+	'tab_component_function': {
+		'modified': 'LightLineTabModified',
+	},
 	'separator': {'left': '', 'right': ''},
-	'subseparator': {'left': '│', 'right': '│'},
+	'subseparator': {'left': '', 'right': ''},
 	'tab': {
 		'active': ['filename', 'modified'],
 		'inactive': ['filename', 'modified'],
@@ -468,15 +471,16 @@ g:lightline = {
 		'right': []
 	},
 	'tabline_separator': {'left': '', 'right': ''},
-	'tabline_subseparator': {'left': '│', 'right': '│'},
+	'tabline_subseparator': {'left': '', 'right': ''},
 }
 
-def g:LightLineModified(): string
-	return &filetype =~# 'help\|man' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+def g:LightLineFileStatus(): string
+	return &filetype =~# 'help\|man' ? '' : &modified ? '[+]' : (&readonly || !&modifiable) ? '[-]' : ''
 enddef
 
-def g:LightLineReadonly(): string
-	return &filetype !~? 'help\|man' && &readonly ? '🔒' : ''
+def g:LightLineTabModified(n: number): string
+	var winnr = tabpagewinnr(n)
+	return gettabwinvar(n, winnr, '&modified') ? '[+]' : ''
 enddef
 
 # Cached window type: returns 0=normal, 1=location, 2=quickfix,
@@ -531,12 +535,23 @@ def IsGitFile(): number
 	return 1
 enddef
 
-# Invalidate per-buffer and per-window caches
-augroup LightLineCache
-	autocmd!
-	autocmd BufEnter * unlet! b:is_git_file
-	autocmd BufWinEnter,WinEnter * unlet! w:window_type
-augroup END
+def g:LightLineMode(): string
+	var window_type = GetWindowType()
+	if window_type != 0
+		return window_type == 1 ? 'Location' :
+			window_type == 2 ? 'Quickfix' :
+			window_type == 3 ? 'Preview' :
+			window_type == 4 ? 'Terminal' :
+			window_type == 5 ? 'Help' :
+			window_type == 6 ? 'Man' : ''
+	endif
+
+	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+		return 'V-MULTI'
+	endif
+
+	return winwidth(0) > 60 ? lightline#mode() : ''
+enddef
 
 # Combined git status component: gutter summary + branch name.
 # Replaces LightLineGitGutter & LightLineFugitive; avoids calling
@@ -570,13 +585,30 @@ def g:LightLineFilename(): string
 	if wt == 1 || wt == 2 || wt == 3
 		return ''
 	endif
-	var ro = g:LightLineReadonly()
-	var mod = g:LightLineModified()
+	var status = g:LightLineFileStatus()
 	var fname = expand('%:t')
 	if fname == ''
 		fname = '[No Name]'
 	endif
-	return join(filter([ro, fname, mod], 'v:val != ""'), ' ')
+	return join(filter([fname, status], 'v:val != ""'), ' ')
+enddef
+
+def g:LightLineVMInfo(): string
+	if GetWindowType() != 0
+		return ''
+	endif
+	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+		var vm = g:VMInfos()
+		if !empty(vm)
+			var result = vm.ratio
+			if !empty(@/)
+				result ..= '  /' .. @/
+			endif
+			return result
+		endif
+		return ''
+	endif
+	return ''
 enddef
 
 def g:LightLineFileformat(): string
@@ -599,41 +631,22 @@ def g:LightLineLineInfo(): string
 	return winwidth(0) > 70 ? printf('%3d/%-d : %-2d', line('.'), line('$'), col('.')) : ''
 enddef
 
-def g:LightLineVMInfo(): string
-	if GetWindowType() != 0
-		return ''
+# Inactive tab gray-out
+def LightLineGrayTabs()
+	var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
+	if !empty(pal) && has_key(pal.tabline, 'left') && !empty(pal.tabline.left) && has_key(pal, 'inactive')
+		pal.tabline.left[0] = copy(pal.inactive.left[0])
+		lightline#highlight()
+		lightline#update()
 	endif
-	if exists('b:VM_Selection') && !empty(b:VM_Selection)
-		var vm = g:VMInfos()
-		if !empty(vm)
-			var result = vm.ratio
-			if !empty(@/)
-				result ..= '  /' .. @/
-			endif
-			return result
-		endif
-		return ''
-	endif
-	return ''
 enddef
 
-def g:LightLineMode(): string
-	var window_type = GetWindowType()
-	if window_type != 0
-		return window_type == 1 ? 'Location' :
-			window_type == 2 ? 'Quickfix' :
-			window_type == 3 ? 'Preview' :
-			window_type == 4 ? 'Terminal' :
-			window_type == 5 ? 'Help' :
-			window_type == 6 ? 'Man' : ''
-	endif
-
-	if exists('b:VM_Selection') && !empty(b:VM_Selection)
-		return 'V-MULTI'
-	endif
-
-	return winwidth(0) > 60 ? lightline#mode() : ''
-enddef
+augroup LightLine
+	autocmd!
+	autocmd BufEnter * unlet! b:is_git_file
+	autocmd BufWinEnter,WinEnter * unlet! w:window_type
+	autocmd VimEnter * silent LightLineGrayTabs()
+augroup END
 # }
 
 # vim-visual-multi lightline integration {
