@@ -332,7 +332,7 @@ augroup FileTypeGroup
 	autocmd FileType rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 	# Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
 	autocmd FileType javascript,typescript,lua,yaml,json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
-
+	autocmd BufRead,BufNewFile *.gotmpl,*.go.tmpl setlocal filetype=gotmpl
 	autocmd BufNewFile *.sh,*.py AutoInsertFileHead()
 
 	# Move the quickfix window to the bottom of the window layout
@@ -1459,7 +1459,7 @@ def OnLspSetup()
 		},
 	},
 	{name: 'gopls',
-		filetype: ['go', 'gomod', 'gowork', 'gotmpl'],
+		filetype: ['go', 'gomod', 'gowork', 'gosum', 'gotmpl'],
 		path: 'gopls',
 		rootSearch: ['go.work', 'go.mod'],
 		workspaceConfig: {
@@ -1586,9 +1586,9 @@ def OnLspSetup()
 	{name: 'vscode-json-language-server',
 		filetype: ['json'],
 		path: 'vscode-json-language-server',
-		args: ['--stdio']
-	}
-	]
+		args: ['--stdio'],
+		initializationOptions: {provideFormatter: true}
+	}]
 
 	g:LspOptionsSet(lspOpts)
 	g:LspAddServer(lspServers)
