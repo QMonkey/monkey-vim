@@ -93,11 +93,20 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 | YAML | yaml-language-server | `npm install -g yaml-language-server` |
 | Markdown | marksman | `brew install marksman` 或 `sudo pacman -S marksman` |
 
+部分 LSP 服务器会把格式化/检查交给**外部工具**，需单独安装。缺失时功能会静默降级（回退到内置诊断或跳过该工具）：
+
+| 语言 | 工具 | 作用 | 安装方式 |
+|---|---|---|---|
+| C/C++ | clang-tidy | linter（经 `clangd --clang-tidy`） | `sudo apt-get install clang-tidy`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
+| Go | staticcheck | linter（经 `gopls` 的 `staticcheck`） | `go install honnef.co/go/tools/cmd/staticcheck@latest` |
+| Shell | shfmt | formatter（经 `bash-language-server`） | `go install mvdan.cc/sh/v3/cmd/shfmt@latest` |
+| Python | black | formatter（经 `pylsp` 的 black 插件） | `pip3 install black` |
+
 #### 2.3 C/C++
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get install gcc g++ clangd
+sudo apt-get install gcc g++ clangd clang-tidy
 
 # OpenSUSE
 sudo zypper install gcc gcc-c++ clang
@@ -117,6 +126,8 @@ brew install gcc llvm
 ```bash
 # 请安装最新版本的 go，然后：
 go install golang.org/x/tools/gopls@latest
+# 可选：staticcheck 检查器（gopls 使用）
+go install honnef.co/go/tools/cmd/staticcheck@latest
 ```
 
 #### 2.5 Python
@@ -124,8 +135,8 @@ go install golang.org/x/tools/gopls@latest
 ```bash
 # 需要 Python 3（如未安装请先通过系统包管理器安装）
 pip3 install python-lsp-server
-# 可选：代码格式化与检查工具（checkhealth.sh 不检查这些）
-pip3 install autopep8 flake8 pylint
+# 可选：代码格式化与检查工具（black 由 pylsp 的 black 插件使用）
+pip3 install black autopep8 flake8 pylint
 ```
 
 #### 2.6 JavaScript / TypeScript
@@ -149,7 +160,15 @@ rustup component add rust-analyzer
 npm install -g yaml-language-server
 ```
 
-#### 2.9 Markdown
+#### 2.9 Shell
+
+```bash
+# 安装 LSP 服务器，以及它依赖的 shfmt 格式化工具
+npm install -g bash-language-server
+go install mvdan.cc/sh/v3/cmd/shfmt@latest
+```
+
+#### 2.10 Markdown
 
 终端/WSL 下预览 Markdown：
 ```bash
@@ -164,7 +183,7 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS，
 # :!explorer.exe %
 ```
 
-#### 2.10 字体（可选）
+#### 2.11 字体（可选）
 
 Vim 使用的 Unicode 字符（⎇, │, 🔒, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)。
 
