@@ -149,32 +149,28 @@ def GetRootTerminalType(): string
 enddef
 
 var root_terminal = GetRootTerminalType()
+var is_tty_console = &term =~# '^linux' || root_terminal ==# 'tty'
 # }
 
 # Color support {
-# The Linux framebuffer console (tty1-tty63, TERM=linux) cannot render
-# 24-bit true color. Forcing 'termguicolors' there makes sonokai emit
-# SGR 38;2;R;G;B sequences that the console quantizes into a garbled,
-# all-bold 8-color mess. Fall back to Vim's built-in highlighting instead.
-# A tmux client on such a console reports &term = tmux-256color, so also
-# treat a detected physical tty (via GetRootTerminalType) as a tty_console.
-var tty_console = !empty(&term) && &term =~# '^linux' || root_terminal ==# 'tty'
-
-if has('termguicolors') && !tty_console
+# The Linux framebuffer console (tty1-tty63, TERM=linux) has no true
+# color and sonokai is a true-color-only theme (its `&t_Co < 256 -> finish`
+# guard makes it a no-op there). Detect it, moreover via a physical tty
+# under a tmux client that masks the term as tmux-256color, so we can fall
+# back to the built-in unokai theme below.
+if has('termguicolors') && !is_tty_console
 	# True color: Vim renders GUI colors (guifg/guibg) directly
 	set termguicolors
 else
 	set notermguicolors
-	if tty_console
-		# Force &t_Co down to 8 so sonokai's own `&t_Co < 256 -> finish`
-		# guard fires and leaves Vim's built-in 8/16-color highlighting
-		# (readable) instead of 256-color cterm indices. Needed both for a
-		# direct tty and for a tmux client that reports 256 colors while
-		# running on top of an 8-color console.
-		set t_Co=8
-	else
+	if !is_tty_console
 		# Fallback: 256-color mode for terminals without true color support
 		set t_Co=256
+	else
+		# The console physically supports 16 colors (8 base + 8 bright);
+		# &t_Co=16 picks unokai's richer `t_Co >= 16` named-color branch
+		# over its cruder 8-color one.
+		set t_Co=16
 	endif
 
 	# Disable Background Color Erase (BCE) so that color schemes
@@ -186,20 +182,27 @@ else
 endif
 # }
 
-# sonokai {
-# Should be set before :colorscheme
-g:sonokai_style = 'andromeda'
-g:sonokai_better_performance = 1
-g:sonokai_diagnostic_text_highlight = 1
-g:sonokai_diagnostic_virtual_text = 'colored'
-g:sonokai_dim_inactive_windows = 1
-
+# Theme {
+# unokai is a built-in Monokai-style theme whose named-color branches
+# match the console's fixed VGA palette, keeping a sonokai-like look when
+# is_tty_console.
 set background=dark
-colorscheme sonokai
+if !is_tty_console
+	# sonokai settings must be set before :colorscheme
+	g:sonokai_style = 'andromeda'
+	g:sonokai_better_performance = 1
+	g:sonokai_diagnostic_text_highlight = 1
+	g:sonokai_diagnostic_virtual_text = 'colored'
+	g:sonokai_dim_inactive_windows = 1
+	colorscheme sonokai
+else
+	colorscheme unokai
+endif
 # }
 
 # Leader {
 g:mapleader = ','
+g:maplocalleader = ','
 # }
 
 # Encoding {
@@ -275,8 +278,6 @@ set jumpoptions+=stack
 # }
 
 # Clipboard {
-# The outermost terminal type was already detected before the color block
-# and cached in `root_terminal` (see "Terminal type detection" above).
 def TmuxAvailable(): bool
 	return !empty($TMUX)
 enddef
@@ -463,7 +464,7 @@ augroup END
 
 # lightline.vim {
 g:lightline = {
-	'colorscheme': 'sonokai',
+	'colorscheme': !is_tty_console ? 'sonokai' : '16color',
 	'active': {
 		'left': [['mode', 'paste'], ['gitinfo'], ['filename']],
 		'right': [['lineinfo'], ['percent'], ['searchinfo', 'filetype', 'fileencoding', 'fileformat']]
@@ -660,10 +661,15 @@ def g:LightLineLineInfo(): string
 	return winwidth(0) > 70 ? printf('%3d/%-d : %-2d', line('.'), line('$'), col('.')) : ''
 enddef
 
+def GetLightlinePalette(): dict<any>
+	var colorscheme = get(g:lightline, 'colorscheme', 'default')
+	return get(g:, 'lightline#colorscheme#' .. colorscheme .. '#palette', {})
+enddef
+
 # Inactive tab gray-out
 def LightLineGrayTabs()
-	var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
-	if !empty(pal) && has_key(pal.tabline, 'left') && !empty(pal.tabline.left) && has_key(pal, 'inactive')
+	var pal = GetLightlinePalette()
+	if !empty(pal)
 		pal.tabline.left[0] = copy(pal.inactive.left[0])
 		lightline#highlight()
 		lightline#update()
@@ -679,22 +685,39 @@ augroup END
 # }
 
 # vim-visual-multi lightline integration {
-highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
-highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
+# Use sonokai's purple accent in true-color mode; on the 16-color console
+# fall back to the closest ANSI purple (cterm 13) with console-safe indices.
+if !is_tty_console
+	highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
+	highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
+else
+	highlight VM_Mode cterm=bold ctermfg=0 ctermbg=13 gui=bold guifg=#1a1b26 guibg=#bb9af7
+	highlight VM_Info ctermfg=13 ctermbg=0 guifg=#bb9af7 guibg=#3b3f54
+endif
 
 var saved_normal_left = []
 def VMEnter()
-	var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
+	var pal = GetLightlinePalette()
+	if empty(pal)
+		return
+	endif
 	saved_normal_left = copy(pal.normal.left[0])
-	pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+	if !is_tty_console
+		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+	else
+		# cterm 0 = black fg on cterm 13 = bright magenta
+		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 0, 13, 'bold']
+	endif
 	lightline#highlight()
 	lightline#update()
 enddef
 
 def VMLeave()
 	if !empty(saved_normal_left)
-		var pal = get(g:, 'lightline#colorscheme#sonokai#palette')
-		pal.normal.left[0] = saved_normal_left
+		var pal = GetLightlinePalette()
+		if !empty(pal)
+			pal.normal.left[0] = saved_normal_left
+		endif
 		saved_normal_left = []
 	endif
 	lightline#highlight()
@@ -1355,17 +1378,31 @@ noremap f <Cmd>call stargate#OKvim(1)<CR>
 # For 2 consecutive characters to search
 noremap F <Cmd>call stargate#OKvim(2)<CR>
 
-highlight StargateFocus ctermfg=101 guifg=#958C6A
-highlight StargateDesaturate ctermfg=238 guifg=#49423F
-highlight StargateError ctermfg=167 guifg=#D35B4B
-highlight StargateLabels ctermfg=179 ctermbg=234 guifg=#CAA247 guibg=#171E2C
-highlight StargateErrorLabels ctermfg=179 ctermbg=52 guifg=#CAA247 guibg=#551414
-highlight StargateMain cterm=bold ctermfg=199 gui=bold guifg=#F2119C
-highlight StargateSecondary cterm=bold ctermfg=49 gui=bold guifg=#11EB9C
-highlight StargateShip ctermfg=233 ctermbg=234 guifg=#111111 guibg=#CAA247
-highlight StargateVIM9000 cterm=bold ctermfg=233 ctermbg=139 gui=bold guifg=#111111 guibg=#B2809F
-highlight StargateMessage ctermfg=143 guifg=#A5B844
-highlight StargateErrorMessage ctermfg=167 guifg=#E36659
+if !is_tty_console
+	highlight StargateFocus ctermfg=101 guifg=#958C6A
+	highlight StargateDesaturate ctermfg=238 guifg=#49423F
+	highlight StargateError ctermfg=167 guifg=#D35B4B
+	highlight StargateLabels ctermfg=179 ctermbg=234 guifg=#CAA247 guibg=#171E2C
+	highlight StargateErrorLabels ctermfg=179 ctermbg=52 guifg=#CAA247 guibg=#551414
+	highlight StargateMain cterm=bold ctermfg=199 gui=bold guifg=#F2119C
+	highlight StargateSecondary cterm=bold ctermfg=49 gui=bold guifg=#11EB9C
+	highlight StargateShip ctermfg=233 ctermbg=234 guifg=#111111 guibg=#CAA247
+	highlight StargateVIM9000 cterm=bold ctermfg=233 ctermbg=139 gui=bold guifg=#111111 guibg=#B2809F
+	highlight StargateMessage ctermfg=143 guifg=#A5B844
+	highlight StargateErrorMessage ctermfg=167 guifg=#E36659
+else
+	highlight StargateFocus ctermfg=3 guifg=#958C6A
+	highlight StargateDesaturate ctermfg=8 guifg=#49423F
+	highlight StargateError ctermfg=1 guifg=#D35B4B
+	highlight StargateLabels ctermfg=3 ctermbg=0 guifg=#CAA247 guibg=#171E2C
+	highlight StargateErrorLabels ctermfg=3 ctermbg=1 guifg=#CAA247 guibg=#551414
+	highlight StargateMain cterm=bold ctermfg=13 gui=bold guifg=#F2119C
+	highlight StargateSecondary cterm=bold ctermfg=10 gui=bold guifg=#11EB9C
+	highlight StargateShip ctermfg=0 ctermbg=3 guifg=#111111 guibg=#CAA247
+	highlight StargateVIM9000 cterm=bold ctermfg=0 ctermbg=5 gui=bold guifg=#111111 guibg=#B2809F
+	highlight StargateMessage ctermfg=3 guifg=#A5B844
+	highlight StargateErrorMessage ctermfg=9 guifg=#E36659
+endif
 # }
 
 # vim-subversive {
@@ -1397,10 +1434,18 @@ g:fastfold_fold_movement_commands = []
 
 # vim-signature {
 # Highlight mark a-zA-Z
-highlight SignatureMarkText cterm=bold ctermfg=154 gui=bold guifg=#A6E22E
+if !is_tty_console
+	highlight SignatureMarkText cterm=bold ctermfg=154 gui=bold guifg=#A6E22E
+else
+	highlight SignatureMarkText cterm=bold ctermfg=10 gui=bold guifg=#A6E22E
+endif
 
 # Highlight marker !@#$%^&*()
-highlight SignatureMarkerText term=bold cterm=bold ctermfg=197 gui=bold guifg=#F92672
+if !is_tty_console
+	highlight SignatureMarkerText term=bold cterm=bold ctermfg=197 gui=bold guifg=#F92672
+else
+	highlight SignatureMarkerText term=bold cterm=bold ctermfg=9 gui=bold guifg=#F92672
+endif
 
 g:SignatureMarkTextHLDynamic = 1
 g:SignatureMarkerTextHLDynamic = 1
