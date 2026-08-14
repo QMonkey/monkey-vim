@@ -13,7 +13,7 @@ The project monkey-vim, aims to make a powerful and fast terminal-native IDE.
 | Linux Terminal | xterm, kitty, alacritty, wezterm, gnome-terminal, etc. |
 | macOS Terminal | Terminal.app, iTerm2, kitty, etc. |
 | WSL | Windows Subsystem for Linux (WSL2 recommended) |
-| Server TTY | Bare Linux console (tty1–tty63), 256-color fallback |
+| Server TTY | Bare Linux console (tty1–tty63), Vim default 8/16-color highlighting (sonokai needs ≥256 colors) |
 | kmscon | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support |
 
 Window/split management is delegated to tmux or your terminal emulator's native tabs.
@@ -47,7 +47,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | universal-ctags | gutentags tag generation | Yes |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation | Recommended |
 | [Pygments](https://pygments.org/) (`pygmentize`) | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.) | Recommended |
-| [fzf](https://github.com/junegunn/fzf) (>= 0.53.0) | Fuzzy finder (fzf.vim) | Yes |
+| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder (fzf.vim) | Yes |
 | [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
 | [delta](https://github.com/dandavison/delta) | Enhanced git diff preview (fugitive, fzf) | Recommended |
 | [Homebrew](https://brew.sh/) | Fallback package manager for tools not in system repos (lua-language-server, marksman, fzf) | Required |
@@ -278,11 +278,22 @@ Add the following override:
 ```ini
 [Service]
 ExecStart=
-ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt \
-    --login -- /sbin/agetty -o '-p -- \\u' - --noclear %I kmscon
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --login -- /sbin/agetty -o '-p -- \\u' - kmscon
 ```
 
-The last argument `kmscon` tells agetty to set `TERM=kmscon`, which matches the terminfo entry installed during build.
+The last argument `kmscon` is agetty's `<termtype>` positional argument and sets `TERM=kmscon`, which matches the terminfo entry installed during build.
+
+The terminal type differs by kmscon version, because the `kmscon` terminfo entry is only shipped since **10.0.0**:
+
+```ini
+# kmscon 10.0.0+ (ships scripts/terminfo/kmscon.ti, default TERM=kmscon)
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --login -- /sbin/agetty -o '-p -- \\u' - kmscon
+
+# kmscon 9.x (no kmscon terminfo entry; use xterm-256color)
+ExecStart=/usr/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --login -- /sbin/agetty -o '-p -- \\u' - xterm-256color
+```
+
+If your `agetty` build supports the `--noclear` flag, you may insert it before the `-` to keep the kmscon splash on the login prompt; it is purely cosmetic.
 
 ```bash
 # Start kmscon on tty1
@@ -290,6 +301,26 @@ sudo systemctl start kmsconvt@tty1.service
 ```
 
 After reboot, press `Ctrl+Alt+F1` to switch to the kmscon-enhanced tty1. You can repeat this for tty2–tty6 as needed.
+
+**`start` vs `enable` — a common pitfall.**
+
+`systemctl start` runs a unit once and ignores the `[Install]` section entirely, so it never touches `autovt@.service`. `systemctl enable` reads `[Install]` and creates symlinks, including the `Alias=autovt@.service`.
+
+tty2–tty6 are **not** started from `getty.target.wants`; systemd-logind spawns each newly-activated VT as `autovt@ttyN.service`, which resolves through the `autovt@.service` alias. That alias ships in Debian/Ubuntu's `kmsconvt@.service`:
+
+```ini
+[Install]
+WantedBy=getty.target
+DefaultInstance=tty1
+Alias=autovt@.service
+```
+
+So:
+
+- `systemctl enable kmsconvt@tty1.service` → only tty1 (instance alias `autovt@tty1.service`).
+- `systemctl enable kmsconvt@.service` (template, no ttyN) → **every VT**, because it creates `/etc/systemd/system/autovt@.service -> kmsconvt@.service`.
+
+The `ln -s ... kmsconvt@tty1.service` + `start` flow above therefore affects only tty1. If tty2–tty6 unexpectedly become kmscon, check for a leftover alias (see 6.5 to revert).
 
 #### 6.3 True color support
 
@@ -303,13 +334,63 @@ export TERM=xterm-256color
 export COLORTERM=truecolor
 ```
 
-The `COLORTERM=truecolor` is required so vim still detects true color support when `TERM` is set to `xterm-256color`. Note that using `xterm-256color` instead of kmscon's native terminfo may cause minor display artifacts in vim due to terminal capability mismatches. For the best experience, build from source to get the native terminfo entry.
+The `COLORTERM=truecolor` is required so vim still detects true color support when `TERM` is set to `xterm-256color`. Note that using `xterm-256color` instead of kmscon's native terminfo may cause minor display artifacts in vim due to terminal capability mismatches. For the best experience, build from source (10.0.0+) to get the native terminfo entry.
 
-If you fall back to a traditional Linux tty (tty1–tty63), monkey-vim degrades to 256-color mode with sonokai's dark palette for accurate color approximation.
+If you run tmux inside kmscon, tmux overrides `$TERM` with `tmux` / `tmux-256color`. This is expected and correct — do **not** change it back. tmux derives its internal `TERM` from the outer terminal and exposes its own accurate capabilities, so vim and other ncurses programs work correctly. Only the **outer** `$TERM` (before entering tmux) matters: keep it as `kmscon` on 10.0.0+ or `xterm-256color` on 9.x.
+
+The Linux framebuffer console (tty1–tty63, `TERM=linux`) only exposes 8/16 colors (`&t_Co < 256`), which triggers sonokai's guard (`&t_Co < 256 -> finish`) and leaves Vim's built-in 8/16-color highlighting, so code stays readable. sonokai itself does not require true color — it renders fine with the `cterm` palette on any 256-color terminal — but it does refuse to load when fewer than 256 colors are available. For the full sonokai scheme on a physical console, replace tty with kmscon (section 6.2) or use any 256-color/true-color terminal.
+
+If you run tmux on a bare tty (not kmscon), tmux defaults to `default-terminal=tmux-256color`, which advertises 256 colors and xterm-style key sequences to every program inside it — even though the underlying console only has 8/16 colors. monkey-vim already detects this (it walks the process tree to see the real tty behind the tmux client) and falls back to Vim's built-in highlighting, so vim itself stays correct regardless. Other programs, however, do not get that protection and may render 256-color escapes the console cannot show. To keep them correct, set tmux's terminal type to match the 8-color console:
+
+```bash
+# In ~/.tmux.conf — only for tmux running on a bare Linux tty
+set -g default-terminal "tmux"
+set -g terminal-overrides ",linux:colors=16"
+```
+
+The first line makes tmux advertise a plain 8-color terminal to programs; the second tells tmux the underlying `linux` console has 16 colors (8 base + 8 bright) so it can downconvert sensibly. Do **not** add these lines when tmux runs under kmscon or a normal terminal emulator — there `tmux-256color` is correct.
 
 #### 6.4 Fonts (optional)
 
 kmscon uses the system's built-in font renderer. If you prefer Powerline-style icons, install a system monospace font of your choice.
+
+#### 6.5 Revert to the legacy tty/getty
+
+To hand the virtual consoles back to agetty:
+
+```bash
+# Stop the kmscon instance
+sudo systemctl stop kmsconvt@tty1.service
+
+# Remove the tty1 wants link created in section 6.2
+sudo rm -f /etc/systemd/system/getty.target.wants/kmsconvt@tty1.service
+
+# Restore getty on tty1
+sudo systemctl enable getty@tty1.service
+sudo systemctl start getty@tty1.service
+```
+
+If you previously ran `systemctl enable kmsconvt@.service` (the template), the `autovt@.service` alias now points at kmscon and keeps replacing every VT. Revert it explicitly:
+
+```bash
+# Point autovt@.service back at getty (drop the kmscon alias)
+sudo systemctl disable kmsconvt@.service
+sudo rm -f /etc/systemd/system/autovt@.service
+
+# Re-enable getty (also restores getty@tty1.service)
+sudo systemctl enable getty@.service
+
+# Reload so logind picks up the change for newly-activated VTs
+sudo systemctl daemon-reload
+```
+
+Verify the alias points at getty again:
+
+```bash
+readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.service
+```
+
+It should resolve to `getty@.service`.
 
 ## Plugin list
 
@@ -485,7 +566,7 @@ gD                  Find global definition (cscope, fallback to ctags on failure
 gR                  Find callers (cscope)
 ```
 
-Cscope supports `c`, `d`, `e`, `f`, `g`, `i`, `s`, `t` query types, with results in quickfix.  
+Cscope supports `c`, `d`, `e`, `f`, `g`, `i`, `s`, `t` query types, with results in quickfix.
 Requires `cscope` and `gtags-cscope` database (auto-generated by gutentags).
 
 #### 1.10 File/Buffer/Tag navigation (fzf.vim)
@@ -543,7 +624,7 @@ m<BS>       Remove all markers
 m?          Open location list and display markers from current buffer
 ```
 
-`:SignatureToggle`  Show/hide marks without deleting them  
+`:SignatureToggle`  Show/hide marks without deleting them
 `:SignatureRefresh`  Re-sync marks and signs if they go out of sync
 
 #### 1.13 Dirvish (Directory viewer, replaces netrw)
@@ -648,7 +729,7 @@ a%      Around any block (text object)
 
 #### 1.20 Lexima (auto-close pairs)
 
-Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''`, ` ``` `. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
+Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''`, ```` ``` ````. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
 
 ### 2. Insert mode
 
@@ -699,8 +780,6 @@ s{textobj}  Replace a text object with clipboard content (e.g. siw)
 ss          Replace entire current line with clipboard content
 S           Replace from cursor to end of line with clipboard content
 ```
-
-
 
 #### 3.4 Easy motion (vim9-stargate)
 
@@ -1103,7 +1182,7 @@ Build Vim from source for the latest version with full features: GTK3 GUI, Wayla
 #### 1. Install dependencies
 
 > The `gpm` packages enable mouse support on the Linux text console (TTY), not on the desktop. Harmless to include.
-> 
+>
 > Optional CLI tools: `wl-clipboard` (Wayland, provides `wl-copy`/`wl-paste`), `xclip` or `xsel` (X11). Vim has built-in clipboard support via `--with-wayland` / `--with-x`, so these are only needed for command-line clipboard access outside Vim.
 
 **Ubuntu/Debian**
