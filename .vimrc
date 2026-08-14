@@ -84,14 +84,98 @@ g:loaded_netrw = 1
 g:loaded_netrwPlugin = 1
 # }
 
+# Terminal type detection {
+# Detect the outermost terminal type by walking up the real process
+# tree from the current Vim (or its tmux client). Needed before the
+# color block because a tmux client running on a physical tty reports
+# &term = tmux-256color, hiding the 8/16-color console behind it.
+# Return value: 'kmscon' | 'tty' | 'physical_console' | 'pseudo_terminal'
+#             | 'remote_ssh' | 'no_tty' | 'unknown'
+def GetRootTerminalType(): string
+	var pid = getpid()
+	if !empty($TMUX)
+		var pid_str = trim(system('tmux display-message -p "#{client_pid}" 2>/dev/null'))
+		if pid_str =~ '^[0-9]\+$'
+			pid = str2nr(pid_str)
+		endif
+	endif
+
+	var uname = trim(system('uname -s'))
+	if empty(uname) || uname =~? 'unknown'
+		return 'unknown'
+	endif
+
+	var last_tty = ''
+	var saw_login = false
+	for _ in range(10)
+		var line = trim(system('ps -o ppid=,tty=,comm= -p ' .. pid))
+		var parts = matchlist(line, '^\s*\(\S\+\)\s\+\(\S\+\)\s*\(.*\)$')
+		if empty(parts)
+			break
+		endif
+		var ppid = parts[1]
+		var tty = parts[2]
+		var comm = parts[3]
+		if comm ==# 'kmscon'
+			return 'kmscon'
+		endif
+		if comm ==# 'login'
+			saw_login = true
+		endif
+		if tty != '' && tty != '?'
+			last_tty = tty
+		endif
+		if ppid == '' || str2nr(ppid) <= 1
+			break
+		endif
+		pid = str2nr(ppid)
+	endfor
+
+	if last_tty == '' && !saw_login
+		return 'no_tty'
+	endif
+	if uname =~? 'Linux'
+		if last_tty =~ '^tty[0-9]\+$' || saw_login
+			return 'tty'
+		elseif last_tty =~ '^pts/'
+			return !empty($SSH_TTY) ? 'remote_ssh' : 'pseudo_terminal'
+		endif
+	endif
+	if uname =~? 'Darwin'
+		return last_tty ==# 'console' || last_tty ==# '/dev/console'
+			? 'physical_console' : 'pseudo_terminal'
+	endif
+	return 'unknown'
+enddef
+
+var root_terminal = GetRootTerminalType()
+# }
+
 # Color support {
-# Use true color when the terminal supports it
-if has('termguicolors')
+# The Linux framebuffer console (tty1-tty63, TERM=linux) cannot render
+# 24-bit true color. Forcing 'termguicolors' there makes sonokai emit
+# SGR 38;2;R;G;B sequences that the console quantizes into a garbled,
+# all-bold 8-color mess. Fall back to Vim's built-in highlighting instead.
+# A tmux client on such a console reports &term = tmux-256color, so also
+# treat a detected physical tty (via GetRootTerminalType) as a tty_console.
+var tty_console = !empty(&term) && &term =~# '^linux' || root_terminal ==# 'tty'
+
+if has('termguicolors') && !tty_console
 	# True color: Vim renders GUI colors (guifg/guibg) directly
 	set termguicolors
 else
-	# Fallback: 256-color mode for terminals without true color support
-	set t_Co=256
+	set notermguicolors
+	if tty_console
+		# Force &t_Co down to 8 so sonokai's own `&t_Co < 256 -> finish`
+		# guard fires and leaves Vim's built-in 8/16-color highlighting
+		# (readable) instead of 256-color cterm indices. Needed both for a
+		# direct tty and for a tmux client that reports 256 colors while
+		# running on top of an 8-color console.
+		set t_Co=8
+	else
+		# Fallback: 256-color mode for terminals without true color support
+		set t_Co=256
+	endif
 
 	# Disable Background Color Erase (BCE) so that color schemes
 	# render properly when inside 256-color tmux and GNU screen.
@@ -191,64 +275,8 @@ set jumpoptions+=stack
 # }
 
 # Clipboard {
-# Detect the outermost terminal type by walking up the real process
-# tree from the current Vim (or its tmux client). A real console
-# (kmscon/TTY/console) makes the GUI clipboard unusable even if
-# $DISPLAY/$WAYLAND_DISPLAY is set.
-# Return value: 'physical_console' | 'pseudo_terminal' | 'remote_ssh' | 'no_tty' | 'unknown'
-def GetRootTerminalType(): string
-	var pid = getpid()
-	if !empty($TMUX)
-		var pid_str = trim(system('tmux display-message -p "#{client_pid}" 2>/dev/null'))
-		if pid_str =~ '^[0-9]\+$'
-			pid = str2nr(pid_str)
-		endif
-	endif
-
-	var uname = trim(system('uname -s'))
-	if empty(uname) || uname =~? 'unknown'
-		return 'unknown'
-	endif
-
-	var last_tty = ''
-	for _ in range(10)
-		var line = trim(system('ps -o ppid=,tty=,comm= -p ' .. pid))
-		var parts = matchlist(line, '^\s*\(\S\+\)\s\+\(\S\+\)\s*\(.*\)$')
-		if empty(parts)
-			break
-		endif
-		var ppid = parts[1]
-		var tty = parts[2]
-		var comm = parts[3]
-		if comm ==# 'kmscon' || comm ==# 'login'
-			return 'physical_console'
-		endif
-		if tty != '' && tty != '?'
-			last_tty = tty
-		endif
-		if ppid == '' || str2nr(ppid) <= 1
-			break
-		endif
-		pid = str2nr(ppid)
-	endfor
-
-	if last_tty == ''
-		return 'no_tty'
-	endif
-	if uname =~? 'Linux'
-		if last_tty =~ '^tty[0-9]\+$'
-			return 'physical_console'
-		elseif last_tty =~ '^pts/'
-			return !empty($SSH_TTY) ? 'remote_ssh' : 'pseudo_terminal'
-		endif
-	endif
-	if uname =~? 'Darwin'
-		return last_tty ==# 'console' || last_tty ==# '/dev/console'
-			? 'physical_console' : 'pseudo_terminal'
-	endif
-	return 'unknown'
-enddef
-
+# The outermost terminal type was already detected before the color block
+# and cached in `root_terminal` (see "Terminal type detection" above).
 def TmuxAvailable(): bool
 	return !empty($TMUX)
 enddef
@@ -278,7 +306,8 @@ endif
 # Use the GUI clipboard (X11/Wayland/macOS) when a display is
 # available and we are not on a real console (kmscon/TTY), where
 # the GUI clipboard is unusable; there, fall back to tmux buffers.
-if GetRootTerminalType() != 'physical_console' && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
+var is_physical_console = root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
+if !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	if has('unnamedplus')
 		# When possible use + register for copy-paste
 		set clipboard=unnamed,unnamedplus
