@@ -157,6 +157,18 @@ install_optional_bin() {
 	bash-language-server)
 		sudo npm install -g bash-language-server
 		;;
+	shfmt)
+		go install mvdan.cc/sh/v3/cmd/shfmt@latest 2>/dev/null || install_pkg shfmt || ok=false
+		;;
+	staticcheck)
+		go install honnef.co/go/tools/cmd/staticcheck@latest 2>/dev/null || ok=false
+		;;
+	black)
+		sudo pip3 install black 2>/dev/null || pip3 install black 2>/dev/null || ok=false
+		;;
+	clang-tidy)
+		install_pkg "$(pkg_name "$bin")" || ok=false
+		;;
 	vim-language-server)
 		sudo npm install -g vim-language-server
 		;;
@@ -225,6 +237,7 @@ declare -A APT_NAMES=(
 	["global"]="global"
 	["pygmentize"]="python3-pygments"
 	["clangd"]="clangd"
+	["clang-tidy"]="clang-tidy"
 	["gcc"]="gcc"
 	["g++"]="g++"
 	["go"]="golang-go"
@@ -240,6 +253,7 @@ declare -A PACMAN_NAMES=(
 	["global"]="global"
 	["pygmentize"]="python-pygments"
 	["clangd"]="clang"
+	["clang-tidy"]="clang"
 	["gcc"]="gcc"
 	["g++"]="gcc"
 	["go"]="go"
@@ -256,6 +270,7 @@ declare -A BREW_NAMES=(
 	["delta"]="git-delta"
 	["global"]="global"
 	["clangd"]="llvm"
+	["clang-tidy"]="llvm"
 	["gcc"]="gcc"
 	["g++"]="gcc"
 	["go"]="go"
@@ -275,6 +290,7 @@ declare -A ZYPPER_NAMES=(
 	["global"]="global"
 	["pygmentize"]="python3-Pygments"
 	["clangd"]="clang"
+	["clang-tidy"]="clang"
 	["gcc"]="gcc"
 	["g++"]="gcc-c++"
 	["go"]="go"
@@ -293,6 +309,7 @@ declare -A YUM_NAMES=(
 	["global"]="global"
 	["pygmentize"]="python3-pygments"
 	["clangd"]="clang-tools-extra"
+	["clang-tidy"]="clang-tools-extra"
 	["gcc"]="gcc"
 	["g++"]="gcc-c++"
 	["go"]="golang"
@@ -318,12 +335,12 @@ pkg_name() {
 # ──────────── language-grouped optional deps ────────────
 
 declare -A DEPS_BY_GROUP
-DEPS_BY_GROUP["C/C++"]="gcc g++ clangd"
-DEPS_BY_GROUP["Go"]="go gopls"
-DEPS_BY_GROUP["Python"]="python3 pylsp"
+DEPS_BY_GROUP["C/C++"]="gcc g++ clangd clang-tidy"
+DEPS_BY_GROUP["Go"]="go gopls staticcheck"
+DEPS_BY_GROUP["Python"]="python3 pylsp black"
 DEPS_BY_GROUP["Rust"]="cargo rust-analyzer"
 DEPS_BY_GROUP["Lua"]="lua-language-server"
-DEPS_BY_GROUP["Shell"]="node bash-language-server"
+DEPS_BY_GROUP["Shell"]="node bash-language-server shfmt"
 DEPS_BY_GROUP["Vim"]="node vim-language-server"
 DEPS_BY_GROUP["JavaScript/TypeScript"]="node typescript-language-server tsc"
 DEPS_BY_GROUP["JSON"]="node vscode-json-language-server"
@@ -471,6 +488,10 @@ if ! $INSTALL_MODE; then
 	INSTALL_HINTS["rust-analyzer"]="rustup component add rust-analyzer"
 	INSTALL_HINTS["node"]="https://nodejs.org/  # or: $(get_install_hint nodejs npm)"
 	INSTALL_HINTS["bash-language-server"]="npm install -g bash-language-server"
+	INSTALL_HINTS["shfmt"]="go install mvdan.cc/sh/v3/cmd/shfmt@latest"
+	INSTALL_HINTS["staticcheck"]="go install honnef.co/go/tools/cmd/staticcheck@latest"
+	INSTALL_HINTS["black"]="pip3 install black"
+	INSTALL_HINTS["clang-tidy"]="$(get_install_hint clang-tidy)"
 	INSTALL_HINTS["vim-language-server"]="npm install -g vim-language-server"
 	INSTALL_HINTS["typescript-language-server"]="npm install -g typescript-language-server typescript"
 	INSTALL_HINTS["tsc"]="npm install -g typescript"
