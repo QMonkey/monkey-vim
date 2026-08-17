@@ -925,6 +925,9 @@ Leader+gD       整个项目与暂存区差异对比
 Leader+gb       Git blame
 ```
 
+> `Leader+gb` / `Leader+gl` / `Leader+gL` 在可视模式下也可用，
+> 对选中行执行 blame 或浏览相关提交。
+
 ### 3. Git 差异标记：[vim-gitgutter](https://github.com/airblade/vim-gitgutter)
 
 #### 快捷键
