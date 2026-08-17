@@ -393,7 +393,7 @@ enddef
 # Don't need to install these if you are running a recent version of Vim
 g:markdown_syntax_conceal = 0
 g:markdown_minlines = 100
-g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'vim', 'sql', 'yaml', 'json']
+g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json']
 # }
 
 # Docset {
@@ -1174,12 +1174,15 @@ nnoremap <silent><Leader>l <ScriptCmd>call QuickFixToggle('l', 'silent! lopen 10
 nnoremap <silent><Leader>gg <Cmd>Git<CR>
 nnoremap <silent><Leader>gd <Cmd>Gdiffsplit!<CR>
 nnoremap <silent><Leader>gD <Cmd>Git diff<CR>
-map <silent><Leader>gb <Cmd>Git blame<CR>
+nnoremap <silent><Leader>gb :Git blame<CR>
+xnoremap <silent><Leader>gb :Git blame<CR>
 # }
 
 # gv.vim {
-map <silent><Leader>gl <Cmd>GV!<CR>
-map <silent><Leader>gL <Cmd>GV<CR>
+nnoremap <silent><Leader>gl :GV!<CR>
+xnoremap <silent><Leader>gl :GV!<CR>
+nnoremap <silent><Leader>gL :GV<CR>
+xnoremap <silent><Leader>gL :GV<CR>
 # }
 
 # vim-gitgutter {
