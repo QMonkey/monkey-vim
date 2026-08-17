@@ -923,6 +923,9 @@ Leader+gD       Diff entire project against index
 Leader+gb       Git blame
 ```
 
+> `Leader+gb` / `Leader+gl` / `Leader+gL` also work in Visual mode to
+> blame or browse commits for the selected lines.
+
 ### 3. Git diff gutter: [vim-gitgutter](https://github.com/airblade/vim-gitgutter)
 
 #### Keymaps
