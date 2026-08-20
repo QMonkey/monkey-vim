@@ -556,14 +556,15 @@ Leader+gh           Show current line diagnostics (popup)
 Leader+d            Show/hide current buffer diagnostics (location list)
 ```
 
-Files are auto-formatted on save via LSP. Completion is enabled by default — LSP-powered suggestions appear automatically as you type. `K` uses `:LspHover` as the keyword program for most filetypes.
+Files are auto-formatted on save via LSP. Completion is enabled by default — LSP-powered suggestions appear automatically as you type. `K` looks up the word under the cursor: `:Man` by default, `:LspHover` in LSP-enabled filetypes, and `:help` in Vim/help files.
 
-#### 1.9 Cscope
+#### 1.9 Cscope & Ctags
 
 ```
 gs                  Find symbol under cursor (cscope)
 gD                  Find global definition (cscope, fallback to ctags on failure)
 gR                  Find callers (cscope)
+g]                  Jump to the tag under cursor, listing all matches in quickfix
 ```
 
 Cscope supports `c`, `d`, `e`, `f`, `g`, `i`, `s`, `t` query types, with results in quickfix.
