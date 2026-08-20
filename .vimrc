@@ -36,10 +36,10 @@ g:plug_timeout = 300
 plug#begin(expand($HOME .. '/.vim/bundle'))
 
 # Plugins {
-# -- Theme / UI
+# Theme / UI
 Plug 'sainnhe/sonokai'
 Plug 'itchyny/lightline.vim'
-# -- Editor
+# Editor
 Plug 'svermeulen/vim-subversive'
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
@@ -48,23 +48,23 @@ Plug 'cohama/lexima.vim'
 Plug 'andymass/vim-matchup'
 Plug 'Konfekt/FastFold'
 Plug 'kshenoy/vim-signature'
-# -- Navigation / Search
+# Navigation / Search
 Plug 'junegunn/fzf' | Plug 'junegunn/fzf.vim'
-Plug 'dyng/ctrlsf.vim'
+Plug 'dyng/ctrlsf.vim', {'on': ['CtrlSF', 'CtrlSFQuickfix', 'CtrlSFToggle', 'CtrlSFOpen', 'CtrlSFUpdate', 'CtrlSFClose', 'CtrlSFFocus', '<Plug>CtrlSFPrompt', '<Plug>CtrlSFCwordExec', '<Plug>CtrlSFVwordExec']}
 Plug 'monkoose/vim9-stargate'
 Plug 'haya14busa/vim-asterisk'
-# -- Git
+# Git
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'airblade/vim-gitgutter'
-# -- Project
+# Project
 Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'justinmk/vim-dirvish'
 Plug 'tpope/vim-obsession'
-# -- Code Intelligence
-Plug 'yegappan/lsp'
+# Code Intelligence
+Plug 'yegappan/lsp', {'on': []}
 Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
-# -- Tools
+# Tools
 Plug 'mg979/vim-visual-multi'
 Plug 'tpope/vim-eunuch'
 Plug 'romainl/vim-qf'
@@ -82,6 +82,11 @@ source $VIMRUNTIME/ftplugin/man.vim
 # Disable netrw
 g:loaded_netrw = 1
 g:loaded_netrwPlugin = 1
+# }
+
+# Leader {
+g:mapleader = ','
+g:maplocalleader = ','
 # }
 
 # Terminal type detection {
@@ -200,267 +205,24 @@ else
 endif
 # }
 
-# Leader {
-g:mapleader = ','
-g:maplocalleader = ','
-# }
-
-# Encoding {
-language message en_US.UTF-8
-set langmenu=en_US.UTF-8
-set encoding=utf-8
-scriptencoding utf-8
-
-# Only work in terminal vim
-set termencoding=utf-8
-set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
-set fileformats=unix,dos,mac
-
-# Character width. Should never be enable!
-#set ambiwidth=double
-# }
-
-# Number {
-set relativenumber number
-set ruler
-
-augroup RelativeNumber
-	autocmd!
-	# Only display relativenumber in active normal mode buffer
-	autocmd WinEnter,InsertLeave * set relativenumber
-	autocmd WinLeave,InsertEnter * set norelativenumber number
-augroup END
-# }
-
-# Cursorline {
-set cursorline
-
-augroup CursorLine
-	autocmd!
-	# Disable cursorline in insert mode
-	autocmd InsertEnter * set nocursorline
-	autocmd InsertLeave * set cursorline
-augroup END
-# }
-
-# Search {
-set incsearch
-set hlsearch
-set ignorecase
-set smartcase
-set showmatch
-
-# The ":substitute" flag 'g' is default on. This means that
-# all matches in a line are substituted instead of one. When a 'g' flag
-# is given to a ":substitute" command, this will toggle the substitution
-# of all or one match
-set gdefault
-
-# Show search count message when searching
-set shortmess-=S shortmess+=s
-
-augroup Hlsearch
-	autocmd!
-	autocmd InsertEnter * if v:hlsearch | feedkeys("\<Cmd>nohlsearch\<CR>", 'm') | endif
-augroup END
-# }
-
-# Completion {
-set wildmenu
-set wildmode=list:longest,full
-set magic
-set completeopt=menu,menuone
-# }
-
-# Swap {
-set directory=$HOME/.vim/swap//
-set jumpoptions+=stack
-# }
-
-# Clipboard {
-def TmuxAvailable(): bool
-	return !empty($TMUX)
-enddef
-
-def TmuxCopy(reg: string, type: string, lines: list<string>)
-	system('tmux load-buffer -w -', join(lines, "\n"))
-enddef
-
-def TmuxPaste(reg: string): list<any>
-	var content = system('tmux save-buffer -')
-	return ['v', split(content, "\n", true)]
-enddef
-
-# tmux clipboard provider, used as +/* register fallback when the
-# GUI clipboard is unavailable (e.g. kmscon/TTY inside tmux).
-# Registered whenever tmux is present; only activated by
-# `set clipmethod=tmux` in the branch below.
-if !empty($TMUX)
-	v:clipproviders["tmux"] = {
-		available: TmuxAvailable,
-		copy: { '+': TmuxCopy, '*': TmuxCopy },
-		paste: { '+': TmuxPaste, '*': TmuxPaste },
-	}
+# CheckFileChanges {
+# Enable focus event tracking for terminal vim.
+# Most terminal terminfo entries lack Ss/Se capability definitions,
+# causing t_fe/t_fd to remain empty. Set them manually so that
+# FocusGained/FocusLost autocommands work (e.g. for checktime).
+if !has('gui_running') && &t_fe == ''
+	&t_fe = "\<Esc>[?1004h"
+	&t_fd = "\<Esc>[?1004l"
+	execute "set <FocusGained>=\<Esc>[I"
+	execute "set <FocusLost>=\<Esc>[O"
 endif
 
-# Choose the clipboard backend for the +/* registers.
-# Use the GUI clipboard (X11/Wayland/macOS) when a display is
-# available and we are not on a real console (kmscon/TTY), where
-# the GUI clipboard is unusable; there, fall back to tmux buffers.
-var is_physical_console = root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
-if !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
-	if has('unnamedplus')
-		# When possible use + register for copy-paste
-		set clipboard=unnamed,unnamedplus
-	else
-		# Use * register for copy-paste (X11 without +clipboard, or Mac)
-		set clipboard=unnamed
-	endif
-elseif !empty($TMUX)
-	set clipboard=unnamed,unnamedplus
-	set clipmethod=tmux
-endif
-# }
-
-# Indent {
-set smartindent
-set autoindent
-set smarttab
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set noexpandtab
-set textwidth=0
-set wrap
-set breakindent
-# }
-
-# Split {
-set splitright
-# }
-
-# Timing {
-# For mappings
-set timeout
-set timeoutlen=1000
-# For key codes
-set ttimeout
-# Unnoticeable small value
-set ttimeoutlen=10
-set updatetime=300
-# }
-
-# Display {
-set list
-set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
-# }
-
-# FileType {
-augroup FileTypeGroup
+augroup CheckFileChanges
 	autocmd!
-	# Space indent, 4-width: Rust, Python, Markdown
-	autocmd FileType rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
-	# Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
-	autocmd FileType javascript,typescript,lua,yaml,json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
-	autocmd BufRead,BufNewFile *.gotmpl,*.go.tmpl setlocal filetype=gotmpl
-	autocmd BufNewFile *.sh,*.py AutoInsertFileHead()
-
-	# Move the quickfix window to the bottom of the window layout
-	autocmd FileType qf wincmd J
-augroup END
-
-def AutoInsertFileHead()
-	# Shell
-	if &filetype ==# 'sh'
-		setline(1, '#!/usr/bin/env bash')
-		cursor(line('$'), 0)
-		put = ''
-	endif
-
-	# Python
-	if &filetype ==# 'python'
-		setline(1, '#!/usr/bin/env python3')
-		cursor(line('$'), 0)
-		put = repeat(nr2char(10), 2)
-	endif
-
-	cursor(line('$'), 0)
-enddef
-# }
-
-# vim-markdown {
-# tpope/vim-markdown
-# Don't need to install these if you are running a recent version of Vim
-g:markdown_syntax_conceal = 0
-g:markdown_minlines = 100
-g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json']
-# }
-
-# Docset {
-augroup Docset
-	autocmd!
-	autocmd FileType man,help setlocal nolist
-
-	# Use :LspHover as the default docset
-	autocmd FileType * setlocal keywordprg=:LspHover
-	autocmd FileType c,man setlocal keywordprg=:Man
-	autocmd FileType c setenv('MANSECT', '2:3:1:4:5:6:7:8:9')
-	autocmd FileType vim,help setlocal keywordprg=:help
+	# Check file changes outside vim (terminal/TTY/kmscon)
+	autocmd FocusGained,BufWinEnter,WinEnter,CursorHold * if getcmdtype() ==# '' | checktime | endif
 augroup END
 # }
-
-# Resize splits when the window is resized
-def ResizeAllTab()
-	var cur_tab = tabpagenr()
-	silent! execute 'tabdo wincmd = '
-	silent! execute 'tabnext ' .. cur_tab
-enddef
-
-augroup AutoResize
-	autocmd!
-	autocmd VimResized * ResizeAllTab()
-augroup END
-
-# Scroll {
-set scrolloff=7
-set sidescrolloff=15
-set sidescroll=1
-# }
-
-# Fold {
-# Disable fold on startup
-set nofoldenable
-set foldmethod=syntax
-set foldlevel=99
-
-# Use indent style fold for python and yaml
-augroup LanguageFold
-	autocmd!
-	autocmd FileType python,yaml setlocal foldmethod=indent
-augroup END
-# }
-
-# Misc {
-set backspace=indent,eol,start
-set hidden
-set autoread
-set belloff=all
-set mouse=nvi
-set showtabline=1
-set laststatus=2
-# }
-
-# Restore cursor to previous editing position
-augroup RestoreCursorPosition
-	autocmd!
-	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
-augroup END
-
-# Clear jumplist on vim startup
-augroup Jumplist
-	autocmd!
-	autocmd VimEnter * :clearjumps
-augroup END
 
 # lightline.vim {
 g:lightline = {
@@ -684,60 +446,291 @@ augroup LightLine
 augroup END
 # }
 
-# vim-visual-multi lightline integration {
-# Use sonokai's purple accent in true-color mode; on the 16-color console
-# fall back to the closest ANSI purple (cterm 13) with console-safe indices.
-if !is_tty_console
-	highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
-	highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
-else
-	highlight VM_Mode cterm=bold ctermfg=0 ctermbg=13 gui=bold guifg=#1a1b26 guibg=#bb9af7
-	highlight VM_Info ctermfg=13 ctermbg=0 guifg=#bb9af7 guibg=#3b3f54
-endif
+# Session / Restore {
+set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
-var saved_normal_left = []
-def VMEnter()
-	var pal = GetLightlinePalette()
-	if empty(pal)
+def GetSessionFileInfo(): list<string>
+	var session_dir = expand($HOME .. '/.cache/sessions/')
+	var session_filename = session_dir .. substitute(trim(GetFileRoot(expand('%:h')), '/', 1), '/', '-', 'g') .. '-session.vim'
+	return [session_dir, session_filename]
+enddef
+
+def BackupSession()
+	var session_info = GetSessionFileInfo()
+	var session_dir = session_info[0]
+	var session_filename = session_info[1]
+	mkdir(session_dir, 'p')
+	execute 'Obsession' session_filename
+enddef
+
+def RestoreSession()
+	var session_info = GetSessionFileInfo()
+	var session_filename = session_info[1]
+	if argc() == 0 && filereadable(session_filename)
+		FixVim9SessionFile(session_filename)
+		execute 'source' session_filename
+	endif
+enddef
+
+def FixVim9SessionFile(file: string)
+	# Since Vim 9.2 (patch 9.2.0579) :mksession writes Vim9 script, but the
+	# Obsession plugin inserts legacy "let g:this_session = ..." lines which are
+	# not allowed in a Vim9 script (E1126).  Rewrite them without ":let".
+	if !filereadable(file)
 		return
 	endif
-	saved_normal_left = copy(pal.normal.left[0])
-	if !is_tty_console
-		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
-	else
-		# cterm 0 = black fg on cterm 13 = bright magenta
-		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 0, 13, 'bold']
+	var lines = readfile(file)
+	if empty(lines) || lines[0] !=# 'vim9script'
+		return
 	endif
-	lightline#highlight()
-	lightline#update()
-enddef
-
-def VMLeave()
-	if !empty(saved_normal_left)
-		var pal = GetLightlinePalette()
-		if !empty(pal)
-			pal.normal.left[0] = saved_normal_left
+	var changed = false
+	var i = 0
+	while i < len(lines)
+		if lines[i] =~# '^let g:this_'
+			lines[i] = substitute(lines[i], '^let ', '', '')
+			changed = true
 		endif
-		saved_normal_left = []
+		i += 1
+	endwhile
+	if changed
+		writefile(lines, file)
 	endif
-	lightline#highlight()
-	lightline#update()
 enddef
 
-augroup VMLightLine
+# Backup
+nnoremap <Leader>ws <ScriptCmd>call BackupSession()<CR>
+# Remove
+nnoremap <Leader>rs <Cmd>Obsession!<CR>
+
+# Restore cursor to previous editing position
+augroup RestoreCursorPosition
 	autocmd!
-	autocmd User visual_multi_start silent VMEnter()
-	autocmd User visual_multi_exit  silent VMLeave()
+	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+augroup END
+
+augroup Session
+	autocmd!
+	# Obsession fires User Obsession after every persist; keep the saved file usable.
+	autocmd User Obsession FixVim9SessionFile(g:this_session)
+	autocmd VimEnter * ++nested RestoreSession()
+augroup END
+
+# Clear jumplist on vim startup
+augroup Jumplist
+	autocmd!
+	autocmd VimEnter * :clearjumps
 augroup END
 # }
 
-# vim-matchup {
-# sonokai explicitly defines MatchParenCur/MatchWord,
-# which blocks vim-matchup's hi def link. Re-link them.
-highlight! link MatchParen Search
-highlight! link MatchParenCur Search
-highlight! link MatchWord Search
-highlight! link MatchWordCur Search
+# vim-gutentags {
+if executable('gtags') && has('cscope')
+	$GTAGSLABEL = 'native-pygments'
+	var gtags_conf_candidates = [
+		'/usr/local/etc/gtags.conf',
+		'/etc/gtags.conf',
+		'/etc/gtags/gtags.conf',
+		'/usr/share/gtags/gtags.conf',
+		'/usr/local/share/gtags/gtags.conf',
+		'/usr/local/opt/global/share/gtags/gtags.conf',
+		'/opt/homebrew/etc/gtags.conf',
+		'/opt/homebrew/share/gtags/gtags.conf',
+		'/opt/homebrew/opt/global/share/gtags/gtags.conf',
+	]
+	if !empty($GTAGSCONF)
+		insert(gtags_conf_candidates, $GTAGSCONF)
+	endif
+	for gtags_conf in gtags_conf_candidates
+		if filereadable(gtags_conf) && stridx(join(readfile(gtags_conf), "\n"), 'native-pygments:') >= 0
+			$GTAGSCONF = gtags_conf
+			break
+		endif
+	endfor
+	g:gutentags_modules = ['ctags', 'gtags_cscope']
+else
+	g:gutentags_modules = ['ctags']
+endif
+g:gutentags_project_root = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
+g:gutentags_cache_dir = expand($HOME .. '/.cache/tags')
+g:gutentags_ctags_tagfile = '.tags'
+g:gutentags_ctags_auto_set_tags = 1
+g:gutentags_ctags_extra_args = [
+	'--fields=+liaS',
+	'--extras=+q',
+	'--langmap=c:.c.h,vim:.vim.vimrc',
+	'--c-kinds=+p',
+	'--c++-kinds=+p',
+	'--python-kinds=+i',
+]
+g:gutentags_auto_add_gtags_cscope = 1
+g:gutentags_generate_on_missing = 1
+g:gutentags_generate_on_new = 0
+g:gutentags_generate_on_write = 1
+g:gutentags_background_update = 1
+g:gutentags_resolve_symlinks = 1
+g:gutentags_define_advanced_commands = 1
+# }
+
+# Encoding {
+language message en_US.UTF-8
+set langmenu=en_US.UTF-8
+set encoding=utf-8
+scriptencoding utf-8
+
+# Only work in terminal vim
+set termencoding=utf-8
+set fileencodings=utf-8,gb18030,cp936,ucs-bom,big5,euc-jp,euc-kr,latin1
+set fileformats=unix,dos,mac
+
+# Character width. Should never be enable!
+#set ambiwidth=double
+# }
+
+# Number {
+set relativenumber number
+set ruler
+
+augroup RelativeNumber
+	autocmd!
+	# Only display relativenumber in active normal mode buffer
+	autocmd WinEnter,InsertLeave * set relativenumber
+	autocmd WinLeave,InsertEnter * set norelativenumber number
+augroup END
+# }
+
+# Cursorline {
+set cursorline
+
+augroup CursorLine
+	autocmd!
+	# Disable cursorline in insert mode
+	autocmd InsertEnter * set nocursorline
+	autocmd InsertLeave * set cursorline
+augroup END
+# }
+
+# Search {
+set incsearch
+set hlsearch
+set ignorecase
+set smartcase
+set showmatch
+
+# The ":substitute" flag 'g' is default on. This means that
+# all matches in a line are substituted instead of one. When a 'g' flag
+# is given to a ":substitute" command, this will toggle the substitution
+# of all or one match
+set gdefault
+
+# Show search count message when searching
+set shortmess-=S shortmess+=s
+
+augroup Hlsearch
+	autocmd!
+	autocmd InsertEnter * if v:hlsearch | feedkeys("\<Cmd>nohlsearch\<CR>", 'm') | endif
+augroup END
+# }
+
+# Completion {
+set wildmenu
+set wildmode=list:longest,full
+set magic
+set completeopt=menu,menuone
+# }
+
+# Swap {
+set directory=$HOME/.vim/swap//
+set jumpoptions+=stack
+# }
+
+# Clipboard {
+def TmuxAvailable(): bool
+	return !empty($TMUX)
+enddef
+
+def TmuxCopy(reg: string, type: string, lines: list<string>)
+	system('tmux load-buffer -w -', join(lines, "\n"))
+enddef
+
+def TmuxPaste(reg: string): list<any>
+	var content = system('tmux save-buffer -')
+	return ['v', split(content, "\n", true)]
+enddef
+
+# tmux clipboard provider, used as +/* register fallback when the
+# GUI clipboard is unavailable (e.g. kmscon/TTY inside tmux).
+# Registered whenever tmux is present; only activated by
+# `set clipmethod=tmux` in the branch below.
+if !empty($TMUX)
+	v:clipproviders["tmux"] = {
+		available: TmuxAvailable,
+		copy: { '+': TmuxCopy, '*': TmuxCopy },
+		paste: { '+': TmuxPaste, '*': TmuxPaste },
+	}
+endif
+
+# Choose the clipboard backend for the +/* registers.
+# Use the GUI clipboard (X11/Wayland/macOS) when a display is
+# available and we are not on a real console (kmscon/TTY), where
+# the GUI clipboard is unusable; there, fall back to tmux buffers.
+var is_physical_console = root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
+if !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
+	if has('unnamedplus')
+		# When possible use + register for copy-paste
+		set clipboard=unnamed,unnamedplus
+	else
+		# Use * register for copy-paste (X11 without +clipboard, or Mac)
+		set clipboard=unnamed
+	endif
+elseif !empty($TMUX)
+	set clipboard=unnamed,unnamedplus
+	set clipmethod=tmux
+endif
+# }
+
+# Indent {
+set smartindent
+set autoindent
+set smarttab
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set noexpandtab
+set textwidth=0
+set wrap
+set breakindent
+# }
+
+# Timing {
+# For mappings
+set timeout
+set timeoutlen=1000
+# For key codes
+set ttimeout
+# Unnoticeable small value
+set ttimeoutlen=10
+set updatetime=300
+# }
+
+# Display {
+set list
+set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
+# }
+
+# Scroll {
+set scrolloff=7
+set sidescrolloff=15
+set sidescroll=1
+# }
+
+# Misc {
+set splitright
+set backspace=indent,eol,start
+set hidden
+set autoread
+set belloff=all
+set mouse=nvi
+set showtabline=1
+set laststatus=2
 # }
 
 # Key map {
@@ -780,7 +773,160 @@ cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 cnoremap <C-h> <BackSpace>
 cnoremap <C-d> <Del>
+# }
 
+# Buffer {
+def OpenPrompt(prompt: string, cmd: string)
+	var name = Strip(input(prompt, '', 'file'))
+	if name !=# ''
+		execute cmd .. ' ' .. fnameescape(name)
+	endif
+enddef
+
+def Strip(input_string: string): string
+	return substitute(input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+enddef
+
+nnoremap <silent>[b <Cmd>bprevious<CR>
+nnoremap <silent>]b <Cmd>bnext<CR>
+nnoremap <silent><Leader>o <ScriptCmd>call OpenPrompt('New buffer name: ', 'edit')<CR>
+# }
+
+# Tab {
+nnoremap <silent>[t <Cmd>tabprevious<CR>
+nnoremap <silent>]t <Cmd>tabnext<CR>
+nnoremap <Leader>1 <Cmd>1tabnext<CR>
+nnoremap <Leader>2 <Cmd>2tabnext<CR>
+nnoremap <Leader>3 <Cmd>3tabnext<CR>
+nnoremap <Leader>4 <Cmd>4tabnext<CR>
+nnoremap <Leader>5 <Cmd>5tabnext<CR>
+nnoremap <Leader>6 <Cmd>6tabnext<CR>
+nnoremap <Leader>7 <Cmd>7tabnext<CR>
+nnoremap <Leader>8 <Cmd>8tabnext<CR>
+nnoremap <Leader>9 <Cmd>9tabnext<CR>
+nnoremap <Leader>[ <Cmd>tabfirst<CR>
+nnoremap <Leader>] <Cmd>tablast<CR>
+nnoremap <silent><Leader><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 'tabnew')<CR>
+# }
+
+# Split {
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nnoremap <silent><Leader><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
+nnoremap <silent><Leader><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
+# }
+
+# F1 ~ F10 {
+nmap <F1> <Plug>CtrlSFPrompt
+nnoremap <silent><F2> <Cmd>CtrlSFToggle<CR>
+# }
+
+# Toggle {
+nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
+nnoremap <silent>cop <Cmd>set invpaste<CR>
+nnoremap <silent>col <Cmd>set invlist<CR>
+nnoremap <silent>con <Cmd>nohlsearch<CR>
+nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohlsearch<CR>
+# <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
+nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohlsearch<CR>
+
+# Disable paste mode when leaving insert mode
+augroup PasteMode
+	autocmd!
+	autocmd InsertLeave * setlocal nopaste
+augroup END
+# }
+
+# Resize {
+def ZoomToggle()
+	if exists('t:zoomed') && t:zoomed && win_id2win(t:zoom_winid) != 0
+		if winnr('$') == t:zoom_wincount
+			execute t:zoom_winrestcmd
+		endif
+		t:zoomed = false
+	else
+		t:zoom_winid = win_getid()
+		t:zoom_wincount = winnr('$')
+		t:zoom_winrestcmd = winrestcmd()
+		wincmd _
+		wincmd |
+		t:zoomed = true
+	endif
+enddef
+
+nnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
+tnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
+
+def ResizeAllTab()
+	var cur_tab = tabpagenr()
+	silent! execute 'tabdo wincmd = '
+	silent! execute 'tabnext ' .. cur_tab
+enddef
+
+augroup AutoResize
+	autocmd!
+	autocmd VimResized * ResizeAllTab()
+augroup END
+# }
+
+# FileType {
+augroup FileTypeGroup
+	autocmd!
+	# Space indent, 4-width: Rust, Python, Markdown
+	autocmd FileType rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+	# Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
+	autocmd FileType javascript,typescript,lua,yaml,json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd BufRead,BufNewFile *.gotmpl,*.go.tmpl setlocal filetype=gotmpl
+	autocmd BufNewFile *.sh,*.py AutoInsertFileHead()
+
+	# Move the quickfix window to the bottom of the window layout
+	autocmd FileType qf wincmd J
+augroup END
+
+def AutoInsertFileHead()
+	# Shell
+	if &filetype ==# 'sh'
+		setline(1, '#!/usr/bin/env bash')
+		cursor(line('$'), 0)
+		put = ''
+	endif
+
+	# Python
+	if &filetype ==# 'python'
+		setline(1, '#!/usr/bin/env python3')
+		cursor(line('$'), 0)
+		put = repeat(nr2char(10), 2)
+	endif
+
+	cursor(line('$'), 0)
+enddef
+# }
+
+# vim-markdown {
+# tpope/vim-markdown
+# Don't need to install these if you are running a recent version of Vim
+g:markdown_syntax_conceal = 0
+g:markdown_minlines = 100
+g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json']
+# }
+
+# Docset {
+augroup Docset
+	autocmd!
+	autocmd FileType man,help setlocal nolist
+
+	# Default docset: built-in :Man for everything
+	autocmd FileType * setlocal keywordprg=:Man
+	# LSP-enabled file types prefer :LspHover
+	autocmd FileType cpp,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,markdown,yaml,json setlocal keywordprg=:LspHover
+	autocmd FileType c setlocal keywordprg=:Man | setenv('MANSECT', '2:3:1:4:5:6:7:8:9')
+	autocmd FileType vim,help setlocal keywordprg=:help
+augroup END
+# }
+
+# Quit {
 def SendExitToAllTerminals()
 	for buf in getbufinfo()
 		if getbufvar(buf.bufnr, '&buftype') == 'terminal' && term_getstatus(buf.bufnr) =~ 'running'
@@ -915,134 +1061,10 @@ nnoremap <F3> :botright terminal ++rows=20<Space>
 nnoremap <silent><F4> <ScriptCmd>call TerminalToggle()<CR>
 tnoremap <silent><F4> <C-\><C-n><ScriptCmd>call TerminalToggle()<CR>
 
-augroup TermSettings
+augroup TerminalSettings
 	autocmd!
 	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide scrolloff=0 | endif
 augroup END
-# }
-
-def OpenPrompt(prompt: string, cmd: string)
-	var name = Strip(input(prompt, '', 'file'))
-	if name !=# ''
-		execute cmd .. ' ' .. fnameescape(name)
-	endif
-enddef
-
-def Strip(input_string: string): string
-	return substitute(input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
-enddef
-
-# Buffer {
-nnoremap <silent><Leader>o <ScriptCmd>call OpenPrompt('New buffer name: ', 'edit')<CR>
-
-nnoremap <silent>[b <Cmd>bprevious<CR>
-nnoremap <silent>]b <Cmd>bnext<CR>
-# }
-
-# Tab {
-nnoremap <silent><Leader><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 'tabnew')<CR>
-nnoremap <silent>[t <Cmd>tabprevious<CR>
-nnoremap <silent>]t <Cmd>tabnext<CR>
-nnoremap <Leader>1 <Cmd>1tabnext<CR>
-nnoremap <Leader>2 <Cmd>2tabnext<CR>
-nnoremap <Leader>3 <Cmd>3tabnext<CR>
-nnoremap <Leader>4 <Cmd>4tabnext<CR>
-nnoremap <Leader>5 <Cmd>5tabnext<CR>
-nnoremap <Leader>6 <Cmd>6tabnext<CR>
-nnoremap <Leader>7 <Cmd>7tabnext<CR>
-nnoremap <Leader>8 <Cmd>8tabnext<CR>
-nnoremap <Leader>9 <Cmd>9tabnext<CR>
-nnoremap <Leader>[ <Cmd>tabfirst<CR>
-nnoremap <Leader>] <Cmd>tablast<CR>
-# }
-
-# Split {
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-h> <C-w>h
-nnoremap <C-l> <C-w>l
-nnoremap <silent><Leader><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
-nnoremap <silent><Leader><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
-# }
-
-# F1 ~ F10 {
-nmap <F1> <Plug>CtrlSFPrompt
-nnoremap <silent><F2> <Cmd>CtrlSFToggle<CR>
-# }
-
-# Toggle {
-nnoremap <silent>cod :<C-R>=&diff ? 'diffoff' : 'diffthis'<CR><CR>
-nnoremap <silent>cop <Cmd>set invpaste<CR>
-nnoremap <silent>col <Cmd>set invlist<CR>
-nnoremap <silent>con <Cmd>nohlsearch<CR>
-nnoremap <silent><Leader><Space> :%s/\s\+$//e<CR>:nohlsearch<CR>
-# <Leader><Leader><Space>: strip trailing whitespace + \r (DOS newline)
-nnoremap <silent><Leader><Leader><Space> :%s/\s\+$//e<CR>:%s/\r$//e<CR>:nohlsearch<CR>
-
-# Disable paste mode when leaving insert mode
-augroup PasteMode
-	autocmd!
-	autocmd InsertLeave * setlocal nopaste
-augroup END
-# }
-
-# Zoom {
-def ZoomToggle()
-	if exists('t:zoomed') && t:zoomed && win_id2win(t:zoom_winid) != 0
-		if winnr('$') == t:zoom_wincount
-			execute t:zoom_winrestcmd
-		endif
-		t:zoomed = false
-	else
-		t:zoom_winid = win_getid()
-		t:zoom_wincount = winnr('$')
-		t:zoom_winrestcmd = winrestcmd()
-		wincmd _
-		wincmd |
-		t:zoomed = true
-	endif
-enddef
-
-nnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
-tnoremap <silent><Leader>z <ScriptCmd>call ZoomToggle()<CR>
-# }
-
-# vim-dirvish {
-nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
-nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetFileRoot(expand('~')))<CR>
-
-def GetFileRoot(fallback: string): string
-	var root = g:FindRootDirectory()
-	return root !=# '' ? root : fallback
-enddef
-
-augroup SplitExplorer
-	autocmd!
-	autocmd FileType dirvish silent! unmap <buffer>a
-	autocmd FileType dirvish silent! unmap <buffer>A
-	autocmd FileType dirvish silent! unmap <buffer>i
-	autocmd FileType dirvish silent! unmap <buffer>I
-	autocmd FileType dirvish silent! unmap <buffer>o
-	autocmd FileType dirvish silent! unmap <buffer>O
-
-	autocmd FileType dirvish noremap - <plug>(dirvish_up)
-	autocmd FileType dirvish noremap <silent><buffer>o :call dirvish#open('edit', 0)<CR>
-	autocmd FileType dirvish noremap <silent><buffer>a :call dirvish#open('split', 0)<CR>
-	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
-	autocmd FileType dirvish noremap <silent><buffer>t :call dirvish#open('tabedit', 0)<CR>
-augroup END
-# }
-
-# ctrlsf.vim {
-g:ctrlsf_confirm_save = 0
-g:ctrlsf_extra_backend_args = {
-			\ 'rg': '--hidden',
-			\ 'ag': '--hidden',
-			\ }
-g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
-
-nnoremap <silent><Leader>a <Plug>CtrlSFCwordExec
-vnoremap <silent><Leader>a <Plug>CtrlSFVwordExec
 # }
 
 # vim-rooter {
@@ -1062,6 +1084,25 @@ augroup END
 # }
 
 # Ctags {
+def TagJump()
+	var name = expand('<cword>')
+	var items = []
+	for t in taglist('^' .. escape(name, '\^$.') .. '$')
+		add(items, {'filename': t.filename, 'pattern': matchstr(t.cmd, '/\zs.*\ze/$'), 'text': t.name})
+	endfor
+	try
+		execute 'tag ' .. name
+	catch /E426/
+		EchoErr('Tag not found: ' .. name)
+		return
+	endtry
+	setqflist(items, 'r')
+	copen
+enddef
+
+nnoremap <silent>gd <C-]>
+nnoremap <silent>g] <ScriptCmd>TagJump()<CR>
+
 augroup Ctags
 	autocmd!
 	# Highlight .tags file as tags file
@@ -1082,54 +1123,6 @@ augroup CscopeQuickfix
 	autocmd QuickfixCmdPost cscope if !empty(getloclist(0)) | lwindow | endif
 	autocmd QuickfixCmdPost cscope if !empty(getqflist()) | cwindow | endif
 augroup END
-# }
-
-# vim-gutentags {
-if executable('gtags') && has('cscope')
-	$GTAGSLABEL = 'native-pygments'
-	var gtags_conf_candidates = [
-		'/usr/local/etc/gtags.conf',
-		'/etc/gtags.conf',
-		'/etc/gtags/gtags.conf',
-		'/usr/share/gtags/gtags.conf',
-		'/usr/local/share/gtags/gtags.conf',
-		'/usr/local/opt/global/share/gtags/gtags.conf',
-		'/opt/homebrew/etc/gtags.conf',
-		'/opt/homebrew/share/gtags/gtags.conf',
-		'/opt/homebrew/opt/global/share/gtags/gtags.conf',
-	]
-	if !empty($GTAGSCONF)
-		insert(gtags_conf_candidates, $GTAGSCONF)
-	endif
-	for gtags_conf in gtags_conf_candidates
-		if filereadable(gtags_conf) && stridx(join(readfile(gtags_conf), "\n"), 'native-pygments:') >= 0
-			$GTAGSCONF = gtags_conf
-			break
-		endif
-	endfor
-	g:gutentags_modules = ['ctags', 'gtags_cscope']
-else
-	g:gutentags_modules = ['ctags']
-endif
-g:gutentags_project_root = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
-g:gutentags_cache_dir = expand($HOME .. '/.cache/tags')
-g:gutentags_ctags_tagfile = '.tags'
-g:gutentags_ctags_auto_set_tags = 1
-g:gutentags_ctags_extra_args = [
-	'--fields=+liaS',
-	'--extras=+q',
-	'--langmap=c:.c.h,vim:.vim.vimrc',
-	'--c-kinds=+p',
-	'--c++-kinds=+p',
-	'--python-kinds=+i',
-]
-g:gutentags_auto_add_gtags_cscope = 1
-g:gutentags_generate_on_missing = 1
-g:gutentags_generate_on_new = 0
-g:gutentags_generate_on_write = 1
-g:gutentags_background_update = 1
-g:gutentags_resolve_symlinks = 1
-g:gutentags_define_advanced_commands = 1
 # }
 
 # vim-qf {
@@ -1170,6 +1163,84 @@ nnoremap <silent><Leader>q <ScriptCmd>call QuickFixToggle('q', 'silent! botright
 nnoremap <silent><Leader>l <ScriptCmd>call QuickFixToggle('l', 'silent! lopen 10')<CR>
 # }
 
+# vim-visual-multi {
+g:VM_maps = {}
+g:VM_maps['Select Operator'] = 'gs'
+g:VM_set_statusline = 0
+g:VM_silent_exit = 1
+
+# Use sonokai's purple accent in true-color mode; on the 16-color console
+# fall back to the closest ANSI purple (cterm 13) with console-safe indices.
+if !is_tty_console
+	highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
+	highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
+else
+	highlight VM_Mode cterm=bold ctermfg=0 ctermbg=13 gui=bold guifg=#1a1b26 guibg=#bb9af7
+	highlight VM_Info ctermfg=13 ctermbg=0 guifg=#bb9af7 guibg=#3b3f54
+endif
+
+var saved_normal_left = []
+def VMEnter()
+	var pal = GetLightlinePalette()
+	if empty(pal)
+		return
+	endif
+	saved_normal_left = copy(pal.normal.left[0])
+	if !is_tty_console
+		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+	else
+		# cterm 0 = black fg on cterm 13 = bright magenta
+		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 0, 13, 'bold']
+	endif
+	lightline#highlight()
+	lightline#update()
+enddef
+
+def VMLeave()
+	if !empty(saved_normal_left)
+		var pal = GetLightlinePalette()
+		if !empty(pal)
+			pal.normal.left[0] = saved_normal_left
+		endif
+		saved_normal_left = []
+	endif
+	lightline#highlight()
+	lightline#update()
+enddef
+
+augroup VMLightLine
+	autocmd!
+	autocmd User visual_multi_start silent VMEnter()
+	autocmd User visual_multi_exit  silent VMLeave()
+augroup END
+# }
+
+# vim-dirvish {
+nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
+nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetFileRoot(expand('~')))<CR>
+
+def GetFileRoot(fallback: string): string
+	var root = g:FindRootDirectory()
+	return root !=# '' ? root : fallback
+enddef
+
+augroup SplitExplorer
+	autocmd!
+	autocmd FileType dirvish silent! unmap <buffer>a
+	autocmd FileType dirvish silent! unmap <buffer>A
+	autocmd FileType dirvish silent! unmap <buffer>i
+	autocmd FileType dirvish silent! unmap <buffer>I
+	autocmd FileType dirvish silent! unmap <buffer>o
+	autocmd FileType dirvish silent! unmap <buffer>O
+
+	autocmd FileType dirvish noremap - <plug>(dirvish_up)
+	autocmd FileType dirvish noremap <silent><buffer>o :call dirvish#open('edit', 0)<CR>
+	autocmd FileType dirvish noremap <silent><buffer>a :call dirvish#open('split', 0)<CR>
+	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
+	autocmd FileType dirvish noremap <silent><buffer>t :call dirvish#open('tabedit', 0)<CR>
+augroup END
+# }
+
 # vim-fugitive {
 nnoremap <silent><Leader>gg <Cmd>Git<CR>
 nnoremap <silent><Leader>gd <Cmd>Gdiffsplit!<CR>
@@ -1189,80 +1260,28 @@ xnoremap <silent><Leader>gL :GV<CR>
 g:gitgutter_map_keys = 0
 g:gitgutter_preview_win_floating = 1
 
-nmap <Leader>hp <Plug>(GitGutterPreviewHunk)
-nmap <Leader>hs <Plug>(GitGutterStageHunk)
-nmap <Leader>hr <Plug>(GitGutterUndoHunk)
-nmap <Leader>hS :Git add %<CR>
-nmap <Leader>hR :Git checkout -- %<CR>
-nmap <Leader>hl :GitGutterQuickFixCurrentFile<CR>
-nmap <Leader>hq :GitGutterQuickFixCurrentFile<CR>
-nmap <Leader>hQ :GitGutterQuickFix<CR>
+nmap <silent><Leader>hp <Plug>(GitGutterPreviewHunk)
+nmap <silent><Leader>hs <Plug>(GitGutterStageHunk)
+nmap <silent><Leader>hr <Plug>(GitGutterUndoHunk)
+nmap <silent><Leader>hS :Git add %<CR>
+nmap <silent><Leader>hR :Git checkout -- %<CR>
+nmap <silent><Leader>hl :GitGutterQuickFixCurrentFile<CR>
+nmap <silent><Leader>hq :GitGutterQuickFixCurrentFile<CR>
+nmap <silent><Leader>hQ :GitGutterQuickFix<CR>
 nmap <silent>[h <Plug>(GitGutterPrevHunk)
 nmap <silent>]h <Plug>(GitGutterNextHunk)
 # }
 
-# Session {
-set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
+# ctrlsf.vim {
+g:ctrlsf_confirm_save = 0
+g:ctrlsf_extra_backend_args = {
+			\ 'rg': '--hidden',
+			\ 'ag': '--hidden',
+			\ }
+g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
 
-def GetSessionFileInfo(): list<string>
-	var session_dir = expand($HOME .. '/.cache/sessions/')
-	var session_filename = session_dir .. substitute(trim(GetFileRoot(expand('%:h')), '/', 1), '/', '-', 'g') .. '-session.vim'
-	return [session_dir, session_filename]
-enddef
-
-def BackupSession()
-	var session_info = GetSessionFileInfo()
-	var session_dir = session_info[0]
-	var session_filename = session_info[1]
-	mkdir(session_dir, 'p')
-	execute 'Obsession' session_filename
-enddef
-
-def RestoreSession()
-	var session_info = GetSessionFileInfo()
-	var session_filename = session_info[1]
-	if argc() == 0 && filereadable(session_filename)
-		FixVim9SessionFile(session_filename)
-		execute 'source' session_filename
-	endif
-enddef
-
-def FixVim9SessionFile(file: string)
-	# Since Vim 9.2 (patch 9.2.0579) :mksession writes Vim9 script, but the
-	# Obsession plugin inserts legacy "let g:this_session = ..." lines which are
-	# not allowed in a Vim9 script (E1126).  Rewrite them without ":let".
-	if !filereadable(file)
-		return
-	endif
-	var lines = readfile(file)
-	if empty(lines) || lines[0] !=# 'vim9script'
-		return
-	endif
-	var changed = false
-	var i = 0
-	while i < len(lines)
-		if lines[i] =~# '^let g:this_'
-			lines[i] = substitute(lines[i], '^let ', '', '')
-			changed = true
-		endif
-		i += 1
-	endwhile
-	if changed
-		writefile(lines, file)
-	endif
-enddef
-
-# Backup
-nnoremap <Leader>ws <ScriptCmd>call BackupSession()<CR>
-# Remove
-nnoremap <Leader>rs <Cmd>Obsession!<CR>
-
-augroup Session
-	autocmd!
-	# Obsession fires User Obsession after every persist; keep the saved file usable.
-	autocmd User Obsession FixVim9SessionFile(g:this_session)
-	autocmd VimEnter * ++nested RestoreSession()
-augroup END
+nnoremap <silent><Leader>a <Plug>CtrlSFCwordExec
+vnoremap <silent><Leader>a <Plug>CtrlSFVwordExec
 # }
 
 # fzf.vim {
@@ -1342,21 +1361,21 @@ def FlattenDocSymbols(syms: list<dict<any>>, srv: dict<any>, bnr: number, kinds:
 	return out
 enddef
 
-def Err(msg: string)
+def EchoErr(msg: string)
 	echohl ErrorMsg
-	echo msg
+	echomsg msg
 	echohl None
 enddef
 
 def FzfLspDocSymbols(types: list<number>)
 	var srv = lsp#buffer#CurbufGetServer('documentSymbol')
 	if empty(srv) || !srv.running || !srv.ready
-		Err('No ready LSP server with documentSymbol support for this buffer')
+		EchoErr('No ready LSP server with documentSymbol support for this buffer')
 		return
 	endif
 	var reply = srv.rpc('textDocument/documentSymbol', {'textDocument': {'uri': lsp#util#LspFileToUri(expand('%:p'))}})
 	if empty(reply) || !has_key(reply, 'result') || empty(reply.result)
-		Err('No document symbols returned by the LSP server')
+		EchoErr('No document symbols returned by the LSP server')
 		return
 	endif
 	if type(reply.result) != v:t_list
@@ -1422,17 +1441,30 @@ map #  <Plug>(asterisk-z#)
 map g# <Plug>(asterisk-gz#)
 # }
 
-# vim-visual-multi {
-g:VM_maps = {}
-g:VM_maps['Select Operator'] = 'gs'
-g:VM_set_statusline = 0
-g:VM_silent_exit = 1
-# }
+# Fold {
+# Disable fold on startup
+set nofoldenable
+set foldmethod=syntax
+set foldlevel=99
 
-# FastFold {
 # Only update fold after type zx or zX
 g:fastfold_fold_command_suffixes = ['x', 'X', 'a', 'A']
 g:fastfold_fold_movement_commands = []
+
+# Use indent style fold for python and yaml
+augroup LanguageFold
+	autocmd!
+	autocmd FileType python,yaml setlocal foldmethod=indent
+augroup END
+# }
+
+# vim-matchup {
+# sonokai explicitly defines MatchParenCur/MatchWord,
+# which blocks vim-matchup's hi def link. Re-link them.
+highlight! link MatchParen Search
+highlight! link MatchParenCur Search
+highlight! link MatchWord Search
+highlight! link MatchWordCur Search
 # }
 
 # vim-signature {
@@ -1684,9 +1716,6 @@ def OnLspSetup()
 	g:LspAddServer(lspServers)
 enddef
 
-# Fallback: use <C-]> (tag jump) when no LSP is attached
-nnoremap gd <C-]>
-
 def GotoDefinition(cmd: string)
 	var pos = getcurpos()
 	silent! execute cmd
@@ -1716,9 +1745,11 @@ enddef
 
 augroup Lsp
 	autocmd!
+	# Load lsp lazily on the first buffer of a supported file type
+	autocmd FileType c,cpp,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,vim,markdown,yaml,json call plug#load('lsp')
 	autocmd User LspSetup OnLspSetup()
 	autocmd User LspAttached OnLspAttached()
-	autocmd BufWritePre * if !empty(lsp#buffer#CurbufGetServer('documentFormatting')) | LspFormat | endif
+	autocmd BufWritePre * if exists('g:loaded_lsp') && !empty(lsp#buffer#CurbufGetServer('documentFormatting')) | LspFormat | endif
 augroup END
 # }
 
@@ -1732,25 +1763,4 @@ imap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
 smap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
 imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
-# }
-
-# Terminal env {
-if !has('gui_running')
-	if &t_fe == ''
-		# Enable focus event tracking for terminal vim.
-		# Most terminal terminfo entries lack Ss/Se capability definitions,
-		# causing t_fe/t_fd to remain empty. Set them manually so that
-		# FocusGained/FocusLost autocommands work (e.g. for checktime).
-		&t_fe = "\<Esc>[?1004h"
-		&t_fd = "\<Esc>[?1004l"
-		execute "set <FocusGained>=\<Esc>[I"
-		execute "set <FocusLost>=\<Esc>[O"
-	endif
-
-	augroup CheckFileChanges
-		autocmd!
-		# Check file changes outside vim (terminal/TTY/kmscon)
-		autocmd FocusGained,BufWinEnter,WinEnter,CursorHold * if getcmdtype() ==# '' | checktime | endif
-	augroup END
-endif
 # }
