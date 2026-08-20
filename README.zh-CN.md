@@ -556,14 +556,15 @@ Leader+d            显示/隐藏当前缓冲区所有诊断（位置列表）
 ```
 
 文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。
-`K` 使用 `:LspHover` 作为大多数文件类型的关键字程序。
+`K` 查找光标下的词：默认使用 `:Man`，LSP 文件类型使用 `:LspHover`，Vim/help 文件使用 `:help`。
 
-#### 1.9 Cscope
+#### 1.9 Cscope 与 Ctags
 
 ```
 gs                  查找光标所在符号（cscope）
 gD                  查找全局定义（cscope，失败时 fallback 到 ctags）
 gR                  查找调用者（cscope）
+g]                  跳转到光标处的 tag，并在 quickfix 列出所有同名定义
 ```
 
 Cscope 支持 `c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型，结果放入 quickfix。
