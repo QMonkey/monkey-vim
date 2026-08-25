@@ -143,7 +143,7 @@ def GetRootTerminalType(): string
 		if last_tty =~ '^tty[0-9]\+$' || saw_login
 			return 'tty'
 		elseif last_tty =~ '^pts/'
-			return !empty($SSH_TTY) ? 'remote_ssh' : 'pseudo_terminal'
+			return (!empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY)) ? 'remote_ssh' : 'pseudo_terminal'
 		endif
 	endif
 	if uname =~? 'Darwin'
@@ -673,6 +673,8 @@ endif
 # available and we are not on a real console (kmscon/TTY), where
 # the GUI clipboard is unusable; there, fall back to tmux buffers.
 var is_physical_console = root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
+var is_ssh = !empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY) || root_terminal ==# 'remote_ssh'
+
 if !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	if has('unnamedplus')
 		# When possible use + register for copy-paste
@@ -680,6 +682,17 @@ if !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has(
 	else
 		# Use * register for copy-paste (X11 without +clipboard, or Mac)
 		set clipboard=unnamed
+	endif
+
+	if is_ssh && exists('*echoraw')
+		# Over ssh, prefer OSC 52 so yanks reach the local clipboard; the
+		# remote X11/Wayland clipboard is otherwise unreachable from here.
+		# osc52 provider (built into Vim 9.1+): emits OSC 52 to the
+		# terminal. Force-available because tmux masks the DA1 response.
+		packadd osc52
+
+		g:osc52_force_avail = 1
+		set clipmethod^=osc52
 	endif
 elseif !empty($TMUX)
 	set clipboard=unnamed,unnamedplus
@@ -922,7 +935,7 @@ augroup Docset
 	# LSP-enabled file types prefer :LspHover
 	autocmd FileType cpp,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,markdown,yaml,json setlocal keywordprg=:LspHover
 	autocmd FileType c setlocal keywordprg=:Man | setenv('MANSECT', '2:3:1:4:5:6:7:8:9')
-	autocmd FileType vim,help setlocal keywordprg=:help
+	autocmd FileType vim,help setlocal keywordprg=:help!
 augroup END
 # }
 
