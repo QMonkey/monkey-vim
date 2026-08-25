@@ -669,30 +669,28 @@ if !empty($TMUX)
 endif
 
 # Choose the clipboard backend for the +/* registers.
-# Use the GUI clipboard (X11/Wayland/macOS) when a display is
-# available and we are not on a real console (kmscon/TTY), where
-# the GUI clipboard is unusable; there, fall back to tmux buffers.
+# Over ssh, prefer OSC 52 so yanks reach the local clipboard; the remote
+# X11/Wayland clipboard is otherwise unreachable from here. This takes
+# precedence over both the GUI and tmux backends, regardless of whether a
+# remote display is present.
 var is_physical_console = root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
 var is_ssh = !empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY) || root_terminal ==# 'remote_ssh'
 
-if !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
+if is_ssh && exists('*echoraw')
+	# osc52 provider (built into Vim 9.1+): emits OSC 52 to the terminal,
+	# so the local terminal's clipboard is written even without a remote
+	# display. Force-available because tmux masks the DA1 response.
+	set clipboard=unnamed,unnamedplus
+	packadd osc52
+	g:osc52_force_avail = 1
+	set clipmethod^=osc52
+elseif !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	if has('unnamedplus')
 		# When possible use + register for copy-paste
 		set clipboard=unnamed,unnamedplus
 	else
 		# Use * register for copy-paste (X11 without +clipboard, or Mac)
 		set clipboard=unnamed
-	endif
-
-	if is_ssh && exists('*echoraw')
-		# Over ssh, prefer OSC 52 so yanks reach the local clipboard; the
-		# remote X11/Wayland clipboard is otherwise unreachable from here.
-		# osc52 provider (built into Vim 9.1+): emits OSC 52 to the
-		# terminal. Force-available because tmux masks the DA1 response.
-		packadd osc52
-
-		g:osc52_force_avail = 1
-		set clipmethod^=osc52
 	endif
 elseif !empty($TMUX)
 	set clipboard=unnamed,unnamedplus
