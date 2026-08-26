@@ -604,7 +604,9 @@ def TagsDoRebuild(root: string)
 			delete(p)
 		endif
 	endfor
-	execute 'GutentagsUpdate!'
+	if exists(':GutentagsUpdate') == 2
+		execute 'GutentagsUpdate!'
+	endif
 enddef
 
 def TagsCheckBranch()
@@ -767,13 +769,22 @@ var is_ssh = !empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY) 
 
 if is_ssh && exists('*echoraw')
 	# osc52 provider (Vim 9.1+): yanks to the local clipboard via OSC 52.
-	# force_avail: tmux masks the DA1 detection. disable_paste: never
-	# block `p` on an OSC 52 query a bare tty would not answer.
-	g:osc52_force_avail = 1
-	g:osc52_disable_paste = 1
+	# tmux masks the DA1 detection, so force_avail; but only when the
+	# remote tmux has set-clipboard on (it answers the OSC52 paste query,
+	# so `p` won't block), otherwise fall back to wayland/x11/tmux.
 	packadd osc52
 	set clipboard=unnamed,unnamedplus
-	set clipmethod^=osc52
+	if !empty($TMUX)
+		var sc = trim(system('tmux show-options -s set-clipboard 2>/dev/null'))
+		if sc =~# 'on'
+			g:osc52_force_avail = 1
+			set clipmethod^=osc52
+		else
+			set clipmethod+=tmux
+		endif
+	else
+		set clipmethod^=osc52
+	endif
 elseif !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	if has('unnamedplus')
 		# When possible use + register for copy-paste
