@@ -571,6 +571,94 @@ g:gutentags_generate_on_write = 1
 g:gutentags_background_update = 1
 g:gutentags_resolve_symlinks = 1
 g:gutentags_define_advanced_commands = 1
+
+# Branch-aware tags rebuild. gutentags only updates gtags incrementally
+# (--incremental), which can't handle deleted/renamed files after a branch
+# switch. Compare the joint (branch, HEAD) identity against a session baseline
+# and force a full rebuild when both change; detached HEAD compares HEAD only.
+g:tags_branch_aware = get(g:, 'tags_branch_aware', 1)
+g:tags_branch_baseline = {}
+
+def TagsBranchIdentity(): dict<string>
+	var root = exists('b:gutentags_root') ? b:gutentags_root : ''
+	if root == ''
+		return {}
+	endif
+	var branch = trim(join(systemlist('git -C ' .. shellescape(root) .. ' branch --show-current'), "\n"))
+	var head = trim(join(systemlist('git -C ' .. shellescape(root) .. ' rev-parse HEAD'), "\n"))
+	if head == ''
+		return {}
+	endif
+	return {'root': root, 'branch': branch, 'head': head}
+enddef
+
+def TagsDoRebuild(root: string)
+	var dbpath = gutentags#get_cachefile(root, '')
+	var gtags_file = dbpath .. '/GTAGS'
+	# Kill this DB's cscope connection first: rebuilding changes the file
+	# inode, which defeats cs-add dedup and would leak a gtags-cscope process.
+	execute 'cscope kill ' .. fnameescape(gtags_file)
+	for f in ['GTAGS', 'GRTAGS', 'GPATH']
+		var p = dbpath .. '/' .. f
+		if filereadable(p)
+			delete(p)
+		endif
+	endfor
+	execute 'GutentagsUpdate!'
+enddef
+
+def TagsCheckBranch()
+	if !g:tags_branch_aware
+		return
+	endif
+	var info = TagsBranchIdentity()
+	if empty(info)
+		return
+	endif
+	var root = info['root']
+	var branch = info['branch']
+	var head = info['head']
+
+	if !has_key(g:tags_branch_baseline, root)
+		g:tags_branch_baseline[root] = {'branch': branch, 'head': head}
+		return
+	endif
+
+	var base = g:tags_branch_baseline[root]
+	if base['branch'] == branch && base['head'] == head
+		return
+	endif
+
+	# Rebuild on a real switch (branch+HEAD both changed) or a detached
+	# HEAD move. Same-branch commit is ignored; rename only refreshes baseline.
+	var rebuild = (base['branch'] != branch && base['head'] != head) ||
+		(branch == '' && base['head'] != head)
+	if rebuild
+		TagsDoRebuild(root)
+		g:tags_branch_baseline[root] = {'branch': branch, 'head': head}
+	elseif base['branch'] != branch
+		g:tags_branch_baseline[root]['branch'] = branch
+	endif
+enddef
+
+def TagsRebuild()
+	var info = TagsBranchIdentity()
+	if empty(info)
+		echoerr 'TagsRebuild: cannot determine project root'
+		return
+	endif
+	TagsDoRebuild(info['root'])
+	g:tags_branch_baseline[info['root']] = {'branch': info['branch'], 'head': info['head']}
+enddef
+
+command! TagsRebuild TagsRebuild()
+
+augroup TagsBranchAware
+	autocmd!
+	autocmd BufEnter,VimEnter * TagsCheckBranch()
+	autocmd FocusGained * TagsCheckBranch()
+	autocmd User FugitiveChanged TagsCheckBranch()
+augroup END
 # }
 
 # Encoding {
