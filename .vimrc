@@ -94,8 +94,7 @@ g:maplocalleader = ','
 # tree from the current Vim (or its tmux client). Needed before the
 # color block because a tmux client running on a physical tty reports
 # &term = tmux-256color, hiding the 8/16-color console behind it.
-# Return value: 'kmscon' | 'tty' | 'physical_console' | 'pseudo_terminal'
-#             | 'remote_ssh' | 'no_tty' | 'unknown'
+# Return value: 'kmscon' | 'tty' | 'physical_console' | 'pseudo_terminal' | 'remote_ssh' | 'no_tty' | 'unknown'
 def GetRootTerminalType(): string
 	var pid = getpid()
 	if !empty($TMUX)
@@ -112,6 +111,7 @@ def GetRootTerminalType(): string
 
 	var last_tty = ''
 	var saw_login = false
+	var saw_sshd = false
 	for _ in range(10)
 		var line = trim(system('ps -o ppid=,tty=,comm= -p ' .. pid))
 		var parts = matchlist(line, '^\s*\(\S\+\)\s\+\(\S\+\)\s*\(.*\)$')
@@ -126,6 +126,9 @@ def GetRootTerminalType(): string
 		endif
 		if comm ==# 'login'
 			saw_login = true
+		endif
+		if comm =~# '^sshd'
+			saw_sshd = true
 		endif
 		if tty != '' && tty != '?'
 			last_tty = tty
@@ -143,7 +146,7 @@ def GetRootTerminalType(): string
 		if last_tty =~ '^tty[0-9]\+$' || saw_login
 			return 'tty'
 		elseif last_tty =~ '^pts/'
-			return (!empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY)) ? 'remote_ssh' : 'pseudo_terminal'
+			return saw_sshd ? 'remote_ssh' : 'pseudo_terminal'
 		endif
 	endif
 	if uname =~? 'Darwin'
@@ -671,7 +674,7 @@ endif
 # Choose the clipboard backend for the +/* registers.
 # Over ssh, prefer OSC 52 so yanks reach the local clipboard; the remote
 # X11/Wayland clipboard is otherwise unreachable from here.
-var is_physical_console = root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
+var is_physical_console = &term =~# '^linux' || root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
 var is_ssh = !empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY) || root_terminal ==# 'remote_ssh'
 
 if is_ssh && exists('*echoraw')
