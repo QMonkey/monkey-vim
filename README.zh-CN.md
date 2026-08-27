@@ -48,7 +48,6 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航 | 推荐 |
 | [fzf](https://github.com/junegunn/fzf) | 模糊搜索器（fzf.vim 依赖） | 是 |
 | [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
-| [delta](https://github.com/dandavison/delta) | Git diff 增强预览（fugitive, fzf） | 推荐 |
 | [Homebrew](https://brew.sh/) | 系统仓库缺失时的后备包管理器（lua-language-server、marksman、fzf 等） | 必须 |
 
 ```bash
@@ -58,20 +57,20 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # Ubuntu/Debian
 sudo apt-get install curl git ripgrep universal-ctags global python3-pygments nodejs npm gcc
-brew install fzf bat git-delta
+brew install fzf bat
 
 # OpenSUSE
-sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta nodejs npm gcc
+sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat nodejs npm gcc
 
 # CentOS（部分软件包来自 EPEL）
 sudo dnf install epel-release
-sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta nodejs npm gcc
+sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat nodejs npm gcc
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta nodejs npm gcc
+sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat nodejs npm gcc
 
 # macOS
-brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta node
+brew install curl git ripgrep universal-ctags global pygments fzf bat node
 ```
 
 #### 2.2 LSP 服务器
@@ -83,6 +82,7 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 | C/C++ | clangd | `sudo apt-get install clangd`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
+| Zig | zls | `brew install zls`（推荐，保持 zig/zls 版本一致）或从 <https://zigtools.org/zls/install/> 下载 |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
 | Lua | lua-language-server | `brew install lua-language-server` 或 `sudo pacman -S lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
@@ -146,21 +146,38 @@ pip3 install black autopep8 flake8 pylint
 npm install -g typescript-language-server typescript
 ```
 
-#### 2.7 Rust
+#### 2.7 Zig
+
+Zig 的语法高亮、缩进和文件类型检测已内置于 Vim 9.2+，无需安装插件。只需安装 Zig 和 ZLS 语言服务器：
+
+```bash
+# 推荐：Homebrew 会保持 zig 与 zls 版本一致
+brew install zig zls          # macOS / Linuxbrew
+
+# 或下载版本匹配的预编译二进制：
+#   zig: https://ziglang.org/download/
+#   zls: https://zigtools.org/zls/install/
+```
+
+> **重要：** zls 与特定版本的 Zig 绑定，版本不匹配时会拒绝启动。请从同一来源安装 `zig` 和 `zls`（Homebrew 或官方下载工具）以保持一致。发行版软件包往往滞后：Ubuntu/Debian 稳定版没有 `zig` 包，Arch 的 `zls` 落后于 Arch 的 `zig`，通常不匹配。
+
+保存时格式化由 ZLS 完成（与 `zig fmt` 一致），无需单独安装格式化工具。构建时诊断（`enable_build_on_save`）可在 `build.zig` 旁的 `zls.json` 中开启。
+
+#### 2.8 Rust
 
 ```bash
 # 安装 rustup（包含 rustc 和 cargo），然后：
 rustup component add rust-analyzer
 ```
 
-#### 2.8 YAML
+#### 2.9 YAML
 
 ```bash
 # 安装 LSP 服务器
 npm install -g yaml-language-server
 ```
 
-#### 2.9 Shell
+#### 2.10 Shell
 
 ```bash
 # 安装 LSP 服务器，以及它依赖的 shfmt 格式化工具
@@ -168,7 +185,7 @@ npm install -g bash-language-server
 go install mvdan.cc/sh/v3/cmd/shfmt@latest
 ```
 
-#### 2.10 Markdown
+#### 2.11 Markdown
 
 终端/WSL 下预览 Markdown：
 ```bash
@@ -183,7 +200,7 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS，
 # :!explorer.exe %
 ```
 
-#### 2.11 字体（可选）
+#### 2.12 字体（可选）
 
 Vim 使用的 Unicode 字符（⎇, │, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)。
 
@@ -1156,7 +1173,7 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 | 文件类型 | 风格 | 宽度 |
 |---|---|---|
 | `c`, `cpp`, `go`, `sh`, `vim`, `sql` | 硬制表符 (`noexpandtab`) | 4 |
-| `rust`, `python`, `markdown` | 空格 (`expandtab`) | 4 |
+| `zig`, `rust`, `python`, `markdown` | 空格 (`expandtab`) | 4 |
 | `javascript`, `typescript`, `lua`, `yaml`, `json` | 空格 (`expandtab`) | 2 |
 
 全局默认使用 4 宽度硬制表符。如需自定义，可在引入 monkey-vim 配置后通过 `FileType` 自动命令覆盖。
