@@ -592,6 +592,22 @@ def TagsBranchIdentity(): dict<string>
 	return {'root': root, 'branch': branch, 'head': head}
 enddef
 
+def TagsHeadFile(root: string): string
+	return gutentags#get_cachefile(root, '') .. '/.tags-head'
+enddef
+
+def TagsLoadHead(root: string): string
+	var f = TagsHeadFile(root)
+	if !filereadable(f)
+		return ''
+	endif
+	return trim(join(readfile(f), "\n"))
+enddef
+
+def TagsSaveHead(root: string, head: string)
+	writefile([head], TagsHeadFile(root), 'b')
+enddef
+
 def TagsDoRebuild(root: string)
 	var dbpath = gutentags#get_cachefile(root, '')
 	var gtags_file = dbpath .. '/GTAGS'
@@ -622,6 +638,15 @@ def TagsCheckBranch()
 	var head = info['head']
 
 	if !has_key(g:tags_branch_baseline, root)
+		# No in-memory baseline yet (fresh Vim). Rebuild only if the DB was
+		# generated for a different HEAD; trust the existing DB otherwise.
+		var saved = TagsLoadHead(root)
+		if saved == ''
+			TagsSaveHead(root, head)
+		elseif saved != head
+			TagsDoRebuild(root)
+			TagsSaveHead(root, head)
+		endif
 		g:tags_branch_baseline[root] = {'branch': branch, 'head': head}
 		return
 	endif
@@ -637,6 +662,7 @@ def TagsCheckBranch()
 		(branch == '' && base['head'] != head)
 	if rebuild
 		TagsDoRebuild(root)
+		TagsSaveHead(root, head)
 		g:tags_branch_baseline[root] = {'branch': branch, 'head': head}
 	elseif base['branch'] != branch
 		g:tags_branch_baseline[root]['branch'] = branch
@@ -650,6 +676,7 @@ def TagsRebuild()
 		return
 	endif
 	TagsDoRebuild(info['root'])
+	TagsSaveHead(info['root'], info['head'])
 	g:tags_branch_baseline[info['root']] = {'branch': info['branch'], 'head': info['head']}
 enddef
 
@@ -657,7 +684,7 @@ command! TagsRebuild TagsRebuild()
 
 augroup TagsBranchAware
 	autocmd!
-	autocmd BufEnter,VimEnter * TagsCheckBranch()
+	autocmd BufEnter * TagsCheckBranch()
 	autocmd FocusGained * TagsCheckBranch()
 	autocmd User FugitiveChanged TagsCheckBranch()
 augroup END
