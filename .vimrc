@@ -22,7 +22,7 @@ if empty(glob($HOME .. '/.vim/autoload/plug.vim'))
 
 	augroup Init
 		autocmd!
-		autocmd VimEnter * PlugInstall | source $MYVIMRC | mkdir($HOME . '/.vim/swap/', 'p')
+		autocmd VimEnter * PlugInstall | mkdir($HOME . '/.vim/swap/', 'p') | source $MYVIMRC
 		autocmd VimEnter * echohl Title | echo 'monkey-vim is ready! Run :PlugStatus to verify plugins.' | echohl None
 	augroup END
 endif
@@ -63,7 +63,7 @@ Plug 'justinmk/vim-dirvish'
 Plug 'tpope/vim-obsession'
 # Code Intelligence
 Plug 'yegappan/lsp', {'on': []}
-Plug 'hrsh7th/vim-vsnip' | Plug 'hrsh7th/vim-vsnip-integ' | Plug 'rafamadriz/friendly-snippets'
+Plug 'hrsh7th/vim-vsnip', {'on': []} | Plug 'hrsh7th/vim-vsnip-integ', {'on': []} | Plug 'rafamadriz/friendly-snippets', {'on': []}
 # Tools
 Plug 'mg979/vim-visual-multi'
 Plug 'tpope/vim-eunuch'
@@ -1013,8 +1013,8 @@ augroup END
 # FileType {
 augroup FileTypeGroup
 	autocmd!
-	# Space indent, 4-width: Rust, Python, Markdown
-	autocmd FileType rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+	# Space indent, 4-width: Zig, Rust, Python, Markdown
+	autocmd FileType zig,rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 	# Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
 	autocmd FileType javascript,typescript,lua,yaml,json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 	autocmd BufRead,BufNewFile *.gotmpl,*.go.tmpl setlocal filetype=gotmpl
@@ -1048,7 +1048,7 @@ enddef
 # Don't need to install these if you are running a recent version of Vim
 g:markdown_syntax_conceal = 0
 g:markdown_minlines = 100
-g:markdown_fenced_languages = ['c', 'cpp', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json']
+g:markdown_fenced_languages = ['c', 'cpp', 'zig', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json']
 # }
 
 # Docset {
@@ -1059,7 +1059,7 @@ augroup Docset
 	# Default docset: built-in :Man for everything
 	autocmd FileType * setlocal keywordprg=:Man
 	# LSP-enabled file types prefer :LspHover
-	autocmd FileType cpp,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,markdown,yaml,json setlocal keywordprg=:LspHover
+	autocmd FileType cpp,zig,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,markdown,yaml,json setlocal keywordprg=:LspHover
 	autocmd FileType c setlocal keywordprg=:Man | setenv('MANSECT', '2:3:1:4:5:6:7:8:9')
 	autocmd FileType vim,help setlocal keywordprg=:help!
 augroup END
@@ -1701,6 +1701,18 @@ def OnLspSetup()
 			'--limit-results=0'
 		],
 	},
+	{name: 'zls',
+		filetype: ['zig'],
+		path: 'zls',
+		args: [],
+		rootSearch: ['build.zig', 'build.zig.zon'],
+		workspaceConfig: {
+			'zls': {
+				'enable_inlay_hints': true,
+				'enable_snippets': true,
+			},
+		},
+	},
 	{name: 'rust-analyzer',
 		filetype: ['rust'],
 		path: 'rust-analyzer',
@@ -1884,8 +1896,10 @@ enddef
 
 augroup Lsp
 	autocmd!
-	# Load lsp lazily on the first buffer of a supported file type
-	autocmd FileType c,cpp,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,vim,markdown,yaml,json call plug#load('lsp')
+	# Lazily load lsp and vsnip only for the supported file types.
+	# Order matters: lsp must be loaded before vim-vsnip-integ, otherwise
+	# vsnip-integ caches "lsp not detected" and LSP snippets never expand.
+	autocmd FileType c,cpp,zig,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,vim,markdown,yaml,json call plug#load('lsp') | call plug#load('vim-vsnip') | call plug#load('vim-vsnip-integ') | call plug#load('friendly-snippets')
 	autocmd User LspSetup OnLspSetup()
 	autocmd User LspAttached OnLspAttached()
 	autocmd BufWritePre * if exists('g:loaded_lsp') && !empty(lsp#buffer#CurbufGetServer('documentFormatting')) | LspFormat | endif
@@ -1893,13 +1907,14 @@ augroup END
 # }
 
 # vim-vsnip {
-# Expand or jump
-imap <expr> <C-l> pumvisible() ? '<C-y>' : vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
-smap <expr> <C-l> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
+# Expand or jump; otherwise accept the completion in the popup (snippet items
+# are expanded automatically on accept via CompleteDone).
+imap <expr> <C-l> exists('*vsnip#available') ? (vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : pumvisible() ? '<C-y>' : '<C-l>') : '<C-l>'
+smap <expr> <C-l> exists('*vsnip#available') ? (vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>') : '<C-l>'
 
 # Jump forward or backward
-imap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
-smap <expr> <Tab> vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
-imap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
-smap <expr> <S-Tab> vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
+imap <expr> <Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>') : '<Tab>'
+smap <expr> <Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>') : '<Tab>'
+imap <expr> <S-Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>') : '<S-Tab>'
+smap <expr> <S-Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>') : '<S-Tab>'
 # }
