@@ -127,7 +127,7 @@ install_pkg() {
 	arch) sudo_cmd pacman -S --noconfirm "$@" || brew install "$@" ;;
 	opensuse) sudo_cmd zypper --non-interactive install -y "$@" || brew install "$@" ;;
 	centos)
-		# Some tools (universal-ctags, global, global-ctags, fzf, bat, git-delta, pygments) come from EPEL
+		# Some tools (universal-ctags, global, global-ctags, fzf, bat, pygments) come from EPEL
 		sudo_cmd dnf install -y epel-release || true
 		_args=("$@")
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
@@ -193,6 +193,12 @@ install_optional_bin() {
 	marksman)
 		install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
 		;;
+	zig)
+		brew install zig 2>/dev/null || install_pkg "$(pkg_name "$bin")" || ok=false
+		;;
+	zls)
+		brew install zls 2>/dev/null || install_pkg "$(pkg_name "$bin")" || ok=false
+		;;
 	*)
 		install_pkg "$(pkg_name "$bin")" || ok=false
 		;;
@@ -223,7 +229,6 @@ REQUIRED["fzf"]="fzf"
 
 declare -A RECOMMENDED=()
 RECOMMENDED["bat"]="bat"
-RECOMMENDED["delta"]="git-delta"
 RECOMMENDED["global"]="global (GNU Global, for gtags)"
 RECOMMENDED["pygmentize"]="pygments (gtags parser for non-C/C++ languages)"
 
@@ -233,7 +238,6 @@ declare -A APT_NAMES=(
 	["ctags"]="universal-ctags"
 	["fzf"]="fzf"
 	["bat"]="bat"
-	["delta"]="git-delta"
 	["global"]="global"
 	["pygmentize"]="python3-pygments"
 	["clangd"]="clangd"
@@ -249,7 +253,6 @@ declare -A PACMAN_NAMES=(
 	["ctags"]="ctags"
 	["fzf"]="fzf"
 	["bat"]="bat"
-	["delta"]="git-delta"
 	["global"]="global"
 	["pygmentize"]="python-pygments"
 	["clangd"]="clang"
@@ -267,7 +270,6 @@ declare -A BREW_NAMES=(
 	["ctags"]="universal-ctags"
 	["fzf"]="fzf"
 	["bat"]="bat"
-	["delta"]="git-delta"
 	["global"]="global"
 	["clangd"]="llvm"
 	["clang-tidy"]="llvm"
@@ -280,13 +282,14 @@ declare -A BREW_NAMES=(
 	["marksman"]="marksman"
 	["glow"]="glow"
 	["pygmentize"]="pygments"
+	["zig"]="zig"
+	["zls"]="zls"
 )
 declare -A ZYPPER_NAMES=(
 	["rg"]="ripgrep"
 	["ctags"]="universal-ctags"
 	["fzf"]="fzf"
 	["bat"]="bat"
-	["delta"]="git-delta"
 	["global"]="global"
 	["pygmentize"]="python3-Pygments"
 	["clangd"]="clang"
@@ -305,7 +308,6 @@ declare -A YUM_NAMES=(
 	["ctags"]="universal-ctags"
 	["fzf"]="fzf"
 	["bat"]="bat"
-	["delta"]="git-delta"
 	["global"]="global"
 	["pygmentize"]="python3-pygments"
 	["clangd"]="clang-tools-extra"
@@ -338,6 +340,7 @@ declare -A DEPS_BY_GROUP
 DEPS_BY_GROUP["C/C++"]="gcc g++ clangd clang-tidy"
 DEPS_BY_GROUP["Go"]="go gopls staticcheck"
 DEPS_BY_GROUP["Python"]="python3 pylsp black"
+DEPS_BY_GROUP["Zig"]="zig zls"
 DEPS_BY_GROUP["Rust"]="cargo rust-analyzer"
 DEPS_BY_GROUP["Lua"]="lua-language-server"
 DEPS_BY_GROUP["Shell"]="node bash-language-server shfmt"
@@ -415,7 +418,7 @@ fi
 echo -e "${BOLD}Recommended tools${NC}"
 echo "  (Missing won't block monkey-vim, but will degrade preview / gtags experience)"
 MISSING_RECOMMENDED=()
-for bin in bat delta global pygmentize; do
+for bin in bat global pygmentize; do
 	if check_bin "$bin" "${RECOMMENDED[$bin]}"; then
 		:
 	else
@@ -443,7 +446,7 @@ fi
 
 if $INSTALL_MODE; then
 	MISSING_OPTIONAL=()
-	for group in "C/C++" "Go" "Python" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
+	for group in "C/C++" "Go" "Python" "Zig" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
 		for bin in ${DEPS_BY_GROUP[$group]}; do
 			if ! command -v "$bin" &>/dev/null; then
 				MISSING_OPTIONAL+=("$bin")
@@ -499,10 +502,12 @@ if ! $INSTALL_MODE; then
 	INSTALL_HINTS["yaml-language-server"]="npm install -g yaml-language-server"
 	INSTALL_HINTS["lua-language-server"]="$(get_install_hint lua-language-server)"
 	INSTALL_HINTS["marksman"]="$(get_install_hint marksman)"
+	INSTALL_HINTS["zig"]="brew install zig  # or: https://ziglang.org/download/"
+	INSTALL_HINTS["zls"]="brew install zls  # or: https://zigtools.org/zls/install/  (must match zig version)"
 	INSTALL_HINTS["glow"]="$(get_install_hint glow)  # or: go install github.com/charmbracelet/glow@latest"
 fi
 
-for group in "C/C++" "Go" "Python" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
+for group in "C/C++" "Go" "Python" "Zig" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
 	echo -e "  ${BOLD}${group}${NC}"
 	for bin in ${DEPS_BY_GROUP[$group]}; do
 		status=0
