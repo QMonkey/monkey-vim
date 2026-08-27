@@ -49,7 +49,6 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [Pygments](https://pygments.org/) (`pygmentize`) | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.) | Recommended |
 | [fzf](https://github.com/junegunn/fzf) | Fuzzy finder (fzf.vim) | Yes |
 | [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
-| [delta](https://github.com/dandavison/delta) | Enhanced git diff preview (fugitive, fzf) | Recommended |
 | [Homebrew](https://brew.sh/) | Fallback package manager for tools not in system repos (lua-language-server, marksman, fzf) | Required |
 
 ```bash
@@ -59,20 +58,20 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # Ubuntu/Debian
 sudo apt-get install curl git ripgrep universal-ctags global python3-pygments nodejs npm gcc
-brew install fzf bat git-delta
+brew install fzf bat
 
 # OpenSUSE
-sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat git-delta nodejs npm gcc
+sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat nodejs npm gcc
 
-# CentOS (enable EPEL for ripgrep/ctags/global/pygments/fzf/bat/delta)
+# CentOS (enable EPEL for ripgrep/ctags/global/pygments/fzf/bat)
 sudo dnf install epel-release
-sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat git-delta nodejs npm gcc
+sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat nodejs npm gcc
 
 # Arch Linux
-sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat git-delta nodejs npm gcc
+sudo pacman -S curl git ripgrep ctags global python-pygments fzf bat nodejs npm gcc
 
 # macOS
-brew install curl git ripgrep universal-ctags global pygments fzf bat git-delta node
+brew install curl git ripgrep universal-ctags global pygments fzf bat node
 ```
 
 #### 2.2 LSP servers
@@ -84,6 +83,7 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 | C/C++ | clangd | `sudo apt-get install clangd`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
 | Go | gopls | `go install golang.org/x/tools/gopls@latest` |
 | Python | python-lsp-server | `pip3 install python-lsp-server` |
+| Zig | zls | `brew install zls` (recommended, keeps zig/zls matched) or download from <https://zigtools.org/zls/install/> |
 | Rust | rust-analyzer | `rustup component add rust-analyzer` |
 | Lua | lua-language-server | `brew install lua-language-server` or `sudo pacman -S lua-language-server` |
 | Shell | bash-language-server | `npm install -g bash-language-server` |
@@ -147,21 +147,38 @@ pip3 install black autopep8 flake8 pylint
 npm install -g typescript-language-server typescript
 ```
 
-#### 2.7 Rust
+#### 2.7 Zig
+
+Zig syntax highlighting, indentation, and filetype detection are built into Vim 9.2+ — no plugin needed. Install Zig and the ZLS language server:
+
+```bash
+# Recommended: Homebrew keeps zig and zls versions in sync
+brew install zig zls          # macOS / Linuxbrew
+
+# Or download matched prebuilt binaries:
+#   zig: https://ziglang.org/download/
+#   zls: https://zigtools.org/zls/install/
+```
+
+> **Important:** zls is tied to a specific Zig version and refuses to start on a mismatch. Install `zig` and `zls` from the same source (Homebrew or the official download tool) so they stay in sync. Distro packages often lag: Ubuntu/Debian stable ship no `zig`, and Arch's `zls` trails Arch's `zig`, so they usually mismatch.
+
+Format-on-save uses ZLS (matches `zig fmt`); no separate formatter is needed. Build-on-save diagnostics (`enable_build_on_save`) can be enabled in a `zls.json` next to `build.zig`.
+
+#### 2.8 Rust
 
 ```bash
 # Install rustup (includes rustc & cargo), then:
 rustup component add rust-analyzer
 ```
 
-#### 2.8 YAML
+#### 2.9 YAML
 
 ```bash
 # Install LSP server
 npm install -g yaml-language-server
 ```
 
-#### 2.9 Shell
+#### 2.10 Shell
 
 ```bash
 # Install LSP server, then the shfmt formatter it depends on
@@ -169,7 +186,7 @@ npm install -g bash-language-server
 go install mvdan.cc/sh/v3/cmd/shfmt@latest
 ```
 
-#### 2.10 Markdown
+#### 2.11 Markdown
 
 Preview Markdown in browser via WSL/glow:
 ```bash
@@ -184,7 +201,7 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS, o
 # :!explorer.exe %
 ```
 
-#### 2.11 Fonts (optional)
+#### 2.12 Fonts (optional)
 
 Vim uses common Unicode characters (⎇, │, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
 
@@ -1158,7 +1175,7 @@ directly with the `global` CLI.
 | Filetype | Style | Width |
 |---|---|---|
 | `c`, `cpp`, `go`, `sh`, `vim`, `sql` | Hard tab (`noexpandtab`) | 4 |
-| `rust`, `python`, `markdown` | Spaces (`expandtab`) | 4 |
+| `zig`, `rust`, `python`, `markdown` | Spaces (`expandtab`) | 4 |
 | `javascript`, `typescript`, `lua`, `yaml`, `json` | Spaces (`expandtab`) | 2 |
 
 The global default is 4-width hard tabs. To customize, override the `FileType` autocmds in your own vimrc after sourcing monkey-vim's.
