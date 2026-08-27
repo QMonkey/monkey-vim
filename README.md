@@ -1411,6 +1411,8 @@ sudo make install
 
 > `--with-x` adds X11 support (clipboard, drag & drop); `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`). A single GTK3 build runs on both Wayland and X11 by auto-detecting the display server at runtime. Use this if you need both — e.g., WSLg (no Wayland clipboard), where clipboard goes through XWayland but display is Wayland.
 
+> **GTK3 vs GTK4.** On a regular Linux desktop you may build with GTK4 instead: install `libgtk-4-dev` (Debian/Ubuntu), `gtk4-devel` (openSUSE/CentOS) or `gtk4` (Arch), and pass `--enable-gui=gtk4`. Do **not** use GTK4 under WSL (WSLg). A GTK4 build drops X11 support entirely (`--enable-gui=gtk4` forces `--without-x`), so it has no `+xterm_clipboard`; the only remaining clipboard feature is `+wayland_clipboard`, which speaks the Wayland `data-control` protocol (`zwlr-data-control-unstable-v1` / `ext-data-control-v1`). WSLg's compositor does not implement that protocol — its clipboard is relayed to Windows over RDP and exposed to Linux apps through XWayland — so a GTK4 build under WSLg ends up with no working system clipboard. On WSL, keep GTK3 with `--with-x` (the "X11 & Wayland" build above), which reaches the clipboard through XWayland.
+
 **kmscon / text console** (no GUI)
 
 ```bash
