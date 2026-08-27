@@ -1409,6 +1409,8 @@ sudo make install
 
 > `--with-x` 添加 X11 支持（剪贴板、拖放）；`--with-wayland` 启用原生 Wayland 支持（`+wayland`、`+wayland_clipboard`）。同一个 GTK3 构建运行时自动检测显示服务器，可同时在 Wayland 和 X11 下运行。如果你需要同时支持两者——例如 WSLg（不支持 Wayland 剪贴板），剪贴板走 XWayland 但显示器是 Wayland——选这个。
 
+> **GTK3 与 GTK4。** 在普通 Linux 桌面上也可以改用 GTK4 构建：安装 `libgtk-4-dev`（Debian/Ubuntu）、`gtk4-devel`（openSUSE/CentOS）或 `gtk4`（Arch），编译参数改为 `--enable-gui=gtk4`。但 **WSL（WSLg）下不要用 GTK4**。GTK4 构建会完全去掉 X11 支持（`--enable-gui=gtk4` 会强制 `--without-x`），因此没有 `+xterm_clipboard`；剩下的剪贴板能力只有 `+wayland_clipboard`，它使用的是 Wayland 的 `data-control` 协议（`zwlr-data-control-unstable-v1` / `ext-data-control-v1`）。而 WSLg 的合成器没有实现该协议——它的剪贴板通过 RDP 中继到 Windows、再经 XWayland 暴露给 Linux 程序——所以 WSLg 下的 GTK4 构建会完全失去系统剪贴板。在 WSL 下请保持 GTK3 + `--with-x`（即上面的 "X11 & Wayland" 构建），剪贴板走 XWayland。
+
 **kmscon / 文本控制台**（无图形界面）
 
 ```bash
