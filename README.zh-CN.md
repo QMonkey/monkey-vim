@@ -8,13 +8,13 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 
 **定位：** monkey-vim 面向纯终端环境 —— 不支持 GUI、gvim，不内建终端复用。适用环境：
 
-| 环境 | 说明 |
-|---|---|
-| Linux 终端 | xterm, kitty, alacritty, wezterm, gnome-terminal 等 |
-| macOS 终端 | Terminal.app, iTerm2, kitty 等 |
-| WSL | Windows Subsystem for Linux（推荐 WSL2） |
+| 环境       | 说明                                                                        |
+| ---------- | --------------------------------------------------------------------------- |
+| Linux 终端 | xterm, kitty, alacritty, wezterm, gnome-terminal 等                         |
+| macOS 终端 | Terminal.app, iTerm2, kitty 等                                              |
+| WSL        | Windows Subsystem for Linux（推荐 WSL2）                                    |
 | 服务器 TTY | 原生 Linux 控制台（tty1–tty63），Vim 内置 8/16 色高亮（sonokai 需 ≥256 色） |
-| kmscon | Kernel Mode Setting 控制台 —— 支持真彩色和 Unicode 的现代 TTY 替代方案 |
+| kmscon     | Kernel Mode Setting 控制台 —— 支持真彩色和 Unicode 的现代 TTY 替代方案      |
 
 窗口/分屏管理交给 tmux 或终端模拟器的原生标签页。
 
@@ -39,16 +39,16 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 #### 2.1 通用工具
 
-| 工具 | 用途 | 是否必须 |
-|---|---|---|
-| curl | 插件管理器引导 | 是 |
-| git | 插件管理器、vim-fugitive | 是 |
-| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf 代码搜索 + fzf.vim 文件搜索 | 是 |
-| universal-ctags | gutentags 标签生成 | 是 |
-| [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航 | 推荐 |
-| [fzf](https://github.com/junegunn/fzf) | 模糊搜索器（fzf.vim 依赖） | 是 |
-| [bat](https://github.com/sharkdp/bat) | fzf 语法高亮文件预览 | 推荐 |
-| [Homebrew](https://brew.sh/) | 系统仓库缺失时的后备包管理器（lua-language-server、marksman、fzf 等） | 必须 |
+| 工具                                                          | 用途                                                                  | 是否必须 |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- | -------- |
+| curl                                                          | 插件管理器引导                                                        | 是       |
+| git                                                           | 插件管理器、vim-fugitive                                              | 是       |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | ctrlsf 代码搜索 + fzf.vim 文件搜索                                    | 是       |
+| universal-ctags                                               | gutentags 标签生成                                                    | 是       |
+| [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航                                    | 推荐     |
+| [fzf](https://github.com/junegunn/fzf)                        | 模糊搜索器（fzf.vim 依赖）                                            | 是       |
+| [bat](https://github.com/sharkdp/bat)                         | fzf 语法高亮文件预览                                                  | 推荐     |
+| [Homebrew](https://brew.sh/)                                  | 系统仓库缺失时的后备包管理器（lua-language-server、marksman、fzf 等） | 必须     |
 
 ```bash
 # 安装 Homebrew（所有 Linux 发行版 — 用于安装系统仓库中缺失的工具）
@@ -77,30 +77,33 @@ brew install curl git ripgrep universal-ctags global pygments fzf bat node
 
 Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/lsp) 插件提供。请根据需要安装对应语言的服务器：
 
-| 语言 | LSP 服务器 | 安装方式 |
-|---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
-| Go | gopls | `go install golang.org/x/tools/gopls@latest` |
-| Python | python-lsp-server | `pip3 install python-lsp-server` |
-| Zig | zls | `brew install zls`（推荐，保持 zig/zls 版本一致）或从 <https://zigtools.org/zls/install/> 下载 |
-| Rust | rust-analyzer | `rustup component add rust-analyzer` |
-| Lua | lua-language-server | `brew install lua-language-server` 或 `sudo pacman -S lua-language-server` |
-| Shell | bash-language-server | `npm install -g bash-language-server` |
-| Vim | vim-language-server | `npm install -g vim-language-server` |
-| JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
-| TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
-| JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
-| YAML | yaml-language-server | `npm install -g yaml-language-server` |
-| Markdown | marksman | `brew install marksman` 或 `sudo pacman -S marksman` |
+| 语言       | LSP 服务器                  | 安装方式                                                                                                                                        |
+| ---------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| C/C++      | clangd                      | `sudo apt-get install clangd`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
+| Go         | gopls                       | `go install golang.org/x/tools/gopls@latest`                                                                                                    |
+| Python     | python-lsp-server           | `pip3 install python-lsp-server`                                                                                                                |
+| Zig        | zls                         | `brew install zls`（推荐，保持 zig/zls 版本一致）或从 <https://zigtools.org/zls/install/> 下载                                                  |
+| Rust       | rust-analyzer               | `rustup component add rust-analyzer`                                                                                                            |
+| Lua        | lua-language-server         | `brew install lua-language-server` 或 `sudo pacman -S lua-language-server`                                                                      |
+| Shell      | bash-language-server        | `npm install -g bash-language-server`                                                                                                           |
+| Vim        | vim-language-server         | `npm install -g vim-language-server`                                                                                                            |
+| JavaScript | typescript-language-server  | `npm install -g typescript-language-server typescript`                                                                                          |
+| TypeScript | typescript-language-server  | `npm install -g typescript-language-server typescript`                                                                                          |
+| JSON       | vscode-json-language-server | `npm install -g vscode-langservers-extracted`                                                                                                   |
+| YAML       | yaml-language-server        | `npm install -g yaml-language-server`                                                                                                           |
+| Markdown   | marksman                    | `brew install marksman` 或 `sudo pacman -S marksman`                                                                                            |
+| Markdown   | efm-langserver              | `go install github.com/mattn/efm-langserver@latest`                                                                                             |
 
 部分 LSP 服务器会把格式化/检查交给**外部工具**，需单独安装。缺失时功能会静默降级（回退到内置诊断或跳过该工具）：
 
-| 语言 | 工具 | 作用 | 安装方式 |
-|---|---|---|---|
-| C/C++ | clang-tidy | linter（经 `clangd --clang-tidy`） | `sudo apt-get install clang-tidy`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
-| Go | staticcheck | linter（经 `gopls` 的 `staticcheck`） | `go install honnef.co/go/tools/cmd/staticcheck@latest` |
-| Shell | shfmt | formatter（经 `bash-language-server`） | `go install mvdan.cc/sh/v3/cmd/shfmt@latest` |
-| Python | black | formatter（经 `pylsp` 的 black 插件） | `pip3 install black` |
+| 语言     | 工具              | 作用                                   | 安装方式                                                                                                                                            |
+| -------- | ----------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C/C++    | clang-tidy        | linter（经 `clangd --clang-tidy`）     | `sudo apt-get install clang-tidy`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
+| Go       | staticcheck       | linter（经 `gopls` 的 `staticcheck`）  | `go install honnef.co/go/tools/cmd/staticcheck@latest`                                                                                              |
+| Shell    | shfmt             | formatter（经 `bash-language-server`） | `go install mvdan.cc/sh/v3/cmd/shfmt@latest`                                                                                                        |
+| Python   | black             | formatter（经 `pylsp` 的 black 插件）  | `pip3 install black`                                                                                                                                |
+| Markdown | prettier          | formatter（经 `efm-langserver`）       | `npm install -g prettier`                                                                                                                           |
+| Markdown | markdownlint-cli2 | linter（经 `efm-langserver`）          | `npm install -g markdownlint-cli2`                                                                                                                  |
 
 #### 2.3 C/C++
 
@@ -188,6 +191,7 @@ go install mvdan.cc/sh/v3/cmd/shfmt@latest
 #### 2.11 Markdown
 
 终端/WSL 下预览 Markdown：
+
 ```bash
 # 方案一：glow（终端 Markdown 渲染器）
 # https://github.com/charmbracelet/glow
@@ -198,6 +202,15 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS，
 
 # 方案二：在 Windows 浏览器中打开（仅 WSL）
 # :!explorer.exe %
+```
+
+格式化与检查由 [efm-langserver](https://github.com/mattn/efm-langserver) 提供（formatter: prettier，linter: markdownlint-cli2）：
+
+```bash
+go install github.com/mattn/efm-langserver@latest
+npm install -g prettier markdownlint-cli2
+# 将 efm 配置（config.yaml + .markdownlint.jsonc）软链到默认路径
+ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver
 ```
 
 #### 2.12 字体（可选）
@@ -226,6 +239,7 @@ Vim 使用的 Unicode 字符（⎇, │, ▸, ·, ¬）无需额外字体即可�
 cd monkey-vim
 ln -sf $(pwd)/.vimrc ~/.vimrc
 ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # 全局 clang-format 风格（可选）
+ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver   # efm：markdown 格式化/检查（可选）
 vim
 ```
 
@@ -318,7 +332,7 @@ sudo systemctl start kmsconvt@tty1.service
 
 重启后，按 `Ctrl+Alt+F1` 即可切换到支持真彩色和 Unicode 的 kmscon 终端。可按需对 tty2–tty6 重复相同操作。
 
-**`start` 与 `enable` 的区别——常见坑。**
+##### `start` 与 `enable` 的区别——常见坑
 
 `systemctl start` 只是运行一次单元，完全不读取 `[Install]` 段，因此不会触碰 `autovt@.service`。`systemctl enable` 会读取 `[Install]` 并创建符号链接，包括 `Alias=autovt@.service`。
 
@@ -410,41 +424,41 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 
 ## 插件列表
 
-| 插件 | 用途 |
-|---|---|
-| [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol 客户端 |
-| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | 代码片段引擎 |
-| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP 片段集成 |
-| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | 常用代码片段集合 |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim) | 模糊文件/缓冲/tag 查找 |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | 异步代码搜索（rg/ag 后端） |
-| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | 状态栏 |
-| [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | 配色方案 |
-| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | 多光标编辑 |
-| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | 快速跳转（替代 vim-sneak） |
-| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git 集成 |
-| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git 差异标记 |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | 自动生成 ctags 与 gtags（GNU Global） |
-| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | 目录浏览器（替代 netrw） |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround) | 围绕字符编辑 |
-| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | 使用剪贴板替换 |
-| [andymass/vim-matchup](https://github.com/andymass/vim-matchup) | 增强 % 匹配跳转 |
-| [wellle/targets.vim](https://github.com/wellle/targets.vim) | 更多文本对象 |
-| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象 |
-| [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | 自动配对括号 |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | 使插件映射支持 `.` 重复 |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX Shell 辅助命令（:SudoWrite、:W、:Delete 等） |
-| [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session 管理 |
-| [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | 大文件折叠性能优化 |
-| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | 增强 `*` / `#` 搜索 |
-| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | 可视化书签 |
-| [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | 自动切换工作目录 |
-| [junegunn/gv.vim](https://github.com/junegunn/gv.vim) | Git 提交浏览器 |
-| [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list 增强 |
+| 插件                                                                                  | 用途                                              |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| [yegappan/lsp](https://github.com/yegappan/lsp)                                       | Language Server Protocol 客户端                   |
+| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | 代码片段引擎                                      |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP 片段集成                                      |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | 常用代码片段集合                                  |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/tag 查找                            |
+| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | 异步代码搜索（rg/ag 后端）                        |
+| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim)                     | 状态栏                                            |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | 配色方案                                          |
+| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | 多光标编辑                                        |
+| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | 快速跳转（替代 vim-sneak）                        |
+| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive)                           | Git 集成                                          |
+| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git 差异标记                                      |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | 自动生成 ctags 与 gtags（GNU Global）             |
+| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish)                       | 目录浏览器（替代 netrw）                          |
+| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | 围绕字符编辑                                      |
+| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | 使用剪贴板替换                                    |
+| [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | 增强 % 匹配跳转                                   |
+| [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | 更多文本对象                                      |
+| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象                                |
+| [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | 自动配对括号                                      |
+| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | 使插件映射支持 `.` 重复                           |
+| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch)                               | UNIX Shell 辅助命令（:SudoWrite、:W、:Delete 等） |
+| [tpope/vim-obsession](https://github.com/tpope/vim-obsession)                         | Session 管理                                      |
+| [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | 大文件折叠性能优化                                |
+| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | 增强 `*` / `#` 搜索                               |
+| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | 可视化书签                                        |
+| [airblade/vim-rooter](https://github.com/airblade/vim-rooter)                         | 自动切换工作目录                                  |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git 提交浏览器                                    |
+| [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list 增强                       |
 
 ## 快捷键
 
-```
+```text
 以下所有"Leader"键，都代表","键
 ```
 
@@ -452,7 +466,7 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 
 #### 1.1 按键修改
 
-```
+```text
 s       用剪贴板的内容替换文本对象选中的字符串（详见§1.7）
 S       用剪贴板的内容替换当前光标到行尾的文本（详见§1.7）
 Y       复制到行尾，相当于"y$"命令
@@ -473,7 +487,7 @@ gs      选择单词/区域进行多光标编辑（vim-visual-multi）
 
 以下按键在插入模式和命令行模式下均适用：
 
-```
+```text
 Ctrl+p  上移        (Up)
 Ctrl+n  下移        (Down)
 Ctrl+b  左移        (Left)
@@ -486,7 +500,7 @@ Ctrl+d  向前删除    (Del)
 
 #### 1.2 F1 ~ F4
 
-```
+```text
 F1      打开 CtrlSF 搜索提示
 F2      切换 CtrlSF 搜索窗口
 F3      打开终端窗口
@@ -495,7 +509,7 @@ F4      切换终端窗口（打开/隐藏）
 
 #### 1.3 缓冲
 
-```
+```text
 Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
 [+b         切换到上一个缓冲
 ]+b         切换到下一个缓冲
@@ -503,7 +517,7 @@ Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
 
 #### 1.4 分屏
 
-```
+```text
 Leader+Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
 Leader+Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
 
@@ -516,7 +530,7 @@ Leader+z    窗口放大/恢复
 
 #### 1.5 Tab
 
-```
+```text
 Leader+Leader+t      输入打开的文件路径，并创建一个新tab窗口
 
 [+t         切换到上一个tab窗口
@@ -530,7 +544,7 @@ Leader+]    切换到最后一个tab窗口
 
 按 `*` 或 `#` 会高亮光标下的所有单词但不跳转。再次按下则正常跳转。
 
-```
+```text
 *       高亮当前词，不跳转（再按跳转）
 g*      同上，部分匹配
 #       同上，反向
@@ -539,7 +553,7 @@ g#      同上，反向部分匹配
 
 #### 1.7 替换（vim-subversive）
 
-```
+```text
 s{文本对象}  用剪贴板内容替换一个文本对象（如 siw 替换当前词）
 ss          用剪贴板内容替换当前整行
 S           用剪贴板内容替换从光标到行尾
@@ -547,7 +561,7 @@ S           用剪贴板内容替换从光标到行尾
 
 #### 1.8 LSP（Language Server Protocol）
 
-```
+```text
 K                   查看光标所在符号的文档说明
 gh                  在弹出窗口中显示文档
 
@@ -577,7 +591,7 @@ Leader+d            显示/隐藏当前缓冲区所有诊断（位置列表）
 
 #### 1.9 Cscope 与 Ctags
 
-```
+```text
 gs                  查找光标所在符号（cscope）
 gD                  查找全局定义（cscope，失败时 fallback 到 ctags）
 gR                  查找调用者（cscope）
@@ -589,7 +603,7 @@ Cscope 支持 `c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型，结�
 
 #### 1.10 文件/缓冲/Tag 导航（fzf.vim）
 
-```
+```text
 Ctrl+p      搜索文件
 
 Leader+b    搜索缓冲（C-d 删除，Enter 打开）
@@ -603,7 +617,7 @@ Leader+e    搜索当前文件行
 
 以下是 Vim 内建折叠按键，由 FastFold 插件优化大文件性能：
 
-```
+```text
 za      当光标下的折叠打开时，关闭它。当折叠关闭时，打开它
 zc      关闭光标下的折叠
 zo      打开光标下的折叠
@@ -614,7 +628,7 @@ zuz     手动更新所有折叠（FastFold）
 
 #### 1.12 Marks（vim-signature）
 
-```
+```text
 m[a-zA-Z]   添加/删除标记
 m,          添加下一个可用的标记
 m.          如果当前行没有标记，添加下一个可用标记。否则，删除第一个标记
@@ -624,10 +638,8 @@ m-          删除当前行的所有标记
 m<Space>    删除当前buffer的所有标记
 
 '[a-zA-Z]   跳转到标记[a-zA-Z]
-]`          跳转到下一个标记
-[`          跳转到上一个标记
-`]          根据字母序列跳转到下一个标记
-`[          根据字母序列跳转到上一个标记
+]` / [`     跳转到下一个 / 上一个标记
+`] / `[     根据字母顺序跳转到下一个 / 上一个标记
 m/          在Location List里，查看当前buffer的所有标记
 
 m[0-9]      添加/删除自定义标记!@#$%^&*()
@@ -642,12 +654,12 @@ m<BS>       删除所有自定义标记
 m?          在Location List里，查看当前buffer的所有自定义标记
 ```
 
-`:SignatureToggle`   显示/隐藏标记（不删除）
-`:SignatureRefresh`  标记与 sign 不同步时重新同步
+`:SignatureToggle` 显示/隐藏标记（不删除）
+`:SignatureRefresh` 标记与 sign 不同步时重新同步
 
 #### 1.13 Dirvish（目录浏览器，替代netrw）
 
-```
+```text
 -           在当前窗口打开文件所在的文件夹
 ~           在当前窗口打开项目根路径或用户主目录
 
@@ -665,13 +677,13 @@ R           刷新目录视图
 
 #### 1.14 代码搜索（ctrlsf）
 
-```
+```text
 Leader+a        当前目录搜索光标所在的词
 ```
 
 #### 1.15 围绕字符编辑（vim-surround）
 
-```
+```text
 ys+textobj+surroundA        在textobj指定的范围增A围绕字符
 yss+surroundA               在当前行增加A围绕字符
 ds+surroundA                删除A围绕字符
@@ -680,7 +692,7 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 
 #### 1.16 终端
 
-```
+```text
 F3      打开终端窗口
 F4      切换终端窗口（打开/隐藏）
 ```
@@ -691,14 +703,14 @@ F3 在底部新建一个终端。F4 切换终端 — 隐藏时不终止进程，
 
 #### 1.17 其他
 
-```
+```text
 Leader+ws       保存session
 Leader+rs       删除session
 ```
 
 Session 保存到 `~/.cache/sessions/`。Vim 启动时自动从此目录恢复 session。
 
-```
+```text
 '.              最后一次变更的地方
 ''              跳回来的地方（最近两个位置跳转）
 Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
@@ -717,6 +729,7 @@ Leader+l            打开/关闭location list
 ```
 
 在 quickfix/location 窗口中（ack 风格映射）：
+
 - `o`/`Enter` — 打开条目（文件+行号）
 - `go` — 在水平分屏中打开
 - `gO` — 打开并聚焦新窗口
@@ -732,12 +745,13 @@ Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，�
 #### 1.18 自动插入文件头
 
 新建 `.sh` 和 `.py` 文件会自动插入 shebang 行：
+
 - `.sh` → `#!/usr/bin/env bash`
 - `.py` → `#!/usr/bin/env python3`
 
 #### 1.19 Match-up（增强 % 匹配跳转）
 
-```
+```text
 %       正向跳转到下一个匹配词（闭合处循环回到开头）
 g%      反向跳转到上一个匹配词
 [%      跳转到上一个外部左括号
@@ -749,13 +763,13 @@ a%      任意块的范围（文本对象）
 
 #### 1.20 Lexima（自动配对括号）
 
-Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''`、```` ``` ````。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
+Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''` 和反引号对。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
 
 ### 2. 插入模式
 
 #### 2.1 代码片段（vim-vsnip）
 
-```
+```text
 Ctrl+l      展开代码片段
 Tab         跳转到下一个占位符
 Shift+Tab   跳转到上一个占位符
@@ -763,7 +777,7 @@ Shift+Tab   跳转到上一个占位符
 
 #### 2.2 FZF 补全
 
-```
+```text
 Ctrl+x Ctrl+p   模糊文件路径补全（fzf）
 Ctrl+x Ctrl+l   模糊行补全（fzf）
 Ctrl+x Ctrl+b   模糊缓冲行补全（fzf）
@@ -777,7 +791,7 @@ Ctrl+x Ctrl+]   标签补全（LSP 慢或不可用时的备选方案）
 
 #### 3.1 按键修改
 
-```
+```text
 s       用剪贴板的内容替换选中文本
 ;       进入命令行模式，相当于":"键
 <       减少缩进，保持选中
@@ -786,14 +800,14 @@ s       用剪贴板的内容替换选中文本
 
 #### 3.2 查找
 
-```
+```text
 *       正向查找选中的字符串（标准 vim 行为，由 vim-asterisk 增强）
 #       逆向查找选中的字符串（标准 vim 行为，由 vim-asterisk 增强）
 ```
 
 #### 3.3 替换
 
-```
+```text
 # '\r'代表换行
 
 s{文本对象}  用剪贴板内容替换文本对象（如 siw）
@@ -803,26 +817,26 @@ S           用剪贴板内容替换光标到行尾
 
 #### 3.4 快速跳转（vim9-stargate）
 
-```
+```text
 f           搜索1个字符并跳转
 F           搜索2个连续字符并跳转（stargate 带提示）
 ```
 
 #### 3.5 代码搜索（ctrlsf）
 
-```
+```text
 Leader+a        当前目录搜索选中字符串
 ```
 
 #### 3.6 围绕字符编辑（vim-surround）
 
-```
+```text
 S+surroundA     选中字符串增加A围绕字符
 ```
 
 ### 4. 命令行模式
 
-```
+```text
 Ctrl+p  上一条命令
 Ctrl+n  下一条命令
 Ctrl+a  跳到命令行最前
@@ -904,6 +918,7 @@ Ctrl+e  跳到命令行最后
 #### Git status 窗口快捷键
 
 在 `:Git` 打开的 status 窗口内：
+
 - `s` — 暂存文件
 - `u` — 取消暂存
 - `-` — 切换暂存
@@ -919,7 +934,7 @@ Ctrl+e  跳到命令行最后
 - `dv` — `:Gvdiffsplit`
 - `gq` — 关闭 status 窗口
 
-更多帮助：`:h fugitive.txt` 或 https://github.com/tpope/vim-fugitive#screencasts
+更多帮助：`:h fugitive.txt` 或 <https://github.com/tpope/vim-fugitive#screencasts>
 
 ### 2. Git 提交浏览器：[gv.vim](https://github.com/junegunn/gv.vim)
 
@@ -934,7 +949,7 @@ Ctrl+e  跳到命令行最后
 
 #### 快捷键
 
-```
+```text
 Leader+gg       打开 Git 状态
 Leader+gl       当前文件的提交浏览器（GV!）
 Leader+gL       打开 Git 提交浏览器（GV）
@@ -950,7 +965,7 @@ Leader+gb       Git blame
 
 #### 快捷键
 
-```
+```text
 [h / ]h         跳转到上一个/下一个修改块
 Leader+hp       预览当前修改块
 Leader+hs       暂存当前修改块
@@ -1170,11 +1185,11 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 
 - **缩进规则** — monkey-vim 按文件类型应用缩进设置：
 
-| 文件类型 | 风格 | 宽度 |
-|---|---|---|
-| `c`, `cpp`, `go`, `sh`, `vim`, `sql` | 硬制表符 (`noexpandtab`) | 4 |
-| `zig`, `rust`, `python`, `markdown` | 空格 (`expandtab`) | 4 |
-| `javascript`, `typescript`, `lua`, `yaml`, `json` | 空格 (`expandtab`) | 2 |
+| 文件类型                                          | 风格                     | 宽度 |
+| ------------------------------------------------- | ------------------------ | ---- |
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql`              | 硬制表符 (`noexpandtab`) | 4    |
+| `zig`, `rust`, `python`, `markdown`               | 空格 (`expandtab`)       | 4    |
+| `javascript`, `typescript`, `lua`, `yaml`, `json` | 空格 (`expandtab`)       | 2    |
 
 全局默认使用 4 宽度硬制表符。如需自定义，可在引入 monkey-vim 配置后通过 `FileType` 自动命令覆盖。
 
@@ -1184,11 +1199,11 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 
 如需独立的剪贴板管理工具（可选）：
 
-| 工具 | 平台 | 用途 |
-|---|---|---|
-| [parcellite](https://parcellite.sourceforge.net/) | X11 | 轻量级剪贴板管理器，支持持久化历史 |
-| [cliphist](https://github.com/sentriz/cliphist) | Wayland | wlroots 剪贴板历史管理 |
-| 系统自带 | macOS/WSL | 系统剪贴板默认持久化，无需额外工具 |
+| 工具                                              | 平台      | 用途                               |
+| ------------------------------------------------- | --------- | ---------------------------------- |
+| [parcellite](https://parcellite.sourceforge.net/) | X11       | 轻量级剪贴板管理器，支持持久化历史 |
+| [cliphist](https://github.com/sentriz/cliphist)   | Wayland   | wlroots 剪贴板历史管理             |
+| 系统自带                                          | macOS/WSL | 系统剪贴板默认持久化，无需额外工具 |
 
 ## 额外设置
 
@@ -1204,79 +1219,79 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 >
 > 可选 CLI 工具：`wl-clipboard`（Wayland，提供 `wl-copy`/`wl-paste`）、`xclip` 或 `xsel`（X11）。Vim 通过 `--with-wayland` / `--with-x` 内建剪贴板支持，这些工具仅在 Vim 外部需要命令行剪贴板访问时使用。
 
-**Ubuntu/Debian**
+##### Ubuntu/Debian
 
 Wayland：
 
 ```bash
 sudo apt-get install libgtk-3-dev \
-	libwayland-dev \
-	libcairo2-dev \
-	libgpm-dev \
-	libncurses-dev \
-	python3-dev \
-	lua5.4 \
-	liblua5.4-dev \
-	perl \
-	libperl-dev \
-	ruby \
-	ruby-dev
+    libwayland-dev \
+    libcairo2-dev \
+    libgpm-dev \
+    libncurses-dev \
+    python3-dev \
+    lua5.4 \
+    liblua5.4-dev \
+    perl \
+    libperl-dev \
+    ruby \
+    ruby-dev
 ```
 
 X11 & Wayland：
 
 ```bash
 sudo apt-get install libgtk-3-dev \
-	libx11-dev \
-	libxt-dev \
-	libxpm-dev \
-	libwayland-dev \
-	libcairo2-dev \
-	libgpm-dev \
-	libncurses-dev \
-	python3-dev \
-	lua5.4 \
-	liblua5.4-dev \
-	perl \
-	libperl-dev \
-	ruby \
-	ruby-dev
+    libx11-dev \
+    libxt-dev \
+    libxpm-dev \
+    libwayland-dev \
+    libcairo2-dev \
+    libgpm-dev \
+    libncurses-dev \
+    python3-dev \
+    lua5.4 \
+    liblua5.4-dev \
+    perl \
+    libperl-dev \
+    ruby \
+    ruby-dev
 ```
 
-**OpenSUSE**
+##### OpenSUSE
 
 Wayland：
 
 ```bash
 sudo zypper install gtk3-devel \
-	wayland-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel
+    wayland-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel
 ```
 
 X11 & Wayland：
 
 ```bash
 sudo zypper install gtk3-devel \
-	wayland-devel \
-	xorg-x11-devel \
-	libXpm-devel \
-	libXt-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel
+    wayland-devel \
+    xorg-x11-devel \
+    libXpm-devel \
+    libXt-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel
 ```
 
-**CentOS**
+##### CentOS
 
 > 需要先启用 EPEL：`sudo dnf install epel-release`。`gtk3-devel` 需要 CentOS 8+ / EPEL 8+，CentOS 7 不可用。`lua-devel` 需要启用 CRB（CodeReady Builder）仓库：`sudo dnf config-manager --set-enabled crb`（CentOS 9）或 `sudo dnf config-manager --set-enabled powertools`（CentOS 8）。
 
@@ -1284,148 +1299,148 @@ Wayland：
 
 ```bash
 sudo dnf install gtk3-devel \
-	wayland-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel \
-	perl \
-	perl-devel \
-	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-CBuilder \
-	perl-ExtUtils-Embed
+    wayland-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel \
+    perl \
+    perl-devel \
+    perl-ExtUtils-ParseXS \
+    perl-ExtUtils-CBuilder \
+    perl-ExtUtils-Embed
 ```
 
 X11 & Wayland：
 
 ```bash
 sudo dnf install gtk3-devel \
-	wayland-devel \
-	libX11-devel \
-	libXpm-devel \
-	libXt-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel \
-	perl \
-	perl-devel \
-	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-CBuilder \
-	perl-ExtUtils-Embed
+    wayland-devel \
+    libX11-devel \
+    libXpm-devel \
+    libXt-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel \
+    perl \
+    perl-devel \
+    perl-ExtUtils-ParseXS \
+    perl-ExtUtils-CBuilder \
+    perl-ExtUtils-Embed
 ```
 
-**Arch**
+##### Arch
 
 Wayland：
 
 ```bash
 sudo pacman -S gtk3 \
-	wayland \
-	gpm \
-	ncurses \
-	lua \
-	perl \
-	python \
-	ruby
+    wayland \
+    gpm \
+    ncurses \
+    lua \
+    perl \
+    python \
+    ruby
 ```
 
 X11 & Wayland：
 
 ```bash
 sudo pacman -S gtk3 \
-	wayland \
-	libx11 \
-	libxt \
-	libxpm \
-	gpm \
-	ncurses \
-	lua \
-	perl \
-	python \
-	ruby
+    wayland \
+    libx11 \
+    libxt \
+    libxpm \
+    gpm \
+    ncurses \
+    lua \
+    perl \
+    python \
+    ruby
 ```
 
 **Mac**（原生图形界面，无需 Wayland/X11）
 
 ```bash
 brew install python \
-	python3 \
-	ruby \
-	lua \
-	cairo
+    python3 \
+    ruby \
+    lua \
+    cairo
 ```
 
 #### 2. 编译并安装
 
-**Wayland**
+##### Wayland
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
-	--enable-gpm \
-	--with-wayland \
-	--enable-python3interp \
-	--enable-luainterp \
-	--enable-perlinterp \
-	--enable-rubyinterp \
-	--enable-multibyte \
-	--enable-terminal \
-	--enable-fontset \
-	--enable-cscope \
-	--enable-fail-if-missing
+    --enable-gui=gtk3 \
+    --enable-gpm \
+    --with-wayland \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
 make
 sudo make install
 ```
 
 > GTK3 图形界面在运行时自动检测 Wayland 后端；也可以强制指定：`export GDK_BACKEND=wayland`。`--with-wayland` 为终端版 Vim 启用原生 Wayland 支持（`+wayland`、`+wayland_clipboard`），即使不使用图形界面也能正常访问剪贴板。
 
-**X11 & Wayland**
+##### X11 & Wayland
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
-	--enable-gpm \
-	--with-x \
-	--with-wayland \
-	--enable-python3interp \
-	--enable-luainterp \
-	--enable-perlinterp \
-	--enable-rubyinterp \
-	--enable-multibyte \
-	--enable-terminal \
-	--enable-fontset \
-	--enable-cscope \
-	--enable-fail-if-missing
+    --enable-gui=gtk3 \
+    --enable-gpm \
+    --with-x \
+    --with-wayland \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
 make
 sudo make install
 ```
 
 > `--with-x` 添加 X11 支持（剪贴板、拖放）；`--with-wayland` 启用原生 Wayland 支持（`+wayland`、`+wayland_clipboard`）。同一个 GTK3 构建运行时自动检测显示服务器，可同时在 Wayland 和 X11 下运行。如果你需要同时支持两者——例如 WSLg（不支持 Wayland 剪贴板），剪贴板走 XWayland 但显示器是 Wayland——选这个。
-
+>
 > **GTK3 与 GTK4。** 在普通 Linux 桌面上也可以改用 GTK4 构建：安装 `libgtk-4-dev`（Debian/Ubuntu）、`gtk4-devel`（openSUSE/CentOS）或 `gtk4`（Arch），编译参数改为 `--enable-gui=gtk4`。但 **WSL（WSLg）下不要用 GTK4**。GTK4 构建会完全去掉 X11 支持（`--enable-gui=gtk4` 会强制 `--without-x`），因此没有 `+xterm_clipboard`；剩下的剪贴板能力只有 `+wayland_clipboard`，它使用的是 Wayland 的 `data-control` 协议（`zwlr-data-control-unstable-v1` / `ext-data-control-v1`）。而 WSLg 的合成器没有实现该协议——它的剪贴板通过 RDP 中继到 Windows、再经 XWayland 暴露给 Linux 程序——所以 WSLg 下的 GTK4 构建会完全失去系统剪贴板。在 WSL 下请保持 GTK3 + `--with-x`（即上面的 "X11 & Wayland" 构建），剪贴板走 XWayland。
 
 **kmscon / 文本控制台**（无图形界面）
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=no \
-	--enable-gpm \
-	--enable-python3interp \
-	--enable-luainterp \
-	--enable-perlinterp \
-	--enable-rubyinterp \
-	--enable-multibyte \
-	--enable-terminal \
-	--enable-fontset \
-	--enable-cscope \
-	--enable-fail-if-missing
+    --enable-gui=no \
+    --enable-gpm \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
 make
 sudo make install
 ```
@@ -1437,10 +1452,6 @@ sudo make install
 ### 在vim中查看man文档
 
 在 bashrc 中加入以下内容：
-
-```bash
-export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
-```
 
 ```bash
 export MANPAGER="env MAN_PN=1 vim -R +MANPAGER -"
