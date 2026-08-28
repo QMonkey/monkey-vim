@@ -16,7 +16,7 @@ The project monkey-vim, aims to make a powerful and fast terminal-native IDE.
 | Server TTY     | Bare Linux console (tty1–tty63), Vim default 8/16-color highlighting (sonokai needs ≥256 colors) |
 | kmscon         | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support         |
 
-Window/split management is delegated to tmux or your terminal emulator's native tabs.
+Top-level workspace management (multiple sessions and terminals) is delegated to tmux or your terminal emulator's tabs; in-editor splits and tabs work as usual.
 
 ## Screenshot
 
@@ -705,7 +705,7 @@ Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal mo
 
 ```text
 Leader+ws       Save session
-Leader+rs       Remove session
+Leader+rs       Remove session (asks for confirmation; no-op when no session exists)
 ```
 
 Sessions are saved to `~/.cache/sessions/`. On Vim startup, a session is automatically restored from this directory.
