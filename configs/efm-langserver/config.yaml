@@ -1,0 +1,13 @@
+version: 2
+rootMarkers: ['.git/']
+languages:
+  markdown:
+    - format-command: 'prettier --stdin-filepath ${INPUT}'
+      format-stdin: true
+      lint-command: 'markdownlint-cli2 - --config ~/.config/efm-langserver/.markdownlint.jsonc'
+      lint-stdin: true
+      lint-ignore-exit-code: true
+      lint-formats:
+        - '%E%f:%l:%c %m'
+        - '%E%f:%l %m'
+      lint-source: 'markdownlint'
