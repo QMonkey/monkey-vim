@@ -1016,7 +1016,7 @@ augroup FileTypeGroup
 	# Space indent, 4-width: Zig, Rust, Python, Markdown
 	autocmd FileType zig,rust,python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
 	# Space indent, 2-width: JavaScript, TypeScript, Lua, YAML, JSON
-	autocmd FileType javascript,typescript,lua,yaml,json setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+	autocmd FileType javascript,typescript,lua,yaml,json,jsonc setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
 	autocmd BufRead,BufNewFile *.gotmpl,*.go.tmpl setlocal filetype=gotmpl
 	autocmd BufNewFile *.sh,*.py AutoInsertFileHead()
 
@@ -1048,7 +1048,7 @@ enddef
 # Don't need to install these if you are running a recent version of Vim
 g:markdown_syntax_conceal = 0
 g:markdown_minlines = 100
-g:markdown_fenced_languages = ['c', 'cpp', 'zig', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json']
+g:markdown_fenced_languages = ['c', 'cpp', 'zig', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json', 'jsonc']
 # }
 
 # Docset {
@@ -1059,7 +1059,7 @@ augroup Docset
 	# Default docset: built-in :Man for everything
 	autocmd FileType * setlocal keywordprg=:Man
 	# LSP-enabled file types prefer :LspHover
-	autocmd FileType cpp,zig,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,markdown,yaml,json setlocal keywordprg=:LspHover
+	autocmd FileType cpp,zig,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,markdown,yaml,json,jsonc setlocal keywordprg=:LspHover
 	autocmd FileType c setlocal keywordprg=:Man | setenv('MANSECT', '2:3:1:4:5:6:7:8:9')
 	autocmd FileType vim,help setlocal keywordprg=:help!
 augroup END
@@ -1840,6 +1840,18 @@ def OnLspSetup()
 		args: ['server'],
 		rootSearch: ['.marksman.toml', '.git/'],
 	},
+	{name: 'efm',
+		filetype: ['markdown'],
+		path: 'efm-langserver',
+		args: [],
+		rootSearch: ['.git/'],
+		initializationOptions: {
+			documentFormatting: v:true,
+			documentRangeFormatting: v:false,
+			documentDiagnostics: v:true,
+			codeAction: v:false,
+		},
+	},
 	{name: 'yaml-language-server',
 		filetype: ['yaml'],
 		path: 'yaml-language-server',
@@ -1857,10 +1869,17 @@ def OnLspSetup()
 		},
 	},
 	{name: 'vscode-json-language-server',
-		filetype: ['json'],
+		filetype: ['json', 'jsonc'],
 		path: 'vscode-json-language-server',
 		args: ['--stdio'],
-		initializationOptions: {provideFormatter: true}
+		initializationOptions: {
+			provideFormatter: true,
+		},
+		workspaceConfig: {
+			'json': {
+				'validate': {'enable': v:true},
+			},
+		},
 	}]
 
 	g:LspOptionsSet(lspOpts)
@@ -1899,7 +1918,7 @@ augroup Lsp
 	# Lazily load lsp and vsnip only for the supported file types.
 	# Order matters: lsp must be loaded before vim-vsnip-integ, otherwise
 	# vsnip-integ caches "lsp not detected" and LSP snippets never expand.
-	autocmd FileType c,cpp,zig,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,vim,markdown,yaml,json call plug#load('lsp') | call plug#load('vim-vsnip') | call plug#load('vim-vsnip-integ') | call plug#load('friendly-snippets')
+	autocmd FileType c,cpp,zig,rust,go,gomod,gowork,gosum,gotmpl,javascript,typescript,python,lua,sh,vim,markdown,yaml,json,jsonc call plug#load('lsp') | call plug#load('vim-vsnip') | call plug#load('vim-vsnip-integ') | call plug#load('friendly-snippets')
 	autocmd User LspSetup OnLspSetup()
 	autocmd User LspAttached OnLspAttached()
 	autocmd BufWritePre * if exists('g:loaded_lsp') && !empty(lsp#buffer#CurbufGetServer('documentFormatting')) | LspFormat | endif
