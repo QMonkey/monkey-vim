@@ -1,0 +1,13 @@
+{
+  // Default rules, minus the noisy ones for prose editing.
+  "default": true,
+  // Line length: free-form prose, don't enforce.
+  "MD013": false,
+  // Don't require H1 as first line (snippets/fragments are common).
+  "MD041": false,
+  // Parallel sections may repeat heading names (e.g. "Keymaps");
+  // only flag duplicates among sibling headings.
+  "MD024": {
+    "siblings_only": true
+  }
+}
