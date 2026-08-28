@@ -8,13 +8,13 @@ The project monkey-vim, aims to make a powerful and fast terminal-native IDE.
 
 **Positioning:** monkey-vim targets pure terminal environments — no GUI, no gvim, no built-in terminal multiplexing. Use it in:
 
-| Environment | Description |
-|---|---|
-| Linux Terminal | xterm, kitty, alacritty, wezterm, gnome-terminal, etc. |
-| macOS Terminal | Terminal.app, iTerm2, kitty, etc. |
-| WSL | Windows Subsystem for Linux (WSL2 recommended) |
-| Server TTY | Bare Linux console (tty1–tty63), Vim default 8/16-color highlighting (sonokai needs ≥256 colors) |
-| kmscon | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support |
+| Environment    | Description                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| Linux Terminal | xterm, kitty, alacritty, wezterm, gnome-terminal, etc.                                           |
+| macOS Terminal | Terminal.app, iTerm2, kitty, etc.                                                                |
+| WSL            | Windows Subsystem for Linux (WSL2 recommended)                                                   |
+| Server TTY     | Bare Linux console (tty1–tty63), Vim default 8/16-color highlighting (sonokai needs ≥256 colors) |
+| kmscon         | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support         |
 
 Window/split management is delegated to tmux or your terminal emulator's native tabs.
 
@@ -39,17 +39,17 @@ git clone https://github.com/QMonkey/monkey-vim.git
 
 #### 2.1 Common tools
 
-| Tool | Purpose | Required |
-|---|---|---|
-| curl | Plugin manager bootstrap | Yes |
-| git | Plugin manager, vim-fugitive | Yes |
-| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg) | ctrlsf code search + fzf.vim file search | Yes |
-| universal-ctags | gutentags tag generation | Yes |
-| [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation | Recommended |
-| [Pygments](https://pygments.org/) (`pygmentize`) | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.) | Recommended |
-| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder (fzf.vim) | Yes |
-| [bat](https://github.com/sharkdp/bat) | Syntax-highlighted file preview in fzf | Recommended |
-| [Homebrew](https://brew.sh/) | Fallback package manager for tools not in system repos (lua-language-server, marksman, fzf) | Required |
+| Tool                                                          | Purpose                                                                                     | Required    |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------- |
+| curl                                                          | Plugin manager bootstrap                                                                    | Yes         |
+| git                                                           | Plugin manager, vim-fugitive                                                                | Yes         |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | ctrlsf code search + fzf.vim file search                                                    | Yes         |
+| universal-ctags                                               | gutentags tag generation                                                                    | Yes         |
+| [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation                                             | Recommended |
+| [Pygments](https://pygments.org/) (`pygmentize`)              | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.)                           | Recommended |
+| [fzf](https://github.com/junegunn/fzf)                        | Fuzzy finder (fzf.vim)                                                                      | Yes         |
+| [bat](https://github.com/sharkdp/bat)                         | Syntax-highlighted file preview in fzf                                                      | Recommended |
+| [Homebrew](https://brew.sh/)                                  | Fallback package manager for tools not in system repos (lua-language-server, marksman, fzf) | Required    |
 
 ```bash
 # Install Homebrew (all Linux distros — required for tools not in system repos)
@@ -78,30 +78,33 @@ brew install curl git ripgrep universal-ctags global pygments fzf bat node
 
 Language Server Protocol support is provided by [yegappan/lsp](https://github.com/yegappan/lsp). Install the servers for languages you use:
 
-| Language | LSP Server | Install |
-|---|---|---|
-| C/C++ | clangd | `sudo apt-get install clangd`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
-| Go | gopls | `go install golang.org/x/tools/gopls@latest` |
-| Python | python-lsp-server | `pip3 install python-lsp-server` |
-| Zig | zls | `brew install zls` (recommended, keeps zig/zls matched) or download from <https://zigtools.org/zls/install/> |
-| Rust | rust-analyzer | `rustup component add rust-analyzer` |
-| Lua | lua-language-server | `brew install lua-language-server` or `sudo pacman -S lua-language-server` |
-| Shell | bash-language-server | `npm install -g bash-language-server` |
-| Vim | vim-language-server | `npm install -g vim-language-server` |
-| JavaScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
-| TypeScript | typescript-language-server | `npm install -g typescript-language-server typescript` |
-| JSON | vscode-json-language-server | `npm install -g vscode-langservers-extracted` |
-| YAML | yaml-language-server | `npm install -g yaml-language-server` |
-| Markdown | marksman | `brew install marksman` or `sudo pacman -S marksman` |
+| Language   | LSP Server                  | Install                                                                                                                                          |
+| ---------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C/C++      | clangd                      | `sudo apt-get install clangd`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
+| Go         | gopls                       | `go install golang.org/x/tools/gopls@latest`                                                                                                     |
+| Python     | python-lsp-server           | `pip3 install python-lsp-server`                                                                                                                 |
+| Zig        | zls                         | `brew install zls` (recommended, keeps zig/zls matched) or download from <https://zigtools.org/zls/install/>                                     |
+| Rust       | rust-analyzer               | `rustup component add rust-analyzer`                                                                                                             |
+| Lua        | lua-language-server         | `brew install lua-language-server` or `sudo pacman -S lua-language-server`                                                                       |
+| Shell      | bash-language-server        | `npm install -g bash-language-server`                                                                                                            |
+| Vim        | vim-language-server         | `npm install -g vim-language-server`                                                                                                             |
+| JavaScript | typescript-language-server  | `npm install -g typescript-language-server typescript`                                                                                           |
+| TypeScript | typescript-language-server  | `npm install -g typescript-language-server typescript`                                                                                           |
+| JSON       | vscode-json-language-server | `npm install -g vscode-langservers-extracted`                                                                                                    |
+| YAML       | yaml-language-server        | `npm install -g yaml-language-server`                                                                                                            |
+| Markdown   | marksman                    | `brew install marksman` or `sudo pacman -S marksman`                                                                                             |
+| Markdown   | efm-langserver              | `go install github.com/mattn/efm-langserver@latest`                                                                                              |
 
 Some LSP servers offload formatting/linting to **external tools** that must be installed separately. Without them the feature silently degrades (falls back to built-in diagnostics or skips the tool):
 
-| Language | Tool | Role | Install |
-|---|---|---|---|
-| C/C++ | clang-tidy | linter (via `clangd --clang-tidy`) | `sudo apt-get install clang-tidy`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
-| Go | staticcheck | linter (via `gopls` `staticcheck`) | `go install honnef.co/go/tools/cmd/staticcheck@latest` |
-| Shell | shfmt | formatter (via `bash-language-server`) | `go install mvdan.cc/sh/v3/cmd/shfmt@latest` |
-| Python | black | formatter (via `pylsp` black plugin) | `pip3 install black` |
+| Language | Tool              | Role                                   | Install                                                                                                                                              |
+| -------- | ----------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C/C++    | clang-tidy        | linter (via `clangd --clang-tidy`)     | `sudo apt-get install clang-tidy`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
+| Go       | staticcheck       | linter (via `gopls` `staticcheck`)     | `go install honnef.co/go/tools/cmd/staticcheck@latest`                                                                                               |
+| Shell    | shfmt             | formatter (via `bash-language-server`) | `go install mvdan.cc/sh/v3/cmd/shfmt@latest`                                                                                                         |
+| Python   | black             | formatter (via `pylsp` black plugin)   | `pip3 install black`                                                                                                                                 |
+| Markdown | prettier          | formatter (via `efm-langserver`)       | `npm install -g prettier`                                                                                                                            |
+| Markdown | markdownlint-cli2 | linter (via `efm-langserver`)          | `npm install -g markdownlint-cli2`                                                                                                                   |
 
 #### 2.3 C/C++
 
@@ -189,6 +192,7 @@ go install mvdan.cc/sh/v3/cmd/shfmt@latest
 #### 2.11 Markdown
 
 Preview Markdown in browser via WSL/glow:
+
 ```bash
 # Option 1: glow (terminal Markdown renderer)
 # https://github.com/charmbracelet/glow
@@ -199,6 +203,15 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS, o
 
 # Option 2: Open in Windows browser (WSL only)
 # :!explorer.exe %
+```
+
+Format & lint are provided by [efm-langserver](https://github.com/mattn/efm-langserver) (formatter: prettier, linter: markdownlint-cli2):
+
+```bash
+go install github.com/mattn/efm-langserver@latest
+npm install -g prettier markdownlint-cli2
+# Link the efm config (config.yaml + .markdownlint.jsonc) to efm's default path
+ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver
 ```
 
 #### 2.12 Fonts (optional)
@@ -227,6 +240,7 @@ Pass `--install` to automatically install missing dependencies (required tools +
 cd monkey-vim
 ln -sf $(pwd)/.vimrc ~/.vimrc
 ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # global clang-format style (optional)
+ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver   # efm: markdown format/lint (optional)
 vim
 ```
 
@@ -319,7 +333,7 @@ sudo systemctl start kmsconvt@tty1.service
 
 After reboot, press `Ctrl+Alt+F1` to switch to the kmscon-enhanced tty1. You can repeat this for tty2–tty6 as needed.
 
-**`start` vs `enable` — a common pitfall.**
+##### `start` vs `enable` — a common pitfall
 
 `systemctl start` runs a unit once and ignores the `[Install]` section entirely, so it never touches `autovt@.service`. `systemctl enable` reads `[Install]` and creates symlinks, including the `Alias=autovt@.service`.
 
@@ -411,41 +425,41 @@ It should resolve to `getty@.service`.
 
 ## Plugin list
 
-| Plugin | Purpose |
-|---|---|
-| [yegappan/lsp](https://github.com/yegappan/lsp) | Language Server Protocol client |
-| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip) | Snippet engine |
-| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ) | LSP snippet integration |
-| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets) | Snippet collection |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim) | Fuzzy file/buffer/tag finder |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim) | Async code search (rg/ag backend) |
-| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim) | Status line |
-| [sainnhe/sonokai](https://github.com/sainnhe/sonokai) | Colorscheme |
-| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi) | Multiple cursors |
-| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate) | Easy motion (replaces vim-sneak) |
-| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive) | Git wrapper |
-| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter) | Git diff in sign column |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags) | Automatic ctags & gtags (GNU Global) generation |
-| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish) | Directory viewer (replaces netrw) |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround) | Surround text with parens/quotes/etc |
-| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive) | Substitute with clipboard |
-| [andymass/vim-matchup](https://github.com/andymass/vim-matchup) | Extended % matching |
-| [wellle/targets.vim](https://github.com/wellle/targets.vim) | Additional text objects |
-| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects |
-| [cohama/lexima.vim](https://github.com/cohama/lexima.vim) | Auto-close brackets/parens |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat) | Repeat plugin maps with `.` |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch) | UNIX shell helpers (:SudoWrite, :W, :Delete, etc.) |
-| [tpope/vim-obsession](https://github.com/tpope/vim-obsession) | Session management |
-| [Konfekt/FastFold](https://github.com/Konfekt/FastFold) | Faster folding for large files |
-| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk) | Improved `*` / `#` search |
-| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature) | Visual marks |
-| [airblade/vim-rooter](https://github.com/airblade/vim-rooter) | Auto-change working directory |
-| [junegunn/gv.vim](https://github.com/junegunn/gv.vim) | Git commit browser |
-| [romainl/vim-qf](https://github.com/romainl/vim-qf) | Quickfix/Location list helpers |
+| Plugin                                                                                | Purpose                                            |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| [yegappan/lsp](https://github.com/yegappan/lsp)                                       | Language Server Protocol client                    |
+| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | Snippet engine                                     |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP snippet integration                            |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | Snippet collection                                 |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag finder                       |
+| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | Async code search (rg/ag backend)                  |
+| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim)                     | Status line                                        |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | Colorscheme                                        |
+| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | Multiple cursors                                   |
+| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | Easy motion (replaces vim-sneak)                   |
+| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive)                           | Git wrapper                                        |
+| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git diff in sign column                            |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | Automatic ctags & gtags (GNU Global) generation    |
+| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish)                       | Directory viewer (replaces netrw)                  |
+| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | Surround text with parens/quotes/etc               |
+| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | Substitute with clipboard                          |
+| [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | Extended % matching                                |
+| [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | Additional text objects                            |
+| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects                          |
+| [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | Auto-close brackets/parens                         |
+| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | Repeat plugin maps with `.`                        |
+| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch)                               | UNIX shell helpers (:SudoWrite, :W, :Delete, etc.) |
+| [tpope/vim-obsession](https://github.com/tpope/vim-obsession)                         | Session management                                 |
+| [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | Faster folding for large files                     |
+| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | Improved `*` / `#` search                          |
+| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | Visual marks                                       |
+| [airblade/vim-rooter](https://github.com/airblade/vim-rooter)                         | Auto-change working directory                      |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git commit browser                                 |
+| [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list helpers                     |
 
 ## Keyboard shortcut
 
-```
+```text
 The "Leader" key below means comma key.
 ```
 
@@ -453,7 +467,7 @@ The "Leader" key below means comma key.
 
 #### 1.1 Remap
 
-```
+```text
 s       Replace a motion/text object with clipboard content (see §1.7)
 S       Replace from cursor to end of line with clipboard content (see §1.7)
 Y       Copy from the cursor position to the end of the line, same as y$
@@ -474,7 +488,7 @@ gs      Select words/regions for multi-cursor editing (vim-visual-multi)
 
 The following remaps work in both Insert mode and Command-line mode:
 
-```
+```text
 Ctrl+p  Move up        (Up)
 Ctrl+n  Move down      (Down)
 Ctrl+b  Move left      (Left)
@@ -487,7 +501,7 @@ Ctrl+d  Delete forward (Del)
 
 #### 1.2 F1 ~ F4
 
-```
+```text
 F1      Open CtrlSF search prompt
 F2      Toggle CtrlSF search window
 F3      Open a terminal at the bottom
@@ -496,7 +510,7 @@ F4      Toggle terminal buffer (open/hide)
 
 #### 1.3 Buffer
 
-```
+```text
 Leader+o    Open a new buffer with given file path in current window
 [+b         Jump to previous buffer
 ]+b         Jump to next buffer
@@ -504,7 +518,7 @@ Leader+o    Open a new buffer with given file path in current window
 
 #### 1.4 Split
 
-```
+```text
 Leader+Leader+s    Open a horizontal split with given file path in current window
 Leader+Leader+v    Open a vertical split with given file path in current window
 
@@ -517,7 +531,7 @@ Leader+z    Toggle zoom
 
 #### 1.5 Tab
 
-```
+```text
 Leader+Leader+t    Open a tab with given file path in current window
 
 [+t         Jump to previous tab
@@ -531,7 +545,7 @@ Leader+]    Jump to last tab
 
 Pressing `*` or `#` highlights all occurrences of the word under cursor without moving. Press again to jump normally.
 
-```
+```text
 *       Highlight current word without moving (press again to jump)
 g*      Same as *, partial match
 #       Same as *, search backward
@@ -540,7 +554,7 @@ g#      Same as g*, search backward
 
 #### 1.7 Replace (vim-subversive)
 
-```
+```text
 s{textobj}  Replace a text object with clipboard content (e.g. siw to replace current word)
 ss          Replace entire current line with clipboard content
 S           Replace from cursor to end of line with clipboard content
@@ -548,7 +562,7 @@ S           Replace from cursor to end of line with clipboard content
 
 #### 1.8 LSP (Language Server Protocol)
 
-```
+```text
 K                   Hover documentation for symbol under cursor
 gh                  Show hover in popup
 
@@ -577,7 +591,7 @@ Files are auto-formatted on save via LSP. Completion is enabled by default — L
 
 #### 1.9 Cscope & Ctags
 
-```
+```text
 gs                  Find symbol under cursor (cscope)
 gD                  Find global definition (cscope, fallback to ctags on failure)
 gR                  Find callers (cscope)
@@ -589,7 +603,7 @@ Requires `cscope` and `gtags-cscope` database (auto-generated by gutentags).
 
 #### 1.10 File/Buffer/Tag navigation (fzf.vim)
 
-```
+```text
 Ctrl+p      Search files
 
 Leader+b    Search buffers (C-d to delete, Enter to open)
@@ -603,7 +617,7 @@ Leader+e    Search line in buffer
 
 These are standard Vim built-in keys enhanced by FastFold for performance:
 
-```
+```text
 za      When on a closed fold, open it. When on an open fold, close it and set 'foldenable'
 zc      Close one fold under the cursor
 zo      Open one fold under the cursor
@@ -614,7 +628,7 @@ zuz     Manually update all folds (FastFold)
 
 #### 1.12 Marks (vim-signature)
 
-```
+```text
 m[a-zA-Z]   Toggle mark and display it in the leftmost column
 m,          Place the next available mark
 m.          If no mark on line, place the next available mark. Otherwise, remove (first) existing mark
@@ -624,10 +638,8 @@ m-          Delete all marks in current line
 m<Space>    Delete all marks in current buffer
 
 '[a-zA-Z]   Jump to the mark
-]`          Jump to next mark
-[`          Jump to prev mark
-`]          Jump by alphabetical order to next mark
-`[          Jump by alphabetical order to prev mark
+]` / [`     Jump to next / previous mark
+`] / `[     Jump by alphabetical order to next / previous mark
 m/          View all marks in Location List
 
 m[0-9]      Toggle the corresponding marker !@#$%^&*()
@@ -642,12 +654,12 @@ m<BS>       Remove all markers
 m?          Open location list and display markers from current buffer
 ```
 
-`:SignatureToggle`  Show/hide marks without deleting them
-`:SignatureRefresh`  Re-sync marks and signs if they go out of sync
+`:SignatureToggle` Show/hide marks without deleting them
+`:SignatureRefresh` Re-sync marks and signs if they go out of sync
 
 #### 1.13 Dirvish (Directory viewer, replaces netrw)
 
-```
+```text
 -           Open file directory in current window
 ~           Open project root or home directory in current window
 
@@ -665,13 +677,13 @@ R           Reload directory view
 
 #### 1.14 Code search (ctrlsf)
 
-```
+```text
 Leader+a        Search current word in current directory
 ```
 
 #### 1.15 Surround (vim-surround)
 
-```
+```text
 ys+textobj+surroundA        Add surround A for the region of textobj
 yss+surroundA               Add surround A for current line
 ds+surroundA                Delete surround A
@@ -680,7 +692,7 @@ cs+surroundA+surroundB      Change surround A to B
 
 #### 1.16 Terminal
 
-```
+```text
 F3      Open a terminal buffer
 F4      Toggle terminal buffer (open/hide)
 ```
@@ -691,16 +703,16 @@ Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal mo
 
 #### 1.17 Others
 
-```
+```text
 Leader+ws       Save session
 Leader+rs       Remove session
 ```
 
 Sessions are saved to `~/.cache/sessions/`. On Vim startup, a session is automatically restored from this directory.
 
-```
+```text
 '.              Jump to last changes
-''              To the position before the latest jump, or where the last "m'" or "m`" command was given
+''              To the position before the latest jump, or where the last "m'" or "m" + backtick command was given
 Ctrl+o          Go to [count] Older cursor position in jump list
 Ctrl+i          Go to [count] newer cursor position in jump list
 Ctrl+^          Edit the alternate file. Mostly the alternate file is the previously edited file
@@ -716,6 +728,7 @@ Leader+l            Toggle location list
 ```
 
 In quickfix/location windows (ack-style mappings):
+
 - `o`/`Enter` — Open entry (file + line)
 - `go` — Open in horizontal split
 - `gO` — Open and focus new window
@@ -730,12 +743,13 @@ Note: `gdefault` is set, so `:s` performs global substitution (all matches per l
 #### 1.18 Auto-insert file headers
 
 New `.sh` and `.py` files get a shebang line automatically inserted:
+
 - `.sh` → `#!/usr/bin/env bash`
 - `.py` → `#!/usr/bin/env python3`
 
 #### 1.19 Match-up (extended % matching)
 
-```
+```text
 %       Go forward to next matching word (cycles back from close to open)
 g%      Go backward to previous matching word
 [%      Go to previous outer open word (start of surrounding block)
@@ -747,13 +761,13 @@ a%      Around any block (text object)
 
 #### 1.20 Lexima (auto-close pairs)
 
-Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''`, ```` ``` ````. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
+Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''` and backtick pairs. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
 
 ### 2. Insert mode
 
 #### 2.1 Snippets (vim-vsnip)
 
-```
+```text
 Ctrl+l      Expand snippet
 Tab         Jump to next placeholder
 Shift+Tab   Jump to previous placeholder
@@ -761,7 +775,7 @@ Shift+Tab   Jump to previous placeholder
 
 #### 2.2 FZF Completion
 
-```
+```text
 Ctrl+x Ctrl+p   Fuzzy file path completion (fzf)
 Ctrl+x Ctrl+l   Fuzzy line completion (fzf)
 Ctrl+x Ctrl+b   Fuzzy buffer line completion (fzf)
@@ -775,7 +789,7 @@ Ctrl+x Ctrl+]   Tag completion (fallback when LSP is slow/unavailable)
 
 #### 3.1 Remap
 
-```
+```text
 s       Replace selected text with clipboard content
 ;       Enter command line mode, same as :
 <       Decrease indent, keep selection
@@ -784,14 +798,14 @@ s       Replace selected text with clipboard content
 
 #### 3.2 Search
 
-```
+```text
 *       Search selected text forward (standard vim behavior, enhanced by vim-asterisk)
 #       Search selected text backward (standard vim behavior, enhanced by vim-asterisk)
 ```
 
 #### 3.3 Replace
 
-```
+```text
 # '\r' standard for newline
 
 s{textobj}  Replace a text object with clipboard content (e.g. siw)
@@ -801,26 +815,26 @@ S           Replace from cursor to end of line with clipboard content
 
 #### 3.4 Easy motion (vim9-stargate)
 
-```
+```text
 f       Search 1 character to jump with hints (stargate)
 F       Search 2 consecutive characters to jump with hints (stargate)
 ```
 
 #### 3.5 Code search (ctrlsf)
 
-```
+```text
 Leader+a        Search selected text in current directory
 ```
 
 #### 3.6 Surround (vim-surround)
 
-```
+```text
 S+surroundA     Add surround A for selected text (vim-surround built-in)
 ```
 
 ### 4. Command line mode
 
-```
+```text
 Ctrl+p  Previous command
 Ctrl+n  Next command
 Ctrl+a  Jump to the begin of the command line
@@ -902,6 +916,7 @@ Ctrl+e  Jump to the end of the command line
 #### Git status buffer keymaps
 
 In the `:Git` status buffer:
+
 - `s` — Stage file
 - `u` — Unstage file
 - `-` — Stage/unstage toggle
@@ -917,7 +932,7 @@ In the `:Git` status buffer:
 - `dv` — `:Gvdiffsplit`
 - `gq` — Close status window
 
-More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencasts
+More help: `:h fugitive.txt` or <https://github.com/tpope/vim-fugitive#screencasts>
 
 ### 2. Git commit browser: [gv.vim](https://github.com/junegunn/gv.vim)
 
@@ -932,7 +947,7 @@ More help: `:h fugitive.txt` or https://github.com/tpope/vim-fugitive#screencast
 
 #### Keymaps
 
-```
+```text
 Leader+gg       Open git status
 Leader+gl       Git commit browser for current file (GV!)
 Leader+gL       Open git commit browser (GV)
@@ -948,7 +963,7 @@ Leader+gb       Git blame
 
 #### Keymaps
 
-```
+```text
 [h / ]h         Jump to previous/next hunk
 Leader+hp       Preview current hunk
 Leader+hs       Stage current hunk
@@ -1172,11 +1187,11 @@ directly with the `global` CLI.
 
 - **Indentation convention** — monkey-vim applies indent settings per filetype:
 
-| Filetype | Style | Width |
-|---|---|---|
-| `c`, `cpp`, `go`, `sh`, `vim`, `sql` | Hard tab (`noexpandtab`) | 4 |
-| `zig`, `rust`, `python`, `markdown` | Spaces (`expandtab`) | 4 |
-| `javascript`, `typescript`, `lua`, `yaml`, `json` | Spaces (`expandtab`) | 2 |
+| Filetype                                          | Style                    | Width |
+| ------------------------------------------------- | ------------------------ | ----- |
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql`              | Hard tab (`noexpandtab`) | 4     |
+| `zig`, `rust`, `python`, `markdown`               | Spaces (`expandtab`)     | 4     |
+| `javascript`, `typescript`, `lua`, `yaml`, `json` | Spaces (`expandtab`)     | 2     |
 
 The global default is 4-width hard tabs. To customize, override the `FileType` autocmds in your own vimrc after sourcing monkey-vim's.
 
@@ -1186,11 +1201,11 @@ monkey-vim sets `clipboard=unnamed,unnamedplus` so vim's yank/delete automatical
 
 If you use a standalone clipboard manager (optional):
 
-| Tool | Platform | Purpose |
-|---|---|---|
-| [parcellite](https://parcellite.sourceforge.net/) | X11 | Lightweight clipboard manager with persistent history |
-| [cliphist](https://github.com/sentriz/cliphist) | Wayland | Clipboard history for wlroots-based compositors |
-| Built-in | macOS/WSL | System clipboard persists by default — no extra tool needed |
+| Tool                                              | Platform  | Purpose                                                     |
+| ------------------------------------------------- | --------- | ----------------------------------------------------------- |
+| [parcellite](https://parcellite.sourceforge.net/) | X11       | Lightweight clipboard manager with persistent history       |
+| [cliphist](https://github.com/sentriz/cliphist)   | Wayland   | Clipboard history for wlroots-based compositors             |
+| Built-in                                          | macOS/WSL | System clipboard persists by default — no extra tool needed |
 
 ## Extra setup
 
@@ -1206,79 +1221,79 @@ Build Vim from source for the latest version with full features: GTK3 GUI, Wayla
 >
 > Optional CLI tools: `wl-clipboard` (Wayland, provides `wl-copy`/`wl-paste`), `xclip` or `xsel` (X11). Vim has built-in clipboard support via `--with-wayland` / `--with-x`, so these are only needed for command-line clipboard access outside Vim.
 
-**Ubuntu/Debian**
+##### Ubuntu/Debian
 
 Wayland:
 
 ```bash
 sudo apt-get install libgtk-3-dev \
-	libwayland-dev \
-	libcairo2-dev \
-	libgpm-dev \
-	libncurses-dev \
-	python3-dev \
-	lua5.4 \
-	liblua5.4-dev \
-	perl \
-	libperl-dev \
-	ruby \
-	ruby-dev
+    libwayland-dev \
+    libcairo2-dev \
+    libgpm-dev \
+    libncurses-dev \
+    python3-dev \
+    lua5.4 \
+    liblua5.4-dev \
+    perl \
+    libperl-dev \
+    ruby \
+    ruby-dev
 ```
 
 X11 & Wayland:
 
 ```bash
 sudo apt-get install libgtk-3-dev \
-	libx11-dev \
-	libxt-dev \
-	libxpm-dev \
-	libwayland-dev \
-	libcairo2-dev \
-	libgpm-dev \
-	libncurses-dev \
-	python3-dev \
-	lua5.4 \
-	liblua5.4-dev \
-	perl \
-	libperl-dev \
-	ruby \
-	ruby-dev
+    libx11-dev \
+    libxt-dev \
+    libxpm-dev \
+    libwayland-dev \
+    libcairo2-dev \
+    libgpm-dev \
+    libncurses-dev \
+    python3-dev \
+    lua5.4 \
+    liblua5.4-dev \
+    perl \
+    libperl-dev \
+    ruby \
+    ruby-dev
 ```
 
-**OpenSUSE**
+##### OpenSUSE
 
 Wayland:
 
 ```bash
 sudo zypper install gtk3-devel \
-	wayland-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel
+    wayland-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel
 ```
 
 X11 & Wayland:
 
 ```bash
 sudo zypper install gtk3-devel \
-	wayland-devel \
-	xorg-x11-devel \
-	libXpm-devel \
-	libXt-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel
+    wayland-devel \
+    xorg-x11-devel \
+    libXpm-devel \
+    libXt-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel
 ```
 
-**CentOS**
+##### CentOS
 
 > Enable EPEL first: `sudo dnf install epel-release`. The `gtk3-devel` package requires CentOS 8+ / EPEL 8+; it is not available on CentOS 7. `lua-devel` requires CRB (CodeReady Builder) repository: `sudo dnf config-manager --set-enabled crb` (CentOS 9) or `sudo dnf config-manager --set-enabled powertools` (CentOS 8).
 
@@ -1286,148 +1301,148 @@ Wayland:
 
 ```bash
 sudo dnf install gtk3-devel \
-	wayland-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel \
-	perl \
-	perl-devel \
-	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-CBuilder \
-	perl-ExtUtils-Embed
+    wayland-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel \
+    perl \
+    perl-devel \
+    perl-ExtUtils-ParseXS \
+    perl-ExtUtils-CBuilder \
+    perl-ExtUtils-Embed
 ```
 
 X11 & Wayland:
 
 ```bash
 sudo dnf install gtk3-devel \
-	wayland-devel \
-	libX11-devel \
-	libXpm-devel \
-	libXt-devel \
-	cairo-devel \
-	gpm-devel \
-	ncurses-devel \
-	python-devel \
-	python3-devel \
-	ruby-devel \
-	lua-devel \
-	perl \
-	perl-devel \
-	perl-ExtUtils-ParseXS \
-	perl-ExtUtils-CBuilder \
-	perl-ExtUtils-Embed
+    wayland-devel \
+    libX11-devel \
+    libXpm-devel \
+    libXt-devel \
+    cairo-devel \
+    gpm-devel \
+    ncurses-devel \
+    python-devel \
+    python3-devel \
+    ruby-devel \
+    lua-devel \
+    perl \
+    perl-devel \
+    perl-ExtUtils-ParseXS \
+    perl-ExtUtils-CBuilder \
+    perl-ExtUtils-Embed
 ```
 
-**Arch**
+##### Arch
 
 Wayland:
 
 ```bash
 sudo pacman -S gtk3 \
-	wayland \
-	gpm \
-	ncurses \
-	lua \
-	perl \
-	python \
-	ruby
+    wayland \
+    gpm \
+    ncurses \
+    lua \
+    perl \
+    python \
+    ruby
 ```
 
 X11 & Wayland:
 
 ```bash
 sudo pacman -S gtk3 \
-	wayland \
-	libx11 \
-	libxt \
-	libxpm \
-	gpm \
-	ncurses \
-	lua \
-	perl \
-	python \
-	ruby
+    wayland \
+    libx11 \
+    libxt \
+    libxpm \
+    gpm \
+    ncurses \
+    lua \
+    perl \
+    python \
+    ruby
 ```
 
 **Mac** (native GUI, no Wayland/X11 needed)
 
 ```bash
 brew install python \
-	python3 \
-	ruby \
-	lua \
-	cairo
+    python3 \
+    ruby \
+    lua \
+    cairo
 ```
 
 #### 2. Compile and install
 
-**Wayland**
+##### Wayland
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
-	--enable-gpm \
-	--with-wayland \
-	--enable-python3interp \
-	--enable-luainterp \
-	--enable-perlinterp \
-	--enable-rubyinterp \
-	--enable-multibyte \
-	--enable-terminal \
-	--enable-fontset \
-	--enable-cscope \
-	--enable-fail-if-missing
+    --enable-gui=gtk3 \
+    --enable-gpm \
+    --with-wayland \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
 make
 sudo make install
 ```
 
 > The GTK3 GUI auto-detects the Wayland backend at runtime; you can force it with `export GDK_BACKEND=wayland`. `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`) for terminal Vim, so clipboard access works even without the GUI.
 
-**X11 & Wayland**
+##### X11 & Wayland
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=gtk3 \
-	--enable-gpm \
-	--with-x \
-	--with-wayland \
-	--enable-python3interp \
-	--enable-luainterp \
-	--enable-perlinterp \
-	--enable-rubyinterp \
-	--enable-multibyte \
-	--enable-terminal \
-	--enable-fontset \
-	--enable-cscope \
-	--enable-fail-if-missing
+    --enable-gui=gtk3 \
+    --enable-gpm \
+    --with-x \
+    --with-wayland \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
 make
 sudo make install
 ```
 
 > `--with-x` adds X11 support (clipboard, drag & drop); `--with-wayland` enables native Wayland support (`+wayland`, `+wayland_clipboard`). A single GTK3 build runs on both Wayland and X11 by auto-detecting the display server at runtime. Use this if you need both — e.g., WSLg (no Wayland clipboard), where clipboard goes through XWayland but display is Wayland.
-
+>
 > **GTK3 vs GTK4.** On a regular Linux desktop you may build with GTK4 instead: install `libgtk-4-dev` (Debian/Ubuntu), `gtk4-devel` (openSUSE/CentOS) or `gtk4` (Arch), and pass `--enable-gui=gtk4`. Do **not** use GTK4 under WSL (WSLg). A GTK4 build drops X11 support entirely (`--enable-gui=gtk4` forces `--without-x`), so it has no `+xterm_clipboard`; the only remaining clipboard feature is `+wayland_clipboard`, which speaks the Wayland `data-control` protocol (`zwlr-data-control-unstable-v1` / `ext-data-control-v1`). WSLg's compositor does not implement that protocol — its clipboard is relayed to Windows over RDP and exposed to Linux apps through XWayland — so a GTK4 build under WSLg ends up with no working system clipboard. On WSL, keep GTK3 with `--with-x` (the "X11 & Wayland" build above), which reaches the clipboard through XWayland.
 
 **kmscon / text console** (no GUI)
 
 ```bash
 ./configure --with-features=huge \
-	--enable-gui=no \
-	--enable-gpm \
-	--enable-python3interp \
-	--enable-luainterp \
-	--enable-perlinterp \
-	--enable-rubyinterp \
-	--enable-multibyte \
-	--enable-terminal \
-	--enable-fontset \
-	--enable-cscope \
-	--enable-fail-if-missing
+    --enable-gui=no \
+    --enable-gpm \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
 make
 sudo make install
 ```
