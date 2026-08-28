@@ -16,7 +16,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 | 服务器 TTY | 原生 Linux 控制台（tty1–tty63），Vim 内置 8/16 色高亮（sonokai 需 ≥256 色） |
 | kmscon     | Kernel Mode Setting 控制台 —— 支持真彩色和 Unicode 的现代 TTY 替代方案      |
 
-窗口/分屏管理交给 tmux 或终端模拟器的原生标签页。
+多会话/多终端这类顶层工作区管理交给 tmux 或终端模拟器的标签页；编辑器内的分屏和标签页照常使用。
 
 ## 截图
 
@@ -705,7 +705,7 @@ F3 在底部新建一个终端。F4 切换终端 — 隐藏时不终止进程，
 
 ```text
 Leader+ws       保存session
-Leader+rs       删除session
+Leader+rs       删除session（需确认；无 session 时不做任何事）
 ```
 
 Session 保存到 `~/.cache/sessions/`。Vim 启动时自动从此目录恢复 session。
@@ -1155,6 +1155,8 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 
 " 停止并删除 session 文件
 :Obsession!
+" 注意：Leader+rs 委托给 :Obsession!，但会先弹出确认，且在无 session 时
+（包括从未保存过的情况）直接报错返回，不会在当前目录误创建 ./Session.vim。
 ```
 
 ### 7. LSP 命令（yegappan/lsp）
