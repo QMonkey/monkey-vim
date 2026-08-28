@@ -193,6 +193,15 @@ install_optional_bin() {
 	marksman)
 		install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
 		;;
+	efm-langserver)
+		go install github.com/mattn/efm-langserver@latest 2>/dev/null || ok=false
+		;;
+	prettier)
+		sudo npm install -g prettier
+		;;
+	markdownlint-cli2)
+		sudo npm install -g markdownlint-cli2
+		;;
 	zig)
 		brew install zig 2>/dev/null || install_pkg "$(pkg_name "$bin")" || ok=false
 		;;
@@ -348,7 +357,7 @@ DEPS_BY_GROUP["Vim"]="node vim-language-server"
 DEPS_BY_GROUP["JavaScript/TypeScript"]="node typescript-language-server tsc"
 DEPS_BY_GROUP["JSON"]="node vscode-json-language-server"
 DEPS_BY_GROUP["YAML"]="node yaml-language-server"
-DEPS_BY_GROUP["Markdown"]="marksman"
+DEPS_BY_GROUP["Markdown"]="marksman efm-langserver prettier markdownlint-cli2"
 DEPS_BY_GROUP["Optional tools"]="glow"
 
 # ──────────────────── main ────────────────────
@@ -501,6 +510,9 @@ if ! $INSTALL_MODE; then
 	INSTALL_HINTS["vscode-json-language-server"]="npm install -g vscode-langservers-extracted"
 	INSTALL_HINTS["yaml-language-server"]="npm install -g yaml-language-server"
 	INSTALL_HINTS["lua-language-server"]="$(get_install_hint lua-language-server)"
+	INSTALL_HINTS["efm-langserver"]="go install github.com/mattn/efm-langserver@latest"
+	INSTALL_HINTS["prettier"]="npm install -g prettier"
+	INSTALL_HINTS["markdownlint-cli2"]="npm install -g markdownlint-cli2"
 	INSTALL_HINTS["marksman"]="$(get_install_hint marksman)"
 	INSTALL_HINTS["zig"]="brew install zig  # or: https://ziglang.org/download/"
 	INSTALL_HINTS["zls"]="brew install zls  # or: https://zigtools.org/zls/install/  (must match zig version)"
@@ -562,6 +574,12 @@ if [ -d "$SWAP_DIR" ]; then
 	echo -e "  ${PASS} swap/ dir exists"
 else
 	echo -e "  ${WARN} swap/ dir not found (auto-created on first vim launch)"
+fi
+
+if [ -L "${HOME}/.config/efm-langserver" ] || [ -f "${HOME}/.config/efm-langserver/config.yaml" ]; then
+	echo -e "  ${PASS} efm-langserver config"
+elif [ -d "configs/efm-langserver" ]; then
+	echo -e "  ${WARN} efm-langserver config not linked (run: ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
 fi
 
 CACHE_DIR="${HOME}/.cache/sessions"
