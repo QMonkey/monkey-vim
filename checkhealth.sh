@@ -138,9 +138,37 @@ install_pkg() {
 	esac
 }
 
+ensure_rust() {
+	# Install Rust via rustup if not present
+	if ! command -v rustup &>/dev/null; then
+		echo -e "  ${YELLOW}→ installing rustup...${NC}"
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+			sh -s -- -y 2>/dev/null || {
+			echo -e "  ${RED}→ rustup install failed${NC}"
+			return 1
+		}
+	fi
+	if [ -f "$HOME/.cargo/env" ]; then
+		# shellcheck disable=SC1091
+		. "$HOME/.cargo/env"
+	fi
+	command -v cargo &>/dev/null
+}
+
+ensure_go_env() {
+	# 'go install' drops binaries in $(go env GOPATH)/bin (default ~/go/bin),
+	# which is usually not on PATH — make them visible for this run.
+	if command -v go &>/dev/null; then
+		local gopath
+		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
+		export PATH="$gopath/bin:$PATH"
+	fi
+}
+
 install_optional_bin() {
 	local bin="$1"
 	local ok=true
+	ensure_go_env
 	case "$bin" in
 	rg)
 		install_pkg "$(pkg_name "$bin")" || cargo install ripgrep 2>/dev/null || ok=false
@@ -149,10 +177,20 @@ install_optional_bin() {
 		go install golang.org/x/tools/gopls@latest
 		;;
 	pylsp)
-		sudo pip3 install python-lsp-server
+		install_pkg "$(pkg_name "$bin")" 2>/dev/null ||
+			sudo pip3 install python-lsp-server 2>/dev/null ||
+			pip3 install python-lsp-server 2>/dev/null ||
+			ok=false
+		;;
+	cargo)
+		ensure_rust || ok=false
 		;;
 	rust-analyzer)
-		rustup component add rust-analyzer
+		if ensure_rust; then
+			rustup component add rust-analyzer
+		else
+			ok=false
+		fi
 		;;
 	bash-language-server)
 		sudo npm install -g bash-language-server
@@ -164,7 +202,10 @@ install_optional_bin() {
 		go install honnef.co/go/tools/cmd/staticcheck@latest 2>/dev/null || ok=false
 		;;
 	black)
-		sudo pip3 install black 2>/dev/null || pip3 install black 2>/dev/null || ok=false
+		install_pkg "$(pkg_name "$bin")" 2>/dev/null ||
+			sudo pip3 install black 2>/dev/null ||
+			pip3 install black 2>/dev/null ||
+			ok=false
 		;;
 	clang-tidy)
 		install_pkg "$(pkg_name "$bin")" || ok=false
@@ -256,6 +297,8 @@ declare -A APT_NAMES=(
 	["go"]="golang-go"
 	["python3"]="python3"
 	["node"]="nodejs"
+	["pylsp"]="python3-pylsp"
+	["black"]="black"
 )
 declare -A PACMAN_NAMES=(
 	["rg"]="ripgrep"
@@ -274,6 +317,8 @@ declare -A PACMAN_NAMES=(
 	["lua-language-server"]="lua-language-server"
 	["marksman"]="marksman"
 	["glow"]="glow"
+	["pylsp"]="python-lsp-server"
+	["black"]="python-black"
 )
 declare -A BREW_NAMES=(
 	["ctags"]="universal-ctags"
@@ -293,6 +338,8 @@ declare -A BREW_NAMES=(
 	["pygmentize"]="pygments"
 	["zig"]="zig"
 	["zls"]="zls"
+	["pylsp"]="python-lsp-server"
+	["black"]="black"
 )
 declare -A ZYPPER_NAMES=(
 	["rg"]="ripgrep"
@@ -311,6 +358,8 @@ declare -A ZYPPER_NAMES=(
 	["lua-language-server"]="lua-language-server"
 	["marksman"]="marksman"
 	["glow"]="glow"
+	["pylsp"]="python-python-lsp-server"
+	["black"]="python3-black"
 )
 declare -A YUM_NAMES=(
 	["rg"]="ripgrep"
@@ -329,6 +378,8 @@ declare -A YUM_NAMES=(
 	["lua-language-server"]="lua-language-server"
 	["marksman"]="marksman"
 	["glow"]="glow"
+	["pylsp"]="python3-lsp-server"
+	["black"]="python3-black"
 )
 
 pkg_name() {
@@ -495,14 +546,14 @@ if ! $INSTALL_MODE; then
 	INSTALL_HINTS["go"]="https://go.dev/dl/"
 	INSTALL_HINTS["gopls"]="go install golang.org/x/tools/gopls@latest"
 	INSTALL_HINTS["python3"]="$(get_install_hint python3)"
-	INSTALL_HINTS["pylsp"]="pip install python-lsp-server"
+	INSTALL_HINTS["pylsp"]="$(get_install_hint "$(pkg_name pylsp)")  # or: pip install python-lsp-server"
 	INSTALL_HINTS["cargo"]="https://rustup.rs/  # then: rustup component add rust-analyzer"
 	INSTALL_HINTS["rust-analyzer"]="rustup component add rust-analyzer"
 	INSTALL_HINTS["node"]="https://nodejs.org/  # or: $(get_install_hint nodejs npm)"
 	INSTALL_HINTS["bash-language-server"]="npm install -g bash-language-server"
 	INSTALL_HINTS["shfmt"]="go install mvdan.cc/sh/v3/cmd/shfmt@latest"
 	INSTALL_HINTS["staticcheck"]="go install honnef.co/go/tools/cmd/staticcheck@latest"
-	INSTALL_HINTS["black"]="pip3 install black"
+	INSTALL_HINTS["black"]="$(get_install_hint "$(pkg_name black)")  # or: pip3 install black"
 	INSTALL_HINTS["clang-tidy"]="$(get_install_hint clang-tidy)"
 	INSTALL_HINTS["vim-language-server"]="npm install -g vim-language-server"
 	INSTALL_HINTS["typescript-language-server"]="npm install -g typescript-language-server typescript"

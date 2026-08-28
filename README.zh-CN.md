@@ -29,6 +29,35 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 
 ## 安装步骤
 
+二选一：一键安装脚本，或手动安装。
+
+### 方式一：一键安装（推荐）
+
+自动完成 Vim 编译安装、依赖与插件安装：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
+```
+
+脚本按顺序执行：
+
+1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
+2. 安装 Homebrew（Linuxbrew）作为兜底包管理器
+3. 克隆并编译 Vim 源码，然后 `make install`
+4. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
+5. 通过 `checkhealth.sh --install` 安装必需工具与可选 LSP 服务端（apt/zypper/dnf/pacman/brew、npm、pip、go install、rustup）
+6. 在 shell rc 文件中持久化 `~/go/bin`、`~/.cargo/bin`（以及 `/usr/local/bin`）
+7. 软链 `.vimrc`、`.clang-format`、efm-langserver 配置，并创建运行时目录
+8. 自动安装全部 vim 插件（`:PlugInstall`）
+
+> 脚本会保留 Vim 源码树在 `~/Documents/vim`（不做清理），日后可用 `git pull` + `make` 重新编译。
+>
+> 脚本只有当已装 vim 低于 9.0 **或** `vim --version` 功能不完整时才会重新编译——仅看版本不够。必需功能与下面的构建一一对应：`+clipboard` 加上（按平台）`+xterm_clipboard`（WSL）、`+wayland_clipboard` 或 `+xterm_clipboard`（Linux 桌面）、或 `+clipboard_provider`（OSC 52，无 GUI 构建）；核心集为 `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`。
+
+### 方式二：手动安装
+
+按下面步骤顺序手动安装：
+
 ### 1. clone到本地
 
 ```bash
@@ -1369,15 +1398,15 @@ sudo pacman -S gtk3 \
     ruby
 ```
 
-**Mac**（原生图形界面，无需 Wayland/X11）
+**Mac**（终端版本，macOS 系统剪贴板走 Cocoa）
 
 ```bash
-brew install python \
-    python3 \
+brew install python3 \
     ruby \
-    lua \
-    cairo
+    lua
 ```
+
+> macOS 上终端版 Vim 的系统剪贴板来自 Darwin/Cocoa（AppKit）支持，默认开启——**不要**传 `--disable-darwin`。由于不会安装 GTK/Motif/Athena 开发库，编译时用 `--enable-gui=no`（见下面"编译并安装"的 **mac** 小节），而不是 `--enable-gui=auto`。
 
 #### 2. 编译并安装
 
@@ -1428,12 +1457,12 @@ sudo make install
 >
 > **GTK3 与 GTK4。** 在普通 Linux 桌面上也可以改用 GTK4 构建：安装 `libgtk-4-dev`（Debian/Ubuntu）、`gtk4-devel`（openSUSE/CentOS）或 `gtk4`（Arch），编译参数改为 `--enable-gui=gtk4`。但 **WSL（WSLg）下不要用 GTK4**。GTK4 构建会完全去掉 X11 支持（`--enable-gui=gtk4` 会强制 `--without-x`），因此没有 `+xterm_clipboard`；剩下的剪贴板能力只有 `+wayland_clipboard`，它使用的是 Wayland 的 `data-control` 协议（`zwlr-data-control-unstable-v1` / `ext-data-control-v1`）。而 WSLg 的合成器没有实现该协议——它的剪贴板通过 RDP 中继到 Windows、再经 XWayland 暴露给 Linux 程序——所以 WSLg 下的 GTK4 构建会完全失去系统剪贴板。在 WSL 下请保持 GTK3 + `--with-x`（即上面的 "X11 & Wayland" 构建），剪贴板走 XWayland。
 
-**kmscon / 文本控制台**（无图形界面）
+##### mac（纯终端；系统剪贴板走 Cocoa）
 
 ```bash
 ./configure --with-features=huge \
     --enable-gui=no \
-    --enable-gpm \
+    --disable-gpm \
     --enable-python3interp \
     --enable-luainterp \
     --enable-perlinterp \
@@ -1447,9 +1476,33 @@ make
 sudo make install
 ```
 
-> 在纯控制台环境、不想安装 GUI 库时，使用无 GUI 构建：去掉 `--with-wayland`/`--with-x` 以及 `libgtk-3-dev`/Wayland/X11 相关包。`--enable-gpm` 保留控制台鼠标支持，`--enable-terminal` 覆盖终端模式。
+> macOS 上 `"+`/`"*` 寄存器来自 Darwin/Cocoa（AppKit）支持，默认开启——请保留（不要 `--disable-darwin`），`--enable-gui=no` 只是让构建停留在纯终端。`--disable-gpm` 必须传：gpm（Linux 控制台鼠标库）在 macOS 上不存在，`--enable-fail-if-missing` 会直接中止 configure。
+
+**kmscon / 文本控制台**（无图形界面）
+
+```bash
+./configure --with-features=huge \
+    --enable-gui=no \
+    --enable-gpm \
+    --with-osc52 \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
+make
+sudo make install
+```
+
+> 无图形界面的机器上，可以跳过 GUI 库——去掉 `--with-wayland` / `--with-x` 以及 `libgtk-3-dev` / Wayland / X11 相关依赖。`--enable-gpm` 保留控制台鼠标支持，`--enable-terminal` 覆盖终端模式。
 >
 > 没有 `--with-wayland` 或 `--with-x` 时，Vim 没有系统剪贴板集成，`"*` 和 `"+` 寄存器不可用，复制/粘贴仅限于 Vim 内部寄存器（`""`、`"0`–`"9` 等）。
+>
+> `--with-osc52` 会启用 OSC 52 剪贴板提供者（`+clipboard_provider`）：yank 的内容会发给**终端模拟器**，由它写入系统剪贴板。因此在 ssh 场景（例如从 Windows Terminal / iTerm2 登录无头服务器）以及桌面终端模拟器里都能用，即使编译时不带任何 GUI/X11 支持；但在纯 tty/kmscon 控制台下是空操作——那里没有程序解析该转义序列。
 
 ### 在vim中查看man文档
 

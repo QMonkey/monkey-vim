@@ -29,6 +29,35 @@ Top-level workspace management (multiple sessions and terminals) is delegated to
 
 ## Installation
 
+Pick one of the two ways below: a one-click script, or manual setup.
+
+### Option 1: One-click install (recommended)
+
+Build Vim and install monkey-vim with all dependencies and plugins automatically:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
+```
+
+What the script does, step by step:
+
+1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
+2. Install Homebrew (Linuxbrew) as the fallback package manager
+3. Clone and compile Vim from source, then `make install`
+4. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
+5. Install required tools + optional LSP servers via `checkhealth.sh --install` (apt/zypper/dnf/pacman/brew, npm, pip, go install, rustup)
+6. Persist `~/go/bin`, `~/.cargo/bin` (and `/usr/local/bin`) in your shell rc files
+7. Symlink `.vimrc`, `.clang-format`, and the efm-langserver config; create runtime directories
+8. Install all Vim plugins (`:PlugInstall`) automatically
+
+> The script keeps the Vim source tree at `~/Documents/vim` (no cleanup), so you can rebuild later with `git pull` + `make`.
+>
+> The script only rebuilds Vim when the installed one is below 9.0 **or** its `vim --version` features are incomplete — version alone isn't enough. The required features mirror the builds below: `+clipboard` plus, per platform, `+xterm_clipboard` (WSL), `+wayland_clipboard` or `+xterm_clipboard` (Linux desktop), or `+clipboard_provider` (OSC 52, GUI-less builds); the core set is `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`.
+
+### Option 2: Manual installation
+
+Install by hand, following the steps in order:
+
 ### 1. Git clone
 
 ```bash
@@ -1369,15 +1398,15 @@ sudo pacman -S gtk3 \
     ruby
 ```
 
-**Mac** (native GUI, no Wayland/X11 needed)
+**Mac** (terminal build, macOS system clipboard via Cocoa)
 
 ```bash
-brew install python \
-    python3 \
+brew install python3 \
     ruby \
-    lua \
-    cairo
+    lua
 ```
+
+> Terminal Vim on macOS gets the system clipboard from the Darwin/Cocoa (AppKit) feature, which is enabled by default — do **not** pass `--disable-darwin`. Since no GTK/Motif/Athena dev libraries are installed, build with `--enable-gui=no` (see **mac** under "Compile and install" below), not `--enable-gui=auto`.
 
 #### 2. Compile and install
 
@@ -1428,12 +1457,34 @@ sudo make install
 >
 > **GTK3 vs GTK4.** On a regular Linux desktop you may build with GTK4 instead: install `libgtk-4-dev` (Debian/Ubuntu), `gtk4-devel` (openSUSE/CentOS) or `gtk4` (Arch), and pass `--enable-gui=gtk4`. Do **not** use GTK4 under WSL (WSLg). A GTK4 build drops X11 support entirely (`--enable-gui=gtk4` forces `--without-x`), so it has no `+xterm_clipboard`; the only remaining clipboard feature is `+wayland_clipboard`, which speaks the Wayland `data-control` protocol (`zwlr-data-control-unstable-v1` / `ext-data-control-v1`). WSLg's compositor does not implement that protocol — its clipboard is relayed to Windows over RDP and exposed to Linux apps through XWayland — so a GTK4 build under WSLg ends up with no working system clipboard. On WSL, keep GTK3 with `--with-x` (the "X11 & Wayland" build above), which reaches the clipboard through XWayland.
 
+##### mac (terminal-only; system clipboard via Cocoa)
+
+```bash
+./configure --with-features=huge \
+    --enable-gui=no \
+    --disable-gpm \
+    --enable-python3interp \
+    --enable-luainterp \
+    --enable-perlinterp \
+    --enable-rubyinterp \
+    --enable-multibyte \
+    --enable-terminal \
+    --enable-fontset \
+    --enable-cscope \
+    --enable-fail-if-missing
+make
+sudo make install
+```
+
+> On macOS the `"+`/`"*` registers come from the Darwin/Cocoa (AppKit) feature, enabled by default — keep it (no `--disable-darwin`), and `--enable-gui=no` just makes the build terminal-only. `--disable-gpm` is required: gpm (the Linux console-mouse library) doesn't exist on macOS and `--enable-fail-if-missing` would abort configure.
+
 **kmscon / text console** (no GUI)
 
 ```bash
 ./configure --with-features=huge \
     --enable-gui=no \
     --enable-gpm \
+    --with-osc52 \
     --enable-python3interp \
     --enable-luainterp \
     --enable-perlinterp \
@@ -1450,6 +1501,8 @@ sudo make install
 > On a console-only machine, build without GUI libraries — drop `--with-wayland` / `--with-x` and the `libgtk-3-dev` / Wayland / X11 packages. `--enable-gpm` keeps console mouse support, and `--enable-terminal` covers terminal mode.
 >
 > Without `--with-wayland` or `--with-x`, Vim has no system clipboard integration. The `"*` and `"+` registers are unavailable; copy/paste is limited to internal Vim registers (`""`, `"0`–`"9`, etc.).
+>
+> `--with-osc52` adds the OSC 52 clipboard provider (`+clipboard_provider`): yanks are sent to the **terminal emulator**, which writes the system clipboard. It thus works over ssh (e.g., into a headless box from Windows Terminal / iTerm2) and in desktop terminal emulators even without any GUI/X11 support compiled in; on a raw tty/kmscon console it is a no-op, since nothing parses the escape sequence there.
 
 ### Use vim to view man doc in shell
 
