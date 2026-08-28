@@ -275,6 +275,11 @@ enddef
 
 def g:LightLineTabModified(n: number): string
 	var winnr = tabpagewinnr(n)
+	if winnr < 1
+		# Popup windows (e.g. fzf) are not part of winnr(); fall back to
+		# window 1 so we read a real file window, not the popup terminal
+		winnr = 1
+	endif
 	return gettabwinvar(n, winnr, '&modified') ? '[+]' : ''
 enddef
 
@@ -500,10 +505,24 @@ def FixVim9SessionFile(file: string)
 	endif
 enddef
 
+# Delete session with confirmation. The readability guard keeps ":Obsession!"
+# on its delete branch, so it never starts tracking ./Session.vim.
+def DeleteSession()
+	var session = get(g:, 'this_obsession', v:this_session)
+	if session ==# '' || !filereadable(session)
+		EchoErr('No session to delete')
+		return
+	endif
+	if confirm('Delete session ' .. fnamemodify(session, ':~') .. '?', "&Yes\n&No", 2) != 1
+		return
+	endif
+	execute 'Obsession!'
+enddef
+
 # Backup
 nnoremap <Leader>ws <ScriptCmd>call BackupSession()<CR>
 # Remove
-nnoremap <Leader>rs <Cmd>Obsession!<CR>
+nnoremap <Leader>rs <ScriptCmd>call DeleteSession()<CR>
 
 # Restore cursor to previous editing position
 augroup RestoreCursorPosition
@@ -578,6 +597,7 @@ g:gutentags_define_advanced_commands = 1
 # and force a full rebuild when both change; detached HEAD compares HEAD only.
 g:tags_branch_aware = get(g:, 'tags_branch_aware', 1)
 g:tags_branch_baseline = {}
+g:tags_rebuild_pending = {}
 
 def TagsBranchIdentity(): dict<string>
 	var root = exists('b:gutentags_root') ? b:gutentags_root : ''
@@ -608,12 +628,26 @@ def TagsSaveHead(root: string, head: string)
 	writefile([head], TagsHeadFile(root), 'b')
 enddef
 
-def TagsDoRebuild(root: string)
+# True if a gutentags generation job is running for any module of 'root'.
+def TagsJobsRunning(root: string): bool
+	for bn in range(1, bufnr('$'))
+		if bufexists(bn) && getbufvar(bn, 'gutentags_root', '') ==# root
+			for [module, tf] in items(getbufvar(bn, 'gutentags_files', {}))
+				if gutentags#find_job_index_by_tags_file(module, tf) >= 0
+					return true
+				endif
+			endfor
+		endif
+	endfor
+	return false
+enddef
+
+def TagsDoRebuildNow(root: string)
 	var dbpath = gutentags#get_cachefile(root, '')
 	var gtags_file = dbpath .. '/GTAGS'
-	# Kill this DB's cscope connection first: rebuilding changes the file
-	# inode, which defeats cs-add dedup and would leak a gtags-cscope process.
-	execute 'cscope kill ' .. fnameescape(gtags_file)
+	# Kill the DB's cscope connection first: rebuilding changes the inode,
+	# which defeats cs-add dedup and would leak a gtags-cscope process.
+	silent! execute 'cscope kill ' .. fnameescape(gtags_file)
 	for f in ['GTAGS', 'GRTAGS', 'GPATH']
 		var p = dbpath .. '/' .. f
 		if filereadable(p)
@@ -623,6 +657,30 @@ def TagsDoRebuild(root: string)
 	if exists(':GutentagsUpdate') == 2
 		execute 'GutentagsUpdate!'
 	endif
+enddef
+
+# Run deferred rebuilds whose project now has no jobs in flight. With no
+# yield points in TagsDoRebuildNow, this execution is atomic.
+def TagsPendingRebuildCheck()
+	for root in keys(g:tags_rebuild_pending)
+		if !TagsJobsRunning(root)
+			remove(g:tags_rebuild_pending, root)
+			TagsDoRebuildNow(root)
+		endif
+	endfor
+enddef
+
+def TagsDoRebuild(root: string)
+	if has_key(g:tags_rebuild_pending, root)
+		return
+	endif
+	# GutentagsUpdate! drops its request (queue mode 0) while jobs are in
+	# flight, so defer until the next job exit.
+	if TagsJobsRunning(root)
+		g:tags_rebuild_pending[root] = v:true
+		return
+	endif
+	TagsDoRebuildNow(root)
 enddef
 
 def TagsCheckBranch()
@@ -687,6 +745,7 @@ augroup TagsBranchAware
 	autocmd BufEnter * TagsCheckBranch()
 	autocmd FocusGained * TagsCheckBranch()
 	autocmd User FugitiveChanged TagsCheckBranch()
+	autocmd User GutentagsUpdated TagsPendingRebuildCheck()
 augroup END
 # }
 
@@ -1840,7 +1899,7 @@ def OnLspSetup()
 		args: ['server'],
 		rootSearch: ['.marksman.toml', '.git/'],
 	},
-	{name: 'efm',
+	{name: 'efm-langserver',
 		filetype: ['markdown'],
 		path: 'efm-langserver',
 		args: [],
