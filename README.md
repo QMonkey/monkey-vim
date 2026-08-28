@@ -211,7 +211,7 @@ Format & lint are provided by [efm-langserver](https://github.com/mattn/efm-lang
 go install github.com/mattn/efm-langserver@latest
 npm install -g prettier markdownlint-cli2
 # Link the efm config (config.yaml + .markdownlint.jsonc) to efm's default path
-ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver
+ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver
 ```
 
 #### 2.12 Fonts (optional)
@@ -240,7 +240,7 @@ Pass `--install` to automatically install missing dependencies (required tools +
 cd monkey-vim
 ln -sf $(pwd)/.vimrc ~/.vimrc
 ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # global clang-format style (optional)
-ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver   # efm: markdown format/lint (optional)
+ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver   # efm: markdown format/lint (optional)
 vim
 ```
 

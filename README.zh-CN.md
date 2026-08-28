@@ -210,7 +210,7 @@ go install github.com/charmbracelet/glow@latest  # Ubuntu / OpenSUSE / CentOS，
 go install github.com/mattn/efm-langserver@latest
 npm install -g prettier markdownlint-cli2
 # 将 efm 配置（config.yaml + .markdownlint.jsonc）软链到默认路径
-ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver
+ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver
 ```
 
 #### 2.12 字体（可选）
@@ -239,7 +239,7 @@ Vim 使用的 Unicode 字符（⎇, │, ▸, ·, ¬）无需额外字体即可�
 cd monkey-vim
 ln -sf $(pwd)/.vimrc ~/.vimrc
 ln -sf $(pwd)/configs/.clang-format ~/.clang-format   # 全局 clang-format 风格（可选）
-ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver   # efm：markdown 格式化/检查（可选）
+ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver   # efm：markdown 格式化/检查（可选）
 vim
 ```
 

@@ -579,7 +579,7 @@ fi
 if [ -L "${HOME}/.config/efm-langserver" ] || [ -f "${HOME}/.config/efm-langserver/config.yaml" ]; then
 	echo -e "  ${PASS} efm-langserver config"
 elif [ -d "configs/efm-langserver" ]; then
-	echo -e "  ${WARN} efm-langserver config not linked (run: ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
+	echo -e "  ${WARN} efm-langserver config not linked (run: ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
 fi
 
 CACHE_DIR="${HOME}/.cache/sessions"
