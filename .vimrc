@@ -38,7 +38,6 @@ plug#begin(expand($HOME .. '/.vim/bundle'))
 # Plugins {
 # Theme / UI
 Plug 'sainnhe/sonokai'
-Plug 'itchyny/lightline.vim'
 # Editor
 Plug 'svermeulen/vim-subversive'
 Plug 'wellle/targets.vim'
@@ -227,65 +226,83 @@ augroup CheckFileChanges
 augroup END
 # }
 
-# lightline.vim {
-g:lightline = {
-	'colorscheme': !is_tty_console ? 'sonokai' : '16color',
-	'active': {
-		'left': [['mode', 'paste'], ['gitinfo'], ['filename']],
-		'right': [['lineinfo'], ['percent'], ['searchinfo', 'filetype', 'fileencoding', 'fileformat']]
-	},
-	'inactive': {
-		'left': [['mode'], ['filename']],
-		'right': []
-	},
-	'component_function': {
-		'mode': 'LightLineMode',
-		'gitinfo': 'LightLineGitInfo',
-		'filename': 'LightLineFilename',
-		'searchinfo': 'LightLineVMInfo',
-		'fileformat': 'LightLineFileformat',
-		'filetype': 'LightLineFiletype',
-		'fileencoding': 'LightLineFileencoding',
-		'percent': 'LightLinePercent',
-		'lineinfo': 'LightLineLineInfo',
-	},
-	'component_expand': {
-		'tabs': 'lightline#tabs',
-	},
-	'tab_component_function': {
-		'modified': 'LightLineTabModified',
-	},
-	'separator': {'left': '', 'right': ''},
-	'subseparator': {'left': '', 'right': ''},
-	'tab': {
-		'active': ['filename', 'modified'],
-		'inactive': ['filename', 'modified'],
-	},
-	'tabline': {
-		'left': [['tabs']],
-		'right': []
-	},
-	'tabline_separator': {'left': '', 'right': ''},
-	'tabline_subseparator': {'left': '', 'right': ''},
+# manual statusline + tabline {
+# Design: statusline/tabline are single {%...%} expressions re-evaluated on
+# redraw; draw paths only read builtin options and cached values -- never
+# system() or plugins (Fugitive/GitGutter/LSP) at draw time. Expensive data
+# (git branch+hunks, LSP diagnostic counts) is recomputed on discrete events
+# (BufEnter, BufWritePost, CursorHold, LspDiagsUpdated) and cached in
+# b:git_info / b:diagnostic_info.
+
+# Mode -> label + highlight-group stem
+const mode_map = {
+	'n': 'NORMAL', 'i': 'INSERT', 'R': 'REPLACE',
+	'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
+	'c': 'COMMAND', 's': 'SELECT', 'S': 'S-LINE', "\<C-s>": 'S-BLOCK',
+	't': 'TERMINAL',
+}
+const mode_key = {
+	'n': 'Normal', 'i': 'Insert', 'R': 'Replace',
+	'v': 'Visual', 'V': 'Visual', "\<C-v>": 'Visual',
+	'c': 'Command', 's': 'Visual', 'S': 'Visual', "\<C-s>": 'Visual',
+	't': 'Terminal',
 }
 
-def g:LightLineFileStatus(): string
-	return &filetype =~# 'help\|man' ? '' : &modified ? '[+]' : (&readonly || !&modifiable) ? '[-]' : ''
-enddef
-
-def g:LightLineTabModified(n: number): string
-	var winnr = tabpagewinnr(n)
-	if winnr < 1
-		# Popup windows (e.g. fzf) are not part of winnr(); fall back to
-		# window 1 so we read a real file window, not the popup terminal
-		winnr = 1
+# Palette (truecolor = sonokai "andromeda", console = 16color)
+# Each color is [gui, cterm]; gui is '' on the console.
+def StatusPalette(): dict<any>
+	if !is_tty_console
+		return {
+			'modeFg': { 'Normal': ['#2b2d3a', 235], 'Insert': ['#2b2d3a', 235], 'Visual': ['#2b2d3a', 235], 'Replace': ['#2b2d3a', 235], 'Command': ['#2b2d3a', 235], 'Terminal': ['#2b2d3a', 235] },
+			'modeBg': { 'Normal': ['#77d5f0', 110], 'Insert': ['#a9dc76', 107], 'Visual': ['#bb97ee', 176], 'Replace': ['#f89860', 215], 'Command': ['#edc763', 179], 'Terminal': ['#ff6188', 203] },
+			'l2': [['#e1e3e4', 250], ['#3f445b', 237]], 'base': [['#e1e3e4', 250], ['#393e53', 237]],
+			'Midline': [['#e1e3e4', 250], ['#333648', 236]], 'Inactive': [['#7e8294', 246], ['#333648', 236]],
+			'TabSelected': [['#2b2d3a', 235], ['#ff6188', 203]], 'TabInactive': [['#7e8294', 246], ['#333648', 236]],
+			'diagnosticFg': { 'Error': ['#fb617e', 203], 'Warn': ['#edc763', 179], 'Hint': ['#bb97ee', 176], 'Info': ['#6dcae8', 110] },
+		}
 	endif
-	return gettabwinvar(n, winnr, '&modified') ? '[+]' : ''
+	return {
+		'modeFg': { 'Normal': ['', 15], 'Insert': ['', 15], 'Visual': ['', 15], 'Replace': ['', 15], 'Command': ['', 0], 'Terminal': ['', 15] },
+		'modeBg': { 'Normal': ['', 12], 'Insert': ['', 2], 'Visual': ['', 5], 'Replace': ['', 9], 'Command': ['', 11], 'Terminal': ['', 9] },
+		'l2': [['', 15], ['', 8]], 'base': [['', 7], ['', 0]], 'Midline': [['', 7], ['', 0]],
+		'Inactive': [['', 7], ['', 8]], 'TabSelected': [['', 15], ['', 12]], 'TabInactive': [['', 7], ['', 8]],
+		'diagnosticFg': { 'Error': ['', 9], 'Warn': ['', 11], 'Hint': ['', 13], 'Info': ['', 14] },
+	}
 enddef
 
-# Cached window type: returns 0=normal, 1=location, 2=quickfix,
-# 3=preview, 4=terminal, 5=help, 6=man, 7=nofile(no name)
-def GetWindowType(): number
+# color is a pair [fg, bg], each itself a [gui, cterm] pair.
+def StatusHighlight(name: string, color: list<any>, bold: bool)
+	var fg = color[0]
+	var bg = color[1]
+	var attr = bold ? 'bold' : 'none'
+	if fg[0] == ''
+		execute printf('highlight %s term=%s ctermfg=%d ctermbg=%d', name, attr, fg[1], bg[1])
+	else
+		execute printf('highlight %s term=%s guifg=%s guibg=%s ctermfg=%d ctermbg=%d',
+			name, attr, fg[0], bg[0], fg[1], bg[1])
+	endif
+enddef
+
+# Define all status/tab highlight groups from the current palette.
+def StatusDefineHighlights()
+	var pal = StatusPalette()
+	for [mkey, mbg] in items(pal.modeBg)
+		StatusHighlight('StlMode' .. mkey, [[pal.modeFg[mkey][0], pal.modeFg[mkey][1]], mbg], true)
+	endfor
+	StatusHighlight('StlL2', pal.l2, false)
+	StatusHighlight('StlBase', pal.base, false)
+	StatusHighlight('StlMidline', pal.Midline, false)
+	StatusHighlight('StlInactive', pal.Inactive, false)
+	StatusHighlight('StlTabSelected', pal.TabSelected, true)
+	StatusHighlight('StlTabInactive', pal.TabInactive, false)
+	StatusHighlight('StlTabMidline', pal.Midline, false)
+	for [dkey, dfg] in items(pal.diagnosticFg)
+		StatusHighlight('StlDiagnostic' .. dkey, [dfg, pal.l2[1]], false)
+	endfor
+enddef
+
+# Window type (cached per window, invalidated on WinEnter)
+def WindowType(): number
 	if exists('w:window_type')
 		return w:window_type
 	endif
@@ -300,10 +317,10 @@ def GetWindowType(): number
 	elseif &buftype ==# 'nofile' && bufname('%') ==# '' && !&modified
 		w:window_type = 7
 	elseif &filetype ==# 'qf'
-		var cur_winnr = winnr()
-		if qf#IsQfWindow(cur_winnr)
+		var cur = winnr()
+		if qf#IsQfWindow(cur)
 			w:window_type = 2
-		elseif qf#IsLocWindow(cur_winnr)
+		elseif qf#IsLocWindow(cur)
 			w:window_type = 1
 		else
 			w:window_type = 0
@@ -314,8 +331,29 @@ def GetWindowType(): number
 	return w:window_type
 enddef
 
-# Cached git file detection. Result is stored in b:is_git_file,
-# invalidated on BufEnter.
+def WindowTypeLabel(): string
+	var wt = WindowType()
+	return wt == 1 ? 'Location' : wt == 2 ? 'Quickfix' : wt == 3 ? 'Preview' :
+		wt == 4 ? 'Terminal' : wt == 5 ? 'Help' : wt == 6 ? 'Man' : ''
+enddef
+
+# Mode label (left, colored block)
+def ModeLabel(): string
+	var wt = WindowType()
+	if wt != 0
+		return WindowTypeLabel()
+	endif
+	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+		return 'V-MULTI'
+	endif
+	return winwidth(0) > 60 ? get(mode_map, mode(), '') : ''
+enddef
+
+def ModeKey(): string
+	return get(mode_key, mode(), 'Normal')
+enddef
+
+# Git info (event-driven, cached in b:git_info)
 def IsGitFile(): number
 	if exists('b:is_git_file')
 		return b:is_git_file
@@ -335,66 +373,59 @@ def IsGitFile(): number
 	return 1
 enddef
 
-def g:LightLineMode(): string
-	var window_type = GetWindowType()
-	if window_type != 0
-		return window_type == 1 ? 'Location' :
-			window_type == 2 ? 'Quickfix' :
-			window_type == 3 ? 'Preview' :
-			window_type == 4 ? 'Terminal' :
-			window_type == 5 ? 'Help' :
-			window_type == 6 ? 'Man' : ''
-	endif
-
-	if exists('b:VM_Selection') && !empty(b:VM_Selection)
-		return 'V-MULTI'
-	endif
-
-	return winwidth(0) > 60 ? lightline#mode() : ''
-enddef
-
-# Combined git status component: gutter summary + branch name.
-# Replaces LightLineGitGutter & LightLineFugitive; avoids calling
-# GetWindowType() / IsGitFile() / FugitiveExtractGitDir() twice.
-def g:LightLineGitInfo(): string
-	if GetWindowType() != 0
-		return ''
-	endif
-	if !IsGitFile()
-		return ''
-	endif
-	var l_parts = []
-	if getftype(expand('%')) ==# 'link'
-		g:FugitiveDetect(resolve(expand('%')))
-	endif
-	var branch = g:FugitiveHead()
-	if branch != ''
-		add(l_parts, '⎇ ' .. branch)
-	endif
-	var s_summary = g:GitGutterGetHunkSummary()
-	for item in [['+%d', s_summary[0]], ['~%d', s_summary[1]], ['-%d', s_summary[2]]]
-		if item[1] != 0
-			add(l_parts, printf(item[0], item[1]))
+# Recompute git info for the current buffer into b:git_info.
+# Called from events only -- never from the statusline draw path.
+def UpdateGitInfo()
+	try
+		if !IsGitFile()
+			b:git_info = ''
+			return
 		endif
-	endfor
-	return join(l_parts, ' ')
+		var parts: list<string> = []
+		if getftype(expand('%')) ==# 'link'
+			g:FugitiveDetect(resolve(expand('%')))
+		endif
+		var branch = g:FugitiveHead()
+		if branch != ''
+			add(parts, '⎇ ' .. branch)
+		endif
+		var sum = g:GitGutterGetHunkSummary()
+		for idx in range(3)
+			if sum[idx] != 0
+				add(parts, printf(['+%d', '~%d', '-%d'][idx], sum[idx]))
+			endif
+		endfor
+		b:git_info = join(parts, ' ')
+	catch
+		b:git_info = ''
+	endtry
 enddef
 
-def g:LightLineFilename(): string
-	var wt = GetWindowType()
+# Filename + status (base block)
+# Shared by statusline (current buffer) and tabline (each tab's active buffer)
+# so their modified/read-only markers always agree.
+def FileStatus(bufnr: number): string
+	return getbufvar(bufnr, '&filetype') =~# 'help\|man' ? '' :
+		getbufvar(bufnr, '&modified') ? '[+]' :
+		(getbufvar(bufnr, '&readonly') || !getbufvar(bufnr, '&modifiable')) ? '[-]' : ''
+enddef
+
+def StatusFilename(): string
+	var wt = WindowType()
 	if wt == 1 || wt == 2 || wt == 3
 		return ''
 	endif
-	var status = g:LightLineFileStatus()
 	var fname = expand('%:t')
 	if fname == ''
 		fname = '[No Name]'
 	endif
-	return join(filter([fname, status], 'v:val != ""'), ' ')
+	var fstatus = FileStatus(bufnr(''))
+	return fstatus == '' ? fname : fname .. ' ' .. fstatus
 enddef
 
-def g:LightLineVMInfo(): string
-	if GetWindowType() != 0
+# Right-hand components
+def SearchInfo(): string
+	if WindowType() != 0
 		return ''
 	endif
 	if exists('b:VM_Selection') && !empty(b:VM_Selection)
@@ -411,46 +442,150 @@ def g:LightLineVMInfo(): string
 	return ''
 enddef
 
-def g:LightLineFileformat(): string
+def StatusPercent(): string
+	return winwidth(0) > 70 ? printf('%d%%%%', (100 * line('.') / line('$'))) : ''
+enddef
+
+def LineInfo(): string
+	return winwidth(0) > 70 ? printf('%d/%d:%d', line('.'), line('$'), col('.')) : ''
+enddef
+
+def StatusFileformat(): string
 	return winwidth(0) > 70 ? &fileformat : ''
 enddef
 
-def g:LightLineFiletype(): string
+def StatusFiletype(): string
 	return winwidth(0) > 70 ? (&filetype != '' ? &filetype : 'unknown') : ''
 enddef
 
-def g:LightLineFileencoding(): string
+def StatusFileencoding(): string
 	return winwidth(0) > 70 ? (&fileencoding != '' ? &fileencoding : &encoding) : ''
 enddef
 
-def g:LightLinePercent(): string
-	return winwidth(0) > 70 ? printf('%3d%%', (100 * line('.') / line('$'))) : ''
+# Wrap like lightline's "%( x %)" (grouped, one space each side).
+def StatusPadding(v: string): string
+	return v == '' ? '' : '%( ' .. v .. ' %)'
 enddef
 
-def g:LightLineLineInfo(): string
-	return winwidth(0) > 70 ? printf('%3d/%-d : %-2d', line('.'), line('$'), col('.')) : ''
-enddef
-
-def GetLightlinePalette(): dict<any>
-	var colorscheme = get(g:lightline, 'colorscheme', 'default')
-	return get(g:, 'lightline#colorscheme#' .. colorscheme .. '#palette', {})
-enddef
-
-# Inactive tab gray-out
-def LightLineGrayTabs()
-	var pal = GetLightlinePalette()
-	if !empty(pal)
-		pal.tabline.left[0] = copy(pal.inactive.left[0])
-		lightline#highlight()
-		lightline#update()
+# LSP diagnostic summary (events update b:diagnostic_info; draw only reads cache)
+# Section renders each severity in its own color: E:1 W:1 H:1 I:1.
+def UpdateDiagnosticInfo()
+	if !exists('g:loaded_lsp')
+		b:diagnostic_info = ''
+		return
 	endif
+	try
+		var cnt = lsp#diag#DiagsGetErrorCount(bufnr('%'))
+		var s = ''
+		var sep = ''
+		for [dkey, tag, n] in [
+				['Error', 'E', cnt.Error],
+				['Warn', 'W', cnt.Warn],
+				['Hint', 'H', cnt.Hint],
+				['Info', 'I', cnt.Info]]
+			if n > 0
+				s ..= sep .. '%#StlDiagnostic' .. dkey .. '#' .. tag .. ':' .. n
+				sep = ' '
+			endif
+		endfor
+		b:diagnostic_info = s
+	catch
+		b:diagnostic_info = ''
+	endtry
 enddef
 
-augroup LightLine
+def DiagnosticInfo(): string
+	return get(b:, 'diagnostic_info', '')
+enddef
+
+# Statusline composer (evaluated per window on redraw)
+def g:Statusline(): string
+	var sel = win_getid() == str2nr(get(g:, 'actual_curwin', win_getid() .. ''))
+	if !sel
+		return '%#StlInactive#%=( ' .. ModeLabel() .. ' )' ..
+			StatusPadding(StatusFilename())
+	endif
+
+	var mkey = ModeKey()
+	var mhl = '%#StlMode' .. mkey .. '#'
+	var left = mhl .. StatusPadding(ModeLabel())
+	if &paste
+		left ..= StatusPadding('PASTE')
+	endif
+	var git = get(b:, 'git_info', '')
+	if git != ''
+		left ..= '%#StlL2#' .. StatusPadding(git)
+	endif
+	var diag = DiagnosticInfo()
+	if diag != ''
+		left ..= '%#StlDiagnosticError# ' .. diag .. ' '
+	endif
+	left ..= '%#StlBase#' .. StatusPadding(StatusFilename())
+
+	var right = '%#StlBase#'
+	right ..= StatusPadding(SearchInfo())
+	right ..= StatusPadding(StatusFiletype())
+	right ..= StatusPadding(StatusFileencoding())
+	right ..= StatusPadding(StatusFileformat())
+	right ..= '%#StlL2#' .. StatusPadding(StatusPercent())
+	right ..= mhl .. StatusPadding(LineInfo())
+
+	return left .. '%#StlMidline#%=' .. right
+enddef
+
+# Tabline composer (evaluated on tabline redraw)
+# Each label reflects the tab's CURRENT active window (like lightline's
+# tabpagewinnr), and its modified marker reuses FileStatus() so tabline and
+# statusline always agree (e.g. terminal tabs show the same marker).
+def TabModified(n: number): string
+	var bufs = tabpagebuflist(n)
+	var b = bufs[tabpagewinnr(n) - 1]
+	return FileStatus(b)
+enddef
+
+def TabLabel(n: number): string
+	var bufs = tabpagebuflist(n)
+	var b = bufs[tabpagewinnr(n) - 1]
+	var fname = bufname(b)
+	if fname == ''
+		fname = '[No Name]'
+	else
+		fname = fnamemodify(fname, ':t')
+	endif
+	var mod = TabModified(n)
+	return mod == '' ? fname : fname .. ' ' .. mod
+enddef
+
+def g:Tabline(): string
+	var s = ''
+	var nr = tabpagenr()
+	var cnt = tabpagenr('$')
+	for i in range(1, cnt)
+		s ..= (i == nr ? '%#StlTabSelected#' : '%#StlTabInactive#')
+		s ..= '%' .. i .. 'T%( ' .. TabLabel(i) .. ' %)%T'
+	endfor
+	return s .. '%#StlTabMidline#%='
+enddef
+
+# Options
+set showtabline=1
+set laststatus=2
+set statusline=%{%g:Statusline()%}
+set tabline=%{%g:Tabline()%}
+
+# Sonokai is loaded synchronously above (colorscheme sonokai), so the palette
+# and highlight groups are defined here once at startup.
+StatusDefineHighlights()
+
+# Events
+augroup Statusline
 	autocmd!
-	autocmd BufEnter * unlet! b:is_git_file
+	autocmd ColorScheme * StatusDefineHighlights()
+	autocmd BufEnter * unlet! b:is_git_file | call UpdateGitInfo() | call UpdateDiagnosticInfo()
+	autocmd BufWritePost * call UpdateGitInfo() | redrawstatus
+	autocmd CursorHold * call UpdateGitInfo() | redrawstatus
+	autocmd User LspDiagsUpdated,LspAttached,LspDetached call UpdateDiagnosticInfo() | redrawstatus
 	autocmd BufWinEnter,WinEnter * unlet! w:window_type
-	autocmd VimEnter * silent LightLineGrayTabs()
 augroup END
 # }
 
@@ -1377,39 +1512,19 @@ else
 	highlight VM_Info ctermfg=13 ctermbg=0 guifg=#bb9af7 guibg=#3b3f54
 endif
 
-var saved_normal_left = []
 def VMEnter()
-	var pal = GetLightlinePalette()
-	if empty(pal)
-		return
-	endif
-	saved_normal_left = copy(pal.normal.left[0])
 	if !is_tty_console
-		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 232, 141, 'bold']
+		execute 'highlight StlModeNormal term=bold guifg=#1a1b26 guibg=#bb9af7 ctermfg=232 ctermbg=141 cterm=bold'
 	else
-		# cterm 0 = black fg on cterm 13 = bright magenta
-		pal.normal.left[0] = ['#1a1b26', '#bb9af7', 0, 13, 'bold']
+		execute 'highlight StlModeNormal term=bold guifg=#1a1b26 guibg=#bb9af7 ctermfg=0 ctermbg=13 cterm=bold'
 	endif
-	lightline#highlight()
-	lightline#update()
-enddef
-
-def VMLeave()
-	if !empty(saved_normal_left)
-		var pal = GetLightlinePalette()
-		if !empty(pal)
-			pal.normal.left[0] = saved_normal_left
-		endif
-		saved_normal_left = []
-	endif
-	lightline#highlight()
-	lightline#update()
+	redrawstatus
 enddef
 
 augroup VMLightLine
 	autocmd!
 	autocmd User visual_multi_start silent VMEnter()
-	autocmd User visual_multi_exit  silent VMLeave()
+	autocmd User visual_multi_exit call StatusDefineHighlights() | redrawstatus
 augroup END
 # }
 
