@@ -207,32 +207,10 @@ else
 endif
 # }
 
-# CheckFileChanges {
-# Enable focus event tracking for terminal vim.
-# Most terminal terminfo entries lack Ss/Se capability definitions,
-# causing t_fe/t_fd to remain empty. Set them manually so that
-# FocusGained/FocusLost autocommands work (e.g. for checktime).
-if !has('gui_running') && &t_fe == ''
-	&t_fe = "\<Esc>[?1004h"
-	&t_fd = "\<Esc>[?1004l"
-	execute "set <FocusGained>=\<Esc>[I"
-	execute "set <FocusLost>=\<Esc>[O"
-endif
-
-augroup CheckFileChanges
-	autocmd!
-	# Check file changes outside vim (terminal/TTY/kmscon)
-	autocmd FocusGained,BufWinEnter,WinEnter,CursorHold * if getcmdtype() ==# '' | checktime | endif
-augroup END
-# }
-
 # manual statusline + tabline {
-# Design: statusline/tabline are single {%...%} expressions re-evaluated on
-# redraw; draw paths only read builtin options and cached values -- never
-# system() or plugins (Fugitive/GitGutter/LSP) at draw time. Expensive data
-# (git branch+hunks, LSP diagnostic counts) is recomputed on discrete events
-# (BufEnter, BufWritePost, CursorHold, LspDiagsUpdated) and cached in
-# b:git_info / b:diagnostic_info.
+# Draw paths read only builtins + cached values (never system()/plugins).
+# Git/LSP data is recomputed on events (BufEnter/BufWritePost/CursorHold/
+# LspDiagsUpdated) into b:git_info, b:diagnostic_info.
 
 # Mode -> label + highlight-group stem
 const mode_map = {
@@ -349,10 +327,6 @@ def ModeLabel(): string
 	return winwidth(0) > 60 ? get(mode_map, mode(), '') : ''
 enddef
 
-def ModeKey(): string
-	return get(mode_key, mode(), 'Normal')
-enddef
-
 # Git info (event-driven, cached in b:git_info)
 def IsGitFile(): number
 	if exists('b:is_git_file')
@@ -375,30 +349,32 @@ enddef
 
 # Recompute git info for the current buffer into b:git_info.
 # Called from events only -- never from the statusline draw path.
-def UpdateGitInfo()
-	try
-		if !IsGitFile()
-			b:git_info = ''
-			return
-		endif
-		var parts: list<string> = []
-		if getftype(expand('%')) ==# 'link'
-			g:FugitiveDetect(resolve(expand('%')))
-		endif
-		var branch = g:FugitiveHead()
-		if branch != ''
-			add(parts, '⎇ ' .. branch)
-		endif
-		var sum = g:GitGutterGetHunkSummary()
-		for idx in range(3)
-			if sum[idx] != 0
-				add(parts, printf(['+%d', '~%d', '-%d'][idx], sum[idx]))
-			endif
-		endfor
-		b:git_info = join(parts, ' ')
-	catch
+# Returns true when git info actually changed, false otherwise.
+def UpdateGitInfo(): bool
+	if !IsGitFile()
 		b:git_info = ''
-	endtry
+		return false
+	endif
+	var parts: list<string> = []
+	if getftype(expand('%')) ==# 'link'
+		g:FugitiveDetect(resolve(expand('%')))
+	endif
+	var branch = g:FugitiveHead()
+	if branch != ''
+		add(parts, '⎇ ' .. branch)
+	endif
+	var sum = g:GitGutterGetHunkSummary()
+	for idx in range(3)
+		if sum[idx] != 0
+			add(parts, printf(['+%d', '~%d', '-%d'][idx], sum[idx]))
+		endif
+	endfor
+	var new_info = join(parts, ' ')
+	if new_info ==# get(b:, 'git_info', '')
+		return false
+	endif
+	b:git_info = new_info
+	return true
 enddef
 
 # Filename + status (base block)
@@ -424,7 +400,7 @@ def StatusFilename(): string
 enddef
 
 # Right-hand components
-def SearchInfo(): string
+def StatusSearchInfo(): string
 	if WindowType() != 0
 		return ''
 	endif
@@ -437,7 +413,6 @@ def SearchInfo(): string
 			endif
 			return result
 		endif
-		return ''
 	endif
 	return ''
 enddef
@@ -446,7 +421,7 @@ def StatusPercent(): string
 	return winwidth(0) > 70 ? printf('%d%%%%', (100 * line('.') / line('$'))) : ''
 enddef
 
-def LineInfo(): string
+def StatusLineInfo(): string
 	return winwidth(0) > 70 ? printf('%d/%d:%d', line('.'), line('$'), col('.')) : ''
 enddef
 
@@ -469,45 +444,41 @@ enddef
 
 # LSP diagnostic summary (events update b:diagnostic_info; draw only reads cache)
 # Section renders each severity in its own color: E:1 W:1 H:1 I:1.
-def UpdateDiagnosticInfo()
+# Returns true when the diagnostic summary actually changed, false when there
+# is no LSP or nothing changed.
+def UpdateDiagnosticInfo(): bool
 	if !exists('g:loaded_lsp')
 		b:diagnostic_info = ''
-		return
+		return false
 	endif
-	try
-		var cnt = lsp#diag#DiagsGetErrorCount(bufnr('%'))
-		var s = ''
-		var sep = ''
-		for [dkey, tag, n] in [
-				['Error', 'E', cnt.Error],
-				['Warn', 'W', cnt.Warn],
-				['Hint', 'H', cnt.Hint],
-				['Info', 'I', cnt.Info]]
-			if n > 0
-				s ..= sep .. '%#StlDiagnostic' .. dkey .. '#' .. tag .. ':' .. n
-				sep = ' '
-			endif
-		endfor
-		b:diagnostic_info = s
-	catch
-		b:diagnostic_info = ''
-	endtry
-enddef
-
-def DiagnosticInfo(): string
-	return get(b:, 'diagnostic_info', '')
+	var cnt = lsp#diag#DiagsGetErrorCount(bufnr('%'))
+	var s = ''
+	var sep = ''
+	for [dkey, tag, n] in [
+			['Error', 'E', cnt.Error],
+			['Warn', 'W', cnt.Warn],
+			['Hint', 'H', cnt.Hint],
+			['Info', 'I', cnt.Info]]
+		if n > 0
+			s ..= sep .. '%#StlDiagnostic' .. dkey .. '#' .. tag .. ':' .. n
+			sep = ' '
+		endif
+	endfor
+	if s ==# get(b:, 'diagnostic_info', '')
+		return false
+	endif
+	b:diagnostic_info = s
+	return true
 enddef
 
 # Statusline composer (evaluated per window on redraw)
 def g:Statusline(): string
 	var sel = win_getid() == str2nr(get(g:, 'actual_curwin', win_getid() .. ''))
 	if !sel
-		return '%#StlInactive#%=( ' .. ModeLabel() .. ' )' ..
-			StatusPadding(StatusFilename())
+		return '%#StlInactive#' .. StatusPadding(ModeLabel()) .. StatusPadding(StatusFilename())
 	endif
 
-	var mkey = ModeKey()
-	var mhl = '%#StlMode' .. mkey .. '#'
+	var mhl = '%#StlMode' .. get(mode_key, mode(), 'Normal') .. '#'
 	var left = mhl .. StatusPadding(ModeLabel())
 	if &paste
 		left ..= StatusPadding('PASTE')
@@ -516,27 +487,25 @@ def g:Statusline(): string
 	if git != ''
 		left ..= '%#StlL2#' .. StatusPadding(git)
 	endif
-	var diag = DiagnosticInfo()
+	var diag = get(b:, 'diagnostic_info', '')
 	if diag != ''
 		left ..= '%#StlDiagnosticError# ' .. diag .. ' '
 	endif
 	left ..= '%#StlBase#' .. StatusPadding(StatusFilename())
 
 	var right = '%#StlBase#'
-	right ..= StatusPadding(SearchInfo())
+	right ..= StatusPadding(StatusSearchInfo())
 	right ..= StatusPadding(StatusFiletype())
 	right ..= StatusPadding(StatusFileencoding())
 	right ..= StatusPadding(StatusFileformat())
 	right ..= '%#StlL2#' .. StatusPadding(StatusPercent())
-	right ..= mhl .. StatusPadding(LineInfo())
+	right ..= mhl .. StatusPadding(StatusLineInfo())
 
 	return left .. '%#StlMidline#%=' .. right
 enddef
 
-# Tabline composer (evaluated on tabline redraw)
-# Each label reflects the tab's CURRENT active window (like lightline's
-# tabpagewinnr), and its modified marker reuses FileStatus() so tabline and
-# statusline always agree (e.g. terminal tabs show the same marker).
+# Tabline composer
+# Each label reflects the tab's current active window via FileStatus
 def TabModified(n: number): string
 	var bufs = tabpagebuflist(n)
 	var b = bufs[tabpagewinnr(n) - 1]
@@ -577,15 +546,33 @@ set tabline=%{%g:Tabline()%}
 # and highlight groups are defined here once at startup.
 StatusDefineHighlights()
 
-# Events
 augroup Statusline
 	autocmd!
 	autocmd ColorScheme * StatusDefineHighlights()
 	autocmd BufEnter * unlet! b:is_git_file | call UpdateGitInfo() | call UpdateDiagnosticInfo()
-	autocmd BufWritePost * call UpdateGitInfo() | redrawstatus
-	autocmd CursorHold * call UpdateGitInfo() | redrawstatus
-	autocmd User LspDiagsUpdated,LspAttached,LspDetached call UpdateDiagnosticInfo() | redrawstatus
+	autocmd BufWritePost * if UpdateGitInfo() | redrawstatus | endif
+	autocmd CursorHold * if UpdateGitInfo() | redrawstatus | endif
+	autocmd User LspDiagsUpdated,LspAttached,LspDetached if UpdateDiagnosticInfo() | redrawstatus | endif
 	autocmd BufWinEnter,WinEnter * unlet! w:window_type
+augroup END
+# }
+
+# CheckFileChanges {
+# Enable focus event tracking for terminal vim.
+# Most terminal terminfo entries lack Ss/Se capability definitions,
+# causing t_fe/t_fd to remain empty. Set them manually so that
+# FocusGained/FocusLost autocommands work (e.g. for checktime).
+if !has('gui_running') && &t_fe == ''
+	&t_fe = "\<Esc>[?1004h"
+	&t_fd = "\<Esc>[?1004l"
+	execute "set <FocusGained>=\<Esc>[I"
+	execute "set <FocusLost>=\<Esc>[O"
+endif
+
+augroup CheckFileChanges
+	autocmd!
+	# Check file changes outside vim (terminal/TTY/kmscon)
+	autocmd FocusGained,BufWinEnter,WinEnter,CursorHold * if getcmdtype() ==# '' | checktime | endif
 augroup END
 # }
 
@@ -1325,7 +1312,7 @@ enddef
 
 def QuitAll()
 	SendExitToAllTerminals()
-	silent! confirm quitall!
+	confirm quitall
 enddef
 
 def Quit()
