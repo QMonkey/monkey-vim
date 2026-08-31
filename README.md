@@ -16,7 +16,7 @@ The project monkey-vim, aims to make a powerful and fast terminal-native IDE.
 | Server TTY     | Bare Linux console (tty1–tty63), Vim default 8/16-color highlighting (sonokai needs ≥256 colors) |
 | kmscon         | Kernel Mode Setting console — modern TTY replacement with true color and Unicode support         |
 
-Top-level workspace management (multiple sessions and terminals) is delegated to tmux or your terminal emulator's tabs; in-editor splits and tabs work as usual.
+Top-level workspace management (multiple sessions and terminals) and AI integration (agent TUIs such as Claude Code or opencode) are both delegated to tmux or your terminal emulator's tabs; in-editor splits and tabs work as usual.
 
 ## Screenshot
 
@@ -31,7 +31,7 @@ Top-level workspace management (multiple sessions and terminals) is delegated to
 
 Pick one of the two ways below: a one-click script, or manual setup.
 
-### Option 1: One-click install (recommended)
+### Option 1: One-click install
 
 Build Vim and install monkey-vim with all dependencies and plugins automatically:
 
@@ -462,7 +462,6 @@ It should resolve to `getty@.service`.
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | Snippet collection                                 |
 | [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag finder                       |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | Async code search (rg/ag backend)                  |
-| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim)                     | Status line                                        |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | Colorscheme                                        |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | Multiple cursors                                   |
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | Easy motion (replaces vim-sneak)                   |
@@ -528,13 +527,14 @@ Ctrl+h  Backspace      (BackSpace)
 Ctrl+d  Delete forward (Del)
 ```
 
-#### 1.2 F1 ~ F4
+#### 1.2 F1 ~ F5
 
 ```text
 F1      Open CtrlSF search prompt
 F2      Toggle CtrlSF search window
 F3      Open a terminal at the bottom
-F4      Toggle terminal buffer (open/hide)
+F4      Toggle the global terminal at the bottom
+F5      Toggle the global terminal on the right
 ```
 
 #### 1.3 Buffer
@@ -723,10 +723,11 @@ cs+surroundA+surroundB      Change surround A to B
 
 ```text
 F3      Open a terminal buffer
-F4      Toggle terminal buffer (open/hide)
+F4      Toggle the global terminal at the bottom
+F5      Toggle the global terminal on the right
 ```
 
-F3 opens a new terminal at the bottom. F4 toggles the terminal — hides it without killing the job, reopens the same terminal on demand.
+F3 opens a new terminal at the bottom. F4 and F5 toggle the single global terminal — F4 shows it at the bottom (20 rows), F5 on the right (half the width). While visible, either key hides it; while hidden, each key reopens it in its own position. It is shared across all tabs: hiding does not kill the job, and the same terminal (history included) reopens in whatever tab you are in.
 
 Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal mode, `<ScrollWheelUp>` and `<ScrollWheelDown>` scroll the terminal buffer.
 
