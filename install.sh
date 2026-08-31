@@ -124,6 +124,42 @@ refresh_path() {
 	if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
 }
 
+# ────────────────── sudo keepalive ──────────────────
+
+SUDO_KEEPALIVE_PID=""
+
+start_sudo_keepalive() {
+	# Keep sudo credentials alive for the whole run: the gap between the first
+	# sudo (build deps) and later ones (make install) can exceed the default
+	# 15-min timestamp_timeout on slow downloads/compiles. A re-auth prompt
+	# then aborts unattended runs (no TTY to answer it).
+	# Skip when running as root or when sudo is unavailable.
+	if [ "$(id -u)" -eq 0 ] || ! command -v sudo &>/dev/null; then
+		return 0
+	fi
+	# Pre-authenticate once so the password is entered at the very start
+	# instead of mid-run after a long download/compile.
+	sudo -v || fail "sudo authorization failed — run this script in an interactive terminal."
+	(
+		# Test hook; also lets users tune the refresh rate.
+		interval="${SUDO_KEEPALIVE_INTERVAL:-60}"
+		# Kill the in-flight `sleep` child when we get TERMed, so no orphan
+		# sleep survives the script.
+		trap 'kill $(jobs -p) 2>/dev/null; exit 0' TERM
+		while true; do
+			sleep "$interval" &
+			wait "$!" 2>/dev/null || exit 0
+			# Non-interactive refresh: never prompts. If the timestamp has
+			# fully expired this fails and the loop exits; later sudo calls
+			# then prompt normally — no worse than without the keepalive.
+			sudo -n true 2>/dev/null || exit 0
+		done
+	) &
+	SUDO_KEEPALIVE_PID=$!
+	# Recycle the background loop on any exit path (success, fail, Ctrl-C).
+	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+}
+
 # ────────────────── Step 1: Install build deps for Vim ──────────────────
 
 install_vim_build_deps() {
@@ -202,28 +238,31 @@ install_vim_build_deps() {
 # ────────────────── Step 2: Install Homebrew / Linuxbrew ──────────────────
 
 install_linuxbrew() {
-	if command -v brew &>/dev/null; then
-		ok "Homebrew already installed."
-		return 0
-	fi
-
-	info "Installing Homebrew/Linuxbrew..."
-	NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" ||
-		warn "Homebrew installer failed — continuing without Homebrew."
-
 	local brew_prefix=""
-	local cand
-	for cand in /home/linuxbrew/.linuxbrew /opt/homebrew /usr/local; do
-		if [ -x "$cand/bin/brew" ]; then
-			brew_prefix="$cand"
-			break
-		fi
-	done
+	if command -v brew &>/dev/null; then
+		brew_prefix="$(dirname "$(dirname "$(command -v brew)")")"
+		ok "Homebrew already installed at $brew_prefix."
+	else
+		info "Installing Homebrew/Linuxbrew..."
+		NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" ||
+			warn "Homebrew installer failed — continuing without Homebrew."
+
+		local cand
+		for cand in /home/linuxbrew/.linuxbrew /opt/homebrew /usr/local; do
+			if [ -x "$cand/bin/brew" ]; then
+				brew_prefix="$cand"
+				break
+			fi
+		done
+	fi
 
 	if [ -n "$brew_prefix" ]; then
 		eval "$("$brew_prefix/bin/brew" shellenv)"
 		ok "Homebrew/Linuxbrew ready at $brew_prefix."
-		# Persist shellenv for future shells (login + interactive rc)
+		# Persist shellenv for future shells (login + interactive rc).
+		# Runs even when brew pre-dates this run: without it, brew-installed
+		# tools (node/npm/...) vanish from PATH in new shells. Idempotent —
+		# append_env_block skips if the marker is already present.
 		local line="eval \"\$($brew_prefix/bin/brew shellenv)\""
 		append_env_block "Homebrew shellenv" "$line"
 	else
@@ -255,7 +294,11 @@ VIM_REQUIRED_FEATURES=(cscope lua multi_byte perl python3 ruby terminal)
 has_vim_feature() {
 	# [+]<feature> must be followed by whitespace or end-of-line, so
 	# "clipboard" does not false-match "clipboard_provider".
-	vim --version 2>/dev/null | grep -qE "[+]${1}([[:space:]]|\$)"
+	# NOT `grep -q`: -q exits on the first match and closes the pipe; if vim
+	# is still writing --version output it dies with SIGPIPE (141) and, under
+	# pipefail, the feature is falsely reported as missing. Plain grep with
+	# stdout to /dev/null reads all input, so vim's writes always succeed.
+	vim --version 2>/dev/null | grep -E "[+]${1}([[:space:]]|\$)" >/dev/null
 }
 
 # Clipboard requirement per scenario, mirroring what build_vim produces for
@@ -507,6 +550,8 @@ main() {
 	info "monkey-vim: ${CYAN}${INSTALL_DIR}${NC}"
 	info "vim source: ${CYAN}${VIM_SRC_DIR}${NC} (kept for future updates)"
 	echo ""
+
+	start_sudo_keepalive
 
 	install_vim_build_deps
 	echo ""
