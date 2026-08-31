@@ -81,6 +81,9 @@ source $VIMRUNTIME/ftplugin/man.vim
 # Disable netrw
 g:loaded_netrw = 1
 g:loaded_netrwPlugin = 1
+
+# Disable the window-local statusline set by ftplugin/qf.vim (8.1.1715+)
+g:qf_disable_statusline = 1
 # }
 
 # Leader {
@@ -377,7 +380,15 @@ def UpdateGitInfo(): bool
 	return true
 enddef
 
-# Filename + status (base block)
+# Display name: tail of the buffer name, "[No Name]" when empty.
+# Shared by statusline (current buffer) and tabline (each tab's active buffer)
+# so unnamed/dir-like buffers display the same way.
+def BufDisplayName(bufnr: number): string
+	var fname = fnamemodify(bufname(bufnr), ':t')
+	return fname == '' ? '[No Name]' : fname
+enddef
+
+# Status marker: "[+]" modified, "[-]" readonly/nomodifiable, "" otherwise.
 # Shared by statusline (current buffer) and tabline (each tab's active buffer)
 # so their modified/read-only markers always agree.
 def FileStatus(bufnr: number): string
@@ -391,10 +402,7 @@ def StatusFilename(): string
 	if wt == 1 || wt == 2 || wt == 3
 		return ''
 	endif
-	var fname = expand('%:t')
-	if fname == ''
-		fname = '[No Name]'
-	endif
+	var fname = BufDisplayName(bufnr(''))
 	var fstatus = FileStatus(bufnr(''))
 	return fstatus == '' ? fname : fname .. ' ' .. fstatus
 enddef
@@ -515,12 +523,7 @@ enddef
 def TabLabel(n: number): string
 	var bufs = tabpagebuflist(n)
 	var b = bufs[tabpagewinnr(n) - 1]
-	var fname = bufname(b)
-	if fname == ''
-		fname = '[No Name]'
-	else
-		fname = fnamemodify(fname, ':t')
-	endif
+	var fname = BufDisplayName(b)
 	var mod = TabModified(n)
 	return mod == '' ? fname : fname .. ' ' .. mod
 enddef
@@ -578,6 +581,11 @@ augroup END
 
 # Session / Restore {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
+
+def GetFileRoot(fallback: string): string
+	var root = g:FindRootDirectory()
+	return root !=# '' ? root : fallback
+enddef
 
 def GetSessionFileInfo(): list<string>
 	var session_dir = expand($HOME .. '/.cache/sessions/')
@@ -1358,21 +1366,29 @@ vnoremap t q
 # }
 
 # Terminal {
+# F4 toggles a single global terminal: hide when visible in the current tab,
+# otherwise close views in other tabs and reopen it at the bottom here.
+# The shell job survives hides, so history is kept across tabs.
 def TerminalToggle()
 	var termrows = 20
-	if exists('t:terminal_bufnr') && bufexists(t:terminal_bufnr) && term_getstatus(t:terminal_bufnr) =~# 'running'
-		var winid = bufwinid(t:terminal_bufnr)
-		if winid != -1
-			win_execute(winid, 'hide')
-		else
-			execute 'botright sbuffer ' .. t:terminal_bufnr
-			execute 'resize ' .. termrows
-			feedkeys("i", 't')
-		endif
-	else
+	if !exists('g:terminal_bufnr') || !bufexists(g:terminal_bufnr) || term_getstatus(g:terminal_bufnr) !~# 'running'
 		execute 'botright terminal ++rows=' .. termrows
-		t:terminal_bufnr = bufnr('%')
+		g:terminal_bufnr = bufnr('%')
+		return
 	endif
+	var wids = win_findbuf(g:terminal_bufnr)
+	for wid in wids
+		if win_id2tabwin(wid)[0] == tabpagenr()
+			win_execute(wid, 'hide')
+			return
+		endif
+	endfor
+	for wid in wids
+		win_execute(wid, 'hide')
+	endfor
+	execute 'botright sbuffer ' .. g:terminal_bufnr
+	execute 'resize ' .. termrows
+	feedkeys("i", 't')
 enddef
 
 tnoremap <silent><ScrollWheelUp> <C-\><C-n><ScrollWheelUp>
@@ -1519,11 +1535,6 @@ augroup END
 nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
 nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetFileRoot(expand('~')))<CR>
 
-def GetFileRoot(fallback: string): string
-	var root = g:FindRootDirectory()
-	return root !=# '' ? root : fallback
-enddef
-
 augroup SplitExplorer
 	autocmd!
 	autocmd FileType dirvish silent! unmap <buffer>a
@@ -1622,10 +1633,10 @@ def BufferExit(code: number)
 	if exists('g:__fzf_buffers_delete_file')
 		var path = remove(g:, '__fzf_buffers_delete_file')
 		if filereadable(path)
-			for line in readfile(path)
-				var b = matchstr(line, '\[\zs\d\+\ze\]')
-				if !empty(b)
-					silent execute 'bdelete ' .. b
+			for line in uniq(sort(readfile(path)))
+				var b = str2nr(matchstr(line, '\[\zs\d\+\ze\]'))
+				if b > 0 && bufexists(b)
+					execute 'silent! bdelete ' .. b
 				endif
 			endfor
 			delete(path)
