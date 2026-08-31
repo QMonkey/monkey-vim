@@ -120,22 +120,46 @@ sudo_cmd() {
 	fi
 }
 
+# Package names that should prefer Homebrew over the system package
+# manager: system repos ship versions that lag far behind (fzf: 0.44 on
+# Ubuntu noble vs current 0.7x). Append more names here as needed.
+BREW_FIRST=(fzf)
+
 install_pkg() {
 	if ! $INSTALL_MODE; then return 1; fi
-	case "$OS" in
-	debian) sudo_cmd apt-get install -y "$@" || brew install "$@" ;;
-	arch) sudo_cmd pacman -S --noconfirm "$@" || brew install "$@" ;;
-	opensuse) sudo_cmd zypper --non-interactive install -y "$@" || brew install "$@" ;;
-	centos)
-		# Some tools (universal-ctags, global, global-ctags, fzf, bat, pygments) come from EPEL
-		sudo_cmd dnf install -y epel-release || true
-		_args=("$@")
-		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-		sudo_cmd dnf install -y "${_args[@]}" || brew install "$@"
-		;;
-	macos) brew install "$@" ;;
-	*) brew install "$@" 2>/dev/null || return 1 ;;
-	esac
+	# Split the request: names in BREW_FIRST go through Homebrew (when it
+	# exists, falling back to the system manager on failure), everything
+	# else through the OS package manager as before.
+	local -a brew_pkgs=() rest=()
+	local p
+	for p in "$@"; do
+		if [[ " ${BREW_FIRST[*]} " == *" $p "* ]] && command -v brew &>/dev/null; then
+			brew_pkgs+=("$p")
+		else
+			rest+=("$p")
+		fi
+	done
+	if ((${#brew_pkgs[@]} > 0)); then
+		if ! brew install "${brew_pkgs[@]}"; then
+			rest+=("${brew_pkgs[@]}") # brew failed — fall back to the system manager
+		fi
+	fi
+	if ((${#rest[@]} > 0)); then
+		case "$OS" in
+		debian) sudo_cmd apt-get install -y "${rest[@]}" || brew install "${rest[@]}" ;;
+		arch) sudo_cmd pacman -S --noconfirm "${rest[@]}" || brew install "${rest[@]}" ;;
+		opensuse) sudo_cmd zypper --non-interactive install -y "${rest[@]}" || brew install "${rest[@]}" ;;
+		centos)
+			# Some tools (universal-ctags, global, global-ctags, fzf, bat, pygments) come from EPEL
+			sudo_cmd dnf install -y epel-release || true
+			local -a _args=("${rest[@]}")
+			[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
+			sudo_cmd dnf install -y "${_args[@]}" || brew install "${rest[@]}"
+			;;
+		macos) brew install "${rest[@]}" ;;
+		*) brew install "${rest[@]}" 2>/dev/null || return 1 ;;
+		esac
+	fi
 }
 
 ensure_rust() {
