@@ -16,7 +16,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 | 服务器 TTY | 原生 Linux 控制台（tty1–tty63），Vim 内置 8/16 色高亮（sonokai 需 ≥256 色） |
 | kmscon     | Kernel Mode Setting 控制台 —— 支持真彩色和 Unicode 的现代 TTY 替代方案      |
 
-多会话/多终端这类顶层工作区管理交给 tmux 或终端模拟器的标签页；编辑器内的分屏和标签页照常使用。
+多会话/多终端的顶层工作区管理与 AI 集成（Agent TUI，如 Claude Code、opencode）都交给 tmux 或终端模拟器的标签页；编辑器内的分屏和标签页照常使用。
 
 ## 截图
 
@@ -31,7 +31,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 
 二选一：一键安装脚本，或手动安装。
 
-### 方式一：一键安装（推荐）
+### 方式一：一键安装
 
 自动完成 Vim 编译安装、依赖与插件安装：
 
@@ -461,7 +461,6 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | 常用代码片段集合                                  |
 | [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/tag 查找                            |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | 异步代码搜索（rg/ag 后端）                        |
-| [itchyny/lightline.vim](https://github.com/itchyny/lightline.vim)                     | 状态栏                                            |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | 配色方案                                          |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | 多光标编辑                                        |
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | 快速跳转（替代 vim-sneak）                        |
@@ -527,13 +526,14 @@ Ctrl+h  退格        (BackSpace)
 Ctrl+d  向前删除    (Del)
 ```
 
-#### 1.2 F1 ~ F4
+#### 1.2 F1 ~ F5
 
 ```text
 F1      打开 CtrlSF 搜索提示
 F2      切换 CtrlSF 搜索窗口
 F3      打开终端窗口
-F4      切换终端窗口（打开/隐藏）
+F4      切换全局终端（底部）
+F5      切换全局终端（右侧）
 ```
 
 #### 1.3 缓冲
@@ -723,10 +723,11 @@ cs+surroundA+surroundB      将A围绕字符改成B围绕字符
 
 ```text
 F3      打开终端窗口
-F4      切换终端窗口（打开/隐藏）
+F4      切换全局终端（底部）
+F5      切换全局终端（右侧）
 ```
 
-F3 在底部新建一个终端。F4 切换终端 — 隐藏时不终止进程，再次打开时复用同一终端。
+F3 在底部新建一个终端。F4/F5 切换同一个全局终端 —— F4 显示在底部（20 行），F5 显示在右侧（一半宽度）。可见时按任意键隐藏；隐藏时按哪个键就在哪个位置打开。终端所有 tab 共享：隐藏时不终止进程，在哪个 tab 按键就在哪个 tab 打开同一终端（保留历史）。
 
 使用 `<Ctrl-\><Ctrl-n>` 从终端模式切换到普通模式。普通模式下 `<ScrollWheelUp>` 和 `<ScrollWheelDown>` 可滚动终端缓冲区。
 
