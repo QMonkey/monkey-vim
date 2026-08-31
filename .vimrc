@@ -215,18 +215,13 @@ endif
 # Git/LSP data is recomputed on events (BufEnter/BufWritePost/CursorHold/
 # LspDiagsUpdated) into b:git_info, b:diagnostic_info.
 
-# Mode -> label + highlight-group stem
+# Mode -> [label, highlight-group]
 const mode_map = {
-	'n': 'NORMAL', 'i': 'INSERT', 'R': 'REPLACE',
-	'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
-	'c': 'COMMAND', 's': 'SELECT', 'S': 'S-LINE', "\<C-s>": 'S-BLOCK',
-	't': 'TERMINAL',
-}
-const mode_key = {
-	'n': 'Normal', 'i': 'Insert', 'R': 'Replace',
-	'v': 'Visual', 'V': 'Visual', "\<C-v>": 'Visual',
-	'c': 'Command', 's': 'Visual', 'S': 'Visual', "\<C-s>": 'Visual',
-	't': 'Terminal',
+	'n': ['NORMAL', 'Normal'], 'i': ['INSERT', 'Insert'], 'R': ['REPLACE', 'Replace'],
+	'v': ['VISUAL', 'Visual'], 'V': ['V-LINE', 'Visual'], "\<C-v>": ['V-BLOCK', 'Visual'],
+	'c': ['COMMAND', 'Command'], 's': ['SELECT', 'Visual'], 'S': ['S-LINE', 'Visual'],
+	"\<C-s>": ['S-BLOCK', 'Visual'],
+	't': ['TERMINAL', 'Terminal'],
 }
 
 # Palette (truecolor = sonokai "andromeda", console = 16color)
@@ -282,33 +277,42 @@ def StatusDefineHighlights()
 	endfor
 enddef
 
-# Window type (cached per window, invalidated on WinEnter)
+# Window type (0 = normal file window): 1 loclist, 2 quickfix, 3 preview,
+# 4 terminal, 5 help, 6 man, 7 empty nofile. Works on any window number;
+# shared by the statusline labels and the auxiliary-window checks in Quit.
+def WindowTypeOf(winnr: number): number
+	var bufnr = winbufnr(winnr)
+	if bufnr == -1
+		return 0
+	endif
+	if getwinvar(winnr, '&previewwindow')
+		return 3
+	endif
+	var bt = getbufvar(bufnr, '&buftype')
+	if bt ==# 'terminal'
+		return 4
+	endif
+	if bt ==# 'help' || getbufvar(bufnr, '&filetype') ==# 'help'
+		return 5
+	endif
+	if bt ==# 'nofile' && getbufvar(bufnr, '&filetype') ==# 'man'
+		return 6
+	endif
+	if bt ==# 'nofile' && bufname(bufnr) ==# '' && !getbufvar(bufnr, '&modified')
+		return 7
+	endif
+	if getbufvar(bufnr, '&filetype') ==# 'qf'
+		return qf#IsLocWindow(winnr) ? 1 : 2
+	endif
+	return 0
+enddef
+
+# Window type of the current window, cached until the next WinEnter
 def WindowType(): number
 	if exists('w:window_type')
 		return w:window_type
 	endif
-	if &previewwindow
-		w:window_type = 3
-	elseif &buftype ==# 'terminal'
-		w:window_type = 4
-	elseif &filetype ==# 'help' || &buftype ==# 'help'
-		w:window_type = 5
-	elseif &buftype ==# 'nofile' && &filetype ==# 'man'
-		w:window_type = 6
-	elseif &buftype ==# 'nofile' && bufname('%') ==# '' && !&modified
-		w:window_type = 7
-	elseif &filetype ==# 'qf'
-		var cur = winnr()
-		if qf#IsQfWindow(cur)
-			w:window_type = 2
-		elseif qf#IsLocWindow(cur)
-			w:window_type = 1
-		else
-			w:window_type = 0
-		endif
-	else
-		w:window_type = 0
-	endif
+	w:window_type = WindowTypeOf(winnr())
 	return w:window_type
 enddef
 
@@ -327,7 +331,7 @@ def ModeLabel(): string
 	if exists('b:VM_Selection') && !empty(b:VM_Selection)
 		return 'V-MULTI'
 	endif
-	return winwidth(0) > 60 ? get(mode_map, mode(), '') : ''
+	return winwidth(0) > 60 ? get(mode_map, mode(), ['', ''])[0] : ''
 enddef
 
 # Git info (event-driven, cached in b:git_info)
@@ -486,7 +490,7 @@ def g:Statusline(): string
 		return '%#StlInactive#' .. StatusPadding(ModeLabel()) .. StatusPadding(StatusFilename())
 	endif
 
-	var mhl = '%#StlMode' .. get(mode_key, mode(), 'Normal') .. '#'
+	var mhl = '%#StlMode' .. get(mode_map, mode(), ['', 'Normal'])[1] .. '#'
 	var left = mhl .. StatusPadding(ModeLabel())
 	if &paste
 		left ..= StatusPadding('PASTE')
@@ -1255,46 +1259,12 @@ augroup END
 # }
 
 # Quit {
-def SendExitToAllTerminals()
-	for buf in getbufinfo()
-		if getbufvar(buf.bufnr, '&buftype') == 'terminal' && term_getstatus(buf.bufnr) =~ 'running'
-			term_sendkeys(buf.bufnr, "exit\<CR>")
-		endif
-	endfor
-enddef
-
-def IsAuxiliaryWindow(winnr: number): number
-	var bufnr = winbufnr(winnr)
-	if bufnr == -1
-		return 1
-	endif
-	if getwinvar(winnr, '&previewwindow')
-		return 1
-	endif
-	if getbufvar(bufnr, '&buftype') ==# 'quickfix'
-		return 1
-	endif
-	if getbufvar(bufnr, '&buftype') ==# 'help'
-		return 1
-	endif
-	if getbufvar(bufnr, '&buftype') ==# 'terminal'
-		return 1
-	endif
-	if getbufvar(bufnr, '&buftype') ==# 'nofile' && getbufvar(bufnr, '&filetype') ==# 'man'
-		return 1
-	endif
-	if getbufvar(bufnr, '&buftype') ==# 'nofile' && bufname(bufnr) ==# '' && !getbufvar(bufnr, '&modified')
-		return 1
-	endif
-	return 0
-enddef
-
 def FocusToValidWindow()
-	if !IsAuxiliaryWindow(winnr())
+	if WindowTypeOf(winnr()) == 0
 		return
 	endif
 	for info in getwininfo()
-		if !IsAuxiliaryWindow(info.winnr)
+		if WindowTypeOf(info.winnr) == 0
 			win_gotoid(info.winid)
 			return
 		endif
@@ -1318,11 +1288,6 @@ def CloseFugitiveDiff(): number
 	return 0
 enddef
 
-def QuitAll()
-	SendExitToAllTerminals()
-	confirm quitall
-enddef
-
 def Quit()
 	if CloseFugitiveDiff()
 		return
@@ -1339,7 +1304,7 @@ def Quit()
 			continue
 		endif
 		has_other_window = 1
-		if !IsAuxiliaryWindow(info.winnr)
+		if WindowTypeOf(info.winnr) == 0
 			total_valid += 1
 			if info.tabnr == cur_tab
 				tab_valid += 1
@@ -1348,7 +1313,7 @@ def Quit()
 	endfor
 
 	if !has_other_window || total_valid == 0
-		QuitAll()
+		confirm quitall
 	elseif tab_valid == 0
 		tabclose
 		FocusToValidWindow()
@@ -1359,47 +1324,57 @@ def Quit()
 enddef
 
 nnoremap <silent>q <ScriptCmd>call Quit()<CR>
-nnoremap <silent><S-q> <ScriptCmd>call QuitAll()<CR>
+nnoremap <silent><S-q> <Cmd>confirm quitall<CR>
 
 nnoremap t q
 vnoremap t q
 # }
 
 # Terminal {
-# F4 toggles a single global terminal: hide when visible in the current tab,
-# otherwise close views in other tabs and reopen it at the bottom here.
-# The shell job survives hides, so history is kept across tabs.
-def TerminalToggle()
-	var termrows = 20
-	if !exists('g:terminal_bufnr') || !bufexists(g:terminal_bufnr) || term_getstatus(g:terminal_bufnr) !~# 'running'
-		execute 'botright terminal ++rows=' .. termrows
-		g:terminal_bufnr = bufnr('%')
-		return
-	endif
-	var wids = win_findbuf(g:terminal_bufnr)
-	for wid in wids
-		if win_id2tabwin(wid)[0] == tabpagenr()
+# F4/F5 toggle one global terminal (bottom / right); either key hides it
+# while visible. The job and history survive hides. F3 opens extra terminals.
+def TerminalToggle(vertical: bool)
+	var buf = get(g:, 'terminal_bufnr', 0)
+	if buf > 0 && bufexists(buf) && term_getstatus(buf) =~# 'running'
+		var wids = win_findbuf(buf)
+		for wid in wids
+			if win_id2tabwin(wid)[0] == tabpagenr()
+				win_execute(wid, 'hide')
+				return
+			endif
+		endfor
+		for wid in wids
 			win_execute(wid, 'hide')
-			return
+		endfor
+		if vertical
+			execute 'botright vertical sbuffer ' .. buf
+		else
+			execute 'botright sbuffer ' .. buf
+			execute 'resize 20'
 		endif
-	endfor
-	for wid in wids
-		win_execute(wid, 'hide')
-	endfor
-	execute 'botright sbuffer ' .. g:terminal_bufnr
-	execute 'resize ' .. termrows
-	feedkeys("i", 't')
+		feedkeys("i", 't')
+	else
+		if vertical
+			execute 'botright vertical terminal'
+		else
+			execute 'botright terminal ++rows=20'
+		endif
+		g:terminal_bufnr = bufnr('%')
+	endif
 enddef
 
 tnoremap <silent><ScrollWheelUp> <C-\><C-n><ScrollWheelUp>
 tnoremap <silent><ScrollWheelDown> <C-\><C-n><ScrollWheelDown>
 nnoremap <F3> :botright terminal ++rows=20<Space>
-nnoremap <silent><F4> <ScriptCmd>call TerminalToggle()<CR>
-tnoremap <silent><F4> <C-\><C-n><ScriptCmd>call TerminalToggle()<CR>
+nnoremap <silent><F4> <ScriptCmd>call TerminalToggle(false)<CR>
+tnoremap <silent><F4> <C-\><C-n><ScriptCmd>call TerminalToggle(false)<CR>
+nnoremap <silent><F5> <ScriptCmd>call TerminalToggle(true)<CR>
+tnoremap <silent><F5> <C-\><C-n><ScriptCmd>call TerminalToggle(true)<CR>
 
 augroup TerminalSettings
 	autocmd!
-	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide scrolloff=0 | endif
+	# term_setkill: on exit, SIGKILL shells silently instead of asking (SIGTERM is ignored by interactive shells); :hide keeps the job
+	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide scrolloff=0 | term_setkill('%', 'kill') | endif
 augroup END
 # }
 
