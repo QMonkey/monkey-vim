@@ -263,7 +263,11 @@ install_linuxbrew() {
 		# Runs even when brew pre-dates this run: without it, brew-installed
 		# tools (node/npm/...) vanish from PATH in new shells. Idempotent —
 		# append_env_block skips if the marker is already present.
-		local line="eval \"\$($brew_prefix/bin/brew shellenv)\""
+		# The case guard makes re-sourcing (e.g. a login .profile sourcing
+		# .bashrc, both carrying this block) a no-op instead of prepending
+		# brew's bin/sbin to PATH twice.
+		local line
+		line="case \":\$PATH:\" in *\":${brew_prefix}/bin:\"*) ;; *) eval \"\$(${brew_prefix}/bin/brew shellenv)\" ;; esac"
 		append_env_block "Homebrew shellenv" "$line"
 	else
 		warn "brew not found — continuing without Homebrew."
