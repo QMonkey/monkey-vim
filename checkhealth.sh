@@ -165,6 +165,29 @@ ensure_go_env() {
 	fi
 }
 
+ensure_npm() {
+	# Debian/Ubuntu: `apt install nodejs` does NOT bring npm (it is only a
+	# Suggests), so npm must be installed explicitly.
+	command -v npm &>/dev/null && return 0
+	echo -e "  ${YELLOW}→ installing npm...${NC}"
+	install_pkg "$(pkg_name npm)"
+}
+
+# Global npm install that works everywhere:
+#   - user-writable prefix (e.g. Homebrew): no sudo — also avoids the sudo
+#     secure_path problem, where root cannot see brew's npm at all;
+#   - system prefix (e.g. /usr from apt): retry with sudo.
+npm_install_g() {
+	ensure_npm || return 1
+	local prefix
+	prefix=$(npm config get prefix 2>/dev/null)
+	if [ -n "$prefix" ] && { [ -w "$prefix" ] || [ -w "$prefix/lib" ]; }; then
+		npm install -g "$@"
+	else
+		sudo_cmd npm install -g "$@"
+	fi
+}
+
 install_optional_bin() {
 	local bin="$1"
 	local ok=true
@@ -193,7 +216,7 @@ install_optional_bin() {
 		fi
 		;;
 	bash-language-server)
-		sudo npm install -g bash-language-server
+		npm_install_g bash-language-server
 		;;
 	shfmt)
 		go install mvdan.cc/sh/v3/cmd/shfmt@latest 2>/dev/null || install_pkg shfmt || ok=false
@@ -211,19 +234,19 @@ install_optional_bin() {
 		install_pkg "$(pkg_name "$bin")" || ok=false
 		;;
 	vim-language-server)
-		sudo npm install -g vim-language-server
+		npm_install_g vim-language-server
 		;;
 	typescript-language-server)
-		sudo npm install -g typescript-language-server typescript
+		npm_install_g typescript-language-server typescript
 		;;
 	tsc)
-		sudo npm install -g typescript
+		npm_install_g typescript
 		;;
 	vscode-json-language-server)
-		sudo npm install -g vscode-langservers-extracted
+		npm_install_g vscode-langservers-extracted
 		;;
 	yaml-language-server)
-		sudo npm install -g yaml-language-server
+		npm_install_g yaml-language-server
 		;;
 	lua-language-server)
 		install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
@@ -238,10 +261,10 @@ install_optional_bin() {
 		go install github.com/mattn/efm-langserver@latest 2>/dev/null || ok=false
 		;;
 	prettier)
-		sudo npm install -g prettier
+		npm_install_g prettier
 		;;
 	markdownlint-cli2)
-		sudo npm install -g markdownlint-cli2
+		npm_install_g markdownlint-cli2
 		;;
 	zig)
 		brew install zig 2>/dev/null || install_pkg "$(pkg_name "$bin")" || ok=false
