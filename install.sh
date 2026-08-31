@@ -119,7 +119,9 @@ refresh_path() {
 		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
 		export PATH="$gopath/bin:$PATH"
 	fi
-	[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+	# Not `[ ... ] && . ...`: when the file is missing the function returns
+	# non-zero and, under set -e, silently aborts the whole script.
+	if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
 }
 
 # ────────────────── Step 1: Install build deps for Vim ──────────────────
@@ -305,7 +307,10 @@ vim_missing_features() {
 build_vim() {
 	if check_vim_version; then
 		local ver
-		ver=$(vim --version | head -1 | grep -oE '[0-9]+\.[0-9]+')
+		# `|| true`: head -1 can close the pipe before vim finishes writing,
+		# making vim die with SIGPIPE (141) and, under pipefail + set -e,
+		# silently abort the whole script after a successful build.
+		ver=$(vim --version | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
 		if vim_features_ok; then
 			ok "Vim ${ver} already installed and meets requirement (>= 9.0, full features). Skipping build."
 			return 0
@@ -393,7 +398,7 @@ build_vim() {
 
 	if check_vim_version; then
 		local ver
-		ver=$(vim --version | head -1 | grep -oE '[0-9]+\.[0-9]+')
+		ver=$(vim --version | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
 		ok "Vim ${ver} built and installed successfully."
 	else
 		fail "Vim build completed but vim is not found in PATH."
