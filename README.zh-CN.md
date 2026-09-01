@@ -1235,12 +1235,12 @@ monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操�
 
 启动时会按以下顺序判定 yank 到系统剪贴板的通路：
 
-| 环境（按此顺序检查）                                                  | 通路                                                                              |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| SSH 且 OSC 52 可用——无 tmux，或 tmux `set-clipboard on`              | [OSC 52](https://vimhelp.org/term.txt.html#xterm-clipboard) 转义序列 → 本地剪贴板 |
-| 有显示服务（Wayland/X11；macOS/WSLg；或 SSH 下检测到 Wayland/X11 显示服务）且非物理控制台 | GUI 剪贴板                                 |
-| 无显示服务且处于 tmux 内——如非 SSH 的 kmscon/tty，或 SSH 且 `set-clipboard` 关闭 | tmux 缓冲区（`tmux load-buffer -w`）        |
-| 较旧的 Vim（无 clipboard provider 功能） | provider 通路全部跳过——有显示服务时仅 GUI 剪贴板；无显示服务时无可用通路，剪贴板不同步 |
+| 环境（按此顺序检查）                                                                      | 通路                                                                                   |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| SSH 且 OSC 52 可用——无 tmux，或 tmux `set-clipboard on`                                   | [OSC 52](https://vimhelp.org/term.txt.html#xterm-clipboard) 转义序列 → 本地剪贴板      |
+| 有显示服务（Wayland/X11；macOS/WSLg；或 SSH 下检测到 Wayland/X11 显示服务）且非物理控制台 | GUI 剪贴板                                                                             |
+| 无显示服务且处于 tmux 内——如非 SSH 的 kmscon/tty，或 SSH 且 `set-clipboard` 关闭          | tmux 缓冲区（`tmux load-buffer -w`）                                                   |
+| 较旧的 Vim（无 clipboard provider 功能）                                                  | provider 通路全部跳过——有显示服务时仅 GUI 剪贴板；无显示服务时无可用通路，剪贴板不同步 |
 
 说明：OSC 52 通路要求终端支持 OSC 52，且 Vim ≥ 9.1.1984（一键安装脚本编译的版本即满足）。tmux 内需要 `set-clipboard on`，否则粘贴查询会阻塞。
 
