@@ -22,7 +22,7 @@ if empty(glob($HOME .. '/.vim/autoload/plug.vim'))
 
 	augroup Init
 		autocmd!
-		autocmd VimEnter * PlugInstall | mkdir($HOME . '/.vim/swap/', 'p') | source $MYVIMRC
+		autocmd VimEnter * PlugInstall | source $MYVIMRC
 		autocmd VimEnter * echohl Title | echo 'monkey-vim is ready! Run :PlugStatus to verify plugins.' | echohl None
 	augroup END
 endif
@@ -56,7 +56,6 @@ Plug 'haya14busa/vim-asterisk'
 Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'airblade/vim-gitgutter'
 # Project
-Plug 'airblade/vim-rooter'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'justinmk/vim-dirvish'
 Plug 'tpope/vim-obsession'
@@ -583,17 +582,45 @@ augroup CheckFileChanges
 augroup END
 # }
 
+# Project root {
+# Find the project root by walking up from `start` for the first
+# directory containing any of the project marker files/dirs
+def FindProjectRoot(start: string, fallback: string): string
+	var dir = resolve(start)
+	while dir !=# '' && dir !=# '/'
+		for marker in ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
+			if !empty(glob(dir .. '/' .. marker, true))
+				return dir
+			endif
+		endfor
+		dir = fnamemodify(dir, ':h')
+	endwhile
+	return fallback
+enddef
+
+def BufferDir(): string
+	return !empty(expand('%:p')) ? fnamemodify(expand('%:p'), ':h') : getcwd()
+enddef
+# }
+
+# Viminfo {
+def GetViminfoFile(): string
+	var root = FindProjectRoot(getcwd(), $HOME)
+	return $HOME .. '/.cache/vim/viminfo/' .. substitute(trim(root, '/', 1), '/', '-', 'g') .. '.viminfo'
+enddef
+
+call mkdir($HOME .. '/.cache/vim/viminfo', 'p')
+# The n flag must come last, so append it with +=
+execute 'set viminfo+=n' .. fnameescape(GetViminfoFile())
+# }
+
 # Session / Restore {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
-def GetFileRoot(fallback: string): string
-	var root = g:FindRootDirectory()
-	return root !=# '' ? root : fallback
-enddef
-
 def GetSessionFileInfo(): list<string>
-	var session_dir = expand($HOME .. '/.cache/sessions/')
-	var session_filename = session_dir .. substitute(trim(GetFileRoot(expand('%:h')), '/', 1), '/', '-', 'g') .. '-session.vim'
+	var root = FindProjectRoot(BufferDir(), BufferDir())
+	var session_dir = expand($HOME .. '/.cache/vim/sessions/')
+	var session_filename = session_dir .. substitute(trim(root, '/', 1), '/', '-', 'g') .. '-session.vim'
 	return [session_dir, session_filename]
 enddef
 
@@ -670,12 +697,6 @@ augroup Session
 	autocmd User Obsession FixVim9SessionFile(g:this_session)
 	autocmd VimEnter * ++nested RestoreSession()
 augroup END
-
-# Clear jumplist on vim startup
-augroup Jumplist
-	autocmd!
-	autocmd VimEnter * :clearjumps
-augroup END
 # }
 
 # vim-gutentags {
@@ -706,7 +727,7 @@ else
 	g:gutentags_modules = ['ctags']
 endif
 g:gutentags_project_root = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
-g:gutentags_cache_dir = expand($HOME .. '/.cache/tags')
+g:gutentags_cache_dir = expand($HOME .. '/.cache/vim/tags')
 g:gutentags_ctags_tagfile = '.tags'
 g:gutentags_ctags_auto_set_tags = 1
 g:gutentags_ctags_extra_args = [
@@ -951,7 +972,8 @@ set completeopt=menu,menuone
 # }
 
 # Swap {
-set directory=$HOME/.vim/swap//
+call mkdir($HOME .. '/.cache/vim/swap', 'p')
+set directory=$HOME/.cache/vim/swap//
 set jumpoptions+=stack
 # }
 
@@ -970,10 +992,10 @@ def TmuxPaste(reg: string): list<any>
 enddef
 
 # tmux clipboard provider, used as +/* register fallback when the
-# GUI clipboard is unavailable (e.g. kmscon/TTY inside tmux).
-# Registered whenever tmux is present; only activated by
-# `set clipmethod=tmux` in the branch below.
-if !empty($TMUX)
+# GUI clipboard is unavailable (e.g. kmscon/TTY inside tmux). Needs the
+# clipboard provider feature (9.1.1857): on older Vims skip it and let
+# the branches below use their fallbacks.
+if has('clipboard_provider') && !empty($TMUX)
 	v:clipproviders["tmux"] = {
 		available: TmuxAvailable,
 		copy: { '+': TmuxCopy, '*': TmuxCopy },
@@ -987,24 +1009,31 @@ endif
 var is_physical_console = &term =~# '^linux' || root_terminal ==# 'kmscon' || root_terminal ==# 'tty' || root_terminal ==# 'physical_console'
 var is_ssh = !empty($SSH_CONNECTION) || !empty($SSH_CLIENT) || !empty($SSH_TTY) || root_terminal ==# 'remote_ssh'
 
-if is_ssh && exists('*echoraw')
-	# osc52 provider (Vim 9.1+): yanks to the local clipboard via OSC 52.
-	# tmux masks the DA1 detection, so force_avail; but only when the
-	# remote tmux has set-clipboard on (it answers the OSC52 paste query,
-	# so `p` won't block), otherwise fall back to wayland/x11/tmux.
+# Register the osc52 pack (no-op on trees < 9.1.1984; packadd is what
+# registers the provider, so it must run before the has_key() check).
+# Also probe the remote tmux, if any: whether it answers the OSC52 paste
+# query (set-clipboard on) decides if osc52 is safe to use.
+var has_osc52 = false
+var sc = ''
+if is_ssh && has('clipboard_provider')
 	packadd osc52
-	set clipboard=unnamed,unnamedplus
+	has_osc52 = has_key(v:clipproviders, 'osc52')
 	if !empty($TMUX)
-		var sc = trim(system('tmux show-options -s set-clipboard 2>/dev/null'))
-		if sc =~# 'on'
-			g:osc52_force_avail = 1
-			set clipmethod^=osc52
-		else
-			set clipmethod+=tmux
-		endif
-	else
-		set clipmethod^=osc52
+		sc = trim(system('tmux show-options -s set-clipboard 2>/dev/null'))
 	endif
+endif
+
+# An unregistered provider name would make the WHOLE 'clipmethod' parse
+# fail (disabling wayland/x11 too), so only use osc52 when registered
+# and, inside tmux, only when set-clipboard is on; otherwise fall
+# through to the branches below.
+if is_ssh && has_osc52 && (empty($TMUX) || sc =~# 'on')
+	if !empty($TMUX)
+		# tmux masks the DA1 detection, so force_avail.
+		g:osc52_force_avail = 1
+	endif
+	set clipboard=unnamed,unnamedplus
+	set clipmethod^=osc52
 elseif !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || has('mac'))
 	if has('unnamedplus')
 		# When possible use + register for copy-paste
@@ -1015,7 +1044,9 @@ elseif !is_physical_console && (!empty($DISPLAY) || !empty($WAYLAND_DISPLAY) || 
 	endif
 elseif !empty($TMUX)
 	set clipboard=unnamed,unnamedplus
-	set clipmethod=tmux
+	if has('clipboard_provider') && has_key(v:clipproviders, 'tmux')
+		set clipmethod=tmux
+	endif
 endif
 # }
 
@@ -1378,19 +1409,18 @@ augroup TerminalSettings
 augroup END
 # }
 
-# vim-rooter {
-g:rooter_patterns = ['.root', '.git', '.hg', '.svn', '.bzr', '_darcs', '_FOSSIL_', '.fslckout']
-g:rooter_silent_chdir = 1
-g:rooter_change_directory_for_non_project_files = 'current'
-g:rooter_resolve_links = 1
-g:rooter_manual_only = 1
+# Project root {
+# Change the working directory to the project root of the current file
+def GotoProjectRoot()
+	execute 'cd' fnameescape(FindProjectRoot(BufferDir(), BufferDir()))
+enddef
 
-nnoremap <silent><Leader>cr <Cmd>Rooter<CR>
+nnoremap <silent><Leader>cr <ScriptCmd>GotoProjectRoot()<CR>
 
 augroup ChangeRoot
 	autocmd!
 	# Change the working directory on vim startup
-	autocmd VimEnter * :Rooter
+	autocmd VimEnter * GotoProjectRoot()
 augroup END
 # }
 
@@ -1508,7 +1538,7 @@ augroup END
 
 # vim-dirvish {
 nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
-nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. GetFileRoot(expand('~')))<CR>
+nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. FindProjectRoot(BufferDir(), expand('~')))<CR>
 
 augroup SplitExplorer
 	autocmd!
