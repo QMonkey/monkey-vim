@@ -601,6 +601,19 @@ enddef
 def BufferDir(): string
 	return !empty(expand('%:p')) ? fnamemodify(expand('%:p'), ':h') : getcwd()
 enddef
+
+# Change the working directory to the project root of the current file
+def GotoProjectRoot()
+	execute 'cd' fnameescape(FindProjectRoot(BufferDir(), BufferDir()))
+enddef
+
+nnoremap <silent><Leader>cr <ScriptCmd>GotoProjectRoot()<CR>
+
+augroup ChangeRoot
+	autocmd!
+	# Change the working directory on vim startup
+	autocmd VimEnter * GotoProjectRoot()
+augroup END
 # }
 
 # Viminfo {
@@ -974,7 +987,6 @@ set completeopt=menu,menuone
 # Swap {
 call mkdir($HOME .. '/.cache/vim/swap', 'p')
 set directory=$HOME/.cache/vim/swap//
-set jumpoptions+=stack
 # }
 
 # Clipboard {
@@ -1092,8 +1104,7 @@ set hidden
 set autoread
 set belloff=all
 set mouse=nvi
-set showtabline=1
-set laststatus=2
+set jumpoptions+=stack
 # }
 
 # Key map {
@@ -1406,21 +1417,6 @@ augroup TerminalSettings
 	autocmd!
 	# term_setkill: on exit, SIGKILL shells silently instead of asking (SIGTERM is ignored by interactive shells); :hide keeps the job
 	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide scrolloff=0 | term_setkill('%', 'kill') | endif
-augroup END
-# }
-
-# Project root {
-# Change the working directory to the project root of the current file
-def GotoProjectRoot()
-	execute 'cd' fnameescape(FindProjectRoot(BufferDir(), BufferDir()))
-enddef
-
-nnoremap <silent><Leader>cr <ScriptCmd>GotoProjectRoot()<CR>
-
-augroup ChangeRoot
-	autocmd!
-	# Change the working directory on vim startup
-	autocmd VimEnter * GotoProjectRoot()
 augroup END
 # }
 
