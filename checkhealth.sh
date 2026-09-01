@@ -70,7 +70,7 @@ check_cmd() {
 
 check_vim_version() {
 	local ver
-	ver=$(vim --version 2>/dev/null | head -1 | grep -oP '\d+\.\d+' || true)
+	ver=$(vim --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
 	if [[ -z "$ver" ]]; then
 		echo -e "  ${FAIL} vim (not found)"
 		ALL_PASSED=false
@@ -79,11 +79,11 @@ check_vim_version() {
 	local major minor
 	major=${ver%%.*}
 	minor=${ver#*.}
-	if ((major > 9 || (major == 9 && minor >= 0))); then
+	if ((major > 9 || (major == 9 && minor >= 1))); then
 		echo -e "  ${PASS} vim ${ver}"
 		return 0
 	else
-		echo -e "  ${FAIL} vim ${ver} (need >= 9.0)"
+		echo -e "  ${FAIL} vim ${ver} (need >= 9.1)"
 		ALL_PASSED=false
 		return 1
 	fi
@@ -316,147 +316,102 @@ get_install_hint() {
 }
 
 # ────────────────── dependency definitions ──────────────────
+# NOTE: no `declare -A` anywhere — macOS still ships bash 3.2, which does
+# not support associative arrays. Bin→name and bin→package lookups are
+# done with case functions instead, and all collections are plain indexed
+# arrays (supported since bash 2.0).
 
-declare -A REQUIRED=()
-REQUIRED["curl"]="curl"
-REQUIRED["git"]="git"
-REQUIRED["rg"]="ripgrep"
-REQUIRED["ctags"]="universal-ctags"
-REQUIRED["fzf"]="fzf"
+REQUIRED_BINS=(curl git rg ctags fzf)
+RECOMMENDED_BINS=(bat global pygmentize)
 
-declare -A RECOMMENDED=()
-RECOMMENDED["bat"]="bat"
-RECOMMENDED["global"]="global (GNU Global, for gtags)"
-RECOMMENDED["pygmentize"]="pygments (gtags parser for non-C/C++ languages)"
+# Human-readable name for a dependency binary.
+dep_name() {
+	case "$1" in
+	rg) echo "ripgrep" ;;
+	ctags) echo "universal-ctags" ;;
+	global) echo "global (GNU Global, for gtags)" ;;
+	pygmentize) echo "pygments (gtags parser for non-C/C++ languages)" ;;
+	*) echo "$1" ;;
+	esac
+}
 
-# packages for each OS (maps binary -> package name)
-declare -A APT_NAMES=(
-	["rg"]="ripgrep"
-	["ctags"]="universal-ctags"
-	["fzf"]="fzf"
-	["bat"]="bat"
-	["global"]="global"
-	["pygmentize"]="python3-pygments"
-	["clangd"]="clangd"
-	["clang-tidy"]="clang-tidy"
-	["gcc"]="gcc"
-	["g++"]="g++"
-	["go"]="golang-go"
-	["python3"]="python3"
-	["node"]="nodejs"
-	["pylsp"]="python3-pylsp"
-	["black"]="black"
-)
-declare -A PACMAN_NAMES=(
-	["rg"]="ripgrep"
-	["ctags"]="ctags"
-	["fzf"]="fzf"
-	["bat"]="bat"
-	["global"]="global"
-	["pygmentize"]="python-pygments"
-	["clangd"]="clang"
-	["clang-tidy"]="clang"
-	["gcc"]="gcc"
-	["g++"]="gcc"
-	["go"]="go"
-	["python3"]="python"
-	["node"]="nodejs"
-	["lua-language-server"]="lua-language-server"
-	["marksman"]="marksman"
-	["glow"]="glow"
-	["pylsp"]="python-lsp-server"
-	["black"]="python-black"
-)
-declare -A BREW_NAMES=(
-	["ctags"]="universal-ctags"
-	["fzf"]="fzf"
-	["bat"]="bat"
-	["global"]="global"
-	["clangd"]="llvm"
-	["clang-tidy"]="llvm"
-	["gcc"]="gcc"
-	["g++"]="gcc"
-	["go"]="go"
-	["python3"]="python"
-	["node"]="node"
-	["lua-language-server"]="lua-language-server"
-	["marksman"]="marksman"
-	["glow"]="glow"
-	["pygmentize"]="pygments"
-	["zig"]="zig"
-	["zls"]="zls"
-	["pylsp"]="python-lsp-server"
-	["black"]="black"
-)
-declare -A ZYPPER_NAMES=(
-	["rg"]="ripgrep"
-	["ctags"]="universal-ctags"
-	["fzf"]="fzf"
-	["bat"]="bat"
-	["global"]="global"
-	["pygmentize"]="python3-Pygments"
-	["clangd"]="clang"
-	["clang-tidy"]="clang"
-	["gcc"]="gcc"
-	["g++"]="gcc-c++"
-	["go"]="go"
-	["python3"]="python3"
-	["node"]="nodejs"
-	["lua-language-server"]="lua-language-server"
-	["marksman"]="marksman"
-	["glow"]="glow"
-	["pylsp"]="python-python-lsp-server"
-	["black"]="python3-black"
-)
-declare -A YUM_NAMES=(
-	["rg"]="ripgrep"
-	["ctags"]="universal-ctags"
-	["fzf"]="fzf"
-	["bat"]="bat"
-	["global"]="global"
-	["pygmentize"]="python3-pygments"
-	["clangd"]="clang-tools-extra"
-	["clang-tidy"]="clang-tools-extra"
-	["gcc"]="gcc"
-	["g++"]="gcc-c++"
-	["go"]="golang"
-	["python3"]="python3"
-	["node"]="nodejs"
-	["lua-language-server"]="lua-language-server"
-	["marksman"]="marksman"
-	["glow"]="glow"
-	["pylsp"]="python3-lsp-server"
-	["black"]="python3-black"
-)
-
+# Package name for a binary on the detected OS. Only entries that differ
+# from the binary name need a case arm; everything else falls through.
 pkg_name() {
 	local bin="$1"
-	case "$OS" in
-	debian) echo "${APT_NAMES[$bin]:-$bin}" ;;
-	opensuse) echo "${ZYPPER_NAMES[$bin]:-$bin}" ;;
-	centos) echo "${YUM_NAMES[$bin]:-$bin}" ;;
-	arch) echo "${PACMAN_NAMES[$bin]:-$bin}" ;;
-	macos) echo "${BREW_NAMES[$bin]:-$bin}" ;;
-	*) echo "$bin" ;;
+	case "$OS:$bin" in
+	# Debian / apt
+	debian:rg) echo "ripgrep" ;;
+	debian:ctags) echo "universal-ctags" ;;
+	debian:pygmentize) echo "python3-pygments" ;;
+	debian:go) echo "golang-go" ;;
+	debian:node) echo "nodejs" ;;
+	debian:pylsp) echo "python3-pylsp" ;;
+	# Arch / pacman
+	arch:rg) echo "ripgrep" ;;
+	arch:clangd | arch:clang-tidy) echo "clang" ;;
+	arch:g++) echo "gcc" ;;
+	arch:python3) echo "python" ;;
+	arch:node) echo "nodejs" ;;
+	arch:pylsp) echo "python-lsp-server" ;;
+	arch:pygmentize) echo "python-pygments" ;;
+	arch:black) echo "python-black" ;;
+	# macOS / brew
+	macos:ctags) echo "universal-ctags" ;;
+	macos:clangd | macos:clang-tidy) echo "llvm" ;;
+	macos:g++) echo "gcc" ;;
+	macos:python3) echo "python" ;;
+	macos:pylsp) echo "python-lsp-server" ;;
+	macos:pygmentize) echo "pygments" ;;
+	# openSUSE / zypper
+	opensuse:rg) echo "ripgrep" ;;
+	opensuse:ctags) echo "universal-ctags" ;;
+	opensuse:pygmentize) echo "python3-Pygments" ;;
+	opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
+	opensuse:g++) echo "gcc-c++" ;;
+	opensuse:node) echo "nodejs" ;;
+	opensuse:pylsp) echo "python-python-lsp-server" ;;
+	opensuse:black) echo "python3-black" ;;
+	# CentOS-family / dnf
+	centos:rg) echo "ripgrep" ;;
+	centos:ctags) echo "universal-ctags" ;;
+	centos:pygmentize) echo "python3-pygments" ;;
+	centos:clangd | centos:clang-tidy) echo "clang-tools-extra" ;;
+	centos:g++) echo "gcc-c++" ;;
+	centos:go) echo "golang" ;;
+	centos:node) echo "nodejs" ;;
+	centos:pylsp) echo "python3-lsp-server" ;;
+	centos:black) echo "python3-black" ;;
+	*)
+		echo "$bin"
+		;;
 	esac
 }
 
 # ──────────── language-grouped optional deps ────────────
 
-declare -A DEPS_BY_GROUP
-DEPS_BY_GROUP["C/C++"]="gcc g++ clangd clang-tidy"
-DEPS_BY_GROUP["Go"]="go gopls staticcheck"
-DEPS_BY_GROUP["Python"]="python3 pylsp black"
-DEPS_BY_GROUP["Zig"]="zig zls"
-DEPS_BY_GROUP["Rust"]="cargo rust-analyzer"
-DEPS_BY_GROUP["Lua"]="lua-language-server"
-DEPS_BY_GROUP["Shell"]="node bash-language-server shfmt"
-DEPS_BY_GROUP["Vim"]="node vim-language-server"
-DEPS_BY_GROUP["JavaScript/TypeScript"]="node typescript-language-server tsc"
-DEPS_BY_GROUP["JSON"]="node vscode-json-language-server"
-DEPS_BY_GROUP["YAML"]="node yaml-language-server"
-DEPS_BY_GROUP["Markdown"]="marksman efm-langserver prettier markdownlint-cli2"
-DEPS_BY_GROUP["Optional tools"]="glow"
+# Note: NOT named GROUPS — that is a special (effectively readonly) bash
+# array holding the current user's group IDs.
+DEP_GROUPS=("C/C++" "Go" "Python" "Zig" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools")
+
+# Space-separated binaries for each language group.
+deps_for_group() {
+	case "$1" in
+	"C/C++") echo "gcc g++ clangd clang-tidy" ;;
+	"Go") echo "go gopls staticcheck" ;;
+	"Python") echo "python3 pylsp black" ;;
+	"Zig") echo "zig zls" ;;
+	"Rust") echo "cargo rust-analyzer" ;;
+	"Lua") echo "lua-language-server" ;;
+	"Shell") echo "node bash-language-server shfmt" ;;
+	"Vim") echo "node vim-language-server" ;;
+	"JavaScript/TypeScript") echo "node typescript-language-server tsc" ;;
+	"JSON") echo "node vscode-json-language-server" ;;
+	"YAML") echo "node yaml-language-server" ;;
+	"Markdown") echo "marksman efm-langserver prettier markdownlint-cli2" ;;
+	"Optional tools") echo "glow" ;;
+	esac
+}
 
 # ──────────────────── main ────────────────────
 
@@ -483,8 +438,8 @@ echo ""
 # ──── required tools ────
 echo -e "${BOLD}Required tools${NC}"
 MISSING_REQUIRED=()
-for bin in curl git rg ctags fzf; do
-	if check_bin "$bin" "${REQUIRED[$bin]}"; then
+for bin in "${REQUIRED_BINS[@]}"; do
+	if check_bin "$bin" "$(dep_name "$bin")"; then
 		:
 	else
 		MISSING_REQUIRED+=("$bin")
@@ -498,12 +453,12 @@ if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 	for b in "${MISSING_REQUIRED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
 	if install_pkg "${pkgs[@]}"; then
 		MISSING_REQUIRED=()
-		for bin in curl git rg ctags fzf; do
+		for bin in "${REQUIRED_BINS[@]}"; do
 			if command -v "$bin" &>/dev/null; then
-				echo -e "  ${PASS} ${REQUIRED[$bin]} installed"
+				echo -e "  ${PASS} $(dep_name "$bin") installed"
 			else
 				MISSING_REQUIRED+=("$bin")
-				echo -e "  ${FAIL} ${REQUIRED[$bin]} still missing"
+				echo -e "  ${FAIL} $(dep_name "$bin") still missing"
 			fi
 		done
 		if [[ ${#MISSING_REQUIRED[@]} -eq 0 ]]; then
@@ -525,14 +480,14 @@ fi
 echo -e "${BOLD}Recommended tools${NC}"
 echo "  (Missing won't block monkey-vim, but will degrade preview / gtags experience)"
 MISSING_RECOMMENDED=()
-for bin in bat global pygmentize; do
-	if check_bin "$bin" "${RECOMMENDED[$bin]}"; then
+for bin in "${RECOMMENDED_BINS[@]}"; do
+	if check_bin "$bin" "$(dep_name "$bin")"; then
 		:
 	else
 		if [[ "$bin" == "bat" ]] && command -v batcat &>/dev/null; then
 			echo -e "    ${PASS} batcat (Debian alias for bat)"
 		else
-			echo -e "    ${FAIL} ${RECOMMENDED[$bin]}"
+			echo -e "    ${FAIL} $(dep_name "$bin")"
 			MISSING_RECOMMENDED+=("$bin")
 		fi
 	fi
@@ -553,8 +508,8 @@ fi
 
 if $INSTALL_MODE; then
 	MISSING_OPTIONAL=()
-	for group in "C/C++" "Go" "Python" "Zig" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
-		for bin in ${DEPS_BY_GROUP[$group]}; do
+	for group in "${DEP_GROUPS[@]}"; do
+		for bin in $(deps_for_group "$group"); do
 			if ! command -v "$bin" &>/dev/null; then
 				MISSING_OPTIONAL+=("$bin")
 			fi
@@ -584,48 +539,47 @@ echo -e "${BOLD}Optional: LSP servers & language tools${NC}"
 echo "  (Install only what you need; missing servers won't block monkey-vim)"
 echo ""
 
-if ! $INSTALL_MODE; then
-	declare -A INSTALL_HINTS
-	INSTALL_HINTS["clangd"]="$(get_install_hint clangd)  # or clangd-15+"
+# Install hint for an optional binary (used outside --install mode).
+hint_for() {
+	case "$1" in
+	clangd) echo "$(get_install_hint clangd)  # or clangd-15+" ;;
+	gcc | g++ | python3) echo "$(get_install_hint "$1")" ;;
+	go) echo "https://go.dev/dl/" ;;
+	gopls) echo "go install golang.org/x/tools/gopls@latest" ;;
+	pylsp) echo "$(get_install_hint "$(pkg_name pylsp)")  # or: pip install python-lsp-server" ;;
+	cargo) echo "https://rustup.rs/  # then: rustup component add rust-analyzer" ;;
+	rust-analyzer) echo "rustup component add rust-analyzer" ;;
+	node) echo "https://nodejs.org/  # or: $(get_install_hint nodejs npm)" ;;
+	bash-language-server) echo "npm install -g bash-language-server" ;;
+	shfmt) echo "go install mvdan.cc/sh/v3/cmd/shfmt@latest" ;;
+	staticcheck) echo "go install honnef.co/go/tools/cmd/staticcheck@latest" ;;
+	black) echo "$(get_install_hint "$(pkg_name black)")  # or: pip3 install black" ;;
+	clang-tidy) echo "$(get_install_hint clang-tidy)" ;;
+	vim-language-server) echo "npm install -g vim-language-server" ;;
+	typescript-language-server) echo "npm install -g typescript-language-server typescript" ;;
+	tsc) echo "npm install -g typescript" ;;
+	vscode-json-language-server) echo "npm install -g vscode-langservers-extracted" ;;
+	yaml-language-server) echo "npm install -g yaml-language-server" ;;
+	lua-language-server) echo "$(get_install_hint lua-language-server)" ;;
+	efm-langserver) echo "go install github.com/mattn/efm-langserver@latest" ;;
+	prettier) echo "npm install -g prettier" ;;
+	markdownlint-cli2) echo "npm install -g markdownlint-cli2" ;;
+	marksman) echo "$(get_install_hint marksman)" ;;
+	zig) echo "brew install zig  # or: https://ziglang.org/download/" ;;
+	zls) echo "brew install zls  # or: https://zigtools.org/zls/install/  (must match zig version)" ;;
+	glow) echo "$(get_install_hint glow)  # or: go install github.com/charmbracelet/glow@latest" ;;
+	esac
+}
 
-	INSTALL_HINTS["gcc"]="$(get_install_hint gcc)"
-	INSTALL_HINTS["g++"]="$(get_install_hint g++)"
-	INSTALL_HINTS["go"]="https://go.dev/dl/"
-	INSTALL_HINTS["gopls"]="go install golang.org/x/tools/gopls@latest"
-	INSTALL_HINTS["python3"]="$(get_install_hint python3)"
-	INSTALL_HINTS["pylsp"]="$(get_install_hint "$(pkg_name pylsp)")  # or: pip install python-lsp-server"
-	INSTALL_HINTS["cargo"]="https://rustup.rs/  # then: rustup component add rust-analyzer"
-	INSTALL_HINTS["rust-analyzer"]="rustup component add rust-analyzer"
-	INSTALL_HINTS["node"]="https://nodejs.org/  # or: $(get_install_hint nodejs npm)"
-	INSTALL_HINTS["bash-language-server"]="npm install -g bash-language-server"
-	INSTALL_HINTS["shfmt"]="go install mvdan.cc/sh/v3/cmd/shfmt@latest"
-	INSTALL_HINTS["staticcheck"]="go install honnef.co/go/tools/cmd/staticcheck@latest"
-	INSTALL_HINTS["black"]="$(get_install_hint "$(pkg_name black)")  # or: pip3 install black"
-	INSTALL_HINTS["clang-tidy"]="$(get_install_hint clang-tidy)"
-	INSTALL_HINTS["vim-language-server"]="npm install -g vim-language-server"
-	INSTALL_HINTS["typescript-language-server"]="npm install -g typescript-language-server typescript"
-	INSTALL_HINTS["tsc"]="npm install -g typescript"
-	INSTALL_HINTS["vscode-json-language-server"]="npm install -g vscode-langservers-extracted"
-	INSTALL_HINTS["yaml-language-server"]="npm install -g yaml-language-server"
-	INSTALL_HINTS["lua-language-server"]="$(get_install_hint lua-language-server)"
-	INSTALL_HINTS["efm-langserver"]="go install github.com/mattn/efm-langserver@latest"
-	INSTALL_HINTS["prettier"]="npm install -g prettier"
-	INSTALL_HINTS["markdownlint-cli2"]="npm install -g markdownlint-cli2"
-	INSTALL_HINTS["marksman"]="$(get_install_hint marksman)"
-	INSTALL_HINTS["zig"]="brew install zig  # or: https://ziglang.org/download/"
-	INSTALL_HINTS["zls"]="brew install zls  # or: https://zigtools.org/zls/install/  (must match zig version)"
-	INSTALL_HINTS["glow"]="$(get_install_hint glow)  # or: go install github.com/charmbracelet/glow@latest"
-fi
-
-for group in "C/C++" "Go" "Python" "Zig" "Rust" "Lua" "Shell" "Vim" "JavaScript/TypeScript" "JSON" "YAML" "Markdown" "Optional tools"; do
+for group in "${DEP_GROUPS[@]}"; do
 	echo -e "  ${BOLD}${group}${NC}"
-	for bin in ${DEPS_BY_GROUP[$group]}; do
+	for bin in $(deps_for_group "$group"); do
 		status=0
 		check_bin "$bin" &>/dev/null || status=$?
 		if [[ $status -eq 0 ]]; then
 			echo -e "    ${PASS} ${bin}"
 		else
-			echo -e "    ${FAIL} ${bin}  ${NC}${INSTALL_HINTS[$bin]}"
+			echo -e "    ${FAIL} ${bin}  ${NC}$(hint_for "$bin")"
 		fi
 	done
 	echo ""
