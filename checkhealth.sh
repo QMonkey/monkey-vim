@@ -621,7 +621,7 @@ else
 	ALL_PASSED=false
 fi
 
-SWAP_DIR="${HOME}/.vim/swap"
+SWAP_DIR="${HOME}/.cache/vim/swap"
 if [ -d "$SWAP_DIR" ]; then
 	echo -e "  ${PASS} swap/ dir exists"
 else
@@ -634,11 +634,18 @@ elif [ -d "configs/efm-langserver" ]; then
 	echo -e "  ${WARN} efm-langserver config not linked (run: ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
 fi
 
-CACHE_DIR="${HOME}/.cache/sessions"
+CACHE_DIR="${HOME}/.cache/vim/sessions"
 if [ -d "$CACHE_DIR" ]; then
 	echo -e "  ${PASS} session cache dir exists"
 else
 	echo -e "  ${WARN} session cache dir not found (auto-created on first session save)"
+fi
+
+VIMINFO_DIR="${HOME}/.cache/vim/viminfo"
+if [ -d "$VIMINFO_DIR" ]; then
+	echo -e "  ${PASS} viminfo dir exists"
+else
+	echo -e "  ${WARN} viminfo dir not found (auto-created on first vim launch)"
 fi
 
 echo ""
