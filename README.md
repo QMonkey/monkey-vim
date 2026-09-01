@@ -24,7 +24,7 @@ Top-level workspace management (multiple sessions and terminals) and AI integrat
 
 ## Requirements
 
-- vim 9.0+
+- vim 9.0+ (9.1.1984+ for the OSC 52 clipboard over SSH; the one-click installer builds a current Vim)
 - A terminal environment (no GUI / gvim support)
 
 ## Installation
@@ -42,17 +42,20 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 What the script does, step by step:
 
 1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
-2. Install Homebrew (Linuxbrew) as the fallback package manager
-3. Clone and compile Vim from source, then `make install`
-4. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
-5. Install required tools + optional LSP servers via `checkhealth.sh --install` (apt/zypper/dnf/pacman/brew, npm, pip, go install, rustup)
-6. Persist `~/go/bin`, `~/.cargo/bin` (and `/usr/local/bin`) in your shell rc files
-7. Symlink `.vimrc`, `.clang-format`, and the efm-langserver config; create runtime directories
-8. Install all Vim plugins (`:PlugInstall`) automatically
+2. Pre-authorize `sudo` once and keep the credentials alive in a background loop, so long downloads/compiles never trigger a mid-run password re-prompt (unattended runs won't stall)
+3. Install Homebrew (Linuxbrew) as the fallback package manager — its shellenv is persisted to your shell rc files (with PATH dedup guards) even when Homebrew already existed
+4. Clone and compile Vim from source, then `make install`
+5. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
+6. Install required tools + optional LSP servers via `checkhealth.sh --install` (apt/zypper/dnf/pacman/brew, npm, pip, go install, rustup). npm is installed explicitly when missing (Debian/Ubuntu `nodejs` alone doesn't provide it); global npm packages skip `sudo` whenever the npm prefix is user-writable; fzf prefers Homebrew so you get a current version instead of the distro's
+7. Persist `~/go/bin`, `~/.cargo/bin` (and `/usr/local/bin`) in your shell rc files
+8. Symlink `.vimrc`, `.clang-format`, and the efm-langserver config; create runtime directories
+9. Install all Vim plugins (`:PlugInstall`) automatically
 
 > The script keeps the Vim source tree at `~/Documents/vim` (no cleanup), so you can rebuild later with `git pull` + `make`.
 >
-> The script only rebuilds Vim when the installed one is below 9.0 **or** its `vim --version` features are incomplete — version alone isn't enough. The required features mirror the builds below: `+clipboard` plus, per platform, `+xterm_clipboard` (WSL), `+wayland_clipboard` or `+xterm_clipboard` (Linux desktop), or `+clipboard_provider` (OSC 52, GUI-less builds); the core set is `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`.
+> The script only rebuilds Vim when the installed one is below 9.0 **or** its `vim --version` features are incomplete — version alone isn't enough. The required features mirror the builds below: `+clipboard` and `+clipboard_provider` (clipboard providers power the osc52/tmux fallbacks; the feature landed in 9.1.1857, so distro builds of 9.1.0–9.1.1846 are rebuilt) plus, per platform, `+xterm_clipboard` (WSL), `+wayland_clipboard` or `+xterm_clipboard` (Linux desktop); the core set is `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`.
+>
+> PATH changes only apply to shells started after the install. When it finishes, the script prints how to apply them to the current terminal (`source <rc file>` or `exec $SHELL`).
 
 ### Option 2: Manual installation
 
@@ -481,7 +484,6 @@ It should resolve to `getty@.service`.
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | Faster folding for large files                     |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | Improved `*` / `#` search                          |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | Visual marks                                       |
-| [airblade/vim-rooter](https://github.com/airblade/vim-rooter)                         | Auto-change working directory                      |
 | [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git commit browser                                 |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list helpers                     |
 
@@ -738,7 +740,9 @@ Leader+ws       Save session
 Leader+rs       Remove session (asks for confirmation; no-op when no session exists)
 ```
 
-Sessions are saved to `~/.cache/sessions/`. On Vim startup, a session is automatically restored from this directory.
+Sessions are saved to `~/.cache/vim/sessions/`. On Vim startup, a session is automatically restored from this directory.
+
+Viminfo is per-project: command/search history, registers, the jumplist and file marks are stored in `~/.cache/vim/viminfo/<project-root-flattened>.viminfo` (project root detected by walking up from the startup directory for `.git`/`.root`/`.hg`/... markers, falling back to `~`), so histories do not leak between projects.
 
 ```text
 '.              Jump to last changes
@@ -768,7 +772,7 @@ In quickfix/location windows (ack-style mappings):
 
 Quickfix windows auto-resize to fit content (max 10 lines), auto-close when empty, and are placed at the bottom.
 
-Note: `gdefault` is set, so `:s` performs global substitution (all matches per line) by default. The jumplist is cleared on each Vim startup (`clearjumps`) to avoid cross-project contamination. `jumpoptions+=stack` makes the jumplist behave like the tagstack.
+Note: `gdefault` is set, so `:s` performs global substitution (all matches per line) by default. The jumplist is persisted per project via the per-project viminfo. `jumpoptions+=stack` makes the jumplist behave like the tagstack.
 
 #### 1.18 Auto-insert file headers
 
@@ -1069,7 +1073,7 @@ Leader+hQ       Load hunks into quickfix (all files)
 
 If GNU Global (`gtags`/`global`) and Pygments (`pygmentize`) are installed,
 gutentags also generates the `GTAGS`/`GRTAGS`/`GPATH` databases in
-`~/.cache/tags/<project>/`. GNU Global provides native parsers for C/C++/Java,
+`~/.cache/vim/tags/<project>/`. GNU Global provides native parsers for C/C++/Java,
 and falls back to Pygments for all other languages (Python, Go, Rust,
 JavaScript, etc.). The gtags database is queried with the `:cs` commands, or
 directly with the `global` CLI.
@@ -1179,7 +1183,7 @@ directly with the `global` CLI.
 ### 6. vim-obsession (Session management)
 
 ```vim
-" Start/update session in ~/.cache/sessions/
+" Start/update session in ~/.cache/vim/sessions/
 :Obsession {file}
 
 " Toggle pause/resume session tracking
@@ -1228,6 +1232,17 @@ The global default is 4-width hard tabs. To customize, override the `FileType` a
 - Vim clipboard integration
 
 monkey-vim sets `clipboard=unnamed,unnamedplus` so vim's yank/delete automatically syncs to the system clipboard. Copied text persists in the system clipboard after vim exits (the system clipboard is owned by the display server / Wayland compositor / terminal, not by vim).
+
+Depending on the environment, yanks reach the system clipboard through different routes (evaluated in this order at startup):
+
+| Environment (checked in this order)                                                                                  | Route                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| SSH and OSC 52 usable — no tmux, or tmux with `set-clipboard on`                                                     | [OSC 52](https://vimhelp.org/term.txt.html#xterm-clipboard) escape sequence → local clipboard                                        |
+| A display server is available (Wayland/X11, macOS/WSLg, or Wayland/X11 detected over SSH) and not a physical console | GUI clipboard                                                                                                                        |
+| No display server and inside tmux — e.g. a non-SSH kmscon/tty, or SSH with `set-clipboard` off                       | tmux buffer (`tmux load-buffer -w`)                                                                                                  |
+| Older Vim without the provider feature                                                                               | Provider routes skipped — GUI clipboard only with a display server; with none, no route is available and the clipboard does not sync |
+
+Notes: the OSC 52 route requires a terminal with OSC 52 support and Vim ≥ 9.1.1984 (the one-click installer builds a current Vim). Inside tmux, `set-clipboard on` is required so paste queries don't block.
 
 If you use a standalone clipboard manager (optional):
 
