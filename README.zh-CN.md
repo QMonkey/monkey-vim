@@ -24,7 +24,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 
 ## 要求
 
-- vim 9.0+
+- vim 9.0+（SSH 下使用 OSC 52 剪贴板需 9.1.1984+；一键安装脚本编译的版本即满足）
 - 终端环境（不支持 GUI / gvim）
 
 ## 安装步骤
@@ -42,17 +42,20 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 脚本按顺序执行：
 
 1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
-2. 安装 Homebrew（Linuxbrew）作为兜底包管理器
-3. 克隆并编译 Vim 源码，然后 `make install`
-4. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
-5. 通过 `checkhealth.sh --install` 安装必需工具与可选 LSP 服务端（apt/zypper/dnf/pacman/brew、npm、pip、go install、rustup）
-6. 在 shell rc 文件中持久化 `~/go/bin`、`~/.cargo/bin`（以及 `/usr/local/bin`）
-7. 软链 `.vimrc`、`.clang-format`、efm-langserver 配置，并创建运行时目录
-8. 自动安装全部 vim 插件（`:PlugInstall`）
+2. 预授权一次 `sudo` 并在后台保活——长时间下载/编译不会中途再次索要密码（无人值守也不会卡住）
+3. 安装 Homebrew（Linuxbrew）作为兜底包管理器——即使 brew 已存在，也会把 shellenv 持久化到 shell rc 文件（带 PATH 去重保护）
+4. 克隆并编译 Vim 源码，然后 `make install`
+5. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
+6. 通过 `checkhealth.sh --install` 安装必需工具与可选 LSP 服务端（apt/zypper/dnf/pacman/brew、npm、pip、go install、rustup）。npm 缺失时会显式安装（Debian/Ubuntu 的 `nodejs` 包不含 npm）；npm prefix 可写时全局包免 `sudo` 安装；fzf 优先用 Homebrew 以获得新版本而非发行版旧包
+7. 在 shell rc 文件中持久化 `~/go/bin`、`~/.cargo/bin`（以及 `/usr/local/bin`）
+8. 软链 `.vimrc`、`.clang-format`、efm-langserver 配置，并创建运行时目录
+9. 自动安装全部 vim 插件（`:PlugInstall`）
 
 > 脚本会保留 Vim 源码树在 `~/Documents/vim`（不做清理），日后可用 `git pull` + `make` 重新编译。
 >
-> 脚本只有当已装 vim 低于 9.0 **或** `vim --version` 功能不完整时才会重新编译——仅看版本不够。必需功能与下面的构建一一对应：`+clipboard` 加上（按平台）`+xterm_clipboard`（WSL）、`+wayland_clipboard` 或 `+xterm_clipboard`（Linux 桌面）、或 `+clipboard_provider`（OSC 52，无 GUI 构建）；核心集为 `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`。
+> 脚本只有当已装 vim 低于 9.0 **或** `vim --version` 功能不完整时才会重新编译——仅看版本不够。必需功能与下面的构建一一对应：`+clipboard` 和 `+clipboard_provider`（剪贴板 provider 是 osc52/tmux 回退的基础，该功能在 9.1.1857 才加入，因此 9.1.0–9.1.1846 的发行版构建会被重编译）加上（按平台）`+xterm_clipboard`（WSL）、`+wayland_clipboard` 或 `+xterm_clipboard`（Linux 桌面）；核心集为 `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`。
+>
+> PATH 修改只对安装之后新启动的 shell 生效。脚本结束时会打印如何在当前终端立即生效（`source <rc 文件>` 或 `exec $SHELL`）。
 
 ### 方式二：手动安装
 
@@ -480,7 +483,6 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | 大文件折叠性能优化                                |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | 增强 `*` / `#` 搜索                               |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | 可视化书签                                        |
-| [airblade/vim-rooter](https://github.com/airblade/vim-rooter)                         | 自动切换工作目录                                  |
 | [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git 提交浏览器                                    |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list 增强                       |
 
@@ -738,7 +740,9 @@ Leader+ws       保存session
 Leader+rs       删除session（需确认；无 session 时不做任何事）
 ```
 
-Session 保存到 `~/.cache/sessions/`。Vim 启动时自动从此目录恢复 session。
+Session 保存到 `~/.cache/vim/sessions/`。Vim 启动时自动从此目录恢复 session。
+
+Viminfo 按工程隔离：命令/搜索历史、寄存器、跳转列表和 file marks 保存到 `~/.cache/vim/viminfo/<工程根目录扁平化>.viminfo`（从启动目录向上查找 `.git`/`.root`/`.hg`/... 标记定位工程根，找不到时回退到 `~`），各工程的历史互不干扰。
 
 ```text
 '.              最后一次变更的地方
@@ -770,7 +774,7 @@ Leader+l            打开/关闭location list
 Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，始终置于底部。
 
 注意：`gdefault` 已设置，`:s` 默认执行全局替换（每行所有匹配）。
-每次启动 Vim 时会清除跳转列表（`clearjumps`），避免跨项目污染。`jumpoptions+=stack` 使跳转列表行为类似标签栈。
+跳转列表通过按工程隔离的 viminfo 持久保存。`jumpoptions+=stack` 使跳转列表行为类似标签栈。
 
 #### 1.18 自动插入文件头
 
@@ -1069,7 +1073,7 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 ```
 
 如果已安装 GNU Global（`gtags`/`global`），gutentags 还会在
-`~/.cache/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
+`~/.cache/vim/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
 gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 
 ### 4. fzf.vim
@@ -1177,7 +1181,7 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 ### 6. vim-obsession（Session 管理）
 
 ```vim
-" 开始/更新 session（保存到 ~/.cache/sessions/）
+" 开始/更新 session（保存到 ~/.cache/vim/sessions/）
 :Obsession {file}
 
 " 暂停/恢复 session 追踪
@@ -1228,6 +1232,17 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 - Vim 剪贴板集成
 
 monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操作会自动同步到系统剪贴板。退出 vim 后，复制的内容仍然保留在系统剪贴板中（系统剪贴板由显示服务器/Wayland 合成器/终端管理，不受 vim 退出影响）。
+
+启动时会按以下顺序判定 yank 到系统剪贴板的通路：
+
+| 环境（按此顺序检查）                                                  | 通路                                                                              |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| SSH 且 OSC 52 可用——无 tmux，或 tmux `set-clipboard on`              | [OSC 52](https://vimhelp.org/term.txt.html#xterm-clipboard) 转义序列 → 本地剪贴板 |
+| 有显示服务（Wayland/X11；macOS/WSLg；或 SSH 下检测到 Wayland/X11 显示服务）且非物理控制台 | GUI 剪贴板                                 |
+| 无显示服务且处于 tmux 内——如非 SSH 的 kmscon/tty，或 SSH 且 `set-clipboard` 关闭 | tmux 缓冲区（`tmux load-buffer -w`）        |
+| 较旧的 Vim（无 clipboard provider 功能） | provider 通路全部跳过——有显示服务时仅 GUI 剪贴板；无显示服务时无可用通路，剪贴板不同步 |
+
+说明：OSC 52 通路要求终端支持 OSC 52，且 Vim ≥ 9.1.1984（一键安装脚本编译的版本即满足）。tmux 内需要 `set-clipboard on`，否则粘贴查询会阻塞。
 
 如需独立的剪贴板管理工具（可选）：
 
