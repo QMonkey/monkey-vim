@@ -285,7 +285,7 @@ check_vim_version() {
 	local major minor
 	major=${ver%%.*}
 	minor=${ver#*.}
-	((major > 9 || (major == 9 && minor >= 0)))
+	((major > 9 || (major == 9 && minor >= 1)))
 }
 
 # Core features every build must have — mirrors our --enable-* flags.
@@ -359,12 +359,12 @@ build_vim() {
 		# silently abort the whole script after a successful build.
 		ver=$(vim --version | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
 		if vim_features_ok; then
-			ok "Vim ${ver} already installed and meets requirement (>= 9.0, full features). Skipping build."
+			ok "Vim ${ver} already installed and meets requirement (>= 9.1, full features). Skipping build."
 			return 0
 		fi
-		warn "Vim ${ver} is >= 9.0 but missing feature(s): $(vim_missing_features)— rebuilding from source."
+		warn "Vim ${ver} is >= 9.1 but missing feature(s): $(vim_missing_features)— rebuilding from source."
 	else
-		warn "Vim 9.0+ not found or vim not in PATH — building from source."
+		warn "Vim 9.1+ not found or vim not in PATH — building from source."
 	fi
 
 	info "Building Vim from source (this may take a few minutes)..."
@@ -591,6 +591,14 @@ main() {
 	echo -e "  Run ${CYAN}vim${NC} to start."
 	echo -e "  Update vim: ${CYAN}cd $VIM_SRC_DIR && git pull && make -j$JOBS && sudo make install${NC}"
 	echo -e "  Update monkey-vim: ${CYAN}cd $INSTALL_DIR && git pull${NC}"
+	echo ""
+	# PATH exports were written to shell rc files, but they only apply to
+	# shells started AFTER this point. A child process can never change the
+	# parent shell's environment, so spell out how to pick it up now.
+	local env_file
+	env_file="$(shell_env_files | head -1)"
+	echo -e "  ${YELLOW}New PATH takes effect in NEW shells. To use it in this terminal now:${NC}"
+	echo -e "    ${CYAN}source ${env_file}${NC}    ${YELLOW}# or simply: ${CYAN}exec \$SHELL${NC}"
 	echo ""
 }
 
