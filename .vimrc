@@ -14,6 +14,8 @@ vim9script
 #     Email: Thinking.QMonkey@GMail.com
 # }
 
+set nocompatible
+
 # Init {
 # Install vim-plug if not present
 if empty(glob($HOME .. '/.vim/autoload/plug.vim'))
@@ -58,7 +60,6 @@ Plug 'airblade/vim-gitgutter'
 # Project
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'justinmk/vim-dirvish'
-Plug 'tpope/vim-obsession'
 # Code Intelligence
 Plug 'yegappan/lsp', {'on': []}
 Plug 'hrsh7th/vim-vsnip', {'on': []} | Plug 'hrsh7th/vim-vsnip-integ', {'on': []} | Plug 'rafamadriz/friendly-snippets', {'on': []}
@@ -75,7 +76,7 @@ silent! packadd! comment
 silent! packadd! hlyank
 
 # Enable 'Man' command
-source $VIMRUNTIME/ftplugin/man.vim
+runtime ftplugin/man.vim
 
 # Disable netrw
 g:loaded_netrw = 1
@@ -623,6 +624,9 @@ def GetViminfoFile(): string
 enddef
 
 call mkdir($HOME .. '/.cache/vim/viminfo', 'p')
+if &viminfo ==# ''
+	set viminfo='100,<50,s10,h
+endif
 # The n flag must come last, so append it with +=
 execute 'set viminfo+=n' .. fnameescape(GetViminfoFile())
 # }
@@ -637,52 +641,42 @@ def GetSessionFileInfo(): list<string>
 	return [session_dir, session_filename]
 enddef
 
+# Sessions are written on demand (<Leader>ws) and re-written on exit while a
+# session is tracked (v:this_session set, either by BackupSession or by a restored session).
+def WriteSessionFile(session_filename: string)
+	mkdir(fnamemodify(session_filename, ':h'), 'p')
+	execute 'mksession!' fnameescape(session_filename)
+	v:this_session = session_filename
+enddef
+
 def BackupSession()
 	var session_info = GetSessionFileInfo()
-	var session_dir = session_info[0]
-	var session_filename = session_info[1]
-	mkdir(session_dir, 'p')
-	execute 'Obsession' session_filename
+	WriteSessionFile(session_info[1])
+	echomsg 'Session saved: ' .. fnamemodify(session_info[1], ':~')
+enddef
+
+def SaveSessionOnExit()
+	if v:this_session ==# ''
+		return
+	endif
+	WriteSessionFile(v:this_session)
 enddef
 
 def RestoreSession()
 	var session_info = GetSessionFileInfo()
 	var session_filename = session_info[1]
 	if argc() == 0 && filereadable(session_filename)
-		FixVim9SessionFile(session_filename)
-		execute 'source' session_filename
+		try
+			execute 'source' session_filename
+		catch
+			EchoErr('Failed to restore session: ' .. v:exception)
+		endtry
 	endif
 enddef
 
-def FixVim9SessionFile(file: string)
-	# Since Vim 9.2 (patch 9.2.0579) :mksession writes Vim9 script, but the
-	# Obsession plugin inserts legacy "let g:this_session = ..." lines which are
-	# not allowed in a Vim9 script (E1126).  Rewrite them without ":let".
-	if !filereadable(file)
-		return
-	endif
-	var lines = readfile(file)
-	if empty(lines) || lines[0] !=# 'vim9script'
-		return
-	endif
-	var changed = false
-	var i = 0
-	while i < len(lines)
-		if lines[i] =~# '^let g:this_'
-			lines[i] = substitute(lines[i], '^let ', '', '')
-			changed = true
-		endif
-		i += 1
-	endwhile
-	if changed
-		writefile(lines, file)
-	endif
-enddef
-
-# Delete session with confirmation. The readability guard keeps ":Obsession!"
-# on its delete branch, so it never starts tracking ./Session.vim.
+# Delete session with confirmation.
 def DeleteSession()
-	var session = get(g:, 'this_obsession', v:this_session)
+	var session = v:this_session
 	if session ==# '' || !filereadable(session)
 		EchoErr('No session to delete')
 		return
@@ -690,7 +684,8 @@ def DeleteSession()
 	if confirm('Delete session ' .. fnamemodify(session, ':~') .. '?', "&Yes\n&No", 2) != 1
 		return
 	endif
-	execute 'Obsession!'
+	delete(session)
+	v:this_session = ''
 enddef
 
 # Backup
@@ -706,8 +701,7 @@ augroup END
 
 augroup Session
 	autocmd!
-	# Obsession fires User Obsession after every persist; keep the saved file usable.
-	autocmd User Obsession FixVim9SessionFile(g:this_session)
+	autocmd VimLeavePre * SaveSessionOnExit()
 	autocmd VimEnter * ++nested RestoreSession()
 augroup END
 # }
