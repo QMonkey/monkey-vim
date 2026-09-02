@@ -141,23 +141,32 @@ start_sudo_keepalive() {
 	# instead of mid-run after a long download/compile.
 	sudo -v || fail "sudo authorization failed — run this script in an interactive terminal."
 	(
-		# Test hook; also lets users tune the refresh rate.
+		# Test hook; also lets users tune the refresh rate. 60s against the
+		# default 15-min timestamp_timeout leaves a 15x margin; override it
+		# if your sudoers sets something unusually short.
 		interval="${SUDO_KEEPALIVE_INTERVAL:-60}"
 		# Kill the in-flight `sleep` child when we get TERMed, so no orphan
-		# sleep survives the script.
-		trap 'kill $(jobs -p) 2>/dev/null; exit 0' TERM
+		# sleep survives the script; wait() reaps everything — WSL's init
+		# does not reap adopted zombies, so anything unreaped here lingers
+		# as a defunct process forever.
+		trap 'kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' TERM
 		while true; do
 			sleep "$interval" &
 			wait "$!" 2>/dev/null || exit 0
 			# Non-interactive refresh: never prompts. If the timestamp has
 			# fully expired this fails and the loop exits; later sudo calls
 			# then prompt normally — no worse than without the keepalive.
-			sudo -n true 2>/dev/null || exit 0
+			# The failure is NOT silent: a dead keepalive is observable.
+			sudo -n true 2>/dev/null || {
+				warn "sudo keepalive stopped — later sudo calls may re-prompt."
+				exit 0
+			}
 		done
 	) &
 	SUDO_KEEPALIVE_PID=$!
-	# Recycle the background loop on any exit path (success, fail, Ctrl-C).
-	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+	# Recycle the background loop on any exit path (success, fail, Ctrl-C);
+	# wait() reaps the subshell itself, for the same WSL-zombie reason.
+	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 }
 
 # ────────────────── Step 1: Install build deps for Vim ──────────────────
@@ -318,6 +327,10 @@ vim_features_ok() {
 		has_vim_feature "$f" || return 1
 	done
 	has_vim_feature clipboard || return 1
+	# osc52/tmux clipboard providers and 'clipmethod' (.vimrc) need the
+	# clipboard provider feature (9.1.1857+); distro builds between 9.1.0
+	# and 9.1.1846 lack it, so require it on every platform.
+	has_vim_feature clipboard_provider || return 1
 	case "$OS" in
 	macos) return 0 ;;
 	esac
@@ -334,7 +347,7 @@ vim_features_ok() {
 
 vim_missing_features() {
 	local req f
-	req=("${VIM_REQUIRED_FEATURES[@]}" clipboard)
+	req=("${VIM_REQUIRED_FEATURES[@]}" clipboard clipboard_provider)
 	if [ "$OS" != macos ]; then
 		if is_wsl; then
 			req+=(xterm_clipboard)
@@ -342,8 +355,6 @@ vim_missing_features() {
 			req+=(wayland_clipboard)
 		elif pkg-config --exists gtk+-3.0 2>/dev/null; then
 			req+=(wayland_clipboard xterm_clipboard) # either one suffices
-		else
-			req+=(clipboard_provider)
 		fi
 	fi
 	for f in "${req[@]}"; do
@@ -497,11 +508,14 @@ setup_symlinks() {
 	ln -sf "$INSTALL_DIR/.vimrc" "$HOME/.vimrc"
 	ok ".vimrc → $INSTALL_DIR/.vimrc"
 
-	mkdir -p "$HOME/.vim/swap"
-	ok "created $HOME/.vim/swap"
+	mkdir -p "$HOME/.cache/vim/swap"
+	ok "created $HOME/.cache/vim/swap"
 
-	mkdir -p "$HOME/.cache/sessions"
-	ok "created $HOME/.cache/sessions"
+	mkdir -p "$HOME/.cache/vim/sessions"
+	ok "created $HOME/.cache/vim/sessions"
+
+	mkdir -p "$HOME/.cache/vim/viminfo"
+	ok "created $HOME/.cache/vim/viminfo"
 
 	if [ -d "$INSTALL_DIR/configs" ]; then
 		if [ -f "$INSTALL_DIR/configs/.clang-format" ]; then
