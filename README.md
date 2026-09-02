@@ -480,7 +480,6 @@ It should resolve to `getty@.service`.
 | [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | Auto-close brackets/parens                         |
 | [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | Repeat plugin maps with `.`                        |
 | [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch)                               | UNIX shell helpers (:SudoWrite, :W, :Delete, etc.) |
-| [tpope/vim-obsession](https://github.com/tpope/vim-obsession)                         | Session management                                 |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | Faster folding for large files                     |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | Improved `*` / `#` search                          |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | Visual marks                                       |
@@ -1180,18 +1179,18 @@ directly with the `global` CLI.
 :Doline {cmd}
 ```
 
-### 6. vim-obsession (Session management)
+### 6. Sessions (native :mksession)
 
 ```vim
-" Start/update session in ~/.cache/vim/sessions/
-:Obsession {file}
+" Save session for the current project to ~/.cache/vim/sessions/
+Leader+ws
 
-" Toggle pause/resume session tracking
-:Obsession
-
-" Stop and delete session file
-:Obsession!
+" Delete the current session file (asks for confirmation)
+Leader+rs
 ```
+
+The session is automatically re-written when Vim exits (while a session is
+tracked) and restored on startup from `~/.cache/vim/sessions/`.
 
 ### 7. LSP commands (yegappan/lsp)
 
