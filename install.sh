@@ -16,6 +16,8 @@ NC='\033[0m'
 INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-vim}"
 VIM_SRC_DIR="${VIM_SRC_DIR:-$HOME/Documents/vim}"
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
+SUDOERS_D_DIR="${SUDOERS_D_DIR:-/etc/sudoers.d}"
+SUDOERS_DROPIN_CREATED=0
 
 # Never let a missing HOME fail later under `set -u`.
 [ -n "${HOME:-}" ] || {
@@ -57,6 +59,15 @@ os_detect() {
 
 is_wsl() {
 	[[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" ]]
+}
+
+is_wsl_kernel() {
+	# Kernel-release-based WSL detection: also true for docker containers
+	# running on a WSL2 host (they share the kernel), where WSL_* env vars
+	# are absent. uname -r works everywhere — macOS has no /proc (returns
+	# a Darwin release, no match); WSL1 reports "...-Microsoft", WSL2
+	# "...-microsoft-standard-*" — hence the case-insensitive match.
+	uname -r | grep -qi 'microsoft'
 }
 
 OS=$(os_detect)
@@ -140,6 +151,26 @@ start_sudo_keepalive() {
 	# Pre-authenticate once so the password is entered at the very start
 	# instead of mid-run after a long download/compile.
 	sudo -v || fail "sudo authorization failed — run this script in an interactive terminal."
+	# On WSL2 the monotonic clock can step backwards (host sleep/resume,
+	# NTP corrections to the host clock, TSC skew across CPUs). When that
+	# happens sudo finds its ticket "from the future" and DISABLES it
+	# (timestamp.c: "ignoring time stamp from the future"), so every later
+	# sudo re-prompts. A negative timestamp_timeout skips that future check
+	# entirely (timestamp.c: "Negative timeouts only expire manually"),
+	# making the ticket immune. Scoped to this run: installed right after
+	# the first auth (writing /etc/sudoers.d needs root), removed on exit.
+	if is_wsl_kernel; then
+		if echo 'Defaults timestamp_timeout=-1' |
+			sudo -n tee "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
+			sudo -n chmod 0440 "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
+			sudo -n visudo -cf "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1; then
+			SUDOERS_DROPIN_CREATED=1
+			ok "WSL detected — temporary sudo timestamp protection installed (removed on exit)."
+		else
+			sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null
+			warn "could not install the temporary sudo timestamp drop-in — clock jumps may re-prompt."
+		fi
+	fi
 	(
 		# Test hook; also lets users tune the refresh rate. 60s against the
 		# default 15-min timestamp_timeout leaves a 15x margin; override it
@@ -166,7 +197,9 @@ start_sudo_keepalive() {
 	SUDO_KEEPALIVE_PID=$!
 	# Recycle the background loop on any exit path (success, fail, Ctrl-C);
 	# wait() reaps the subshell itself, for the same WSL-zombie reason.
-	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
+	# Also roll back the temporary sudoers drop-in (root rm; the ticket
+	# cannot expire under timestamp_timeout=-1, so -n always succeeds).
+	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null; if [ "$SUDOERS_DROPIN_CREATED" = 1 ]; then sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null || warn "temporary sudoers drop-in left behind: $SUDOERS_D_DIR/wsl-timestamp (remove manually)"; fi' EXIT
 }
 
 # ────────────────── Step 1: Install build deps for Vim ──────────────────
