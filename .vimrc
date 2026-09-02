@@ -59,7 +59,7 @@ Plug 'tpope/vim-fugitive' | Plug 'junegunn/gv.vim', {'on': 'GV'}
 Plug 'airblade/vim-gitgutter'
 # Project
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'justinmk/vim-dirvish'
+Plug 'habamax/vim-dir'
 # Code Intelligence
 Plug 'yegappan/lsp', {'on': []}
 Plug 'hrsh7th/vim-vsnip', {'on': []} | Plug 'hrsh7th/vim-vsnip-integ', {'on': []} | Plug 'rafamadriz/friendly-snippets', {'on': []}
@@ -600,6 +600,11 @@ def FindProjectRoot(start: string, fallback: string): string
 enddef
 
 def BufferDir(): string
+	if IsExplorerBuffer(bufname('%'))
+		# A vim-dir buffer is named "dir://{path}"; use the browsed directory
+		# so session/viminfo naming stays anchored to a real directory.
+		return substitute(bufname('%'), '^dir://', '', '')
+	endif
 	return !empty(expand('%:p')) ? fnamemodify(expand('%:p'), ':h') : getcwd()
 enddef
 
@@ -624,15 +629,83 @@ def GetViminfoFile(): string
 enddef
 
 call mkdir($HOME .. '/.cache/vim/viminfo', 'p')
-if &viminfo ==# ''
-	set viminfo='100,<50,s10,h
-endif
 # The n flag must come last, so append it with +=
 execute 'set viminfo+=n' .. fnameescape(GetViminfoFile())
 # }
 
 # Session / Restore {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
+
+def IsExplorerBuffer(name: string): bool
+	return name =~# '^dir://'
+enddef
+
+def IsDirExists(path: string): bool
+	if isdirectory(expand(path))
+		return true
+	endif
+	# mksession writes the path via fnameescape(): spaces become "my\ dir",
+	# so also try the unescaped form before giving up.
+	return isdirectory(expand(substitute(path, '\\\(\S\)', '\1', 'g')))
+enddef
+
+# mksession cannot represent vim-dir buffers (unlisted, 'buftype' nofile): a
+# session persisted while a vim-dir buffer is focused loses its window and the
+# surrounding layout. Switch vim-dir windows back to a real buffer before the
+# session is written.
+def LeaveExplorerBuffers()
+	# Fallback: the first listed, named buffer that is not an explorer.
+	var bufinfos = getbufinfo({buflisted: 1})
+	var fallback = -1
+	for b in bufinfos
+		if !IsExplorerBuffer(b.name) && !empty(b.name)
+			fallback = b.bufnr
+			break
+		endif
+	endfor
+	if fallback == -1
+		return
+	endif
+	var cur_wid = win_getid()
+	var alt_bufnr = bufnr('#')
+	for win in range(1, winnr('$'))
+		if !IsExplorerBuffer(bufname(winbufnr(win)))
+			continue
+		endif
+		win_gotoid(win_getid(win))
+		if alt_bufnr > 0 && alt_bufnr != bufnr('%') && buflisted(alt_bufnr) && !IsExplorerBuffer(bufname(alt_bufnr))
+			execute 'buffer' alt_bufnr
+		else
+			execute 'buffer' fallback
+		endif
+	endfor
+	win_gotoid(cur_wid)
+enddef
+
+def SanitizeSessionFile(file: string)
+	# Drop entries that break session restore:
+	# - explorer buffers ("dir://...") which mksession cannot restore
+	# - cd/lcd lines whose target directory no longer exists (E344 aborts
+	#   sourcing the session and leaves the layout unrestored)
+	if !filereadable(file)
+		return
+	endif
+	var lines = readfile(file)
+	var sanitized: list<string> = []
+	for line in lines
+		if line =~# '\v^ba(dd|lt)>.*dir://'
+			continue
+		endif
+		var m = matchlist(line, '\v^(cd|lcd) (\S+)$')
+		if !empty(m) && !IsDirExists(m[2])
+			continue
+		endif
+		add(sanitized, line)
+	endfor
+	if sanitized != lines
+		writefile(sanitized, file)
+	endif
+enddef
 
 def GetSessionFileInfo(): list<string>
 	var root = FindProjectRoot(BufferDir(), BufferDir())
@@ -645,8 +718,10 @@ enddef
 # session is tracked (v:this_session set, either by BackupSession or by a restored session).
 def WriteSessionFile(session_filename: string)
 	mkdir(fnamemodify(session_filename, ':h'), 'p')
+	LeaveExplorerBuffers()
 	execute 'mksession!' fnameescape(session_filename)
 	v:this_session = session_filename
+	SanitizeSessionFile(session_filename)
 enddef
 
 def BackupSession()
@@ -1526,24 +1601,39 @@ augroup VMLightLine
 augroup END
 # }
 
-# vim-dirvish {
-nnoremap <silent>- <Cmd>execute 'Dirvish' expand('%:p:h')<CR>
-nnoremap <silent>~ <ScriptCmd>execute('Dirvish ' .. FindProjectRoot(BufferDir(), expand('~')))<CR>
+# vim-dir {
+nnoremap <silent>- <Cmd>Dir<CR>
+nnoremap <silent>~ <ScriptCmd>execute('Dir ' .. FindProjectRoot(BufferDir(), expand('~')))<CR>
 
-augroup SplitExplorer
+# gq: exit the dir listing -- switch back to a real file buffer (the alternate buffer, else the first listed one); 
+# the listing itself is never kept and the tab or Vim is never quit.
+def DirClose()
+	var target = -1
+	var alt_bufnr = bufnr('#')
+	if alt_bufnr > 0 && buflisted(alt_bufnr) && !IsExplorerBuffer(bufname(alt_bufnr))
+		target = alt_bufnr
+	else
+		for b in getbufinfo({buflisted: 1})
+			if !IsExplorerBuffer(b.name) && !empty(b.name)
+				target = b.bufnr
+				break
+			endif
+		endfor
+	endif
+	if target == -1
+		if winnr('$') > 1
+			close
+		else
+			enew
+		endif
+	else
+		execute 'buffer' target
+	endif
+enddef
+
+augroup DirBuffer
 	autocmd!
-	autocmd FileType dirvish silent! unmap <buffer>a
-	autocmd FileType dirvish silent! unmap <buffer>A
-	autocmd FileType dirvish silent! unmap <buffer>i
-	autocmd FileType dirvish silent! unmap <buffer>I
-	autocmd FileType dirvish silent! unmap <buffer>o
-	autocmd FileType dirvish silent! unmap <buffer>O
-
-	autocmd FileType dirvish noremap - <plug>(dirvish_up)
-	autocmd FileType dirvish noremap <silent><buffer>o :call dirvish#open('edit', 0)<CR>
-	autocmd FileType dirvish noremap <silent><buffer>a :call dirvish#open('split', 0)<CR>
-	autocmd FileType dirvish noremap <silent><buffer>i :call dirvish#open('vsplit', 0)<CR>
-	autocmd FileType dirvish noremap <silent><buffer>t :call dirvish#open('tabedit', 0)<CR>
+	autocmd FileType dir nnoremap <buffer><nowait><silent>gq <ScriptCmd>DirClose()<CR>
 augroup END
 # }
 
