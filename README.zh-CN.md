@@ -479,7 +479,6 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 | [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | 自动配对括号                                      |
 | [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | 使插件映射支持 `.` 重复                           |
 | [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch)                               | UNIX Shell 辅助命令（:SudoWrite、:W、:Delete 等） |
-| [tpope/vim-obsession](https://github.com/tpope/vim-obsession)                         | Session 管理                                      |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | 大文件折叠性能优化                                |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | 增强 `*` / `#` 搜索                               |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | 可视化书签                                        |
@@ -1178,20 +1177,18 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 :Doline {cmd}
 ```
 
-### 6. vim-obsession（Session 管理）
+### 6. Session（原生 :mksession）
 
 ```vim
-" 开始/更新 session（保存到 ~/.cache/vim/sessions/）
-:Obsession {file}
+" 保存当前项目的 session 到 ~/.cache/vim/sessions/
+Leader+ws
 
-" 暂停/恢复 session 追踪
-:Obsession
-
-" 停止并删除 session 文件
-:Obsession!
-" 注意：Leader+rs 委托给 :Obsession!，但会先弹出确认，且在无 session 时
-（包括从未保存过的情况）直接报错返回，不会在当前目录误创建 ./Session.vim。
+" 删除当前 session 文件（弹出确认）
+Leader+rs
 ```
+
+退出 Vim 时会自动重写已追踪的 session（v:this_session 已设置），启动时从
+`~/.cache/vim/sessions/` 自动恢复。
 
 ### 7. LSP 命令（yegappan/lsp）
 
