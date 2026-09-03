@@ -682,19 +682,13 @@ def LeaveExplorerBuffers()
 enddef
 
 def SanitizeSessionFile(file: string)
-	# Drop entries that break session restore:
-	# - explorer buffers ("dir://...") which mksession cannot restore
-	# - cd/lcd lines whose target directory no longer exists (E344 aborts
-	#   sourcing the session and leaves the layout unrestored)
+	# Drop cd/lcd lines whose target directory no longer exists
 	if !filereadable(file)
 		return
 	endif
 	var lines = readfile(file)
 	var sanitized: list<string> = []
 	for line in lines
-		if line =~# '\v^ba(dd|lt)>.*dir://'
-			continue
-		endif
 		var m = matchlist(line, '\v^(cd|lcd) (\S+)$')
 		if !empty(m) && !IsDirExists(m[2])
 			continue
@@ -1606,7 +1600,7 @@ augroup END
 nnoremap <silent>- <Cmd>Dir<CR>
 nnoremap <silent>~ <ScriptCmd>execute('Dir ' .. FindProjectRoot(BufferDir(), expand('~')))<CR>
 
-# gq: exit the dir listing -- switch back to a real file buffer (the alternate buffer, else the first listed one); 
+# gq: exit the dir listing -- switch back to a real file buffer (the alternate buffer, else the first listed one);
 # the listing itself is never kept and the tab or Vim is never quit.
 def DirClose()
 	var target = -1
@@ -1642,7 +1636,7 @@ augroup END
 def SudoWriteCmd()
 	var errfile = tempname()
 	execute 'write !sudo tee ' .. shellescape(expand('%:p')) .. ' >/dev/null 2>' .. errfile
-	var error = join(readfile(errfile), ' | ')
+	var error = join(filter(readfile(errfile), 'trim(v:val) !=# ""'), ' | ')
 	delete(errfile)
 	if v:shell_error || error =~# '^sudo'
 		# :w ! already cleared 'modified' although nothing was written
@@ -1844,7 +1838,7 @@ endif
 # }
 
 # vim-sandwich {
-# Bare `s` has no sandwich action. Without this mapping, a timed-out `s` falls through to native substitute (cl) 
+# Bare `s` has no sandwich action. Without this mapping, a timed-out `s` falls through to native substitute (cl)
 # and deletes the char under cursor. <Nop> makes that fallback harmless.
 nmap s <Nop>
 xmap s <Nop>
