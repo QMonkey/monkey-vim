@@ -62,10 +62,10 @@ is_wsl() {
 }
 
 is_wsl_kernel() {
-	# Kernel-release-based WSL detection: also true for docker containers
-	# running on a WSL2 host (they share the kernel), where WSL_* env vars
-	# are absent. uname -r works everywhere — macOS has no /proc (returns
-	# a Darwin release, no match); WSL1 reports "...-Microsoft", WSL2
+	# Kernel-release-based WSL detection: does not rely on the WSL_* env
+	# vars, which some shells and exec contexts do not inherit.
+	# uname -r works everywhere — macOS has no /proc (returns a Darwin
+	# release, no match); WSL1 reports "...-Microsoft", WSL2
 	# "...-microsoft-standard-*" — hence the case-insensitive match.
 	uname -r | grep -qi 'microsoft'
 }
@@ -160,7 +160,13 @@ start_sudo_keepalive() {
 	# making the ticket immune. Scoped to this run: installed right after
 	# the first auth (writing /etc/sudoers.d needs root), removed on exit.
 	if is_wsl_kernel; then
-		if echo 'Defaults timestamp_timeout=-1' |
+		# timestamp_type=global: tickets are keyed by uid only (no tty/sid),
+		# so a ticket granted in one terminal or SSH session is honored in
+		# every other one. timestamp_timeout=-1 then skips the "from the
+		# future" disable path entirely (timestamp.c: "Negative timeouts
+		# only expire manually (sudo -k)"), making the ticket immune to
+		# WSL2's monotonic clock steps. Combined: one password per WSL boot.
+		if printf 'Defaults timestamp_type=global\nDefaults timestamp_timeout=-1\n' |
 			sudo -n tee "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
 			sudo -n chmod 0440 "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
 			sudo -n visudo -cf "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1; then
