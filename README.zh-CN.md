@@ -462,6 +462,7 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 | [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | 代码片段引擎                          |
 | [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP 片段集成                          |
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | 常用代码片段集合                      |
+| [junegunn/fzf](https://github.com/junegunn/fzf)                                       | 模糊搜索器（fzf.vim 依赖）            |
 | [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/tag 查找                |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | 异步代码搜索（rg/ag 后端）            |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | 配色方案                              |
@@ -471,13 +472,12 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 | [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git 差异标记                          |
 | [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | 自动生成 ctags 与 gtags（GNU Global） |
 | [habamax/vim-dir](https://github.com/habamax/vim-dir)                                 | 文件管理器/目录浏览器（替代 netrw）   |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | 围绕字符编辑                          |
+| [machakann/vim-sandwich](https://github.com/machakann/vim-sandwich)                   | 围绕字符编辑                          |
 | [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | 使用剪贴板替换                        |
 | [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | 增强 % 匹配跳转                       |
 | [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | 更多文本对象                          |
 | [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象                    |
 | [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | 自动配对括号                          |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | 使插件映射支持 `.` 重复               |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | 大文件折叠性能优化                    |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | 增强 `*` / `#` 搜索                   |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | 可视化书签                            |
@@ -495,8 +495,8 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 #### 1.1 按键修改
 
 ```text
-s       用剪贴板的内容替换文本对象选中的字符串（详见§1.7）
-S       用剪贴板的内容替换当前光标到行尾的文本（详见§1.7）
+x       用剪贴板的内容替换文本对象选中的字符串（详见§1.7）
+X       用剪贴板的内容替换当前光标到行尾的文本（详见§1.7）
 Y       复制到行尾，相当于"y$"命令
 H       跳到当前行第一个非空字符,相当于"^"命令
 L       跳到当前行最后一个字符,相当于"$"命令
@@ -583,9 +583,9 @@ g#      同上，反向部分匹配
 #### 1.7 替换（vim-subversive）
 
 ```text
-s{文本对象}  用剪贴板内容替换一个文本对象（如 siw 替换当前词）
-ss          用剪贴板内容替换当前整行
-S           用剪贴板内容替换从光标到行尾
+x{文本对象}  用剪贴板内容替换一个文本对象（如 xiw 替换当前词）
+xx          用剪贴板内容替换当前整行
+X           用剪贴板内容替换从光标到行尾
 ```
 
 #### 1.8 LSP（Language Server Protocol）
@@ -715,13 +715,15 @@ p/P         复制/移动选中项到当前目录
 Leader+a        当前目录搜索光标所在的词
 ```
 
-#### 1.15 围绕字符编辑（vim-surround）
+#### 1.15 围绕字符编辑（vim-sandwich）
 
 ```text
-ys+textobj+surroundA        在textobj指定的范围增A围绕字符
-yss+surroundA               在当前行增加A围绕字符
-ds+surroundA                删除A围绕字符
-cs+surroundA+surroundB      将A围绕字符改成B围绕字符
+sa+textobj+surroundA        在textobj指定的范围增A围绕字符
+sd+surroundA                删除A围绕字符
+sdb                         自动检测并删除A围绕字符
+sr+surroundA+surroundB      将A围绕字符改成B围绕字符
+ib / ab                     文本对象：选中被围绕的文本（自动检测）
+is / as+surroundA           文本对象：按指定围绕字符选中文本
 ```
 
 #### 1.16 终端
@@ -802,6 +804,80 @@ a%      任意块的范围（文本对象）
 
 Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''` 和反引号对。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
 
+#### 1.21 操作符（Operators）
+
+操作符与文本对象（§1.22）或 motion 组合使用：`{操作符}{文本对象}`。以下操作符均支持 `[count]`；标注了"嵌套"的操作符，`[count]` 表示"第 N 层包围结构"。
+
+```text
+# Vim 原生
+d c y           删除 / 修改 / 复制
+gu gU g~        转小写 / 转大写 / 大小写互换
+> <             缩进调整
+=               按缩进规则重排
+!               通过外部命令过滤行
+gn gN           操作下一个 / 上一个搜索匹配
+
+# vim-subversive（见 §1.7）
+x               用寄存器内容替换文本对象 / motion
+xx              替换当前整行
+X               替换光标到行尾
+
+# vim-sandwich（见 §1.15）
+sa{motion}{char}    增加围绕字符（count 作用于 motion）
+sd{char} / sdb      删除围绕字符    [count] = 嵌套层级，如 2sd"
+sr{old}{new} / srb  替换围绕字符    [count] = 嵌套层级
+```
+
+#### 1.22 文本对象（targets.vim / vim-indent-object / vim-sandwich / vim-matchup）
+
+所有文本对象都能配合任意 operator 使用：`d`/`c`/`y`、`x`（subversive，见 §1.7）、`sa`（sandwich，见 §1.15）、`gu`/`gU`/`g~` 等。多数对象支持 `[count]`（如 `2ib` 选中外层块）。
+
+```text
+# Vim 原生
+iw / aw         词
+iW / aW         字串（以空白分隔）
+is / as         句子
+ip / ap         段落
+i( a( i[ a[ i{ a{ i< a<   括号（b 是括号的别名，此处被覆盖）
+i" a" i' a' i` a`   引号
+it / at         HTML/XML 标签
+gn / gN         上次搜索匹配
+
+# targets.vim（增强搜索：seek 定位、增长、转义感知、跨行）
+ib / ab         任意括号块（自动检测 () [] {}）—— 被 vim-sandwich 覆盖，见下
+iq / aq         任意引号（自动检测 ' " `）
+i, a, i. a. ... 分隔符：, . ; : + - = ~ _ * # | \ & $ /
+                如 i_ 编辑 snake_case 片段、i= 编辑 key=value
+ia / aa         函数参数（ina / ila 跳到下一个 / 上一个参数）
+il / al         当前行（不含 / 含尾部空白）
+it / at         标签（增强版）
+inb anb inq anq ...   上述对象的 next / last 变体（先定位再操作）
+
+# vim-indent-object（缩进块，Python / YAML 利器）
+ii / ai         缩进块（ai 包含上一行）
+iI / aI         缩进块，包含上 / 下方边界行
+2ii             上溯一层缩进
+
+# vim-sandwich（跨所有注册配对的自动检测）
+ib / ab         任意被围绕文本（括号 + 引号 + 标签，覆盖 targets 的版本）
+is / as+字符    指定配对选中文本（如 as( ）
+
+# vim-matchup（关键词块）
+i% / a%         if...endif、function...endfunction 等的内部 / 范围
+2i%             第 2 层包围块的内部
+```
+
+各插件的 `[count]` 语义：
+
+```text
+Vim 原生        重复对象本身（2iw = 两个词）；括号类无嵌套 count
+targets.vim     括号 / 引号 / 标签：count = 嵌套层级（2i) 选外层括号）
+                分隔符 / 参数：count 跳过相应数量的分隔符
+vim-indent-object   count = 缩进层级（2ii 上溯一层）
+vim-sandwich    ib / ab / is / as：count = 第 N 个候选（嵌套层级）
+vim-matchup     count = 第 N 层包围块
+```
+
 ### 2. 插入模式
 
 #### 2.1 代码片段（vim-vsnip）
@@ -847,9 +923,9 @@ s       用剪贴板的内容替换选中文本
 ```text
 # '\r'代表换行
 
-s{文本对象}  用剪贴板内容替换文本对象（如 siw）
-ss          用剪贴板内容替换当前整行
-S           用剪贴板内容替换光标到行尾
+x{文本对象}  用剪贴板内容替换文本对象（如 xiw）
+xx          用剪贴板内容替换当前整行
+X           用剪贴板内容替换光标到行尾
 ```
 
 #### 3.4 快速跳转（vim9-stargate）
@@ -865,10 +941,12 @@ F           搜索2个连续字符并跳转（stargate 带提示）
 Leader+a        当前目录搜索选中字符串
 ```
 
-#### 3.6 围绕字符编辑（vim-surround）
+#### 3.6 围绕字符编辑（vim-sandwich）
 
 ```text
-S+surroundA     选中字符串增加A围绕字符
+sa+surroundA     选中字符串增加A围绕字符
+sd               删除选中字符串两端的围绕字符
+sr+surroundA     替换选中字符串两端的围绕字符
 ```
 
 ### 4. 命令行模式
