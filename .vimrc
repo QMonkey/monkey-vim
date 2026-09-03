@@ -1462,7 +1462,9 @@ def TerminalToggle(vertical: bool)
 			execute 'botright sbuffer ' .. buf
 			execute 'resize 20'
 		endif
-		feedkeys("i", 't')
+		if term_getstatus(buf) =~# 'normal'
+			feedkeys("i", 't')
+		endif
 	else
 		if vertical
 			execute 'botright vertical terminal'
