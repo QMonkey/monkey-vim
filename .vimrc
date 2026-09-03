@@ -44,7 +44,7 @@ Plug 'sainnhe/sonokai'
 Plug 'svermeulen/vim-subversive'
 Plug 'wellle/targets.vim'
 Plug 'michaeljsmith/vim-indent-object'
-Plug 'tpope/vim-surround' | Plug 'tpope/vim-repeat'
+Plug 'machakann/vim-sandwich'
 Plug 'cohama/lexima.vim'
 Plug 'andymass/vim-matchup'
 Plug 'Konfekt/FastFold'
@@ -1841,11 +1841,18 @@ else
 endif
 # }
 
+# vim-sandwich {
+# Bare `s` has no sandwich action. Without this mapping, a timed-out `s` falls through to native substitute (cl) 
+# and deletes the char under cursor. <Nop> makes that fallback harmless.
+nmap s <Nop>
+xmap s <Nop>
+# }
+
 # vim-subversive {
-nnoremap s <plug>(SubversiveSubstitute)
-xnoremap s <plug>(SubversiveSubstitute)
-nnoremap ss <plug>(SubversiveSubstituteLine)
-nnoremap S <plug>(SubversiveSubstituteToEndOfLine)
+nnoremap x <plug>(SubversiveSubstitute)
+xnoremap x <plug>(SubversiveSubstitute)
+nnoremap xx <plug>(SubversiveSubstituteLine)
+nnoremap X <plug>(SubversiveSubstituteToEndOfLine)
 # }
 
 # vim-asterisk {
