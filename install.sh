@@ -57,7 +57,7 @@ os_detect() {
 	esac
 }
 
-is_wsl() {
+is_wsl_kernel() {
 	[[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" ]]
 }
 
@@ -157,8 +157,10 @@ start_sudo_keepalive() {
 	# (timestamp.c: "ignoring time stamp from the future"), so every later
 	# sudo re-prompts. A negative timestamp_timeout skips that future check
 	# entirely (timestamp.c: "Negative timeouts only expire manually"),
-	# making the ticket immune. Scoped to this run: installed right after
-	# the first auth (writing /etc/sudoers.d needs root), removed on exit.
+	# making the ticket immune. The drop-in PERSISTS after this script
+	# exits: rolling it back would revert to per-tty tickets, and every
+	# new terminal / docker exec / clock jump would re-prompt. Remove it
+	# manually to restore the default behavior.
 	if is_wsl_kernel; then
 		# timestamp_type=global: tickets are keyed by uid only (no tty/sid),
 		# so a ticket granted in one terminal or SSH session is honored in
@@ -171,7 +173,7 @@ start_sudo_keepalive() {
 			sudo -n chmod 0440 "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
 			sudo -n visudo -cf "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1; then
 			SUDOERS_DROPIN_CREATED=1
-			ok "WSL detected — temporary sudo timestamp protection installed (removed on exit)."
+			ok "WSL detected — sudo timestamp drop-in installed (persists; remove with: sudo rm $SUDOERS_D_DIR/wsl-timestamp)."
 		else
 			sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null
 			warn "could not install the temporary sudo timestamp drop-in — clock jumps may re-prompt."
@@ -203,9 +205,9 @@ start_sudo_keepalive() {
 	SUDO_KEEPALIVE_PID=$!
 	# Recycle the background loop on any exit path (success, fail, Ctrl-C);
 	# wait() reaps the subshell itself, for the same WSL-zombie reason.
-	# Also roll back the temporary sudoers drop-in (root rm; the ticket
-	# cannot expire under timestamp_timeout=-1, so -n always succeeds).
-	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null; if [ "$SUDOERS_DROPIN_CREATED" = 1 ]; then sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null || warn "temporary sudoers drop-in left behind: $SUDOERS_D_DIR/wsl-timestamp (remove manually)"; fi' EXIT
+	# The sudoers drop-in is intentionally NOT removed here: rolling it back
+	# would revert to per-tty tickets and re-prompt on every new terminal.
+	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 }
 
 # ────────────────── Step 1: Install build deps for Vim ──────────────────
@@ -220,7 +222,7 @@ install_vim_build_deps() {
 			libgpm-dev libncurses-dev
 			python3-dev lua5.4 liblua5.4-dev
 			perl libperl-dev ruby ruby-dev)
-		if is_wsl; then
+		if is_wsl_kernel; then
 			gui=(libgtk-3-dev libx11-dev libxt-dev libxpm-dev)
 		else
 			# Non-WSL: prefer GTK4 (no X11 dependency)
@@ -232,7 +234,7 @@ install_vim_build_deps() {
 		common=(base-devel git curl
 			wayland gpm ncurses
 			lua perl python ruby)
-		if is_wsl; then
+		if is_wsl_kernel; then
 			gui=(gtk3 libx11 libxt libxpm)
 		else
 			gui=(gtk4)
@@ -246,7 +248,7 @@ install_vim_build_deps() {
 			gpm-devel ncurses-devel
 			python-devel python3-devel
 			ruby-devel lua-devel perl perl-devel)
-		if is_wsl; then
+		if is_wsl_kernel; then
 			gui=(gtk3-devel xorg-x11-devel libXpm-devel libXt-devel)
 		else
 			gui=(gtk4-devel)
@@ -261,7 +263,7 @@ install_vim_build_deps() {
 			python3-devel ruby-devel lua-devel
 			perl perl-devel perl-ExtUtils-ParseXS
 			perl-ExtUtils-CBuilder perl-ExtUtils-Embed)
-		if is_wsl; then
+		if is_wsl_kernel; then
 			gui=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
 		else
 			gui=(gtk4-devel)
@@ -373,7 +375,7 @@ vim_features_ok() {
 	case "$OS" in
 	macos) return 0 ;;
 	esac
-	if is_wsl; then
+	if is_wsl_kernel; then
 		has_vim_feature xterm_clipboard
 	elif pkg-config --exists gtk4 2>/dev/null; then
 		has_vim_feature wayland_clipboard
@@ -388,7 +390,7 @@ vim_missing_features() {
 	local req f
 	req=("${VIM_REQUIRED_FEATURES[@]}" clipboard clipboard_provider)
 	if [ "$OS" != macos ]; then
-		if is_wsl; then
+		if is_wsl_kernel; then
 			req+=(xterm_clipboard)
 		elif pkg-config --exists gtk4 2>/dev/null; then
 			req+=(wayland_clipboard)
@@ -452,7 +454,7 @@ build_vim() {
 		;;
 	*)
 		configure_args+=(--enable-gpm)
-		if is_wsl; then
+		if is_wsl_kernel; then
 			# WSLg clipboard goes through XWayland — must keep GTK3 + --with-x
 			configure_args+=(--enable-gui=gtk3 --with-x --with-wayland)
 		elif pkg-config --exists gtk4 2>/dev/null; then
@@ -601,7 +603,7 @@ main() {
 	echo ""
 
 	info "Detected OS: ${CYAN}${OS}${NC}"
-	if is_wsl; then
+	if is_wsl_kernel; then
 		info "Detected WSL — building Vim with GTK3 + X11 (WSLg clipboard)."
 	fi
 	info "monkey-vim: ${CYAN}${INSTALL_DIR}${NC}"
