@@ -24,7 +24,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 
 ## 要求
 
-- vim 9.0+（SSH 下使用 OSC 52 剪贴板需 9.1.1984+；一键安装脚本编译的版本即满足）
+- vim 9.1+（SSH 下使用 OSC 52 剪贴板需 9.1.1984+；一键安装脚本编译的版本即满足）
 - 终端环境（不支持 GUI / gvim）
 
 ## 安装步骤
@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 脚本按顺序执行：
 
 1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
-2. 预授权一次 `sudo` 并在后台保活——长时间下载/编译不会中途再次索要密码（无人值守也不会卡住）
+2. 预授权一次 `sudo` 并在后台保活——长时间下载/编译不会中途再次索要密码（无人值守也不会卡住）。WSL 下还会临时安装一个 sudoers drop-in（退出时移除）：`timestamp_type=global` + `timestamp_timeout=-1` 让票据只按用户记录——新开终端、SSH 会话、WSL 时钟回跳、tty 变化都不会再次索要密码，**WSL 重启前只需输一次**
 3. 安装 Homebrew（Linuxbrew）作为兜底包管理器——即使 brew 已存在，也会把 shellenv 持久化到 shell rc 文件（带 PATH 去重保护）
 4. 克隆并编译 Vim 源码，然后 `make install`
 5. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
@@ -53,7 +53,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 
 > 脚本会保留 Vim 源码树在 `~/Documents/vim`（不做清理），日后可用 `git pull` + `make` 重新编译。
 >
-> 脚本只有当已装 vim 低于 9.0 **或** `vim --version` 功能不完整时才会重新编译——仅看版本不够。必需功能与下面的构建一一对应：`+clipboard` 和 `+clipboard_provider`（剪贴板 provider 是 osc52/tmux 回退的基础，该功能在 9.1.1857 才加入，因此 9.1.0–9.1.1846 的发行版构建会被重编译）加上（按平台）`+xterm_clipboard`（WSL）、`+wayland_clipboard` 或 `+xterm_clipboard`（Linux 桌面）；核心集为 `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`。
+> 脚本只有当已装 vim 低于 9.1 **或** `vim --version` 功能不完整时才会重新编译——仅看版本不够。必需功能与下面的构建一一对应：`+clipboard` 和 `+clipboard_provider`（剪贴板 provider 是 osc52/tmux 回退的基础，该功能在 9.1.1857 才加入，因此 9.1.0–9.1.1846 的发行版构建会被重编译）加上（按平台）`+xterm_clipboard`（WSL）、`+wayland_clipboard` 或 `+xterm_clipboard`（Linux 桌面）；核心集为 `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`。
 >
 > PATH 修改只对安装之后新启动的 shell 生效。脚本结束时会打印如何在当前终端立即生效（`source <rc 文件>` 或 `exec $SHELL`）。
 
@@ -456,34 +456,33 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 
 ## 插件列表
 
-| 插件                                                                                  | 用途                                              |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| [yegappan/lsp](https://github.com/yegappan/lsp)                                       | Language Server Protocol 客户端                   |
-| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | 代码片段引擎                                      |
-| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP 片段集成                                      |
-| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | 常用代码片段集合                                  |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/tag 查找                            |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | 异步代码搜索（rg/ag 后端）                        |
-| [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | 配色方案                                          |
-| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | 多光标编辑                                        |
-| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | 快速跳转（替代 vim-sneak）                        |
-| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive)                           | Git 集成                                          |
-| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git 差异标记                                      |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | 自动生成 ctags 与 gtags（GNU Global）             |
-| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish)                       | 目录浏览器（替代 netrw）                          |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | 围绕字符编辑                                      |
-| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | 使用剪贴板替换                                    |
-| [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | 增强 % 匹配跳转                                   |
-| [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | 更多文本对象                                      |
-| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象                                |
-| [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | 自动配对括号                                      |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | 使插件映射支持 `.` 重复                           |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch)                               | UNIX Shell 辅助命令（:SudoWrite、:W、:Delete 等） |
-| [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | 大文件折叠性能优化                                |
-| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | 增强 `*` / `#` 搜索                               |
-| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | 可视化书签                                        |
-| [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git 提交浏览器                                    |
-| [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list 增强                       |
+| 插件                                                                                  | 用途                                  |
+| ------------------------------------------------------------------------------------- | ------------------------------------- |
+| [yegappan/lsp](https://github.com/yegappan/lsp)                                       | Language Server Protocol 客户端       |
+| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | 代码片段引擎                          |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP 片段集成                          |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | 常用代码片段集合                      |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/tag 查找                |
+| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | 异步代码搜索（rg/ag 后端）            |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | 配色方案                              |
+| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | 多光标编辑                            |
+| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | 快速跳转（替代 vim-sneak）            |
+| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive)                           | Git 集成                              |
+| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git 差异标记                          |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | 自动生成 ctags 与 gtags（GNU Global） |
+| [habamax/vim-dir](https://github.com/habamax/vim-dir)                                 | 文件管理器/目录浏览器（替代 netrw）   |
+| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | 围绕字符编辑                          |
+| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | 使用剪贴板替换                        |
+| [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | 增强 % 匹配跳转                       |
+| [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | 更多文本对象                          |
+| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | 基于缩进的文本对象                    |
+| [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | 自动配对括号                          |
+| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | 使插件映射支持 `.` 重复               |
+| [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | 大文件折叠性能优化                    |
+| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | 增强 `*` / `#` 搜索                   |
+| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | 可视化书签                            |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git 提交浏览器                        |
+| [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list 增强           |
 
 ## 快捷键
 
@@ -687,22 +686,27 @@ m?          在Location List里，查看当前buffer的所有自定义标记
 `:SignatureToggle` 显示/隐藏标记（不删除）
 `:SignatureRefresh` 标记与 sign 不同步时重新同步
 
-#### 1.13 Dirvish（目录浏览器，替代netrw）
+#### 1.13 vim-dir（文件管理器/目录浏览器，替代netrw）
 
 ```text
 -           在当前窗口打开文件所在的文件夹
 ~           在当前窗口打开项目根路径或用户主目录
 
-<CR>        进入目录或打开文件
-o           在当前窗口打开
-a           在水平分屏打开
-i           在垂直分屏打开
+目录列表内：
+<CR>/o      进入目录或打开文件
+O           用系统默认程序打开
+s           在水平分屏打开
+S           在垂直分屏打开
 t           在新标签页打开
--           返回上一级目录
-A/I/O       已禁用（请使用 a/i/o 代替）
-x           将文件添加到 arglist
-R           刷新目录视图
-:Shdo       根据行内容生成 shell 脚本（如 :%Shdo）
+-/<BS>/u    返回上一级目录
+i           预览文件（前 100 行）
+x/X         切换选中 / 全选
+D 或 dd     删除文件/目录
+R 或 rr     重命名文件/目录
+C/cc        新建目录 / 新建文件
+p/P         复制/移动选中项到当前目录
+.           切换隐藏文件显示
+:DirFilter  按正则过滤条目（! 为隐藏匹配项）
 ```
 
 #### 1.14 代码搜索（ctrlsf）
@@ -1011,41 +1015,11 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 
 ## 常用 Vim 命令
 
-### 1. vim-eunuch（UNIX Shell 辅助）
+### 1. SudoWrite
 
 ```vim
-" 类似 :wall，但写入的是所有窗口而不是所有 buffer
-:W
-
-" 写入所有修改过的 buffer
-:wall
-
-" 使用 root 权限保存文件
+" 以 root 权限写入当前文件（会提示输入 sudo 密码）
 :SudoWrite
-
-" 使用 root 权限编辑文件
-:SudoEdit {file}
-
-" 从磁盘和 buffer 中删除文件
-:Delete
-" 从磁盘中删除文件，保留 buffer
-:Remove
-
-" 重命名 / 移动文件
-:Rename {dest}
-
-" 复制文件
-:Copy {dest}
-
-" 修改文件权限
-:Chmod {mode}
-
-" 创建目录（含父目录）
-:Mkdir {dir}
-" 单独 :Mkdir 创建当前文件所在的目录
-
-" 查找文件（结果放入 quickfix）
-:Cfind {args}
 ```
 
 ### 2. CtrlSF
