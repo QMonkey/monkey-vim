@@ -463,6 +463,7 @@ It should resolve to `getty@.service`.
 | [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | Snippet engine                                   |
 | [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP snippet integration                          |
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | Snippet collection                               |
+| [junegunn/fzf](https://github.com/junegunn/fzf)                                       | Fuzzy finder (fzf.vim dependency)                |
 | [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag finder                     |
 | [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | Async code search (rg/ag backend)                |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | Colorscheme                                      |
@@ -472,13 +473,12 @@ It should resolve to `getty@.service`.
 | [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git diff in sign column                          |
 | [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | Automatic ctags & gtags (GNU Global) generation  |
 | [habamax/vim-dir](https://github.com/habamax/vim-dir)                                 | File manager / directory viewer (replaces netrw) |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | Surround text with parens/quotes/etc             |
+| [machakann/vim-sandwich](https://github.com/machakann/vim-sandwich)                   | Surround text with parens/quotes/etc             |
 | [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | Substitute with clipboard                        |
 | [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | Extended % matching                              |
 | [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | Additional text objects                          |
 | [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects                        |
 | [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | Auto-close brackets/parens                       |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | Repeat plugin maps with `.`                      |
 | [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | Faster folding for large files                   |
 | [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | Improved `*` / `#` search                        |
 | [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | Visual marks                                     |
@@ -496,8 +496,8 @@ The "Leader" key below means comma key.
 #### 1.1 Remap
 
 ```text
-s       Replace a motion/text object with clipboard content (see §1.7)
-S       Replace from cursor to end of line with clipboard content (see §1.7)
+x       Replace a motion/text object with clipboard content (see §1.7)
+X       Replace from cursor to end of line with clipboard content (see §1.7)
 Y       Copy from the cursor position to the end of the line, same as y$
 H       To the first non-blank character of the line, same as ^
 L       To the last character of the line, same as $
@@ -584,9 +584,9 @@ g#      Same as g*, search backward
 #### 1.7 Replace (vim-subversive)
 
 ```text
-s{textobj}  Replace a text object with clipboard content (e.g. siw to replace current word)
-ss          Replace entire current line with clipboard content
-S           Replace from cursor to end of line with clipboard content
+x{textobj}  Replace a text object with clipboard content (e.g. xiw to replace current word)
+xx          Replace entire current line with clipboard content
+X           Replace from cursor to end of line with clipboard content
 ```
 
 #### 1.8 LSP (Language Server Protocol)
@@ -715,13 +715,15 @@ p/P         Copy/move selected into current directory
 Leader+a        Search current word in current directory
 ```
 
-#### 1.15 Surround (vim-surround)
+#### 1.15 Surround (vim-sandwich)
 
 ```text
-ys+textobj+surroundA        Add surround A for the region of textobj
-yss+surroundA               Add surround A for current line
-ds+surroundA                Delete surround A
-cs+surroundA+surroundB      Change surround A to B
+sa+textobj+surroundA        Add surround A for the region of textobj
+sd+surroundA                Delete surround A
+sdb                         Delete surround A (auto detect)
+sr+surroundA+surroundB      Change surround A to B
+ib / ab                     Textobject: select sandwiched text (auto detect)
+is / as+surroundA           Textobject: select sandwiched text (by query)
 ```
 
 #### 1.16 Terminal
@@ -800,6 +802,80 @@ a%      Around any block (text object)
 
 Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''` and backtick pairs. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
 
+#### 1.21 Operators
+
+Operators combine with text objects (§1.22) or motions: `{operator}{textobject}`. All operators below accept `[count]`. Nesting: `[count]` before the object means "the N-th surrounding level" for the plugins marked below.
+
+```text
+# Native Vim
+d c y           Delete / change / yank
+gu gU g~        Lowercase / uppercase / toggle case
+> <             Shift indent
+=               Reindent
+!               Filter lines through external command
+gn gN           Operate on the next / previous search match
+
+# vim-subversive (see §1.7)
+x               Replace text object / motion with register content
+xx              Replace entire current line
+X               Replace from cursor to end of line
+
+# vim-sandwich (see §1.15)
+sa{motion}{char}    Add surround (count applies to the motion)
+sd{char} / sdb      Delete surround    [count] = nesting level, e.g. 2sd"
+sr{old}{new} / srb  Replace surround   [count] = nesting level
+```
+
+#### 1.22 Text objects (targets.vim / vim-indent-object / vim-sandwich / vim-matchup)
+
+All text objects work with every operator: `d`/`c`/`y`, `x` (subversive, see §1.7), `sa` (sandwich, see §1.15), `gu`/`gU`/`g~`, etc. Most objects support `[count]` (e.g. `2ib` selects the outer block).
+
+```text
+# Native Vim
+iw / aw         Word
+iW / aW         WORD (whitespace-delimited)
+is / as         Sentence
+ip / ap         Paragraph
+i( a( i[ a[ i{ a{ i< a<   Brackets (b = alias of parenthesis, overridden here)
+i" a" i' a' i` a`   Quotes
+it / at         HTML/XML tag
+gn / gN         Last search pattern match
+
+# targets.vim (enhanced search: seeking, growing, escaping, multi-line)
+ib / ab         Any block (auto-detects () [] {}) — overridden by vim-sandwich, see below
+iq / aq         Any quote (auto-detects ' " `)
+i, a, i. a. ... Separators: , . ; : + - = ~ _ * # | \ & $ /
+                e.g. i_ edits snake_case segments, i= edits key=value
+ia / aa         Function argument (use ina / ila to seek to next / last argument)
+il / al         Current line (without / with trailing whitespace)
+it / at         Tag (enhanced)
+inb anb inq anq ...   Next / last variants of the above (seek before acting)
+
+# vim-indent-object (indentation blocks, useful for Python / YAML)
+ii / ai         Indentation block (ai includes the line above)
+iI / aI         Indentation block incl. lines above / below
+2ii             One indentation level up
+
+# vim-sandwich (auto-detection across all registered pairs)
+ib / ab         Any sandwiched text (brackets + quotes + tags, overrides targets' version)
+is / as+char    Select sandwiched text by specifying the pair (e.g. as( )
+
+# vim-matchup (keyword blocks)
+i% / a%         Inside / around if...endif, function...endfunction, etc.
+2i%             Inside of the 2nd surrounding block
+```
+
+`[count]` semantics per plugin:
+
+```text
+Native          Repeats the object (2iw = two words); no nesting count
+targets.vim     Pair / quote / tag: count = nesting level (2i) selects the outer pair)
+                Separator / argument: count skips that many delimiters
+vim-indent-object   Count = indentation levels (2ii = one level up)
+vim-sandwich    ib / ab / is / as: count = nth candidate (nesting level)
+vim-matchup     Count = the count-th surrounding block
+```
+
 ### 2. Insert mode
 
 #### 2.1 Snippets (vim-vsnip)
@@ -845,9 +921,9 @@ s       Replace selected text with clipboard content
 ```text
 # '\r' standard for newline
 
-s{textobj}  Replace a text object with clipboard content (e.g. siw)
-ss          Replace entire current line with clipboard content
-S           Replace from cursor to end of line with clipboard content
+x{textobj}  Replace a text object with clipboard content (e.g. xiw)
+xx          Replace entire current line with clipboard content
+X           Replace from cursor to end of line with clipboard content
 ```
 
 #### 3.4 Easy motion (vim9-stargate)
@@ -863,10 +939,12 @@ F       Search 2 consecutive characters to jump with hints (stargate)
 Leader+a        Search selected text in current directory
 ```
 
-#### 3.6 Surround (vim-surround)
+#### 3.6 Surround (vim-sandwich)
 
 ```text
-S+surroundA     Add surround A for selected text (vim-surround built-in)
+sa+surroundA     Add surround A for selected text
+sd               Delete surround at both ends of selection
+sr+surroundA     Replace surround at both ends of selection
 ```
 
 ### 4. Command line mode
