@@ -24,7 +24,7 @@ Top-level workspace management (multiple sessions and terminals) and AI integrat
 
 ## Requirements
 
-- vim 9.0+ (9.1.1984+ for the OSC 52 clipboard over SSH; the one-click installer builds a current Vim)
+- vim 9.1+ (9.1.1984+ for the OSC 52 clipboard over SSH; the one-click installer builds a current Vim)
 - A terminal environment (no GUI / gvim support)
 
 ## Installation
@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 What the script does, step by step:
 
 1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
-2. Pre-authorize `sudo` once and keep the credentials alive in a background loop, so long downloads/compiles never trigger a mid-run password re-prompt (unattended runs won't stall)
+2. Pre-authorize `sudo` once and keep the credentials alive in a background loop, so long downloads/compiles never trigger a mid-run password re-prompt (unattended runs won't stall). On WSL it also installs a temporary sudoers drop-in (removed on exit) with `timestamp_type=global` + `timestamp_timeout=-1`: tickets are keyed by uid only, so new terminal and SSH sessions, WSL clock jumps and tty changes never re-prompt — one password until WSL restarts
 3. Install Homebrew (Linuxbrew) as the fallback package manager — its shellenv is persisted to your shell rc files (with PATH dedup guards) even when Homebrew already existed
 4. Clone and compile Vim from source, then `make install`
 5. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
@@ -53,7 +53,7 @@ What the script does, step by step:
 
 > The script keeps the Vim source tree at `~/Documents/vim` (no cleanup), so you can rebuild later with `git pull` + `make`.
 >
-> The script only rebuilds Vim when the installed one is below 9.0 **or** its `vim --version` features are incomplete — version alone isn't enough. The required features mirror the builds below: `+clipboard` and `+clipboard_provider` (clipboard providers power the osc52/tmux fallbacks; the feature landed in 9.1.1857, so distro builds of 9.1.0–9.1.1846 are rebuilt) plus, per platform, `+xterm_clipboard` (WSL), `+wayland_clipboard` or `+xterm_clipboard` (Linux desktop); the core set is `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`.
+> The script only rebuilds Vim when the installed one is below 9.1 **or** its `vim --version` features are incomplete — version alone isn't enough. The required features mirror the builds below: `+clipboard` and `+clipboard_provider` (clipboard providers power the osc52/tmux fallbacks; the feature landed in 9.1.1857, so distro builds of 9.1.0–9.1.1846 are rebuilt) plus, per platform, `+xterm_clipboard` (WSL), `+wayland_clipboard` or `+xterm_clipboard` (Linux desktop); the core set is `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`.
 >
 > PATH changes only apply to shells started after the install. When it finishes, the script prints how to apply them to the current terminal (`source <rc file>` or `exec $SHELL`).
 
@@ -457,34 +457,33 @@ It should resolve to `getty@.service`.
 
 ## Plugin list
 
-| Plugin                                                                                | Purpose                                            |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| [yegappan/lsp](https://github.com/yegappan/lsp)                                       | Language Server Protocol client                    |
-| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | Snippet engine                                     |
-| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP snippet integration                            |
-| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | Snippet collection                                 |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag finder                       |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | Async code search (rg/ag backend)                  |
-| [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | Colorscheme                                        |
-| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | Multiple cursors                                   |
-| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | Easy motion (replaces vim-sneak)                   |
-| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive)                           | Git wrapper                                        |
-| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git diff in sign column                            |
-| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | Automatic ctags & gtags (GNU Global) generation    |
-| [justinmk/vim-dirvish](https://github.com/justinmk/vim-dirvish)                       | Directory viewer (replaces netrw)                  |
-| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | Surround text with parens/quotes/etc               |
-| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | Substitute with clipboard                          |
-| [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | Extended % matching                                |
-| [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | Additional text objects                            |
-| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects                          |
-| [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | Auto-close brackets/parens                         |
-| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | Repeat plugin maps with `.`                        |
-| [tpope/vim-eunuch](https://github.com/tpope/vim-eunuch)                               | UNIX shell helpers (:SudoWrite, :W, :Delete, etc.) |
-| [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | Faster folding for large files                     |
-| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | Improved `*` / `#` search                          |
-| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | Visual marks                                       |
-| [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git commit browser                                 |
-| [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list helpers                     |
+| Plugin                                                                                | Purpose                                          |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [yegappan/lsp](https://github.com/yegappan/lsp)                                       | Language Server Protocol client                  |
+| [hrsh7th/vim-vsnip](https://github.com/hrsh7th/vim-vsnip)                             | Snippet engine                                   |
+| [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP snippet integration                          |
+| [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | Snippet collection                               |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag finder                     |
+| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | Async code search (rg/ag backend)                |
+| [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | Colorscheme                                      |
+| [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | Multiple cursors                                 |
+| [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | Easy motion (replaces vim-sneak)                 |
+| [tpope/vim-fugitive](https://github.com/tpope/vim-fugitive)                           | Git wrapper                                      |
+| [airblade/vim-gitgutter](https://github.com/airblade/vim-gitgutter)                   | Git diff in sign column                          |
+| [ludovicchabant/vim-gutentags](https://github.com/ludovicchabant/vim-gutentags)       | Automatic ctags & gtags (GNU Global) generation  |
+| [habamax/vim-dir](https://github.com/habamax/vim-dir)                                 | File manager / directory viewer (replaces netrw) |
+| [tpope/vim-surround](https://github.com/tpope/vim-surround)                           | Surround text with parens/quotes/etc             |
+| [svermeulen/vim-subversive](https://github.com/svermeulen/vim-subversive)             | Substitute with clipboard                        |
+| [andymass/vim-matchup](https://github.com/andymass/vim-matchup)                       | Extended % matching                              |
+| [wellle/targets.vim](https://github.com/wellle/targets.vim)                           | Additional text objects                          |
+| [michaeljsmith/vim-indent-object](https://github.com/michaeljsmith/vim-indent-object) | Indent-based text objects                        |
+| [cohama/lexima.vim](https://github.com/cohama/lexima.vim)                             | Auto-close brackets/parens                       |
+| [tpope/vim-repeat](https://github.com/tpope/vim-repeat)                               | Repeat plugin maps with `.`                      |
+| [Konfekt/FastFold](https://github.com/Konfekt/FastFold)                               | Faster folding for large files                   |
+| [haya14busa/vim-asterisk](https://github.com/haya14busa/vim-asterisk)                 | Improved `*` / `#` search                        |
+| [kshenoy/vim-signature](https://github.com/kshenoy/vim-signature)                     | Visual marks                                     |
+| [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git commit browser                               |
+| [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list helpers                   |
 
 ## Keyboard shortcut
 
@@ -687,22 +686,27 @@ m?          Open location list and display markers from current buffer
 `:SignatureToggle` Show/hide marks without deleting them
 `:SignatureRefresh` Re-sync marks and signs if they go out of sync
 
-#### 1.13 Dirvish (Directory viewer, replaces netrw)
+#### 1.13 vim-dir (File manager / directory viewer, replaces netrw)
 
 ```text
 -           Open file directory in current window
 ~           Open project root or home directory in current window
 
-<CR>        Enter directory or open file
-o           Open in current window (edit)
-a           Open in horizontal split
-i           Open in vertical split
+Inside the directory listing:
+<CR>/o      Enter directory or open file
+O           Open with OS default application
+s           Open in horizontal split
+S           Open in vertical split
 t           Open in new tab
--           Go up one directory
-A/I/O       Disabled (use a/i/o instead)
-x           Add files to arglist
-R           Reload directory view
-:Shdo       Generate shell script from lines (e.g., :%Shdo)
+-/<BS>/u    Go up one directory
+i           Preview file (first 100 lines)
+x/X         Toggle selection / select all
+D or dd     Delete files/directories
+R or rr     Rename files/directories
+C/cc        Create directory / create file
+p/P         Copy/move selected into current directory
+.           Toggle hidden files
+:DirFilter  Filter entries by regex (! to hide matches)
 ```
 
 #### 1.14 Code search (ctrlsf)
@@ -1009,41 +1013,11 @@ Leader+hQ       Load hunks into quickfix (all files)
 
 ## Useful Vim commands
 
-### 1. vim-eunuch (UNIX shell helpers)
+### 1. SudoWrite
 
 ```vim
-" Like :wall, but writes all windows rather than all buffers
-:W
-
-" Write all modified buffers
-:wall
-
-" Write file with sudo privileges
+" Write the current file with root privileges (prompts for sudo password)
 :SudoWrite
-
-" Edit file with sudo
-:SudoEdit {file}
-
-" Delete file from disk and buffer
-:Delete
-" Delete file from disk, keep buffer
-:Remove
-
-" Rename / move file
-:Rename {dest}
-
-" Copy file
-:Copy {dest}
-
-" Change permissions
-:Chmod {mode}
-
-" Create directory (incl. parents)
-:Mkdir {dir}
-" Mkdir on its own creates the current file's parent dir
-
-" Find files (results in quickfix)
-:Cfind {args}
 ```
 
 ### 2. CtrlSF
