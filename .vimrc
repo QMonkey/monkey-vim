@@ -65,7 +65,6 @@ Plug 'yegappan/lsp', {'on': []}
 Plug 'hrsh7th/vim-vsnip', {'on': []} | Plug 'hrsh7th/vim-vsnip-integ', {'on': []} | Plug 'rafamadriz/friendly-snippets', {'on': []}
 # Tools
 Plug 'mg979/vim-visual-multi'
-Plug 'tpope/vim-eunuch'
 Plug 'romainl/vim-qf'
 # }
 
@@ -1635,6 +1634,25 @@ augroup DirBuffer
 	autocmd!
 	autocmd FileType dir nnoremap <buffer><nowait><silent>gq <ScriptCmd>DirClose()<CR>
 augroup END
+# }
+
+# SudoWrite {
+def SudoWriteCmd()
+	var errfile = tempname()
+	execute 'write !sudo tee ' .. shellescape(expand('%:p')) .. ' >/dev/null 2>' .. errfile
+	var error = join(readfile(errfile), ' | ')
+	delete(errfile)
+	if v:shell_error || error =~# '^sudo'
+		# :w ! already cleared 'modified' although nothing was written
+		setlocal modified
+		EchoErr('SudoWrite failed: ' .. (empty(error) ? $'exit {v:shell_error}' : error))
+		return
+	endif
+	# disk now matches the buffer
+	setlocal nomodified noreadonly
+enddef
+
+command! -bar SudoWrite SudoWriteCmd()
 # }
 
 # vim-fugitive {
