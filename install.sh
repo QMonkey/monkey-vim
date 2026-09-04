@@ -294,8 +294,29 @@ install_linuxbrew() {
 		ok "Homebrew already installed at $brew_prefix."
 	else
 		info "Installing Homebrew/Linuxbrew..."
-		NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" ||
+		# The Homebrew installer runs `sudo -k` on exit to invalidate the sudo
+		# ticket (its security design). That would disable the -1/global ticket
+		# we just established, making every later sudo re-prompt. So: download
+		# the installer to a temp file, replace the `sudo -k` in its exit trap
+		# with true, and run the local file (instead of piping curl straight
+		# into bash).
+		local installer="/tmp/homebrew_install.$$.sh"
+		local fetched=0 attempt
+		for attempt in 1 2 3; do
+			if curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"; then
+				fetched=1
+				break
+			fi
+			sleep 2
+		done
+		if [ "$fetched" != 1 ]; then
+			warn "Homebrew installer download failed — continuing without Homebrew."
+			return 0
+		fi
+		sed -i 's|/usr/bin/sudo -k|/usr/bin/true|g' "$installer"
+		NONINTERACTIVE=1 /bin/bash "$installer" ||
 			warn "Homebrew installer failed — continuing without Homebrew."
+		rm -f "$installer"
 
 		local cand
 		for cand in /home/linuxbrew/.linuxbrew /opt/homebrew /usr/local; do
