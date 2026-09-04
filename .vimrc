@@ -261,6 +261,7 @@ def StatusPalette(): dict<any>
 				'Replace': [thm_bg[0 : 1], thm_orange[0 : 1]],
 				'Command': [thm_bg[0 : 1], thm_yellow[0 : 1]],
 				'Terminal': [thm_bg[0 : 1], thm_filled_red[0 : 1]],
+				'VM': [thm_bg[0 : 1], thm_purple[0 : 1]],
 			},
 			'StlB': [thm_fg[0 : 1], thm_slate[0 : 1]],
 			'StlC': [thm_fg[0 : 1], thm_status_bg[0 : 1]],
@@ -273,6 +274,7 @@ def StatusPalette(): dict<any>
 				'Replace': [thm_bg[0 : 1], thm_orange[0 : 1]],
 				'Command': [thm_bg[0 : 1], thm_yellow[0 : 1]],
 				'Terminal': [thm_bg[0 : 1], thm_filled_red[0 : 1]],
+				'VM': [thm_bg[0 : 1], thm_purple[0 : 1]],
 			},
 			'StlFill': [thm_fg[0 : 1], thm_coal[0 : 1]],
 			'StlInactive': [thm_muted[0 : 1], thm_coal[0 : 1]],
@@ -300,6 +302,7 @@ def StatusPalette(): dict<any>
 			'Replace': [['', thm_bg[2]], ['', thm_orange[2]]],
 			'Command': [['', thm_bg[2]], ['', thm_yellow[2]]],
 			'Terminal': [['', thm_bg[2]], ['', thm_filled_red[2]]],
+			'VM': [['', thm_bg[2]], ['', thm_purple[2]]],
 		},
 		'StlB': [['', thm_fg[2]], ['', thm_slate[2]]],
 		'StlC': [['', thm_fg[2]], ['', thm_status_bg[2]]],
@@ -312,6 +315,7 @@ def StatusPalette(): dict<any>
 			'Replace': [['', thm_bg[2]], ['', thm_orange[2]]],
 			'Command': [['', thm_bg[2]], ['', thm_yellow[2]]],
 			'Terminal': [['', thm_bg[2]], ['', thm_filled_red[2]]],
+			'VM': [['', thm_bg[2]], ['', thm_purple[2]]],
 		},
 		'StlFill': [['', thm_fg[2]], ['', thm_coal[2]]],
 		'StlInactive': [['', thm_muted[2]], ['', thm_coal[2]]],
@@ -421,7 +425,7 @@ def ModeLabel(): string
 	if wt != 0
 		return WindowTypeLabel()
 	endif
-	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+	if !empty(get(b:, 'VM_Selection', ''))
 		return 'V-MULTI'
 	endif
 	return winwidth(0) > 60 ? get(mode_map, mode(), ['', ''])[0] : ''
@@ -509,7 +513,7 @@ def StatusSearchInfo(): string
 	if WindowType() != 0
 		return ''
 	endif
-	if exists('b:VM_Selection') && !empty(b:VM_Selection)
+	if !empty(get(b:, 'VM_Selection', ''))
 		var vm = g:VMInfos()
 		if !empty(vm)
 			var result = vm.ratio
@@ -571,15 +575,16 @@ def UpdateDiagnosticInfo(): bool
 	return true
 enddef
 
-# Statusline composer (evaluated per window on redraw)
+# Statusline composer
 def g:Statusline(): string
 	var sel = win_getid() == str2nr(get(g:, 'actual_curwin', win_getid() .. ''))
 	if !sel
 		return '%#StlInactive#' .. StatusPadding(ModeLabel()) .. StatusPadding(StatusFilename())
 	endif
 
-	var mhl = '%#StlA' .. get(mode_map, mode(), ['', 'Normal'])[1] .. '#'
-	var zhl = '%#StlZ' .. get(mode_map, mode(), ['', 'Normal'])[1] .. '#'
+	var vm = !empty(get(b:, 'VM_Selection', ''))
+	var mhl = '%#StlA' .. (vm ? 'VM' : get(mode_map, mode(), ['', 'Normal'])[1]) .. '#'
+	var zhl = '%#StlZ' .. (vm ? 'VM' : get(mode_map, mode(), ['', 'Normal'])[1]) .. '#'
 	var left = mhl .. StatusPadding(ModeLabel())
 	if &paste
 		left ..= StatusPadding('PASTE')
@@ -1249,6 +1254,13 @@ set updatetime=300
 # Display {
 set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
+
+# Trailing whitespace in red (matchadd is window-local; priority -1 keeps it below Search/IncSearch)
+execute $'highlight TrailingSpace guifg=NONE guibg={thm_red[0]} ctermfg=NONE ctermbg={thm_red[1]}'
+augroup TrailingWhitespace
+	autocmd!
+	autocmd WinEnter,BufWinEnter * if empty(getmatches()->filter((_, m) => m.group ==# 'TrailingSpace')) | matchadd('TrailingSpace', '\s\+$', -1) | endif
+augroup END
 # }
 
 # Scroll {
@@ -1656,32 +1668,8 @@ nnoremap <silent><Leader>l <ScriptCmd>call QuickFixToggle('l', 'silent! lopen 10
 g:VM_maps = {}
 g:VM_maps['Select Operator'] = 'gs'
 g:VM_set_statusline = 0
+g:VM_show_warnings = 0
 g:VM_silent_exit = 1
-
-# Use sonokai's purple accent in true-color mode; on the 16-color console
-# fall back to the closest ANSI purple (cterm 13) with console-safe indices.
-if !is_tty_console
-	execute $'highlight VM_Mode cterm=bold ctermfg={thm_bg[1]} ctermbg={thm_purple[1]} gui=bold guifg={thm_bg[0]} guibg={thm_purple[0]}'
-	execute $'highlight VM_Info ctermfg={thm_purple[1]} ctermbg={thm_coal[1]} guifg={thm_purple[0]} guibg={thm_coal[0]}'
-else
-	execute $'highlight VM_Mode cterm=bold ctermfg={thm_bg[2]} ctermbg={thm_purple[2]} gui=bold guifg={thm_bg[0]} guibg={thm_purple[0]}'
-	execute $'highlight VM_Info ctermfg={thm_purple[2]} ctermbg={thm_coal[2]} guifg={thm_purple[0]} guibg={thm_coal[0]}'
-endif
-
-def VMEnter()
-	if !is_tty_console
-		execute $'highlight StlANormal term=bold guifg={thm_bg[0]} guibg={thm_purple[0]} ctermfg={thm_bg[1]} ctermbg={thm_purple[1]} cterm=bold'
-	else
-		execute $'highlight StlANormal term=bold guifg={thm_bg[0]} guibg={thm_purple[0]} ctermfg={thm_bg[2]} ctermbg={thm_purple[2]} cterm=bold'
-	endif
-	redrawstatus
-enddef
-
-augroup VMLightLine
-	autocmd!
-	autocmd User visual_multi_start silent VMEnter()
-	autocmd User visual_multi_exit call StatusDefineHighlights() | redrawstatus
-augroup END
 # }
 
 # vim-dir {
@@ -1999,10 +1987,10 @@ def OnLspSetup()
 		completionTextEdit: false,
 		diagVirtualTextAlign: 'below',
 		diagVirtualTextWrap: 'wrap',
-		diagSignErrorText: 'E>',
-		diagSignHintText: 'H>',
-		diagSignInfoText: 'I>',
-		diagSignWarningText: 'W>',
+		diagSignErrorText: 'E',
+		diagSignWarningText: 'W',
+		diagSignInfoText: 'I',
+		diagSignHintText: 'H',
 		echoSignature: false,
 		hideDisabledCodeActions: false,
 		highlightDiagInline: true,
