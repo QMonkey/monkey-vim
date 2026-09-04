@@ -206,6 +206,27 @@ if !is_tty_console
 else
 	colorscheme unokai
 endif
+
+# Theme colors (sonokai "andromeda")
+# Each thm_<color> is [gui, cterm256, cterm16] so every highlight can set
+# guifg/ctermfg at once in truecolor mode and fall back to the 16-color
+# console value via thm_<color>[2]. The "_filled" variants are sonokai's
+# filled_* colors (brighter, used as statusline block backgrounds).
+const thm_bg = ['#2b2d3a', 235, 0]           # bg0
+const thm_fg = ['#e1e3e4', 250, 7]           # fg
+const thm_muted = ['#7e8294', 246, 8]        # grey
+const thm_coal = ['#333648', 236, 0]         # bg1
+const thm_status_bg = ['#393e53', 237, 0]    # bg3
+const thm_slate = ['#3f445b', 237, 8]        # bg4
+const thm_red = ['#fb617e', 203, 9]          # red
+const thm_filled_red = ['#ff6188', 203, 9]   # filled_red
+const thm_orange = ['#f89860', 215, 9]       # orange
+const thm_yellow = ['#edc763', 179, 11]      # yellow
+const thm_green = ['#9ed06c', 107, 2]        # green
+const thm_filled_green = ['#a9dc76', 107, 2] # filled_green
+const thm_cyan = ['#6dcae8', 110, 14]        # blue (tmux: thm_cyan)
+const thm_filled_blue = ['#77d5f0', 110, 12] # filled_blue
+const thm_purple = ['#bb97ee', 176, 5]       # purple
 # }
 
 # manual statusline + tabline {
@@ -214,32 +235,90 @@ endif
 
 # Mode -> [label, highlight-group]
 const mode_map = {
-	'n': ['NORMAL', 'Normal'], 'i': ['INSERT', 'Insert'], 'R': ['REPLACE', 'Replace'],
-	'v': ['VISUAL', 'Visual'], 'V': ['V-LINE', 'Visual'], "\<C-v>": ['V-BLOCK', 'Visual'],
-	'c': ['COMMAND', 'Command'], 's': ['SELECT', 'Visual'], 'S': ['S-LINE', 'Visual'],
-	"\<C-s>": ['S-BLOCK', 'Visual'],
-	't': ['TERMINAL', 'Terminal'],
+	'n':         ['NORMAL',   'Normal'],
+	'i':         ['INSERT',   'Insert'],
+	'R':         ['REPLACE',  'Replace'],
+	'v':         ['VISUAL',   'Visual'],
+	'V':         ['V-LINE',   'Visual'],
+	"\<C-v>":    ['V-BLOCK',  'Visual'],
+	'c':         ['COMMAND',  'Command'],
+	's':         ['SELECT',   'Visual'],
+	'S':         ['S-LINE',   'Visual'],
+	"\<C-s>":    ['S-BLOCK',  'Visual'],
+	't':         ['TERMINAL', 'Terminal'],
 }
 
-# Palette (truecolor = sonokai "andromeda", console = 16color)
-# Each color is [gui, cterm]; gui is '' on the console.
+# Palette
+# Keys mirror the highlight group names. Each value is a [fg, bg] pair,
+# each itself a [gui, cterm] pair; gui is '' on the console.
 def StatusPalette(): dict<any>
 	if !is_tty_console
 		return {
-			'modeFg': { 'Normal': ['#2b2d3a', 235], 'Insert': ['#2b2d3a', 235], 'Visual': ['#2b2d3a', 235], 'Replace': ['#2b2d3a', 235], 'Command': ['#2b2d3a', 235], 'Terminal': ['#2b2d3a', 235] },
-			'modeBg': { 'Normal': ['#77d5f0', 110], 'Insert': ['#a9dc76', 107], 'Visual': ['#bb97ee', 176], 'Replace': ['#f89860', 215], 'Command': ['#edc763', 179], 'Terminal': ['#ff6188', 203] },
-			'l2': [['#e1e3e4', 250], ['#3f445b', 237]], 'base': [['#e1e3e4', 250], ['#393e53', 237]],
-			'Midline': [['#e1e3e4', 250], ['#333648', 236]], 'Inactive': [['#7e8294', 246], ['#333648', 236]],
-			'TabSelected': [['#2b2d3a', 235], ['#ff6188', 203]], 'TabInactive': [['#7e8294', 246], ['#333648', 236]],
-			'diagnosticFg': { 'Error': ['#fb617e', 203], 'Warn': ['#edc763', 179], 'Hint': ['#bb97ee', 176], 'Info': ['#6dcae8', 110] },
+			'StlA': {
+				'Normal': [thm_bg[0 : 1], thm_filled_blue[0 : 1]],
+				'Insert': [thm_bg[0 : 1], thm_filled_green[0 : 1]],
+				'Visual': [thm_bg[0 : 1], thm_purple[0 : 1]],
+				'Replace': [thm_bg[0 : 1], thm_orange[0 : 1]],
+				'Command': [thm_bg[0 : 1], thm_yellow[0 : 1]],
+				'Terminal': [thm_bg[0 : 1], thm_filled_red[0 : 1]],
+			},
+			'StlB': [thm_fg[0 : 1], thm_slate[0 : 1]],
+			'StlC': [thm_fg[0 : 1], thm_status_bg[0 : 1]],
+			'StlX': [thm_fg[0 : 1], thm_status_bg[0 : 1]],
+			'StlY': [thm_fg[0 : 1], thm_slate[0 : 1]],
+			'StlZ': {
+				'Normal': [thm_bg[0 : 1], thm_filled_blue[0 : 1]],
+				'Insert': [thm_bg[0 : 1], thm_filled_green[0 : 1]],
+				'Visual': [thm_bg[0 : 1], thm_purple[0 : 1]],
+				'Replace': [thm_bg[0 : 1], thm_orange[0 : 1]],
+				'Command': [thm_bg[0 : 1], thm_yellow[0 : 1]],
+				'Terminal': [thm_bg[0 : 1], thm_filled_red[0 : 1]],
+			},
+			'StlFill': [thm_fg[0 : 1], thm_coal[0 : 1]],
+			'StlInactive': [thm_muted[0 : 1], thm_coal[0 : 1]],
+			'StlTabsActive': [thm_bg[0 : 1], thm_filled_red[0 : 1]],
+			'StlTabsInactive': [thm_muted[0 : 1], thm_coal[0 : 1]],
+			'StlTabsFill': [thm_fg[0 : 1], thm_coal[0 : 1]],
+			'StlDiagnostic': {
+				'Error': [thm_red[0 : 1], thm_slate[0 : 1]],
+				'Warn': [thm_yellow[0 : 1], thm_slate[0 : 1]],
+				'Hint': [thm_purple[0 : 1], thm_slate[0 : 1]],
+				'Info': [thm_cyan[0 : 1], thm_slate[0 : 1]],
+			},
 		}
 	endif
 	return {
-		'modeFg': { 'Normal': ['', 15], 'Insert': ['', 15], 'Visual': ['', 15], 'Replace': ['', 15], 'Command': ['', 0], 'Terminal': ['', 15] },
-		'modeBg': { 'Normal': ['', 12], 'Insert': ['', 2], 'Visual': ['', 5], 'Replace': ['', 9], 'Command': ['', 11], 'Terminal': ['', 9] },
-		'l2': [['', 15], ['', 8]], 'base': [['', 7], ['', 0]], 'Midline': [['', 7], ['', 0]],
-		'Inactive': [['', 7], ['', 8]], 'TabSelected': [['', 15], ['', 12]], 'TabInactive': [['', 7], ['', 8]],
-		'diagnosticFg': { 'Error': ['', 9], 'Warn': ['', 11], 'Hint': ['', 13], 'Info': ['', 14] },
+		'StlA': {
+			'Normal': [['', thm_bg[2]], ['', thm_filled_blue[2]]],
+			'Insert': [['', thm_bg[2]], ['', thm_filled_green[2]]],
+			'Visual': [['', thm_bg[2]], ['', thm_purple[2]]],
+			'Replace': [['', thm_bg[2]], ['', thm_orange[2]]],
+			'Command': [['', thm_bg[2]], ['', thm_yellow[2]]],
+			'Terminal': [['', thm_bg[2]], ['', thm_filled_red[2]]],
+		},
+		'StlB': [['', thm_fg[2]], ['', thm_slate[2]]],
+		'StlC': [['', thm_fg[2]], ['', thm_status_bg[2]]],
+		'StlX': [['', thm_fg[2]], ['', thm_status_bg[2]]],
+		'StlY': [['', thm_fg[2]], ['', thm_slate[2]]],
+		'StlZ': {
+			'Normal': [['', thm_bg[2]], ['', thm_filled_blue[2]]],
+			'Insert': [['', thm_bg[2]], ['', thm_filled_green[2]]],
+			'Visual': [['', thm_bg[2]], ['', thm_purple[2]]],
+			'Replace': [['', thm_bg[2]], ['', thm_orange[2]]],
+			'Command': [['', thm_bg[2]], ['', thm_yellow[2]]],
+			'Terminal': [['', thm_bg[2]], ['', thm_filled_red[2]]],
+		},
+		'StlFill': [['', thm_fg[2]], ['', thm_coal[2]]],
+		'StlInactive': [['', thm_muted[2]], ['', thm_coal[2]]],
+		'StlTabsActive': [['', thm_bg[2]], ['', thm_filled_red[2]]],
+		'StlTabsInactive': [['', thm_muted[2]], ['', thm_coal[2]]],
+		'StlTabsFill': [['', thm_fg[2]], ['', thm_coal[2]]],
+		'StlDiagnostic': {
+			'Error': [['', thm_red[2]], ['', thm_slate[2]]],
+			'Warn': [['', thm_yellow[2]], ['', thm_slate[2]]],
+			'Hint': [['', thm_purple[2]], ['', thm_slate[2]]],
+			'Info': [['', thm_cyan[2]], ['', thm_slate[2]]],
+		},
 	}
 enddef
 
@@ -251,26 +330,30 @@ def StatusHighlight(name: string, color: list<any>, bold: bool)
 	if fg[0] == ''
 		execute printf('highlight %s term=%s ctermfg=%d ctermbg=%d', name, attr, fg[1], bg[1])
 	else
-		execute printf('highlight %s term=%s guifg=%s guibg=%s ctermfg=%d ctermbg=%d',
-			name, attr, fg[0], bg[0], fg[1], bg[1])
+		execute printf('highlight %s term=%s guifg=%s guibg=%s ctermfg=%d ctermbg=%d', name, attr, fg[0], bg[0], fg[1], bg[1])
 	endif
 enddef
 
 # Define all status/tab highlight groups from the current palette.
 def StatusDefineHighlights()
 	var pal = StatusPalette()
-	for [mkey, mbg] in items(pal.modeBg)
-		StatusHighlight('StlMode' .. mkey, [[pal.modeFg[mkey][0], pal.modeFg[mkey][1]], mbg], true)
+	for [mkey, pair] in items(pal.StlA)
+		StatusHighlight('StlA' .. mkey, pair, true)
 	endfor
-	StatusHighlight('StlL2', pal.l2, false)
-	StatusHighlight('StlBase', pal.base, false)
-	StatusHighlight('StlMidline', pal.Midline, false)
-	StatusHighlight('StlInactive', pal.Inactive, false)
-	StatusHighlight('StlTabSelected', pal.TabSelected, true)
-	StatusHighlight('StlTabInactive', pal.TabInactive, false)
-	StatusHighlight('StlTabMidline', pal.Midline, false)
-	for [dkey, dfg] in items(pal.diagnosticFg)
-		StatusHighlight('StlDiagnostic' .. dkey, [dfg, pal.l2[1]], false)
+	StatusHighlight('StlB', pal.StlB, false)
+	StatusHighlight('StlC', pal.StlC, false)
+	StatusHighlight('StlX', pal.StlX, false)
+	StatusHighlight('StlY', pal.StlY, false)
+	for [zkey, pair] in items(pal.StlZ)
+		StatusHighlight('StlZ' .. zkey, pair, true)
+	endfor
+	StatusHighlight('StlFill', pal.StlFill, false)
+	StatusHighlight('StlInactive', pal.StlInactive, false)
+	StatusHighlight('StlTabsActive', pal.StlTabsActive, true)
+	StatusHighlight('StlTabsInactive', pal.StlTabsInactive, false)
+	StatusHighlight('StlTabsFill', pal.StlTabsFill, false)
+	for [dkey, pair] in items(pal.StlDiagnostic)
+		StatusHighlight('StlDiagnostic' .. dkey, pair, false)
 	endfor
 enddef
 
@@ -486,30 +569,31 @@ def g:Statusline(): string
 		return '%#StlInactive#' .. StatusPadding(ModeLabel()) .. StatusPadding(StatusFilename())
 	endif
 
-	var mhl = '%#StlMode' .. get(mode_map, mode(), ['', 'Normal'])[1] .. '#'
+	var mhl = '%#StlA' .. get(mode_map, mode(), ['', 'Normal'])[1] .. '#'
+	var zhl = '%#StlZ' .. get(mode_map, mode(), ['', 'Normal'])[1] .. '#'
 	var left = mhl .. StatusPadding(ModeLabel())
 	if &paste
 		left ..= StatusPadding('PASTE')
 	endif
 	var git = get(b:, 'git_info', '')
 	if git != ''
-		left ..= '%#StlL2#' .. StatusPadding(git)
+		left ..= '%#StlB#' .. StatusPadding(git)
 	endif
 	var diag = get(b:, 'diagnostic_info', '')
 	if diag != ''
 		left ..= '%#StlDiagnosticError# ' .. diag .. ' '
 	endif
-	left ..= '%#StlBase#' .. StatusPadding(StatusFilename())
+	left ..= '%#StlC#' .. StatusPadding(StatusFilename())
 
-	var right = '%#StlBase#'
+	var right = '%#StlX#'
 	right ..= StatusPadding(StatusSearchInfo())
 	right ..= StatusPadding(StatusFiletype())
 	right ..= StatusPadding(StatusFileencoding())
 	right ..= StatusPadding(StatusFileformat())
-	right ..= '%#StlL2#' .. StatusPadding(StatusPercent())
-	right ..= mhl .. StatusPadding(StatusLineInfo())
+	right ..= '%#StlY#' .. StatusPadding(StatusPercent())
+	right ..= zhl .. StatusPadding(StatusLineInfo())
 
-	return left .. '%#StlMidline#%=' .. right
+	return left .. '%#StlFill#%=' .. right
 enddef
 
 # Tabline composer
@@ -533,10 +617,10 @@ def g:Tabline(): string
 	var nr = tabpagenr()
 	var cnt = tabpagenr('$')
 	for i in range(1, cnt)
-		s ..= (i == nr ? '%#StlTabSelected#' : '%#StlTabInactive#')
+		s ..= (i == nr ? '%#StlTabsActive#' : '%#StlTabsInactive#')
 		s ..= '%' .. i .. 'T%( ' .. TabLabel(i) .. ' %)%T'
 	endfor
-	return s .. '%#StlTabMidline#%='
+	return s .. '%#StlTabsFill#%='
 enddef
 
 # Options
@@ -596,7 +680,7 @@ def FindProjectRoot(start: string, fallback: string): string
 enddef
 
 def BufferDir(): string
-	if IsExplorerBuffer(bufname('%'))
+	if getbufvar(bufnr('%'), '&filetype') ==# 'dir'
 		# A vim-dir buffer is named "dir://{path}"; use the browsed directory
 		# so session/viminfo naming stays anchored to a real directory.
 		return substitute(bufname('%'), '^dir://', '', '')
@@ -638,8 +722,14 @@ def EchoErr(msg: string)
 	echohl None
 enddef
 
-def IsExplorerBuffer(name: string): bool
-	return name =~# '^dir://'
+# mksession cannot represent these buffers (e.g. vim-dir listings: unlisted,
+# 'buftype' nofile): a session persisted while such a window is focused loses
+# the window and the surrounding layout. Windows showing one of
+# g:session_switch_filetypes are switched back to a real buffer before the session is written.
+g:session_switch_filetypes = ['dir']
+
+def IsSessionSwitchBuffer(bufnr: number): bool
+	return index(g:session_switch_filetypes, getbufvar(bufnr, '&filetype')) >= 0
 enddef
 
 def IsDirExists(path: string): bool
@@ -651,15 +741,12 @@ def IsDirExists(path: string): bool
 	return isdirectory(expand(substitute(path, '\\\(\S\)', '\1', 'g')))
 enddef
 
-# mksession cannot represent vim-dir buffers (unlisted, 'buftype' nofile): a
-# session persisted while a vim-dir buffer is focused loses its window and the
-# surrounding layout. Switch vim-dir windows back to a real buffer before the session is written.
-def LeaveExplorerBuffers()
-	# Fallback: the first listed, named buffer that is not an explorer.
+def SwitchSessionFiletypeWindows()
+	# Fallback: the first listed, named buffer that is not excluded.
 	var bufinfos = getbufinfo({buflisted: 1})
 	var fallback = -1
 	for b in bufinfos
-		if !IsExplorerBuffer(b.name) && !empty(b.name)
+		if !IsSessionSwitchBuffer(b.bufnr) && !empty(b.name)
 			fallback = b.bufnr
 			break
 		endif
@@ -670,11 +757,11 @@ def LeaveExplorerBuffers()
 	var cur_wid = win_getid()
 	var alt_bufnr = bufnr('#')
 	for win in range(1, winnr('$'))
-		if !IsExplorerBuffer(bufname(winbufnr(win)))
+		if !IsSessionSwitchBuffer(winbufnr(win))
 			continue
 		endif
 		win_gotoid(win_getid(win))
-		if alt_bufnr > 0 && alt_bufnr != bufnr('%') && buflisted(alt_bufnr) && !IsExplorerBuffer(bufname(alt_bufnr))
+		if alt_bufnr > 0 && alt_bufnr != bufnr('%') && buflisted(alt_bufnr) && !IsSessionSwitchBuffer(alt_bufnr)
 			execute 'buffer' alt_bufnr
 		else
 			execute 'buffer' fallback
@@ -713,7 +800,7 @@ enddef
 # session is tracked (v:this_session set, either by BackupSession or by a restored session).
 def WriteSessionFile(session_filename: string)
 	mkdir(fnamemodify(session_filename, ':h'), 'p')
-	LeaveExplorerBuffers()
+	SwitchSessionFiletypeWindows()
 	execute 'mksession!' fnameescape(session_filename)
 	v:this_session = session_filename
 	SanitizeSessionFile(session_filename)
@@ -1565,18 +1652,18 @@ g:VM_silent_exit = 1
 # Use sonokai's purple accent in true-color mode; on the 16-color console
 # fall back to the closest ANSI purple (cterm 13) with console-safe indices.
 if !is_tty_console
-	highlight VM_Mode cterm=bold ctermfg=232 ctermbg=141 gui=bold guifg=#1a1b26 guibg=#bb9af7
-	highlight VM_Info ctermfg=141 ctermbg=236 guifg=#bb9af7 guibg=#3b3f54
+	execute $'highlight VM_Mode cterm=bold ctermfg={thm_bg[1]} ctermbg={thm_purple[1]} gui=bold guifg={thm_bg[0]} guibg={thm_purple[0]}'
+	execute $'highlight VM_Info ctermfg={thm_purple[1]} ctermbg={thm_coal[1]} guifg={thm_purple[0]} guibg={thm_coal[0]}'
 else
-	highlight VM_Mode cterm=bold ctermfg=0 ctermbg=13 gui=bold guifg=#1a1b26 guibg=#bb9af7
-	highlight VM_Info ctermfg=13 ctermbg=0 guifg=#bb9af7 guibg=#3b3f54
+	execute $'highlight VM_Mode cterm=bold ctermfg={thm_bg[2]} ctermbg={thm_purple[2]} gui=bold guifg={thm_bg[0]} guibg={thm_purple[0]}'
+	execute $'highlight VM_Info ctermfg={thm_purple[2]} ctermbg={thm_coal[2]} guifg={thm_purple[0]} guibg={thm_coal[0]}'
 endif
 
 def VMEnter()
 	if !is_tty_console
-		execute 'highlight StlModeNormal term=bold guifg=#1a1b26 guibg=#bb9af7 ctermfg=232 ctermbg=141 cterm=bold'
+		execute $'highlight StlANormal term=bold guifg={thm_bg[0]} guibg={thm_purple[0]} ctermfg={thm_bg[1]} ctermbg={thm_purple[1]} cterm=bold'
 	else
-		execute 'highlight StlModeNormal term=bold guifg=#1a1b26 guibg=#bb9af7 ctermfg=0 ctermbg=13 cterm=bold'
+		execute $'highlight StlANormal term=bold guifg={thm_bg[0]} guibg={thm_purple[0]} ctermfg={thm_bg[2]} ctermbg={thm_purple[2]} cterm=bold'
 	endif
 	redrawstatus
 enddef
@@ -1597,11 +1684,11 @@ nnoremap <silent>~ <ScriptCmd>execute('Dir ' .. FindProjectRoot(BufferDir(), exp
 def DirClose()
 	var target = -1
 	var alt_bufnr = bufnr('#')
-	if alt_bufnr > 0 && buflisted(alt_bufnr) && !IsExplorerBuffer(bufname(alt_bufnr))
+	if alt_bufnr > 0 && buflisted(alt_bufnr) && getbufvar(alt_bufnr, '&filetype') !=# 'dir'
 		target = alt_bufnr
 	else
 		for b in getbufinfo({buflisted: 1})
-			if !IsExplorerBuffer(b.name) && !empty(b.name)
+			if getbufvar(b.bufnr, '&filetype') !=# 'dir' && !empty(b.name)
 				target = b.bufnr
 				break
 			endif
@@ -1882,11 +1969,11 @@ g:SignatureMap = {
 }
 g:SignatureMarkTextHLDynamic = 1
 
-# Highlight mark a-zA-Z
+# Highlight mark a-zA-Z (sonokai green)
 if !is_tty_console
-	highlight SignatureMarkText cterm=bold ctermfg=154 gui=bold guifg=#A6E22E
+	execute $'highlight SignatureMarkText cterm=bold ctermfg={thm_green[1]} gui=bold guifg={thm_green[0]}'
 else
-	highlight SignatureMarkText cterm=bold ctermfg=10 gui=bold guifg=#A6E22E
+	execute $'highlight SignatureMarkText cterm=bold ctermfg={thm_green[2]} gui=bold guifg={thm_green[0]}'
 endif
 # }
 
