@@ -248,7 +248,7 @@ ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver
 
 #### 2.12 Fonts (optional)
 
-Vim uses common Unicode characters (⎇, │, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
+Vim uses common Unicode characters (│, ▸, ·, ¬) and works without extra fonts. A [Nerd Font](https://github.com/ryanoasis/nerd-fonts) is optional if you prefer the Powerline-style look.
 
 ### 3. Health check
 
