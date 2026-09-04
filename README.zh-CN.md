@@ -247,7 +247,7 @@ ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver
 
 #### 2.12 字体（可选）
 
-Vim 使用的 Unicode 字符（⎇, │, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)。
+Vim 使用的 Unicode 字符（│, ▸, ·, ¬）无需额外字体即可正常显示。如需 Powerline 风格外观，可选择性安装 [Nerd Font](https://github.com/ryanoasis/nerd-fonts)。
 
 ### 3. 健康检查
 
