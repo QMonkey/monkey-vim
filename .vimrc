@@ -193,8 +193,7 @@ endif
 
 # Theme {
 # unokai is a built-in Monokai-style theme whose named-color branches
-# match the console's fixed VGA palette, keeping a sonokai-like look when
-# is_tty_console.
+# match the console's fixed VGA palette, keeping a sonokai-like look when is_tty_console.
 set background=dark
 if !is_tty_console
 	# sonokai settings must be set before :colorscheme
@@ -211,8 +210,7 @@ endif
 
 # manual statusline + tabline {
 # Draw paths read only builtins + cached values (never system()/plugins).
-# Git/LSP data is recomputed on events (BufEnter/BufWritePost/CursorHold/
-# LspDiagsUpdated) into b:git_info, b:diagnostic_info.
+# Git/LSP data is recomputed on events (BufEnter/User GitGutter/LspDiagsUpdated) into b:git_info, b:diagnostic_info.
 
 # Mode -> [label, highlight-group]
 const mode_map = {
@@ -343,7 +341,7 @@ def IsGitFile(): number
 		return 0
 	endif
 	var fname = expand('%:t')
-	if fname == '' || fname =~# '\[Plugins\]'
+	if fname == ''
 		return 0
 	endif
 	if g:FugitiveExtractGitDir(resolve(expand('%'))) == ''
@@ -455,8 +453,7 @@ enddef
 
 # LSP diagnostic summary (events update b:diagnostic_info; draw only reads cache)
 # Section renders each severity in its own color: E:1 W:1 H:1 I:1.
-# Returns true when the diagnostic summary actually changed, false when there
-# is no LSP or nothing changed.
+# Returns true when the diagnostic summary actually changed, false when there is no LSP or nothing changed.
 def UpdateDiagnosticInfo(): bool
 	if !exists('g:loaded_lsp')
 		b:diagnostic_info = ''
@@ -555,19 +552,19 @@ StatusDefineHighlights()
 augroup Statusline
 	autocmd!
 	autocmd ColorScheme * StatusDefineHighlights()
-	autocmd BufEnter * unlet! b:is_git_file | call UpdateGitInfo() | call UpdateDiagnosticInfo()
-	autocmd BufWritePost * if UpdateGitInfo() | redrawstatus | endif
-	autocmd CursorHold * if UpdateGitInfo() | redrawstatus | endif
-	autocmd User LspDiagsUpdated,LspAttached,LspDetached if UpdateDiagnosticInfo() | redrawstatus | endif
 	autocmd BufWinEnter,WinEnter * unlet! w:window_type
+	autocmd BufEnter * unlet! b:is_git_file | call UpdateGitInfo() | call UpdateDiagnosticInfo()
+	# GitGutter fires this after its diff completes -- hunks are fresh, unlike
+	# BufWritePost/CursorHold/TextChanged where the cache is still stale
+	autocmd User GitGutter if UpdateGitInfo() | redrawstatus | endif
+	autocmd User LspDiagsUpdated,LspAttached,LspDetached if UpdateDiagnosticInfo() | redrawstatus | endif
 augroup END
 # }
 
 # CheckFileChanges {
 # Enable focus event tracking for terminal vim.
-# Most terminal terminfo entries lack Ss/Se capability definitions,
-# causing t_fe/t_fd to remain empty. Set them manually so that
-# FocusGained/FocusLost autocommands work (e.g. for checktime).
+# Most terminal terminfo entries lack Ss/Se capability definitions, causing t_fe/t_fd to remain empty.
+# Set them manually so that FocusGained/FocusLost autocommands work (e.g. for checktime).
 if !has('gui_running') && &t_fe == ''
 	&t_fe = "\<Esc>[?1004h"
 	&t_fd = "\<Esc>[?1004l"
@@ -635,6 +632,12 @@ execute 'set viminfo+=n' .. fnameescape(GetViminfoFile())
 # Session / Restore {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
+def EchoErr(msg: string)
+	echohl ErrorMsg
+	echomsg msg
+	echohl None
+enddef
+
 def IsExplorerBuffer(name: string): bool
 	return name =~# '^dir://'
 enddef
@@ -650,8 +653,7 @@ enddef
 
 # mksession cannot represent vim-dir buffers (unlisted, 'buftype' nofile): a
 # session persisted while a vim-dir buffer is focused loses its window and the
-# surrounding layout. Switch vim-dir windows back to a real buffer before the
-# session is written.
+# surrounding layout. Switch vim-dir windows back to a real buffer before the session is written.
 def LeaveExplorerBuffers()
 	# Fallback: the first listed, named buffer that is not an explorer.
 	var bufinfos = getbufinfo({buflisted: 1})
@@ -960,7 +962,7 @@ enddef
 def TagsRebuild()
 	var info = TagsBranchIdentity()
 	if empty(info)
-		echoerr 'TagsRebuild: cannot determine project root'
+		EchoErr('TagsRebuild: cannot determine project root')
 		return
 	endif
 	TagsDoRebuild(info['root'])
@@ -1229,17 +1231,11 @@ nnoremap <silent><Leader>o <ScriptCmd>call OpenPrompt('New buffer name: ', 'edit
 # }
 
 # Tab {
+for i in range(1, 9)
+	execute $'nnoremap <Leader>{i} <Cmd>{i}tabnext<CR>'
+endfor
 nnoremap <silent>[t <Cmd>tabprevious<CR>
 nnoremap <silent>]t <Cmd>tabnext<CR>
-nnoremap <Leader>1 <Cmd>1tabnext<CR>
-nnoremap <Leader>2 <Cmd>2tabnext<CR>
-nnoremap <Leader>3 <Cmd>3tabnext<CR>
-nnoremap <Leader>4 <Cmd>4tabnext<CR>
-nnoremap <Leader>5 <Cmd>5tabnext<CR>
-nnoremap <Leader>6 <Cmd>6tabnext<CR>
-nnoremap <Leader>7 <Cmd>7tabnext<CR>
-nnoremap <Leader>8 <Cmd>8tabnext<CR>
-nnoremap <Leader>9 <Cmd>9tabnext<CR>
 nnoremap <Leader>[ <Cmd>tabfirst<CR>
 nnoremap <Leader>] <Cmd>tablast<CR>
 nnoremap <silent><Leader><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 'tabnew')<CR>
@@ -1539,24 +1535,20 @@ g:qf_auto_quit = 1
 def QuickFixToggle(type: string, cmd: string)
 	var ftype = &filetype
 	var last_winnr = winnr('#')
-	var buffer_count_before = BufferCount()
+	var buffer_count_before = len(tabpagebuflist())
 	if type ==# 'quickfix' || type ==# 'q'
 		silent! cclose
 	elseif type ==# 'location' || type ==# 'l'
 		silent! lclose
 	endif
 
-	if BufferCount() == buffer_count_before
+	if len(tabpagebuflist()) == buffer_count_before
 		execute cmd
 	else
 		if ftype ==# 'qf'
 			silent! execute last_winnr .. 'wincmd w'
 		endif
 	endif
-enddef
-
-def BufferCount(): number
-	return len(tabpagebuflist())
 enddef
 
 nnoremap <silent><Leader>d <ScriptCmd>call QuickFixToggle('l', 'LspDiag show')<CR>
@@ -1639,8 +1631,6 @@ def SudoWriteCmd()
 	var error = join(filter(readfile(errfile), 'trim(v:val) !=# ""'), ' | ')
 	delete(errfile)
 	if v:shell_error || error =~# '^sudo'
-		# :w ! already cleared 'modified' although nothing was written
-		setlocal modified
 		EchoErr('SudoWrite failed: ' .. (empty(error) ? $'exit {v:shell_error}' : error))
 		return
 	endif
@@ -1771,12 +1761,6 @@ def FlattenDocSymbols(syms: list<dict<any>>, srv: dict<any>, bnr: number, kinds:
 	return out
 enddef
 
-def EchoErr(msg: string)
-	echohl ErrorMsg
-	echomsg msg
-	echohl None
-enddef
-
 def FzfLspDocSymbols(types: list<number>)
 	var srv = lsp#buffer#CurbufGetServer('documentSymbol')
 	if empty(srv) || !srv.running || !srv.ready
@@ -1885,22 +1869,25 @@ highlight! link MatchWordCur Search
 # }
 
 # vim-signature {
+# Disable markers (!@#$%^&*()): 10 blank slots make m1-m0 fall through to
+# native marks; the marker-specific maps are left unmapped
+g:SignatureIncludeMarkers = '          '
+g:SignatureMap = {
+	'PurgeMarkers': '',
+	'ListBufferMarkers': '',
+	'GotoNextMarker': '',
+	'GotoPrevMarker': '',
+	'GotoNextMarkerAny': '',
+	'GotoPrevMarkerAny': '',
+}
+g:SignatureMarkTextHLDynamic = 1
+
 # Highlight mark a-zA-Z
 if !is_tty_console
 	highlight SignatureMarkText cterm=bold ctermfg=154 gui=bold guifg=#A6E22E
 else
 	highlight SignatureMarkText cterm=bold ctermfg=10 gui=bold guifg=#A6E22E
 endif
-
-# Highlight marker !@#$%^&*()
-if !is_tty_console
-	highlight SignatureMarkerText term=bold cterm=bold ctermfg=197 gui=bold guifg=#F92672
-else
-	highlight SignatureMarkerText term=bold cterm=bold ctermfg=9 gui=bold guifg=#F92672
-endif
-
-g:SignatureMarkTextHLDynamic = 1
-g:SignatureMarkerTextHLDynamic = 1
 # }
 
 # lsp {
