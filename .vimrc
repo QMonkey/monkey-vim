@@ -279,6 +279,11 @@ def StatusPalette(): dict<any>
 			'StlTabsActive': [thm_bg[0 : 1], thm_filled_red[0 : 1]],
 			'StlTabsInactive': [thm_muted[0 : 1], thm_coal[0 : 1]],
 			'StlTabsFill': [thm_fg[0 : 1], thm_coal[0 : 1]],
+			'StlGit': {
+				'Added': [thm_green[0 : 1], thm_slate[0 : 1]],
+				'Modified': [thm_cyan[0 : 1], thm_slate[0 : 1]],
+				'Deleted': [thm_red[0 : 1], thm_slate[0 : 1]],
+			},
 			'StlDiagnostic': {
 				'Error': [thm_red[0 : 1], thm_slate[0 : 1]],
 				'Warn': [thm_yellow[0 : 1], thm_slate[0 : 1]],
@@ -313,6 +318,11 @@ def StatusPalette(): dict<any>
 		'StlTabsActive': [['', thm_bg[2]], ['', thm_filled_red[2]]],
 		'StlTabsInactive': [['', thm_muted[2]], ['', thm_coal[2]]],
 		'StlTabsFill': [['', thm_fg[2]], ['', thm_coal[2]]],
+		'StlGit': {
+			'Added': [['', thm_green[2]], ['', thm_slate[2]]],
+			'Modified': [['', thm_cyan[2]], ['', thm_slate[2]]],
+			'Deleted': [['', thm_red[2]], ['', thm_slate[2]]],
+		},
 		'StlDiagnostic': {
 			'Error': [['', thm_red[2]], ['', thm_slate[2]]],
 			'Warn': [['', thm_yellow[2]], ['', thm_slate[2]]],
@@ -352,6 +362,9 @@ def StatusDefineHighlights()
 	StatusHighlight('StlTabsActive', pal.StlTabsActive, true)
 	StatusHighlight('StlTabsInactive', pal.StlTabsInactive, false)
 	StatusHighlight('StlTabsFill', pal.StlTabsFill, false)
+	for [gkey, pair] in items(pal.StlGit)
+		StatusHighlight('StlGit' .. gkey, pair, false)
+	endfor
 	for [dkey, pair] in items(pal.StlDiagnostic)
 		StatusHighlight('StlDiagnostic' .. dkey, pair, false)
 	endfor
@@ -442,21 +455,21 @@ def UpdateGitInfo(): bool
 		b:git_info = ''
 		return false
 	endif
-	var parts: list<string> = []
 	if getftype(expand('%')) ==# 'link'
 		g:FugitiveDetect(resolve(expand('%')))
 	endif
 	var branch = g:FugitiveHead()
-	if branch != ''
-		add(parts, '⎇ ' .. branch)
-	endif
 	var sum = g:GitGutterGetHunkSummary()
-	for idx in range(3)
-		if sum[idx] != 0
-			add(parts, printf(['+%d', '~%d', '-%d'][idx], sum[idx]))
+	var hunks: list<string> = []
+	for [tag, group, n] in [['+', 'Added', sum[0]], ['~', 'Modified', sum[1]], ['-', 'Deleted', sum[2]]]
+		if n != 0
+			add(hunks, $'%#StlGit{group}#{tag}{n}')
 		endif
 	endfor
-	var new_info = join(parts, ' ')
+	var new_info = branch
+	if !empty(hunks)
+		new_info = (new_info ==# '' ? '' : new_info .. '  ') .. join(hunks, ' ')
+	endif
 	if new_info ==# get(b:, 'git_info', '')
 		return false
 	endif
@@ -545,11 +558,7 @@ def UpdateDiagnosticInfo(): bool
 	var cnt = lsp#diag#DiagsGetErrorCount(bufnr('%'))
 	var s = ''
 	var sep = ''
-	for [dkey, tag, n] in [
-			['Error', 'E', cnt.Error],
-			['Warn', 'W', cnt.Warn],
-			['Hint', 'H', cnt.Hint],
-			['Info', 'I', cnt.Info]]
+	for [dkey, tag, n] in [['Error', 'E', cnt.Error], ['Warn', 'W', cnt.Warn], ['Info', 'I', cnt.Info], ['Hint', 'H', cnt.Hint]]
 		if n > 0
 			s ..= sep .. '%#StlDiagnostic' .. dkey .. '#' .. tag .. ':' .. n
 			sep = ' '
