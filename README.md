@@ -670,18 +670,11 @@ m<Space>    Delete all marks in current buffer
 ]` / [`     Jump to next / previous mark
 `] / `[     Jump by alphabetical order to next / previous mark
 m/          View all marks in Location List
-
-m[0-9]      Toggle the corresponding marker !@#$%^&*()
-
-m<S-[0-9]>  Remove all markers of the same type
-m<BS>       Remove all markers
-
-]-          Jump to next line having a marker of the same type
-[-          Jump to prev line having a marker of the same type
-]=          Jump to next line having a marker of any type
-[=          Jump to prev line having a marker of any type
-m?          Open location list and display markers from current buffer
 ```
+
+Markers (!@#$%^&*()) are disabled: `m[0-9]` falls through to Vim's native
+marks, and the marker mappings (`m<BS>`, `m?`, `]-`, `[-`, `]=`, `[=`) are
+left unmapped.
 
 `:SignatureToggle` Show/hide marks without deleting them
 `:SignatureRefresh` Re-sync marks and signs if they go out of sync
