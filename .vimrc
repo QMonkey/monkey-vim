@@ -1258,10 +1258,29 @@ set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
 # Trailing whitespace in red (matchadd is window-local; priority -1 keeps it below Search/IncSearch)
+# Blacklist: filetypes that skip trailing-whitespace highlighting
+g:trailing_whitespace_blacklist = ['fugitive', 'ctrlsf']
 execute $'highlight TrailingSpace guifg=NONE guibg={thm_red[0]} ctermfg=NONE ctermbg={thm_red[1]}'
+
+def g:HighlightTrailingSpace()
+	var ids: list<number> = []
+	for m in getmatches()
+		if m.group ==# 'TrailingSpace'
+			ids->add(m.id)
+		endif
+	endfor
+	if index(g:trailing_whitespace_blacklist, &filetype) >= 0
+		for id in ids
+			matchdelete(id)
+		endfor
+	elseif ids->empty()
+		matchadd('TrailingSpace', '\s\+$', -1)
+	endif
+enddef
+
 augroup TrailingWhitespace
 	autocmd!
-	autocmd WinEnter,BufWinEnter * if empty(getmatches()->filter((_, m) => m.group ==# 'TrailingSpace')) | matchadd('TrailingSpace', '\s\+$', -1) | endif
+	autocmd WinEnter,BufWinEnter,FileType * call g:HighlightTrailingSpace()
 augroup END
 # }
 
