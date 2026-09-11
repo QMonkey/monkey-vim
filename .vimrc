@@ -51,7 +51,6 @@ Plug 'Konfekt/FastFold'
 Plug 'kshenoy/vim-signature'
 # Navigation / Search
 Plug 'junegunn/fzf' | Plug 'junegunn/fzf.vim'
-Plug 'dyng/ctrlsf.vim', {'on': ['CtrlSF', 'CtrlSFQuickfix', 'CtrlSFToggle', 'CtrlSFOpen', 'CtrlSFUpdate', 'CtrlSFClose', 'CtrlSFFocus', '<Plug>CtrlSFPrompt', '<Plug>CtrlSFCwordExec', '<Plug>CtrlSFVwordExec']}
 Plug 'monkoose/vim9-stargate'
 Plug 'haya14busa/vim-asterisk'
 # Git
@@ -1259,7 +1258,7 @@ set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
 # Trailing whitespace in red (matchadd is window-local; priority -1 keeps it below Search/IncSearch)
 # Blacklist: filetypes that skip trailing-whitespace highlighting
-g:trailing_whitespace_blacklist = ['fugitive', 'ctrlsf']
+g:trailing_whitespace_blacklist = ['fugitive']
 execute $'highlight TrailingSpace guifg=NONE guibg={thm_red[0]} ctermfg=NONE ctermbg={thm_red[1]}'
 
 def g:HighlightTrailingSpace()
@@ -1377,11 +1376,6 @@ nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
 nnoremap <silent><Leader><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
 nnoremap <silent><Leader><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
-# }
-
-# F1 ~ F10 {
-nmap <F1> <Plug>CtrlSFPrompt
-nnoremap <silent><F2> <Cmd>CtrlSFToggle<CR>
 # }
 
 # Toggle {
@@ -1777,28 +1771,23 @@ nmap <silent>[h <Plug>(GitGutterPrevHunk)
 nmap <silent>]h <Plug>(GitGutterNextHunk)
 # }
 
-# ctrlsf.vim {
-g:ctrlsf_confirm_save = 0
-g:ctrlsf_extra_backend_args = {
-			\ 'rg': '--hidden',
-			\ 'ag': '--hidden',
-			\ }
-g:ctrlsf_ignore_dir = ['.git', '.hg', '.svn', '.bzr']
-
-nnoremap <silent><Leader>a <Plug>CtrlSFCwordExec
-vnoremap <silent><Leader>a <Plug>CtrlSFVwordExec
-# }
-
 # fzf.vim {
 $FZF_DEFAULT_OPTS = '--layout=reverse'
 g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.9 } }
 g:fzf_preview_window = ['right:60%']
 g:fzf_action = {
-			\ 'ctrl-s': 'split',
-			\ 'ctrl-v': 'vsplit',
-			\ 'ctrl-t': 'tab split',
-			\ }
+	'ctrl-s': 'split',
+	'ctrl-v': 'vsplit',
+	'ctrl-t': 'tab split',
+	'f2': '',
+}
 
+# F1: ripgrep live search (--hidden, skips g:fzf_rg_ignore_dirs)
+# F2: close the fzf window, or reopen the last Rg search with its query
+nnoremap <silent><F1> <ScriptCmd>call FzfRg()<CR>
+nnoremap <silent><F2> <ScriptCmd>call FzfRgToggle()<CR>
+nnoremap <silent><Leader>a <ScriptCmd>call FzfRg(expand('<cword>'))<CR>
+vnoremap <silent><Leader>a <Esc><ScriptCmd>call FzfRgSel()<CR>
 nnoremap <silent><C-p> <Cmd>Files<CR>
 nnoremap <silent><Leader>b <ScriptCmd>call FzfBuffers()<CR>
 nnoremap <silent><Leader>t <Cmd>BTags<CR>
@@ -1809,6 +1798,131 @@ nnoremap <silent><Leader>e <Cmd>BLines<CR>
 imap <C-x><C-p> <Plug>(fzf-complete-path)
 imap <C-x><C-l> <Plug>(fzf-complete-line)
 imap <C-x><C-b> <Plug>(fzf-complete-buffer-line)
+
+g:fzf_rg_ignore_dirs = ['.git', '.hg', '.svn', '.bzr']
+
+# The <Esc> in the mapping ends Visual mode first: keys would otherwise keep
+# going to the selection instead of the fzf terminal. The selection is then
+# read from the '< '> marks via getregion().
+def FzfRgSel()
+	var text = getregion([bufnr('%')] + getpos("'<")[1 : 3], [bufnr('%')] + getpos("'>")[1 : 3], {type: visualmode()})->join("\n")
+	FzfRg(text, true, text =~# "\n")
+enddef
+
+# literal: true = fixed-string search (default), false = regex
+# multiline: true adds -U (--multiline) so newlines in the pattern match across lines
+def FzfRg(query: string = '', literal: bool = true, multiline: bool = false)
+	var globs = g:fzf_rg_ignore_dirs->mapnew((_, d) => $'--glob !{d}')->join(' ')
+	var spec = {
+		'sink*': function('FzfRgSink'),
+		'options': ['--print-query'],
+	}
+	fzf#vim#grep2($'rg {literal ? "-F " : ""}{multiline ? "-U " : ""}--hidden --column --line-number --no-heading --color=always --smart-case {globs} --', query, fzf#vim#with_preview(spec), 0)
+enddef
+
+# lines: [query, key (empty for <CR>, or a g:fzf_action key), ...selections]
+# Mirrors fzf.vim's s:ag_handler/s:action_for/s:fill_quickfix/s:ag_to_qf.
+# FzfRg additions: --print-query makes lines[0] the query (stashed for FzfRgToggle,
+# so selections start at lines[2]), and the f2 sentinel is a no-op.
+def FzfRgSink(lines: list<string>)
+	if len(lines) < 2
+		return
+	endif
+	g:__fzf_rg_last_query = lines[0]
+	var key = lines[1]
+	if key ==# 'f2' || len(lines) < 3
+		return
+	endif
+
+	# Multi-line rejoin, as in s:ag_handler: with g:fzf_grep_multi_line set,
+	# grep2 pipes matches through perl and one match arrives as
+	# multi_line + 1 consecutive entries.
+	var multi_line = min([get(get(g:, 'fzf_vim', {}), 'grep_multi_line', get(g:, 'fzf_grep_multi_line', 0)), 1])
+	var rest: list<string> = []
+	if multi_line && executable('perl')
+		for idx in range(2, len(lines) - 1, multi_line + 1)
+			add(rest, join(lines[idx : idx + multi_line], ''))
+		endfor
+	else
+		rest = lines[2 : -1]
+	endif
+
+	# s:ag_to_qf: filename, line, optional column, optional text; tolerant of
+	# spaces around the colons; ':acd' resolves relative filenames.
+	var list = []
+	for line in rest
+		var m = matchlist(line, '\(.\{-}\)\s*:\s*\(\d\+\)\%(\s*:\s*\(\d\+\)\)\?\%(\s*:\(.*\)\)\?')
+		if empty(m)
+			continue
+		endif
+		var item = {filename: &acd ? fnamemodify(m[1], ':p') : m[1], lnum: str2nr(m[2]), text: m[4]}
+		if !empty(m[3])
+			item.col = str2nr(m[3])
+		endif
+		add(list, item)
+	endfor
+	if empty(list)
+		return
+	endif
+
+	# s:is_paste + s:rstrip: paste key honors fzf_vim.paste_key/fzf_paste_key
+	var paste_key = get(get(g:, 'fzf_vim', {}), 'paste_key', get(g:, 'fzf_paste_key', 'alt-enter'))
+	if key ==# paste_key
+		fzf#vim#paste(map(copy(list), (_, v) => substitute(v.text, '\s*$', '', 'g')))
+		return
+	endif
+
+	# s:action_for(key, filename, multi): with the default edit action, stay
+	# when multiple items are selected (quickfix takes over) or the file is
+	# already in the current window; otherwise record '' and open.
+	var action = get(g:fzf_action, key, '')
+	var edit = type(action) != v:t_string || stridx('edit', action) == 0
+	var stay = edit && (len(list) > 1 || fnamemodify(list[0].filename, ':p') ==# expand('%:p'))
+	if !stay
+		setpos("''", getpos('.'))
+		execute (edit ? 'edit' : action) .. ' ' .. fnameescape(list[0].filename)
+	endif
+
+	# s:fill_quickfix: listproc_rg/listproc conf, fzf#vim#listproc#quickfix
+	# default (setqflist + copen + wincmd p + cfirst)
+	if len(list) > 1
+		var conf = get(g:, 'fzf_vim', {})
+		# function() (not funcref()): autoload functions are only resolved on call
+		var Handler = get(conf, 'listproc_rg', get(conf, 'listproc', function('fzf#vim#listproc#quickfix')))
+		Handler(list)
+		return
+	endif
+
+	# single selection: jump like s:ag_handler
+	try
+		execute list[0].lnum
+		if has_key(list[0], 'col')
+			cursor(0, list[0].col)
+		endif
+		normal! zvzz
+	catch
+	endtry
+enddef
+
+def FzfRgToggle()
+	# g:fzf_layout = window: fzf is a terminal buffer shown in a popup
+	for id in popup_list()
+		var b = winbufnr(id)
+		if getbufvar(b, '&buftype') ==# 'terminal' && getbufvar(b, '&filetype') ==# 'fzf'
+			popup_close(id)
+			execute 'silent! bdelete!' b
+			return
+		endif
+	endfor
+	# Fallback for a non-popup fzf window
+	for b in range(1, bufnr('$'))
+		if getbufvar(b, '&buftype') ==# 'terminal' && getbufvar(b, '&filetype') ==# 'fzf'
+			execute 'silent! bdelete!' b
+			return
+		endif
+	endfor
+	FzfRg(get(g:, '__fzf_rg_last_query', ''))
+enddef
 
 def FzfBuffers()
 	g:__fzf_buffers_delete_file = tempname()
