@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 脚本按顺序执行：
 
 1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
-2. 预授权一次 `sudo` 并在后台保活——长时间下载/编译不会中途再次索要密码（无人值守也不会卡住）。WSL 下还会临时安装一个 sudoers drop-in（退出时移除）：`timestamp_type=global` + `timestamp_timeout=-1` 让票据只按用户记录——新开终端、SSH 会话、WSL 时钟回跳、tty 变化都不会再次索要密码，**WSL 重启前只需输一次**
+2. 预授权一次 `sudo` 并在后台保活——长时间下载/编译不会中途再次索要密码（无人值守也不会卡住）。WSL 下若为 GNU sudo 还会安装一个**持久化**的 sudoers drop-in：`timestamp_type=global` + `timestamp_timeout=-1` 让票据只按用户记录——新开终端、SSH 会话、WSL 时钟回跳、tty 变化都不会再次索要密码（sudo-rs 系统跳过此 drop-in）
 3. 安装 Homebrew（Linuxbrew）作为兜底包管理器——即使 brew 已存在，也会把 shellenv 持久化到 shell rc 文件（带 PATH 去重保护）
 4. 克隆并编译 Vim 源码，然后 `make install`
 5. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
@@ -75,7 +75,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | ------------------------------------------------------------- | --------------------------------------------------------------------- | -------- |
 | curl                                                          | 插件管理器引导                                                        | 是       |
 | git                                                           | 插件管理器、vim-fugitive                                              | 是       |
-| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | ctrlsf 代码搜索 + fzf.vim 文件搜索                                    | 是       |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | fzf.vim 代码搜索（F1/Leader+a）                                       | 是       |
 | universal-ctags                                               | gutentags 标签生成                                                    | 是       |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航                                    | 推荐     |
 | [fzf](https://github.com/junegunn/fzf)                        | 模糊搜索器（fzf.vim 依赖）                                            | 是       |
@@ -463,8 +463,7 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 | [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP 片段集成                          |
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | 常用代码片段集合                      |
 | [junegunn/fzf](https://github.com/junegunn/fzf)                                       | 模糊搜索器（fzf.vim 依赖）            |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/tag 查找                |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | 异步代码搜索（rg/ag 后端）            |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | 模糊文件/缓冲/代码搜索                |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | 配色方案                              |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | 多光标编辑                            |
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | 快速跳转（替代 vim-sneak）            |
@@ -529,8 +528,8 @@ Ctrl+d  向前删除    (Del)
 #### 1.2 F1 ~ F5
 
 ```text
-F1      打开 CtrlSF 搜索提示
-F2      切换 CtrlSF 搜索窗口
+F1      打开 fzf ripgrep 实时搜索（--hidden，跳过 g:fzf_rg_ignore_dirs）
+F2      关闭 fzf 窗口；或带上次搜索关键词重新打开
 F3      打开终端窗口
 F4      切换全局终端（底部）
 F5      切换全局终端（右侧）
@@ -701,10 +700,10 @@ p/P         复制/移动选中项到当前目录
 :DirFilter  按正则过滤条目（! 为隐藏匹配项）
 ```
 
-#### 1.14 代码搜索（ctrlsf）
+#### 1.14 代码搜索（fzf ripgrep）
 
 ```text
-Leader+a        当前目录搜索光标所在的词
+Leader+a        搜索光标所在的词（字面搜索）
 ```
 
 #### 1.15 围绕字符编辑（vim-sandwich）
@@ -927,10 +926,10 @@ f           搜索1个字符并跳转
 F           搜索2个连续字符并跳转（stargate 带提示）
 ```
 
-#### 3.5 代码搜索（ctrlsf）
+#### 3.5 代码搜索（fzf ripgrep）
 
 ```text
-Leader+a        当前目录搜索选中字符串
+Leader+a        搜索选中的文本（字面搜索）
 ```
 
 #### 3.6 围绕字符编辑（vim-sandwich）
@@ -1092,20 +1091,7 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 :SudoWrite
 ```
 
-### 2. CtrlSF
-
-```vim
-" 递归搜索当前目录中包含 PATTERN 的代码
-:CtrlSF[!] [PATTERN] [path]
-
-" 重新打开 CtrlSF 窗口
-:CtrlSFOpen
-
-" 关闭 CtrlSF 窗口
-:CtrlSFClose
-```
-
-### 3. Gutentags
+### 2. Gutentags
 
 ```vim
 " 为当前文件生成tag
@@ -1119,7 +1105,7 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 `~/.cache/vim/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
 gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 
-### 4. fzf.vim
+### 3. fzf.vim
 
 ```vim
 " 搜索文件
@@ -1145,7 +1131,21 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 :BTags [QUERY]
 
 " 交互式 grep（ripgrep）
-:Rg [QUERY]              " 或 :RG（全屏结果）
+:Rg [QUERY]              " 或 :RG（实时 grep）
+
+" F1 / F2 / Leader+a 使用自定义 Rg 实时搜索：
+"   - 默认字面搜索（-F 固定字符串）；正则模式用 FzfRg(query, false)
+"   - ripgrep 带 --hidden，跳过 g:fzf_rg_ignore_dirs 中的目录（默认
+"     .git .hg .svn .bzr），随输入实时重新搜索
+"   - Enter 打开匹配项；TAB 多选后 Enter 填入 quickfix 窗口
+"   - F2 关闭 fzf 窗口；或带上次搜索关键词重新打开
+"   - Leader+a 搜索光标下的词 / 选中的文本
+"
+" 跨文件批量修改（替代 CtrlSF 编辑模式）：
+"   - F1 搜索，TAB 多选，Enter 填入 quickfix 窗口，然后
+"     :cdo s/old/new/g | update       " 对每条匹配执行替换并保存文件
+"     :cfdo %s/old/new/ge | update    " 对每个文件执行一次替换
+"     （:update 只保存真正改动的文件）
 
 " 使用 ag（Silver Searcher）搜索
 :Ag [QUERY]
@@ -1199,7 +1199,7 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 :Locate [QUERY]
 ```
 
-### 5. vim-qf（Quickfix 增强）
+### 4. vim-qf（Quickfix 增强）
 
 ```vim
 " 只保留匹配的条目
@@ -1221,7 +1221,7 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 :Doline {cmd}
 ```
 
-### 6. Session（原生 :mksession）
+### 5. Session（原生 :mksession）
 
 ```vim
 " 保存当前项目的 session 到 ~/.cache/vim/sessions/
@@ -1234,7 +1234,7 @@ Leader+rs
 退出 Vim 时会自动重写已追踪的 session（v:this_session 已设置），启动时从
 `~/.cache/vim/sessions/` 自动恢复。
 
-### 7. LSP 命令（yegappan/lsp）
+### 6. LSP 命令（yegappan/lsp）
 
 ```vim
 " 在整个工作区搜索符号
