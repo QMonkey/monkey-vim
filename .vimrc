@@ -62,8 +62,6 @@ Plug 'habamax/vim-dir'
 # Code Intelligence
 Plug 'yegappan/lsp', {'on': []}
 Plug 'hrsh7th/vim-vsnip', {'on': []} | Plug 'hrsh7th/vim-vsnip-integ', {'on': []} | Plug 'rafamadriz/friendly-snippets', {'on': []}
-# AI
-Plug 'gergap/vim-ollama'
 # Tools
 Plug 'mg979/vim-visual-multi'
 Plug 'romainl/vim-qf'
@@ -2107,23 +2105,6 @@ if !is_tty_console
 else
 	execute $'highlight SignatureMarkText cterm=bold ctermfg={thm_green[2]} gui=bold guifg={thm_green[0]}'
 endif
-# }
-
-# vim-ollama {
-g:ollama_host = 'http://localhost:11434'
-g:ollama_model = 'starcoder2:3b'
-g:ollama_edit_model = 'qwen2.5-coder:7b'
-g:ollama_chat_model = 'llama3.1:8b'
-
-# Disable default mappings to avoid conflicts (vsnip owns <Tab>)
-g:ollama_no_maps = 1
-g:ollama_no_tab_map = 1
-
-nnoremap <silent><Leader>ii <Cmd>Ollama toggle<CR>
-nnoremap <silent><Leader>ic <Cmd>Ollama chat<CR>
-nnoremap <silent><Leader>ir <Cmd>Ollama review<CR>
-vnoremap <silent><Leader>ie <Cmd>Ollama edit<CR>
-inoremap <silent><Leader><Tab> <Cmd>Ollama complete<CR>
 # }
 
 # lsp {
