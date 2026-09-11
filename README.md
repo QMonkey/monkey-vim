@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 What the script does, step by step:
 
 1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
-2. Pre-authorize `sudo` once and keep the credentials alive in a background loop, so long downloads/compiles never trigger a mid-run password re-prompt (unattended runs won't stall). On WSL it also installs a temporary sudoers drop-in (removed on exit) with `timestamp_type=global` + `timestamp_timeout=-1`: tickets are keyed by uid only, so new terminal and SSH sessions, WSL clock jumps and tty changes never re-prompt — one password until WSL restarts
+2. Pre-authorize `sudo` once and keep the credentials alive in a background loop, so long downloads/compiles never trigger a mid-run password re-prompt (unattended runs won't stall). On WSL with GNU sudo it also installs a **persistent** sudoers drop-in with `timestamp_type=global` + `timestamp_timeout=-1`: tickets are keyed by uid only, so new terminal and SSH sessions, WSL clock jumps and tty changes never re-prompt (sudo-rs-based systems skip this drop-in)
 3. Install Homebrew (Linuxbrew) as the fallback package manager — its shellenv is persisted to your shell rc files (with PATH dedup guards) even when Homebrew already existed
 4. Clone and compile Vim from source, then `make install`
 5. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
@@ -75,7 +75,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------- |
 | curl                                                          | Plugin manager bootstrap                                                                    | Yes         |
 | git                                                           | Plugin manager, vim-fugitive                                                                | Yes         |
-| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | ctrlsf code search + fzf.vim file search                                                    | Yes         |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | fzf.vim code search (F1/Leader+a)                                                           | Yes         |
 | universal-ctags                                               | gutentags tag generation                                                                    | Yes         |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation                                             | Recommended |
 | [Pygments](https://pygments.org/) (`pygmentize`)              | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.)                           | Recommended |
@@ -464,8 +464,7 @@ It should resolve to `getty@.service`.
 | [hrsh7th/vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)                 | LSP snippet integration                          |
 | [rafamadriz/friendly-snippets](https://github.com/rafamadriz/friendly-snippets)       | Snippet collection                               |
 | [junegunn/fzf](https://github.com/junegunn/fzf)                                       | Fuzzy finder (fzf.vim dependency)                |
-| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag finder                     |
-| [dyng/ctrlsf.vim](https://github.com/dyng/ctrlsf.vim)                                 | Async code search (rg/ag backend)                |
+| [junegunn/fzf.vim](https://github.com/junegunn/fzf.vim)                               | Fuzzy file/buffer/tag/code search                |
 | [sainnhe/sonokai](https://github.com/sainnhe/sonokai)                                 | Colorscheme                                      |
 | [mg979/vim-visual-multi](https://github.com/mg979/vim-visual-multi)                   | Multiple cursors                                 |
 | [monkoose/vim9-stargate](https://github.com/monkoose/vim9-stargate)                   | Easy motion (replaces vim-sneak)                 |
@@ -530,8 +529,8 @@ Ctrl+d  Delete forward (Del)
 #### 1.2 F1 ~ F5
 
 ```text
-F1      Open CtrlSF search prompt
-F2      Toggle CtrlSF search window
+F1      Open fzf ripgrep live search (--hidden, skips g:fzf_rg_ignore_dirs)
+F2      Close the fzf window, or reopen the last Rg search with its query
 F3      Open a terminal at the bottom
 F4      Toggle the global terminal at the bottom
 F5      Toggle the global terminal on the right
@@ -702,10 +701,10 @@ p/P         Copy/move selected into current directory
 :DirFilter  Filter entries by regex (! to hide matches)
 ```
 
-#### 1.14 Code search (ctrlsf)
+#### 1.14 Code search (fzf ripgrep)
 
 ```text
-Leader+a        Search current word in current directory
+Leader+a        Search current word (literal search)
 ```
 
 #### 1.15 Surround (vim-sandwich)
@@ -926,10 +925,10 @@ f       Search 1 character to jump with hints (stargate)
 F       Search 2 consecutive characters to jump with hints (stargate)
 ```
 
-#### 3.5 Code search (ctrlsf)
+#### 3.5 Code search (fzf ripgrep)
 
 ```text
-Leader+a        Search selected text in current directory
+Leader+a        Search selected text (literal search)
 ```
 
 #### 3.6 Surround (vim-sandwich)
@@ -1091,21 +1090,7 @@ Leader+hQ       Load hunks into quickfix (all files)
 :SudoWrite
 ```
 
-### 2. CtrlSF
-
-```vim
-" Search recursively in current directory for the pattern
-" Jump to the first result unless ! is given.
-:CtrlSF[!] [PATTERN] [path]
-
-" Reopen CtrlSF window
-:CtrlSFOpen
-
-" Close CtrlSF window
-:CtrlSFClose
-```
-
-### 3. Gutentags
+### 2. Gutentags
 
 ```vim
 " Generate tags for current file
@@ -1122,7 +1107,7 @@ and falls back to Pygments for all other languages (Python, Go, Rust,
 JavaScript, etc.). The gtags database is queried with the `:cs` commands, or
 directly with the `global` CLI.
 
-### 4. fzf.vim
+### 3. fzf.vim
 
 ```vim
 " Search files
@@ -1148,7 +1133,21 @@ directly with the `global` CLI.
 :BTags [QUERY]
 
 " Interactive grep (ripgrep)
-:Rg [QUERY]              " or :RG for full-screen results
+:Rg [QUERY]              " or :RG for live-grep results
+
+" F1 / F2 / Leader+a use a custom Rg live search:
+"   - literal (fixed-string) search by default; regex via FzfRg(query, false)
+"   - ripgrep runs with --hidden, skipping g:fzf_rg_ignore_dirs (default:
+"     .git .hg .svn .bzr), and re-runs on every keystroke
+"   - Enter opens the match; TAB-select several, Enter fills the quickfix window
+"   - F2 closes the fzf window, or reopens the last search with its query
+"   - Leader+a searches the word under the cursor / the selected text
+"
+" Cross-file batch editing (replaces CtrlSF edit mode):
+"   - search with F1, TAB-select matches, Enter -> quickfix window, then
+"     :cdo s/old/new/g | update       " substitute at each match, save each file
+"     :cfdo %s/old/new/ge | update    " substitute once per file
+"     (:update only writes files that actually changed)
 
 " Search with ag (Silver Searcher)
 :Ag [QUERY]
@@ -1202,7 +1201,7 @@ directly with the `global` CLI.
 :Locate [QUERY]
 ```
 
-### 5. vim-qf (Quickfix helpers)
+### 4. vim-qf (Quickfix helpers)
 
 ```vim
 " Keep only matching entries in qf/loc list
@@ -1224,7 +1223,7 @@ directly with the `global` CLI.
 :Doline {cmd}
 ```
 
-### 6. Sessions (native :mksession)
+### 5. Sessions (native :mksession)
 
 ```vim
 " Save session for the current project to ~/.cache/vim/sessions/
@@ -1237,7 +1236,7 @@ Leader+rs
 The session is automatically re-written when Vim exits (while a session is
 tracked) and restored on startup from `~/.cache/vim/sessions/`.
 
-### 7. LSP commands (yegappan/lsp)
+### 6. LSP commands (yegappan/lsp)
 
 ```vim
 " Symbol search across entire workspace
