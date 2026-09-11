@@ -70,6 +70,14 @@ is_wsl_kernel() {
 	uname -r | grep -qi 'microsoft'
 }
 
+is_gnu_sudo() {
+	# Only GNU sudo (Sudo Project, version 1.x) supports the timestamp
+	# Defaults used by the drop-in below. sudo-rs (the Rust rewrite, whose
+	# prompt is "[sudo: authenticate] Password:") rejects unknown Defaults
+	# settings, which would invalidate the whole drop-in file.
+	sudo -V 2>/dev/null | head -1 | grep -q 'Sudo version 1\.'
+}
+
 OS=$(os_detect)
 
 sudo_cmd() {
@@ -161,7 +169,7 @@ start_sudo_keepalive() {
 	# exits: rolling it back would revert to per-tty tickets, and every
 	# new terminal / docker exec / clock jump would re-prompt. Remove it
 	# manually to restore the default behavior.
-	if is_wsl_kernel; then
+	if is_wsl_kernel && is_gnu_sudo; then
 		# timestamp_type=global: tickets are keyed by uid only (no tty/sid),
 		# so a ticket granted in one terminal or SSH session is honored in
 		# every other one. timestamp_timeout=-1 then skips the "from the
@@ -175,9 +183,15 @@ start_sudo_keepalive() {
 			SUDOERS_DROPIN_CREATED=1
 			ok "WSL detected — sudo timestamp drop-in installed (persists; remove with: sudo rm $SUDOERS_D_DIR/wsl-timestamp)."
 		else
-			sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null
+			# The failure cleanup must not kill the script (set -e): the rm
+			# with -n always fails when the ticket is invalid.
+			sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null || true
 			warn "could not install the temporary sudo timestamp drop-in — clock jumps may re-prompt."
 		fi
+	elif is_wsl_kernel; then
+		# sudo-rs (the Rust rewrite) rejects unknown Defaults settings — a
+		# timestamp drop-in would invalidate the whole file there.
+		info "non-GNU sudo detected (sudo-rs?) — skipping the timestamp drop-in."
 	fi
 	(
 		# Test hook; also lets users tune the refresh rate. 60s against the
