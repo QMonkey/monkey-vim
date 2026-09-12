@@ -732,20 +732,24 @@ execute 'set viminfo+=n' .. fnameescape(GetViminfoFile())
 # Session / Restore {
 set sessionoptions-=blank sessionoptions-=options sessionoptions-=folds sessionoptions-=terminal
 
-def EchoErr(msg: string)
-	echohl ErrorMsg
+def EchoMsg(hl: string, msg: string)
+	execute('echohl ' .. hl)
 	echomsg msg
 	echohl None
 enddef
 
 # mksession cannot represent these buffers (e.g. vim-dir listings: unlisted,
-# 'buftype' nofile): a session persisted while such a window is focused loses
-# the window and the surrounding layout. Windows showing one of
-# g:session_switch_filetypes are switched back to a real buffer before the session is written.
+# 'buftype' nofile; terminal buffers: unlisted, 'buftype' terminal): a session
+# persisted while such a window is focused loses the window and the surrounding
+# layout. Windows showing a filetype in g:session_switch_filetypes or a buftype
+# in g:session_switch_buftypes are switched back to a real buffer before the
+# session is written.
 g:session_switch_filetypes = ['dir']
+g:session_switch_buftypes = ['terminal']
 
 def IsSessionSwitchBuffer(bufnr: number): bool
 	return index(g:session_switch_filetypes, getbufvar(bufnr, '&filetype')) >= 0
+		|| index(g:session_switch_buftypes, getbufvar(bufnr, '&buftype')) >= 0
 enddef
 
 def IsDirExists(path: string): bool
@@ -842,7 +846,7 @@ def RestoreSession()
 		try
 			execute 'source' session_filename
 		catch
-			EchoErr('Failed to restore session: ' .. v:exception)
+			EchoMsg('ErrorMsg', 'Failed to restore session: ' .. v:exception)
 		endtry
 	endif
 enddef
@@ -851,7 +855,7 @@ enddef
 def DeleteSession()
 	var session = v:this_session
 	if session ==# '' || !filereadable(session)
-		EchoErr('No session to delete')
+		EchoMsg('ErrorMsg', 'No session to delete')
 		return
 	endif
 	if confirm('Delete session ' .. fnamemodify(session, ':~') .. '?', "&Yes\n&No", 2) != 1
@@ -1065,7 +1069,7 @@ enddef
 def TagsRebuild()
 	var info = TagsBranchIdentity()
 	if empty(info)
-		EchoErr('TagsRebuild: cannot determine project root')
+		EchoMsg('ErrorMsg', 'TagsRebuild: cannot determine project root')
 		return
 	endif
 	TagsDoRebuild(info['root'])
@@ -1258,8 +1262,9 @@ set list
 set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
 # Trailing whitespace in red (matchadd is window-local; priority -1 keeps it below Search/IncSearch)
-# Blacklist: filetypes that skip trailing-whitespace highlighting
+# Blacklists: filetypes and buffer types that skip trailing-whitespace highlighting
 g:trailing_whitespace_blacklist = ['fugitive', 'git']
+g:trailing_whitespace_buftype_blacklist = ['terminal']
 execute $'highlight TrailingSpace guifg=NONE guibg={thm_red[0]} ctermfg=NONE ctermbg={thm_red[1]}'
 
 def g:HighlightTrailingSpace()
@@ -1269,7 +1274,7 @@ def g:HighlightTrailingSpace()
 			ids->add(m.id)
 		endif
 	endfor
-	if index(g:trailing_whitespace_blacklist, &filetype) >= 0
+	if index(g:trailing_whitespace_blacklist, &filetype) >= 0 || index(g:trailing_whitespace_buftype_blacklist, &buftype) >= 0
 		for id in ids
 			matchdelete(id)
 		endfor
@@ -1280,7 +1285,7 @@ enddef
 
 augroup TrailingWhitespace
 	autocmd!
-	autocmd WinEnter,BufWinEnter,FileType * call g:HighlightTrailingSpace()
+	autocmd WinEnter,BufWinEnter,FileType,TerminalWinOpen * call g:HighlightTrailingSpace()
 augroup END
 # }
 
@@ -1647,12 +1652,8 @@ def SendPaneList(): list<string>
 	return result
 enddef
 
-def SendPaneId(entry: string): string
-	return matchstr(entry, '%\d\+$')
-enddef
-
 def SendPaneSink(Cb: func(string), line: string)
-	var pane = SendPaneId(line)
+	var pane = matchstr(line, '%\d\+$')
 	if pane ==# ''
 		return
 	endif
@@ -1663,9 +1664,7 @@ enddef
 def SendOpenPicker(Cb: func(string))
 	var panes = SendPaneList()
 	if empty(panes)
-		echohl ErrorMsg
-		echomsg 'send-to-pane: no other tmux panes'
-		echohl None
+		EchoMsg('ErrorMsg', 'send-to-pane: no other tmux panes')
 		return
 	endif
 	# No layout key here on purpose: fzf#wrap then applies g:fzf_layout, so the
@@ -1678,7 +1677,7 @@ def SendOpenPicker(Cb: func(string))
 	fzf#run(fzf#wrap('sendpane', spec, 0))
 enddef
 
-def SendTmuxText(pane: string, text: string, submit: bool)
+def TmuxSend(pane: string, text: string, submit: bool)
 	if text !=# ''
 		system('tmux load-buffer -', text)
 		# Always bracketed paste (-p): without it tmux sends each byte as a
@@ -1718,24 +1717,27 @@ def SendToPane(text: string, submit: bool)
 		# verify the attached pane still exists, else auto-detach
 		var out = system('tmux display-message -p -t ' .. shellescape(pane) .. ' "#{pane_id}"')
 		if v:shell_error != 0 || stridx(out, pane) < 0
-			echohl WarningMsg
-			echomsg 'send-to-pane: attached pane is gone, detached'
-			echohl None
+			EchoMsg('WarningMsg', 'send-to-pane: attached pane is gone, detached')
 			g:SEND_PANE_ID = ''
 			pane = ''
 		endif
 	endif
 	if pane !=# ''
-		SendTmuxText(pane, text, submit)
+		TmuxSend(pane, text, submit)
 		return
 	endif
-	SendOpenPicker((p) => SendTmuxText(p, text, submit))
+	SendOpenPicker((p) => TmuxSend(p, text, submit))
 enddef
 
-# ,ss in Visual mode: the selection (read from '< '> marks, same idiom as
-# FzfRgSel); ,ss in Normal mode sends the whole current line instead.
+# Visual selection read from the '< '> marks.
+def VisualSelection(): string
+	return getregion([bufnr('%')] + getpos("'<")[1 : 3], [bufnr('%')] + getpos("'>")[1 : 3], {type: visualmode()})->join("\n")
+enddef
+
+# ,ss in Visual mode: the selection (read from '< '> marks); ,ss in Normal
+# mode sends the whole current line instead.
 def SendVisual()
-	var text = getregion([bufnr('%')] + getpos("'<")[1 : 3], [bufnr('%')] + getpos("'>")[1 : 3], {type: visualmode()})->join("\n")
+	var text = VisualSelection()
 	SendToPane(text, false)
 enddef
 
@@ -1753,9 +1755,7 @@ enddef
 
 def SendAttach()
 	if empty($TMUX)
-		echohl ErrorMsg
-		echomsg 'send-to-pane: attach only applies to tmux'
-		echohl None
+		EchoMsg('ErrorMsg', 'send-to-pane: attach only applies to tmux')
 		return
 	endif
 	SendOpenPicker((pane) => SendAttachSink(pane))
@@ -1785,7 +1785,7 @@ def TagJump()
 	try
 		execute 'tag ' .. name
 	catch /E426/
-		EchoErr('Tag not found: ' .. name)
+		EchoMsg('ErrorMsg', 'Tag not found: ' .. name)
 		return
 	endtry
 	setqflist(items, 'r')
@@ -1902,7 +1902,7 @@ def SudoWriteCmd()
 	var error = join(filter(readfile(errfile), 'trim(v:val) !=# ""'), ' | ')
 	delete(errfile)
 	if v:shell_error || error =~# '^sudo'
-		EchoErr('SudoWrite failed: ' .. (empty(error) ? $'exit {v:shell_error}' : error))
+		EchoMsg('ErrorMsg', 'SudoWrite failed: ' .. (empty(error) ? $'exit {v:shell_error}' : error))
 		return
 	endif
 	# disk now matches the buffer
@@ -1980,7 +1980,7 @@ g:fzf_rg_ignore_dirs = ['.git', '.hg', '.svn', '.bzr']
 # going to the selection instead of the fzf terminal. The selection is then
 # read from the '< '> marks via getregion().
 def FzfRgSel()
-	var text = getregion([bufnr('%')] + getpos("'<")[1 : 3], [bufnr('%')] + getpos("'>")[1 : 3], {type: visualmode()})->join("\n")
+	var text = VisualSelection()
 	FzfRg(text, true, text =~# "\n")
 enddef
 
@@ -2158,12 +2158,12 @@ enddef
 def FzfLspDocSymbols(types: list<number>)
 	var srv = lsp#buffer#CurbufGetServer('documentSymbol')
 	if empty(srv) || !srv.running || !srv.ready
-		EchoErr('No ready LSP server with documentSymbol support for this buffer')
+		EchoMsg('ErrorMsg', 'No ready LSP server with documentSymbol support for this buffer')
 		return
 	endif
 	var reply = srv.rpc('textDocument/documentSymbol', {'textDocument': {'uri': lsp#util#LspFileToUri(expand('%:p'))}})
 	if empty(reply) || !has_key(reply, 'result') || empty(reply.result)
-		EchoErr('No document symbols returned by the LSP server')
+		EchoMsg('ErrorMsg', 'No document symbols returned by the LSP server')
 		return
 	endif
 	if type(reply.result) != v:t_list
