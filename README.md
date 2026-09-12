@@ -531,9 +531,10 @@ Ctrl+d  Delete forward (Del)
 ```text
 F1      Open fzf ripgrep live search (--hidden, skips g:fzf_rg_ignore_dirs)
 F2      Close the fzf window, or reopen the last Rg search with its query
-F3      Open a terminal at the bottom
-F4      Toggle the global terminal at the bottom
-F5      Toggle the global terminal on the right
+F3      Open a bottom terminal pre-filling `:botright terminal ++rows=20 `
+        (type an optional command and press <CR>; empty input opens a shell)
+F4      Toggle the global terminal at the bottom (open/hide)
+F5      Toggle the global terminal at the right (open/hide)
 ```
 
 #### 1.3 Buffer
@@ -721,16 +722,41 @@ is / as+surroundA           Textobject: select sandwiched text (by query)
 #### 1.16 Terminal
 
 ```text
-F3      Open a terminal buffer
-F4      Toggle the global terminal at the bottom
-F5      Toggle the global terminal on the right
+F3      Open a bottom terminal pre-filling `:botright terminal ++rows=20 `
+        (type an optional command and press <CR>; empty input opens a shell)
+F4      Toggle the global terminal at the bottom (20 rows)
+F5      Toggle the global terminal at the right (half width)
 ```
 
-F3 opens a new terminal at the bottom. F4 and F5 toggle the single global terminal — F4 shows it at the bottom (20 rows), F5 on the right (half the width). While visible, either key hides it; while hidden, each key reopens it in its own position. It is shared across all tabs: hiding does not kill the job, and the same terminal (history included) reopens in whatever tab you are in.
+F4 and F5 toggle the same global terminal — either key hides it while visible,
+and it reopens with job and scrollback intact in whatever tab you are in. F3
+opens an extra terminal per invocation; the command runs as a job and the
+window stays open showing `[Process exited N]` afterwards.
 
-Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal mode, `<ScrollWheelUp>` and `<ScrollWheelDown>` scroll the terminal buffer.
+Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal
+mode, `<ScrollWheelUp>` and `<ScrollWheelDown>` scroll the terminal buffer.
 
-#### 1.17 Others
+#### 1.17 Send to pane (,s group)
+
+Text goes to a tmux pane or, outside tmux, to the F4/F5 global terminal
+(auto-opened as a right split on first send). Inside tmux the first send opens
+an fzf pane picker and attaches the pick for the rest of this Vim session;
+later sends go straight to the attached pane. The attached pane is marked `*`
+in the picker, the pane running vim itself is excluded, and a vanished pane
+auto-detaches.
+
+```text
+,ss     Paste the visual selection / current line into a tmux pane (fzf)
+,sf     Paste the current file path
+,sp     Type a prompt and paste it
+,sm     Submit (Enter) in the target pane
+,sa     Attach a pane so sends skip the picker
+,sd     Detach the attached pane
+```
+
+,ss, ,sf and ,sp only paste — compose around them in the target; ,sm submits.
+
+#### 1.18 Others
 
 ```text
 Leader+ws       Save session
@@ -771,14 +797,14 @@ Quickfix windows auto-resize to fit content (max 10 lines), auto-close when empt
 
 Note: `gdefault` is set, so `:s` performs global substitution (all matches per line) by default. The jumplist is persisted per project via the per-project viminfo. `jumpoptions+=stack` makes the jumplist behave like the tagstack.
 
-#### 1.18 Auto-insert file headers
+#### 1.19 Auto-insert file headers
 
 New `.sh` and `.py` files get a shebang line automatically inserted:
 
 - `.sh` → `#!/usr/bin/env bash`
 - `.py` → `#!/usr/bin/env python3`
 
-#### 1.19 Match-up (extended % matching)
+#### 1.20 Match-up (extended % matching)
 
 ```text
 %       Go forward to next matching word (cycles back from close to open)
@@ -790,13 +816,13 @@ i%      Inside of any block (text object)
 a%      Around any block (text object)
 ```
 
-#### 1.20 Lexima (auto-close pairs)
+#### 1.21 Lexima (auto-close pairs)
 
 Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''` and backtick pairs. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
 
-#### 1.21 Operators
+#### 1.22 Operators
 
-Operators combine with text objects (§1.22) or motions: `{operator}{textobject}`. All operators below accept `[count]`. Nesting: `[count]` before the object means "the N-th surrounding level" for the plugins marked below.
+Operators combine with text objects (§1.23) or motions: `{operator}{textobject}`. All operators below accept `[count]`. Nesting: `[count]` before the object means "the N-th surrounding level" for the plugins marked below.
 
 ```text
 # Native Vim
@@ -818,7 +844,7 @@ sd{char} / sdb      Delete surround    [count] = nesting level, e.g. 2sd"
 sr{old}{new} / srb  Replace surround   [count] = nesting level
 ```
 
-#### 1.22 Text objects (targets.vim / vim-indent-object / vim-sandwich / vim-matchup)
+#### 1.23 Text objects (targets.vim / vim-indent-object / vim-sandwich / vim-matchup)
 
 All text objects work with every operator: `d`/`c`/`y`, `x` (subversive, see §1.7), `sa` (sandwich, see §1.15), `gu`/`gU`/`g~`, etc. Most objects support `[count]` (e.g. `2ib` selects the outer block).
 
