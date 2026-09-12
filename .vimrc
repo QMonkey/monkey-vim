@@ -723,6 +723,9 @@ enddef
 
 call mkdir($HOME .. '/.cache/vim/viminfo', 'p')
 # The n flag must come last, so append it with +=
+# ! saves all-uppercase global variables (e.g. SEND_PANE_ID) to viminfo.
+# Note: '!n...' must be appended as two separate +=  (combined is rejected).
+set viminfo+=!
 execute 'set viminfo+=n' .. fnameescape(GetViminfoFile())
 # }
 
@@ -1256,7 +1259,7 @@ set listchars=tab:▸\ ,leadmultispace:│\ \ \ ,eol:¬,trail:·
 
 # Trailing whitespace in red (matchadd is window-local; priority -1 keeps it below Search/IncSearch)
 # Blacklist: filetypes that skip trailing-whitespace highlighting
-g:trailing_whitespace_blacklist = ['fugitive']
+g:trailing_whitespace_blacklist = ['fugitive', 'git']
 execute $'highlight TrailingSpace guifg=NONE guibg={thm_red[0]} ctermfg=NONE ctermbg={thm_red[1]}'
 
 def g:HighlightTrailingSpace()
@@ -1552,37 +1555,56 @@ vnoremap t q
 # }
 
 # Terminal {
-# F4/F5 toggle one global terminal (bottom / right); either key hides it
-# while visible. The job and history survive hides. F3 opens extra terminals.
-def TerminalToggle(vertical: bool)
+# Ensure the F4/F5 global terminal runs and is shown in the current tab.
+# Returns its buffer number.
+def EnsureTerminal(vertical: bool): number
+	stopinsert
 	var buf = get(g:, 'terminal_bufnr', 0)
-	if buf > 0 && bufexists(buf) && term_getstatus(buf) =~# 'running'
-		var wids = win_findbuf(buf)
-		for wid in wids
-			if win_id2tabwin(wid)[0] == tabpagenr()
-				win_execute(wid, 'hide')
-				return
-			endif
-		endfor
-		for wid in wids
-			win_execute(wid, 'hide')
-		endfor
-		if vertical
-			execute 'botright vertical sbuffer ' .. buf
-		else
-			execute 'botright sbuffer ' .. buf
-			execute 'resize 20'
-		endif
-		if term_getstatus(buf) =~# 'normal'
-			feedkeys("i", 't')
-		endif
-	else
+	var running = buf > 0 && bufexists(buf) && term_getstatus(buf) =~# 'running'
+	if !running
 		if vertical
 			execute 'botright vertical terminal'
 		else
 			execute 'botright terminal ++rows=20'
 		endif
 		g:terminal_bufnr = bufnr('%')
+		return bufnr('%')
+	endif
+	var cur_tab = tabpagenr()
+	var shown = false
+	for wid in win_findbuf(buf)
+		if win_id2tabwin(wid)[0] == cur_tab
+			shown = true
+		else
+			win_execute(wid, 'hide')
+		endif
+	endfor
+	if !shown
+		if vertical
+			execute 'botright vertical sbuffer ' .. buf
+		else
+			execute 'botright sbuffer ' .. buf
+			execute 'resize 20'
+		endif
+	endif
+	return buf
+enddef
+
+# F4/F5 toggle the global terminal: visible -> hide (job survives),
+# else show/create it in the current tab.
+def TerminalToggle(vertical: bool)
+	var buf = get(g:, 'terminal_bufnr', 0)
+	if buf > 0 && bufexists(buf) && term_getstatus(buf) =~# 'running'
+		for wid in win_findbuf(buf)
+			if win_id2tabwin(wid)[0] == tabpagenr()
+				win_execute(wid, 'hide')
+				return
+			endif
+		endfor
+	endif
+	buf = EnsureTerminal(vertical)
+	if term_getstatus(buf) =~# 'normal'
+		feedkeys("i", 't')
 	endif
 enddef
 
@@ -1599,6 +1621,158 @@ augroup TerminalSettings
 	# term_setkill: on exit, SIGKILL shells silently instead of asking (SIGTERM is ignored by interactive shells); :hide keeps the job
 	autocmd TerminalOpen * if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' | setlocal nobuflisted bufhidden=hide scrolloff=0 | term_setkill('%', 'kill') | endif
 augroup END
+# }
+
+# Send to pane (,s group) {
+# Deliver text to a tmux pane or the global terminal — REPLs, AI CLIs, build
+# panes, anything. Inside tmux the target is picked with fzf and remembered in
+# g:SEND_PANE_ID for the rest of this Vim session (,sa attaches, ,sd detaches);
+# outside tmux the text goes to the F5 global terminal instead. SEND_PANE_ID is
+# all-uppercase so viminfo's '!' section persists it per project, surviving restarts.
+# Viminfo restore runs after vimrc, so this default is safe to set unconditionally.
+g:SEND_PANE_ID = ''
+
+def SendPaneList(): list<string>
+	var self_pane = $TMUX_PANE
+	var out = system('tmux list-panes -a -F "#{pane_id}|#{session_name}:#{window_index}.#{pane_index}|#{pane_current_command}|#{pane_current_path}"')
+	var result: list<string> = []
+	for line in split(out, '\n', 1)
+		var m = matchlist(line, '\v^([^|]+)\|([^|]+)\|([^|]+)\|(.*)$')
+		if empty(m) || m[1] ==# self_pane
+			continue
+		endif
+		var mark = m[1] ==# g:SEND_PANE_ID ? '* ' : ''
+		result->add(mark .. m[2] .. ' ' .. m[4] .. ' [' .. m[3] .. '] ' .. m[1])
+	endfor
+	return result
+enddef
+
+def SendPaneId(entry: string): string
+	return matchstr(entry, '%\d\+$')
+enddef
+
+def SendPaneSink(Cb: func(string), line: string)
+	var pane = SendPaneId(line)
+	if pane ==# ''
+		return
+	endif
+	g:SEND_PANE_ID = pane
+	Cb(pane)
+enddef
+
+def SendOpenPicker(Cb: func(string))
+	var panes = SendPaneList()
+	if empty(panes)
+		echohl ErrorMsg
+		echomsg 'send-to-pane: no other tmux panes'
+		echohl None
+		return
+	endif
+	# No layout key here on purpose: fzf#wrap then applies g:fzf_layout, so the
+	# picker opens as a popup just like F1 / <C-p>.
+	var spec = {
+		'source': panes,
+		'sink': function('SendPaneSink', [Cb]),
+		'options': ['--prompt=Pane> '],
+	}
+	fzf#run(fzf#wrap('sendpane', spec, 0))
+enddef
+
+def SendTmuxText(pane: string, text: string, submit: bool)
+	if text !=# ''
+		system('tmux load-buffer -', text)
+		# Always bracketed paste (-p): without it tmux sends each byte as a
+		# typed key, and a literal Tab in the text hits the target TUI's own
+		# Tab binding (e.g. opencode's plan-mode switch). -r only for multi-line
+		# so embedded LFs paste literally instead of becoming Enter per line.
+		var cmd = 'tmux paste-buffer -t ' .. shellescape(pane) .. ' -p'
+		if text =~# '\n'
+			cmd = cmd .. ' -r'
+		endif
+		system(cmd)
+	endif
+	if submit
+		system('tmux send-keys -t ' .. shellescape(pane) .. ' Enter')
+	endif
+enddef
+
+def SendToTerminal(text: string, submit: bool)
+	var prev = win_getid()
+	var buf = EnsureTerminal(true)
+	term_sendkeys(buf, text)
+	if submit
+		term_sendkeys(buf, "\<CR>")
+	endif
+	if win_id2win(prev) != 0
+		win_gotoid(prev)
+	endif
+enddef
+
+def SendToPane(text: string, submit: bool)
+	if empty($TMUX)
+		SendToTerminal(text, submit)
+		return
+	endif
+	var pane = g:SEND_PANE_ID
+	if pane !=# ''
+		# verify the attached pane still exists, else auto-detach
+		var out = system('tmux display-message -p -t ' .. shellescape(pane) .. ' "#{pane_id}"')
+		if v:shell_error != 0 || stridx(out, pane) < 0
+			echohl WarningMsg
+			echomsg 'send-to-pane: attached pane is gone, detached'
+			echohl None
+			g:SEND_PANE_ID = ''
+			pane = ''
+		endif
+	endif
+	if pane !=# ''
+		SendTmuxText(pane, text, submit)
+		return
+	endif
+	SendOpenPicker((p) => SendTmuxText(p, text, submit))
+enddef
+
+# ,ss in Visual mode: the selection (read from '< '> marks, same idiom as
+# FzfRgSel); ,ss in Normal mode sends the whole current line instead.
+def SendVisual()
+	var text = getregion([bufnr('%')] + getpos("'<")[1 : 3], [bufnr('%')] + getpos("'>")[1 : 3], {type: visualmode()})->join("\n")
+	SendToPane(text, false)
+enddef
+
+def SendPrompt()
+	var prompt = input('Prompt> ')
+	if prompt !=# ''
+		SendToPane(prompt, false)
+	endif
+enddef
+
+# ,sa attach a pane so sends skip the picker; ,sd detach
+def SendAttachSink(pane: string)
+	g:SEND_PANE_ID = pane
+enddef
+
+def SendAttach()
+	if empty($TMUX)
+		echohl ErrorMsg
+		echomsg 'send-to-pane: attach only applies to tmux'
+		echohl None
+		return
+	endif
+	SendOpenPicker((pane) => SendAttachSink(pane))
+enddef
+
+def SendDetach()
+	echomsg 'send-to-pane: detached ' .. (g:SEND_PANE_ID ==# '' ? 'nothing' : g:SEND_PANE_ID)
+	g:SEND_PANE_ID = ''
+enddef
+
+nnoremap <silent><Leader>ss <ScriptCmd>call SendToPane(getline('.'), false)<CR>
+xnoremap <silent><Leader>ss <Esc><ScriptCmd>call SendVisual()<CR>
+nnoremap <silent><Leader>sf <ScriptCmd>call SendToPane(expand('%:p'), false)<CR>
+nnoremap <silent><Leader>sp <ScriptCmd>call SendPrompt()<CR>
+nnoremap <silent><Leader>sm <ScriptCmd>call SendToPane('', true)<CR>
+nnoremap <silent><Leader>sa <ScriptCmd>call SendAttach()<CR>
+nnoremap <silent><Leader>sd <ScriptCmd>call SendDetach()<CR>
 # }
 
 # Ctags {
@@ -1770,7 +1944,10 @@ nmap <silent>]h <Plug>(GitGutterNextHunk)
 # }
 
 # fzf.vim {
-$FZF_DEFAULT_OPTS = '--layout=reverse'
+# Preview scrolling in every fzf window:
+# alt-u/alt-d half-page up/down, alt-f/alt-b page down/up, alt-j/
+# alt-k line down/up inside the preview pane.
+$FZF_DEFAULT_OPTS = '--layout=reverse --bind=alt-u:preview-half-page-up,alt-d:preview-half-page-down,alt-f:preview-page-down,alt-b:preview-page-up,alt-j:preview-down,alt-k:preview-up'
 g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.9 } }
 g:fzf_preview_window = ['right:60%']
 g:fzf_action = {
