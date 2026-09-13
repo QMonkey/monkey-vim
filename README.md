@@ -791,6 +791,7 @@ In quickfix/location windows (ack-style mappings):
 - `gO` — Open and focus new window
 - `t` — Open in new tab
 - `T` — Open in new tab (keep quickfix focused)
+- `p` — Preview the item under the cursor in the preview window (vim-qf)
 - `q` — Close quickfix window
 
 Quickfix windows auto-resize to fit content (max 10 lines), auto-close when empty, and are placed at the bottom.
