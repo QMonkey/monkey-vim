@@ -71,10 +71,12 @@ is_wsl_kernel() {
 }
 
 is_gnu_sudo() {
-	# Only GNU sudo (Sudo Project, version 1.x) supports the timestamp
-	# Defaults used by the drop-in below. sudo-rs (the Rust rewrite, whose
-	# prompt is "[sudo: authenticate] Password:") rejects unknown Defaults
-	# settings, which would invalidate the whole drop-in file.
+	# GNU sudo (Sudo Project, version 1.x) accepts a NEGATIVE
+	# timestamp_timeout ("never expire"). sudo-rs (the Rust rewrite, whose
+	# prompt is "[sudo: authenticate] Password:") parses timestamp_timeout
+	# as UNSIGNED minutes and any parse failure rejects the WHOLE sudoers
+	# file — so the drop-in timeout value differs per implementation (see
+	# start_sudo_keepalive).
 	sudo -V 2>/dev/null | head -1 | grep -q 'Sudo version 1\.'
 }
 
@@ -165,33 +167,50 @@ start_sudo_keepalive() {
 	# (timestamp.c: "ignoring time stamp from the future"), so every later
 	# sudo re-prompts. A negative timestamp_timeout skips that future check
 	# entirely (timestamp.c: "Negative timeouts only expire manually"),
-	# making the ticket immune. The drop-in PERSISTS after this script
-	# exits: rolling it back would revert to per-tty tickets, and every
-	# new terminal / docker exec / clock jump would re-prompt. Remove it
-	# manually to restore the default behavior.
-	if is_wsl_kernel && is_gnu_sudo; then
-		# timestamp_type=global: tickets are keyed by uid only (no tty/sid),
-		# so a ticket granted in one terminal or SSH session is honored in
-		# every other one. timestamp_timeout=-1 then skips the "from the
-		# future" disable path entirely (timestamp.c: "Negative timeouts
-		# only expire manually (sudo -k)"), making the ticket immune to
-		# WSL2's monotonic clock steps. Combined: one password per WSL boot.
-		if printf 'Defaults timestamp_type=global\nDefaults timestamp_timeout=-1\n' |
-			sudo -n tee "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
-			sudo -n chmod 0440 "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1 &&
-			sudo -n visudo -cf "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1; then
+	# making the ticket immune. The drop-in is scoped to the invoking user
+	# and PERSISTS after this script exits: rolling it back would revert to
+	# 15-minute expiring tickets. Remove it manually to restore the default.
+	if is_wsl_kernel; then
+		# Deliberately NO timestamp_type=global here: it would switch the
+		# ticket type AFTER `sudo -v` created a tty-type record, and sudo
+		# looks up records by type (timestamp.c timestamp_lock only finds
+		# TS_GLOBAL records then) — the tty record becomes invisible, the
+		# next `sudo -n` fails validation, and the install chain aborts
+		# while leaving a broken file behind. Keeping the default tty type
+		# means the existing ticket stays valid. Trade-off: tickets are
+		# keyed per-tty, so a NEW terminal prompts once (then its ticket is
+		# equally immune). The whole thing is ONE sudo invocation: a single
+		# validation, and write+chmod+visudo-check happen atomically as
+		# root — no window in which a wrong-permission file could be parsed
+		# by the next sudo. `-n` guarantees no hidden prompt here (only the
+		# `sudo -v` above may ask for the password, keeping the run at one
+		# entry). The timeout VALUE is per-implementation:
+		#   - GNU sudo: -1 means "never expire" and SKIPS the "from the
+		#     future" clock check entirely (timestamp.c: negative timeouts
+		#     only expire manually) — required for WSL clock-jump immunity.
+		#   - sudo-rs: timestamp_timeout parses as UNSIGNED minutes
+		#     (defaults/mod.rs fractional_minutes -> u64) and any parse
+		#     failure is an unrecoverable sudoers error (ast.rs
+		#     "unknown setting"), rejecting the whole drop-in — so -1 is
+		#     impossible there. A huge-but-valid value is the equivalent;
+		#     sudo-rs stamps tickets with CLOCK_BOOTTIME (system/time.rs),
+		#     so host wall-clock NTP jumps never touch them, and its
+		#     touch() never permanently disables on backward steps (worst
+		#     case: one re-auth). Records live in /var/run/sudo-rs (tmpfs).
+		if is_gnu_sudo; then
+			local drop_in
+			printf -v drop_in 'Defaults:%s timestamp_timeout=-1' "$(id -un)"
+		else
+			local drop_in
+			printf -v drop_in 'Defaults:%s timestamp_timeout=999999999' "$(id -un)"
+		fi
+		if printf '%s\n' "$drop_in" |
+			sudo -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1; then
 			SUDOERS_DROPIN_CREATED=1
 			ok "WSL detected — sudo timestamp drop-in installed (persists; remove with: sudo rm $SUDOERS_D_DIR/wsl-timestamp)."
 		else
-			# The failure cleanup must not kill the script (set -e): the rm
-			# with -n always fails when the ticket is invalid.
-			sudo -n rm -f "$SUDOERS_D_DIR/wsl-timestamp" 2>/dev/null || true
 			warn "could not install the temporary sudo timestamp drop-in — clock jumps may re-prompt."
 		fi
-	elif is_wsl_kernel; then
-		# sudo-rs (the Rust rewrite) rejects unknown Defaults settings — a
-		# timestamp drop-in would invalidate the whole file there.
-		info "non-GNU sudo detected (sudo-rs?) — skipping the timestamp drop-in."
 	fi
 	(
 		# Test hook; also lets users tune the refresh rate. 60s against the
