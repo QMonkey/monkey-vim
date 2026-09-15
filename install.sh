@@ -17,7 +17,8 @@ INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-vim}"
 VIM_SRC_DIR="${VIM_SRC_DIR:-$HOME/Documents/vim}"
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
 SUDOERS_D_DIR="${SUDOERS_D_DIR:-/etc/sudoers.d}"
-SUDOERS_DROPIN_CREATED=0
+SUDO_NOPASSWD=0
+NOPASSWD_DROPIN="$SUDOERS_D_DIR/zz-monkey-vim-nopasswd"
 
 # Never let a missing HOME fail later under `set -u`.
 [ -n "${HOME:-}" ] || {
@@ -70,20 +71,19 @@ is_wsl_kernel() {
 	uname -r | grep -qi 'microsoft'
 }
 
-is_gnu_sudo() {
-	# GNU sudo (Sudo Project, version 1.x) accepts a NEGATIVE
-	# timestamp_timeout ("never expire"). sudo-rs (the Rust rewrite, whose
-	# prompt is "[sudo: authenticate] Password:") parses timestamp_timeout
-	# as UNSIGNED minutes and any parse failure rejects the WHOLE sudoers
-	# file — so the drop-in timeout value differs per implementation (see
-	# start_sudo_keepalive).
-	sudo -V 2>/dev/null | head -1 | grep -q 'Sudo version 1\.'
-}
-
 OS=$(os_detect)
 
 sudo_cmd() {
+	# Lazy re-auth: Homebrew resets the sudo timestamp on EVERY invocation
+	# (brew.sh runs `sudo --reset-timestamp` at startup), so a ticket that
+	# was valid a minute ago can be dead here. Re-authenticate proactively
+	# with an explanatory prompt instead of letting the command fail or
+	# spring a context-free password prompt. `-n true` never prompts; the
+	# interactive `-v` only runs when the ticket is actually gone.
 	if command -v sudo &>/dev/null; then
+		if ! sudo -n true 2>/dev/null; then
+			sudo -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
+		fi
 		sudo "$@"
 	else
 		"$@"
@@ -145,11 +145,25 @@ refresh_path() {
 	if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
 }
 
-# ────────────────── sudo keepalive ──────────────────
+# ────────────────── sudo setup (auth + drop-ins + keepalive) ──────────────────
 
 SUDO_KEEPALIVE_PID=""
 
-start_sudo_keepalive() {
+cleanup_sudo() {
+	# Kill the keepalive (if running) and remove the temporary NOPASSWD
+	# drop-in. `sudo -n rm` works while NOPASSWD is still in place — the
+	# file grants it, so removal never needs a password.
+	if [ -n "$SUDO_KEEPALIVE_PID" ]; then
+		kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
+		wait "$SUDO_KEEPALIVE_PID" 2>/dev/null
+	fi
+	if [ "$SUDO_NOPASSWD" -eq 1 ]; then
+		sudo -n rm -f "$NOPASSWD_DROPIN" 2>/dev/null ||
+			warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $NOPASSWD_DROPIN"
+	fi
+}
+
+setup_sudo() {
 	# Keep sudo credentials alive for the whole run: the gap between the first
 	# sudo (build deps) and later ones (make install) can exceed the default
 	# 15-min timestamp_timeout on slow downloads/compiles. A re-auth prompt
@@ -161,96 +175,60 @@ start_sudo_keepalive() {
 	# Pre-authenticate once so the password is entered at the very start
 	# instead of mid-run after a long download/compile.
 	sudo -v || fail "sudo authorization failed — run this script in an interactive terminal."
-	# On WSL2 the monotonic clock can step backwards (host sleep/resume,
-	# NTP corrections to the host clock, TSC skew across CPUs). When that
-	# happens sudo finds its ticket "from the future" and DISABLES it
-	# (timestamp.c: "ignoring time stamp from the future"), so every later
-	# sudo re-prompts. A negative timestamp_timeout skips that future check
-	# entirely (timestamp.c: "Negative timeouts only expire manually"),
-	# making the ticket immune. The drop-in is scoped to the invoking user
-	# and PERSISTS after this script exits: rolling it back would revert to
-	# 15-minute expiring tickets. Remove it manually to restore the default.
-	if is_wsl_kernel; then
-		# Deliberately NO timestamp_type=global here: it would switch the
-		# ticket type AFTER `sudo -v` created a tty-type record, and sudo
-		# looks up records by type (timestamp.c timestamp_lock only finds
-		# TS_GLOBAL records then) — the tty record becomes invisible, the
-		# next `sudo -n` fails validation, and the install chain aborts
-		# while leaving a broken file behind. Keeping the default tty type
-		# means the existing ticket stays valid. Trade-off: tickets are
-		# keyed per-tty, so a NEW terminal prompts once (then its ticket is
-		# equally immune). The whole thing is ONE sudo invocation: a single
-		# validation, and write+chmod+visudo-check happen atomically as
-		# root — no window in which a wrong-permission file could be parsed
-		# by the next sudo. `-n` guarantees no hidden prompt here (only the
-		# `sudo -v` above may ask for the password, keeping the run at one
-		# entry). The timeout VALUE is per-implementation:
-		#   - GNU sudo: -1 means "never expire" and SKIPS the "from the
-		#     future" clock check entirely (timestamp.c: negative timeouts
-		#     only expire manually) — required for WSL clock-jump immunity.
-		#   - sudo-rs: timestamp_timeout parses as UNSIGNED minutes
-		#     (defaults/mod.rs fractional_minutes -> u64) and any parse
-		#     failure is an unrecoverable sudoers error (ast.rs
-		#     "unknown setting"), rejecting the whole drop-in — so -1 is
-		#     impossible there. A huge-but-valid value is the equivalent;
-		#     sudo-rs stamps tickets with CLOCK_BOOTTIME (system/time.rs),
-		#     so host wall-clock NTP jumps never touch them, and its
-		#     touch() never permanently disables on backward steps (worst
-		#     case: one re-auth). Records live in /var/run/sudo-rs (tmpfs).
-		if is_gnu_sudo; then
-			local drop_in
-			printf -v drop_in 'Defaults:%s timestamp_timeout=-1' "$(id -un)"
-		else
-			local drop_in
-			printf -v drop_in 'Defaults:%s timestamp_timeout=999999999' "$(id -un)"
-		fi
-		if printf '%s\n' "$drop_in" |
-			sudo -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$SUDOERS_D_DIR/wsl-timestamp" >/dev/null 2>&1; then
-			SUDOERS_DROPIN_CREATED=1
-			ok "WSL detected — sudo timestamp drop-in installed (persists; remove with: sudo rm $SUDOERS_D_DIR/wsl-timestamp)."
-		else
-			warn "could not install the temporary sudo timestamp drop-in — clock jumps may re-prompt."
-		fi
+	# Temporary NOPASSWD for the duration of the run — the core of the
+	# one-password design. Three things would otherwise kill the sudo
+	# ticket mid-run and force a re-auth prompt:
+	#   1. Homebrew resets the sudo timestamp on EVERY `brew` invocation
+	#      (brew.sh runs `sudo --reset-timestamp` at startup) — even a
+	#      never-expiring ticket dies after each brew command;
+	#   2. WSL2 clock steps (host sleep/resume, TSC skew) make sudo
+	#      disable tickets "from the future";
+	#   3. plain expiry (default 15 minutes) on long downloads/compiles.
+	# With NOPASSWD, authentication is granted by the sudoers rule itself
+	# and the timestamp is never consulted — on both GNU sudo and sudo-rs
+	# — so the run is immune to all three in ANY command order, and the
+	# only password entry is the `sudo -v` above.
+	# Scoped to the invoking user and REMOVED on exit (incl. Ctrl-C);
+	# if the script is SIGKILLed the file survives — remove manually with
+	# `sudo rm $NOPASSWD_DROPIN`. If you prefer a permanent passwordless
+	# sudo, add the same line to your own sudoers drop-in instead.
+	if printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$(id -un)" |
+		sudo -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$NOPASSWD_DROPIN" >/dev/null 2>&1; then
+		SUDO_NOPASSWD=1
+		ok "Temporary NOPASSWD drop-in installed for this run (auto-removed on exit)."
+	else
+		warn "could not install the temporary NOPASSWD drop-in — falling back to keepalive + lazy re-auth."
 	fi
-	(
-		# Test hook; also lets users tune the refresh rate. 60s against the
-		# default 15-min timestamp_timeout leaves a 15x margin; override it
-		# if your sudoers sets something unusually short.
-		interval="${SUDO_KEEPALIVE_INTERVAL:-60}"
-		# Kill the in-flight `sleep` child when we get TERMed, so no orphan
-		# sleep survives the script; wait() reaps everything — WSL's init
-		# does not reap adopted zombies, so anything unreaped here lingers
-		# as a defunct process forever.
-		trap 'kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' TERM
-		while true; do
-			sleep "$interval" &
-			wait "$!" 2>/dev/null || exit 0
-			# Non-interactive refresh: never prompts. Capture stderr so the
-			# failure reason is observable (an empty detail means the record
-			# was found but outdated — on WSL2 that is a backward
-			# CLOCK_BOOTTIME step, which sudo-rs cannot be configured to
-			# ignore: its touch() requires timestamp <= now and has no
-			# negative-timeout escape like GNU sudo's -1).
-			if ! keepalive_err="$(sudo -n true 2>&1)"; then
-				warn "sudo keepalive tick failed (${keepalive_err:-no detail; on WSL2 usually a backward clock step})."
-				# Re-authenticate NOW, with context, instead of letting the
-				# next sudo — possibly minutes later, mid-build — fail with
-				# an unexplained password prompt. Then keep going: one
-				# password restores the ticket for everything that follows.
-				sudo -v || {
-					warn "sudo re-authentication failed — later sudo calls will re-prompt."
+	if [ "$SUDO_NOPASSWD" -eq 0 ]; then
+		# Fallback when NOPASSWD could not be installed: refresh the ticket
+		# in the background so plain expiry does not prompt mid-run. It
+		# cannot fully protect the run — brew resets the ticket by design
+		# and WSL clock steps disable it — so when this stops, sudo_cmd()
+		# re-authenticates lazily (one explanatory prompt) at the next
+		# privileged call.
+		(
+			# 60s refresh against the 15-min default timeout leaves a 15x
+			# margin; override via SUDO_KEEPALIVE_INTERVAL if needed.
+			interval="${SUDO_KEEPALIVE_INTERVAL:-60}"
+			# Kill the in-flight `sleep` child when TERMed, and wait() to
+			# reap — WSL's init does not reap adopted zombies.
+			trap 'kill $(jobs -p) 2>/dev/null; wait 2>/dev/null; exit 0' TERM
+			while true; do
+				sleep "$interval" &
+				wait "$!" 2>/dev/null || exit 0
+				if ! sudo -n true 2>/dev/null; then
+					warn "sudo keepalive stopped — expected after a brew run; the next privileged command re-authenticates."
 					exit 0
-				}
-				ok "sudo ticket re-established — keepalive continuing."
-			fi
-		done
-	) &
-	SUDO_KEEPALIVE_PID=$!
-	# Recycle the background loop on any exit path (success, fail, Ctrl-C);
-	# wait() reaps the subshell itself, for the same WSL-zombie reason.
-	# The sudoers drop-in is intentionally NOT removed here: rolling it back
-	# would revert to per-tty tickets and re-prompt on every new terminal.
-	trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
+				fi
+			done
+		) &
+		SUDO_KEEPALIVE_PID=$!
+	fi
+	# Recycle the background loop and drop the NOPASSWD grant on any exit
+	# path (success, fail, Ctrl-C).
+	trap cleanup_sudo EXIT
+	trap 'exit 130' INT
+	trap 'exit 143' TERM
 }
 
 # ────────────────── Step 1: Install build deps for Vim ──────────────────
@@ -680,7 +658,7 @@ main() {
 	info "vim source: ${CYAN}${VIM_SRC_DIR}${NC} (kept for future updates)"
 	echo ""
 
-	start_sudo_keepalive
+	setup_sudo
 
 	install_vim_build_deps
 	echo ""
