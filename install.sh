@@ -225,14 +225,24 @@ start_sudo_keepalive() {
 		while true; do
 			sleep "$interval" &
 			wait "$!" 2>/dev/null || exit 0
-			# Non-interactive refresh: never prompts. If the timestamp has
-			# fully expired this fails and the loop exits; later sudo calls
-			# then prompt normally — no worse than without the keepalive.
-			# The failure is NOT silent: a dead keepalive is observable.
-			sudo -n true 2>/dev/null || {
-				warn "sudo keepalive stopped — later sudo calls may re-prompt."
-				exit 0
-			}
+			# Non-interactive refresh: never prompts. Capture stderr so the
+			# failure reason is observable (an empty detail means the record
+			# was found but outdated — on WSL2 that is a backward
+			# CLOCK_BOOTTIME step, which sudo-rs cannot be configured to
+			# ignore: its touch() requires timestamp <= now and has no
+			# negative-timeout escape like GNU sudo's -1).
+			if ! keepalive_err="$(sudo -n true 2>&1)"; then
+				warn "sudo keepalive tick failed (${keepalive_err:-no detail; on WSL2 usually a backward clock step})."
+				# Re-authenticate NOW, with context, instead of letting the
+				# next sudo — possibly minutes later, mid-build — fail with
+				# an unexplained password prompt. Then keep going: one
+				# password restores the ticket for everything that follows.
+				sudo -v || {
+					warn "sudo re-authentication failed — later sudo calls will re-prompt."
+					exit 0
+				}
+				ok "sudo ticket re-established — keepalive continuing."
+			fi
 		done
 	) &
 	SUDO_KEEPALIVE_PID=$!
@@ -249,7 +259,7 @@ install_vim_build_deps() {
 	info "Installing Vim build dependencies..."
 	case "$OS" in
 	debian)
-		sudo_cmd apt-get update -qq
+		sudo_cmd apt-get update -q
 		common=(git curl build-essential
 			libwayland-dev libcairo2-dev
 			libgpm-dev libncurses-dev
@@ -335,6 +345,9 @@ install_linuxbrew() {
 		# into bash).
 		local installer="/tmp/homebrew_install.$$.sh"
 		local fetched=0 attempt
+		# `curl -fsSL -o` is silent: on a slow network the download (and its
+		# retries) would look like a hang without this line.
+		info "Downloading the Homebrew installer..."
 		for attempt in 1 2 3; do
 			if curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"; then
 				fetched=1
@@ -636,7 +649,10 @@ setup_symlinks() {
 # ────────────────── Step 8: Install plugins via vim-plug ──────────────────
 
 install_plugins() {
-	info "Installing Vim plugins (vim-plug)..."
+	# Headless `vim -es` swallows vim-plug's window output, so cloning the
+	# plugins produces NO output at all — spell out that the wait is normal
+	# instead of looking like a hang.
+	info "Installing Vim plugins (vim-plug) — no output below until done, may take a few minutes..."
 	# vim-plug is auto-bootstrapped by .vimrc on first launch.
 	# We run vim headless to trigger PlugInstall.
 	vim -es -u "$HOME/.vimrc" \
