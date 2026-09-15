@@ -789,7 +789,7 @@ def CleanSessionExcludedWindows()
 		if tabpagenr('$') == 1 && pos == [1, 1] && tabpagewinnr(1, '$') == 1
 			# Last remaining window: switching is the only safe option.
 			win_gotoid(w.winid)
-			if alt_bufnr > 0 && alt_bufnr != bufnr('%') && buflisted(alt_bufnr) && !IsSessionExcludedBuffer(alt_bufnr)
+			if alt_bufnr > 0 && buflisted(alt_bufnr) && !IsSessionExcludedBuffer(alt_bufnr)
 				execute 'buffer' alt_bufnr
 			else
 				execute 'buffer' fallback
@@ -842,13 +842,6 @@ def BackupSession()
 	echomsg 'Session saved: ' .. fnamemodify(session_info[1], ':~')
 enddef
 
-def SaveSessionOnExit()
-	if v:this_session ==# ''
-		return
-	endif
-	WriteSessionFile(v:this_session)
-enddef
-
 def RestoreSession()
 	var session_info = GetSessionFileInfo()
 	var session_filename = session_info[1]
@@ -880,16 +873,16 @@ nnoremap <Leader>ws <ScriptCmd>call BackupSession()<CR>
 # Remove
 nnoremap <Leader>rs <ScriptCmd>call DeleteSession()<CR>
 
+augroup Session
+	autocmd!
+	autocmd VimLeavePre * if v:this_session !=# '' | WriteSessionFile(v:this_session) | endif
+	autocmd VimEnter * ++nested RestoreSession()
+augroup END
+
 # Restore cursor to previous editing position
 augroup RestoreCursorPosition
 	autocmd!
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
-augroup END
-
-augroup Session
-	autocmd!
-	autocmd VimLeavePre * SaveSessionOnExit()
-	autocmd VimEnter * ++nested RestoreSession()
 augroup END
 # }
 
