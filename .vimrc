@@ -2738,13 +2738,3 @@ smap <expr> <Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(1) ? '<Plug>(vsnip
 imap <expr> <S-Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>') : '<S-Tab>'
 smap <expr> <S-Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>') : '<S-Tab>'
 # }
-
-# A vim9script vimrc keeps the startup (Vi) 'cpoptions' -- the :vim9script
-# side effect does not apply to it and the value is re-applied after the rc.
-# With the C flag present, every runtime-sourced autoload script (fugitive,
-# signature, gitgutter...) loses its \ line continuations and errors on each
-# call. VimEnter runs after that restore, so fixing it there sticks.
-augroup VimEnterCpo
-	autocmd!
-	autocmd VimEnter * set cpo&vim
-augroup END
