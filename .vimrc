@@ -1376,10 +1376,54 @@ nnoremap <silent><Leader><Leader>t <ScriptCmd>call OpenPrompt('New tab name: ', 
 # }
 
 # Split {
+def WinNav(dir: string)
+	# Popups (fzf, ...) are modal UI: wincmd is not even allowed there (E994),
+	# and their own Alt bindings must keep working -- hand the full Alt+key
+	# back to the job instead. 'n' skips mappings so the forwarded key cannot
+	# re-enter this function.
+	if win_gettype() ==# 'popup' || (&buftype ==# 'terminal' && bufname('%') =~# 'fzf')
+		# NB: build the sequence from "\e": a partial "\<M-..." string fragment
+		# does not decode in vim9 and would be forwarded as literal text.
+		feedkeys("\e" .. dir, "n")
+		return
+	endif
+	# stopinsert is a no-op in terminal mode, so a terminal-to-terminal
+	# switch keeps the mode by itself. Resume input only when the terminal
+	# we landed on is paused in Normal mode, else the "i" reaches the job.
+	stopinsert
+	execute 'wincmd' dir
+	if &buftype ==# 'terminal' && bufname('%') !~# 'fzf' && term_getstatus(bufnr()) =~# 'normal'
+		feedkeys("i", 't')
+	endif
+enddef
+
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
+# Terminals send Alt+letter as an ESC prefix, which vim cannot decode by
+# default (|map-alt-keys|), so declare the sequences as key codes for
+# <A-h/j/k/l> to fire in every mode, terminal included. The keycode wait uses
+# 'ttimeoutlen' (10ms), so a lone Esc falls through almost instantly and a
+# manual Esc+key inside terminal jobs (an inner vim's Esc+j) is never swallowed.
+if !has('gui_running')
+	execute "set <M-h>=\eh"
+	execute "set <M-j>=\ej"
+	execute "set <M-k>=\ek"
+	execute "set <M-l>=\el"
+endif
+nnoremap <silent><A-h> <ScriptCmd>WinNav('h')<CR>
+inoremap <silent><A-h> <ScriptCmd>WinNav('h')<CR>
+tnoremap <silent><A-h> <ScriptCmd>WinNav('h')<CR>
+nnoremap <silent><A-j> <ScriptCmd>WinNav('j')<CR>
+inoremap <silent><A-j> <ScriptCmd>WinNav('j')<CR>
+tnoremap <silent><A-j> <ScriptCmd>WinNav('j')<CR>
+nnoremap <silent><A-k> <ScriptCmd>WinNav('k')<CR>
+inoremap <silent><A-k> <ScriptCmd>WinNav('k')<CR>
+tnoremap <silent><A-k> <ScriptCmd>WinNav('k')<CR>
+nnoremap <silent><A-l> <ScriptCmd>WinNav('l')<CR>
+inoremap <silent><A-l> <ScriptCmd>WinNav('l')<CR>
+tnoremap <silent><A-l> <ScriptCmd>WinNav('l')<CR>
 nnoremap <silent><Leader><Leader>s <ScriptCmd>call OpenPrompt('New split name: ', 'split')<CR>
 nnoremap <silent><Leader><Leader>v <ScriptCmd>call OpenPrompt('New vsplit name: ', 'vsplit')<CR>
 # }
@@ -1621,6 +1665,54 @@ tnoremap <silent><F4> <C-\><C-n><ScriptCmd>call TerminalToggle(false)<CR>
 nnoremap <silent><F5> <ScriptCmd>call TerminalToggle(true)<CR>
 tnoremap <silent><F5> <C-\><C-n><ScriptCmd>call TerminalToggle(true)<CR>
 
+# ESC ; conflicts with no vim input protocol sequence (unlike ESC [ / ESC O),
+# so the declaration alone teaches vim to decode this Alt combination - the
+# same mechanism as the <M-h/j/k/l> declarations in the Split section.
+if !has('gui_running')
+	execute "set <M-;>=\e;"
+endif
+
+# Alt+; as a universal "back to normal mode" (Alt+[ cannot be decoded in a
+# terminal: ESC [ is the CSI intro). <C-\><C-n> is a no-op in normal mode and
+# Esc-like everywhere else, terminal mode included. It mirrors <Esc>:
+# insert/replace -> normal (VM-insert -> VM-normal), then a second press
+# exits the multi-cursors; non-insert + VM -> exit VM directly. Visual mode
+# leaves via <C-\><C-n> first, then a second Alt+; exits.
+def BackToNormal()
+	# mode() =~ '^[iR]' covers insert, replace and virtual replace.
+	if mode() =~# '^[iR]'
+		stopinsert
+	elseif !empty(get(b:, 'VM_Selection', {}))
+		vm#reset()
+	else
+		execute "normal! \<C-\>\<C-n>"
+	endif
+enddef
+nnoremap <silent><A-;> <ScriptCmd>BackToNormal()<CR>
+inoremap <silent><A-;> <ScriptCmd>BackToNormal()<CR>
+vnoremap <silent><A-;> <C-\><C-n>
+# :vmap mappings have Select mode restored after they execute (|Select-mode-
+# mapping| edge case), so Select needs its own mapping to actually leave.
+snoremap <silent><A-;> <C-\><C-n>
+cnoremap <silent><A-;> <C-\><C-n>
+onoremap <silent><A-;> <C-\><C-n>
+tnoremap <silent><A-;> <C-\><C-n>
+
+# `r` followed by a special key (e.g. <A-;>) must abort like <Esc>: mappings
+# don't apply inside `r`'s char prompt, so the key would be used as the
+# replacement character. Read it with getchar() and abort on 27 (<Esc>),
+# 0x80-key strings (special keys) and the keycodes of the <M-*> keys declared
+# above (0x80 + char code; <A-;> decodes to 187, i.e. »). The latter shadow
+# è ê ë ì as replacement characters - an accepted trade-off.
+def ReplaceOneChar()
+	var n = getchar()
+	if n == 27 || type(n) == v:t_string || index([187, 232, 234, 235, 236], n) >= 0
+		return
+	endif
+	execute $'normal! {v:count1}r{nr2char(n)}'
+enddef
+nnoremap <silent> r <ScriptCmd>ReplaceOneChar()<CR>
+
 augroup TerminalSettings
 	autocmd!
 	# term_setkill: on exit, SIGKILL shells silently instead of asking (SIGTERM is ignored by interactive shells); :hide keeps the job
@@ -1628,14 +1720,48 @@ augroup TerminalSettings
 augroup END
 # }
 
-# Send to pane (,s group) {
+# Send to pane {
 # Deliver text to a tmux pane or the global terminal — REPLs, AI CLIs, build
 # panes, anything. Inside tmux the target is picked with fzf and remembered in
 # g:SEND_PANE_ID for the rest of this Vim session (,sa attaches, ,sd detaches);
 # outside tmux the text goes to the F5 global terminal instead. SEND_PANE_ID is
 # all-uppercase so viminfo's '!' section persists it per project, surviving restarts.
+# Attachment is verified against a uuid stored as a pane option: generated
+# once per pane, shared by all nvims attaching it, and dying with the pane —
+# so a reused %N id after tmux restart/restore can't be mistaken for the old pane.
 # Viminfo restore runs after vimrc, so this default is safe to set unconditionally.
 g:SEND_PANE_ID = ''
+g:SEND_PANE_UUID = ''
+
+def NewUuid(): string
+	# rand() needs an explicit seed, else the sequence repeats across runs.
+	var s = srand(localtime() * 100000 + getpid())
+	var out = ''
+	for _ in range(4)
+		out ..= printf('%08x', rand(s))
+	endfor
+	return out
+enddef
+
+def PaneUuid(pane: string): string
+	var existing = system('tmux display-message -p -t ' .. shellescape(pane) .. ' "#{@send-pane-uuid}"')->trim()
+	if v:shell_error == 0 && existing !=# ''
+		return existing
+	endif
+	var uuid = NewUuid()
+	system('tmux set-option -p -t ' .. shellescape(pane) .. ' @send-pane-uuid ' .. shellescape(uuid))
+	return uuid
+enddef
+
+def AttachPane(pane: string)
+	g:SEND_PANE_ID = pane
+	g:SEND_PANE_UUID = PaneUuid(pane)
+enddef
+
+def DetachPane()
+	g:SEND_PANE_ID = ''
+	g:SEND_PANE_UUID = ''
+enddef
 
 def SendPaneList(): list<string>
 	var self_pane = $TMUX_PANE
@@ -1657,7 +1783,7 @@ def SendPaneSink(Cb: func(string), line: string)
 	if pane ==# ''
 		return
 	endif
-	g:SEND_PANE_ID = pane
+	AttachPane(pane)
 	Cb(pane)
 enddef
 
@@ -1713,18 +1839,15 @@ def SendToPane(text: string, submit: bool)
 		return
 	endif
 	var pane = g:SEND_PANE_ID
+	var uuid = g:SEND_PANE_UUID
 	if pane !=# ''
-		# verify the attached pane still exists, else auto-detach
-		var out = system('tmux display-message -p -t ' .. shellescape(pane) .. ' "#{pane_id}"')
-		if v:shell_error != 0 || stridx(out, pane) < 0
-			EchoMsg('WarningMsg', 'send-to-pane: attached pane is gone, detached')
-			g:SEND_PANE_ID = ''
-			pane = ''
+		var out = uuid ==# '' ? '' : system('tmux display-message -p -t ' .. shellescape(pane) .. ' "#{@send-pane-uuid}"')->trim()
+		if uuid !=# '' && v:shell_error == 0 && out ==# uuid
+			TmuxSend(pane, text, submit)
+			return
 		endif
-	endif
-	if pane !=# ''
-		TmuxSend(pane, text, submit)
-		return
+		DetachPane()
+		EchoMsg('WarningMsg', 'send-to-pane: attached pane changed or is gone, detached')
 	endif
 	SendOpenPicker((p) => TmuxSend(p, text, submit))
 enddef
@@ -1750,7 +1873,7 @@ enddef
 
 # ,sa attach a pane so sends skip the picker; ,sd detach
 def SendAttachSink(pane: string)
-	g:SEND_PANE_ID = pane
+	AttachPane(pane)
 enddef
 
 def SendAttach()
@@ -1763,7 +1886,7 @@ enddef
 
 def SendDetach()
 	echomsg 'send-to-pane: detached ' .. (g:SEND_PANE_ID ==# '' ? 'nothing' : g:SEND_PANE_ID)
-	g:SEND_PANE_ID = ''
+	DetachPane()
 enddef
 
 nnoremap <silent><Leader>ss <ScriptCmd>call SendToPane(getline('.'), false)<CR>
@@ -1857,6 +1980,25 @@ g:VM_maps['Select Operator'] = 'gs'
 g:VM_set_statusline = 0
 g:VM_show_warnings = 0
 g:VM_silent_exit = 1
+
+# VM's replace_chars() (mapped to `r`) only cancels on a raw <Esc>, so a
+# special key like <A-;> would be replaced with (see ReplaceOneChar() above).
+# Override the plug to cancel on <Esc>/special keys, feeding the char back so
+# replace_chars() reads it unchanged. The plug is (re)defined in Maps.start()
+# right before it fires the User event, so hooking that event always lands after VM has (re)defined it.
+def VMReplaceChar()
+	var n = getchar()
+	if n == 27 || type(n) == v:t_string || index([187, 232, 234, 235, 236], n) >= 0
+		return
+	endif
+	feedkeys(nr2char(n), 't')
+	b:VM_Selection.Edit.replace_chars()
+enddef
+
+augroup VMReplaceCharFix
+	autocmd!
+	autocmd User visual_multi_mappings nnoremap <silent> <Plug>(VM-Replace-Characters) <ScriptCmd>VMReplaceChar()<CR>
+augroup END
 # }
 
 # vim-dir {
@@ -2596,3 +2738,13 @@ smap <expr> <Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(1) ? '<Plug>(vsnip
 imap <expr> <S-Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>') : '<S-Tab>'
 smap <expr> <S-Tab> exists('*vsnip#jumpable') ? (vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>') : '<S-Tab>'
 # }
+
+# A vim9script vimrc keeps the startup (Vi) 'cpoptions' -- the :vim9script
+# side effect does not apply to it and the value is re-applied after the rc.
+# With the C flag present, every runtime-sourced autoload script (fugitive,
+# signature, gitgutter...) loses its \ line continuations and errors on each
+# call. VimEnter runs after that restore, so fixing it there sticks.
+augroup VimEnterCpo
+	autocmd!
+	autocmd VimEnter * set cpo&vim
+augroup END
