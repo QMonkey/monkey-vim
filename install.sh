@@ -71,6 +71,27 @@ is_wsl_kernel() {
 	uname -r | grep -qi 'microsoft'
 }
 
+# WSL interop appends the WINDOWS PATH to ours, so tools installed on the
+# Windows side (node, python, sudo.exe, ...) appear as /mnt/c/... shims.
+# They are not Linux binaries and root's secure_path cannot see them —
+# treat /mnt/* resolutions as "not installed" so the real Linux packages
+# get installed instead.
+have_native_cmd() {
+	command -v "$1" &>/dev/null || return 1
+	case "$(command -v "$1")" in
+	/mnt/*) return 1 ;; # WSL Windows-interop shim
+	esac
+	return 0
+}
+
+# Absolute path to a LINUX sudo, or non-zero.
+native_sudo() {
+	local p
+	have_native_cmd sudo || return 1
+	p=$(command -v sudo)
+	printf '%s' "$p"
+}
+
 OS=$(os_detect)
 
 sudo_cmd() {
@@ -80,14 +101,12 @@ sudo_cmd() {
 	# with an explanatory prompt instead of letting the command fail or
 	# spring a context-free password prompt. `-n true` never prompts; the
 	# interactive `-v` only runs when the ticket is actually gone.
-	if command -v sudo &>/dev/null; then
-		if ! sudo -n true 2>/dev/null; then
-			sudo -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
-		fi
-		sudo "$@"
-	else
-		"$@"
+	local sudo_bin
+	sudo_bin=$(native_sudo) || { "$@"; return; }
+	if ! "$sudo_bin" -n true 2>/dev/null; then
+		"$sudo_bin" -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
 	fi
+	"$sudo_bin" "$@"
 }
 
 # Print login profile + interactive rc file for the detected shell.
@@ -135,7 +154,7 @@ append_env_block() {
 
 refresh_path() {
 	# In-session PATH refresh so newly installed tools are found by this script.
-	if command -v go &>/dev/null; then
+	if have_native_cmd go; then
 		local gopath
 		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
 		export PATH="$gopath/bin:$PATH"
@@ -157,8 +176,8 @@ cleanup_sudo() {
 		kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
 		wait "$SUDO_KEEPALIVE_PID" 2>/dev/null
 	fi
-	if [ "$SUDO_NOPASSWD" -eq 1 ]; then
-		sudo -n rm -f "$NOPASSWD_DROPIN" 2>/dev/null ||
+	if [ "$SUDO_NOPASSWD" -eq 1 ] && [ -n "$SUDO_BIN" ]; then
+		"$SUDO_BIN" -n rm -f "$NOPASSWD_DROPIN" 2>/dev/null ||
 			warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $NOPASSWD_DROPIN"
 	fi
 }
@@ -168,13 +187,14 @@ setup_sudo() {
 	# sudo (build deps) and later ones (make install) can exceed the default
 	# 15-min timestamp_timeout on slow downloads/compiles. A re-auth prompt
 	# then aborts unattended runs (no TTY to answer it).
-	# Skip when running as root or when sudo is unavailable.
-	if [ "$(id -u)" -eq 0 ] || ! command -v sudo &>/dev/null; then
+	# Skip when running as root or when no native sudo is available.
+	SUDO_BIN=$(native_sudo) || return 0
+	if [ "$(id -u)" -eq 0 ]; then
 		return 0
 	fi
 	# Pre-authenticate once so the password is entered at the very start
 	# instead of mid-run after a long download/compile.
-	sudo -v || fail "sudo authorization failed — run this script in an interactive terminal."
+	"$SUDO_BIN" -v || fail "sudo authorization failed — run this script in an interactive terminal."
 	# Temporary NOPASSWD for the duration of the run — the core of the
 	# one-password design. Three things would otherwise kill the sudo
 	# ticket mid-run and force a re-auth prompt:
@@ -193,7 +213,7 @@ setup_sudo() {
 	# `sudo rm $NOPASSWD_DROPIN`. If you prefer a permanent passwordless
 	# sudo, add the same line to your own sudoers drop-in instead.
 	if printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$(id -un)" |
-		sudo -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$NOPASSWD_DROPIN" >/dev/null 2>&1; then
+		"$SUDO_BIN" -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$NOPASSWD_DROPIN" >/dev/null 2>&1; then
 		SUDO_NOPASSWD=1
 		ok "Temporary NOPASSWD drop-in installed for this run (auto-removed on exit)."
 	else
@@ -216,7 +236,7 @@ setup_sudo() {
 			while true; do
 				sleep "$interval" &
 				wait "$!" 2>/dev/null || exit 0
-				if ! sudo -n true 2>/dev/null; then
+				if ! "$SUDO_BIN" -n true 2>/dev/null; then
 					warn "sudo keepalive stopped — expected after a brew run; the next privileged command re-authenticates."
 					exit 0
 				fi
@@ -293,7 +313,7 @@ install_vim_build_deps() {
 		;;
 	macos)
 		# Terminal-only build (--enable-gui=no); no gtk/cairo needed.
-		if command -v brew &>/dev/null; then
+		if have_native_cmd brew; then
 			brew install python3 ruby lua
 		else
 			warn "Homebrew not found — cannot install vim build deps. Install it first: https://brew.sh"
@@ -303,6 +323,7 @@ install_vim_build_deps() {
 		warn "Unknown OS ($OS). Attempting to continue with whatever is available."
 		;;
 	esac
+	hash -r # re-scan PATH: fresh binaries must not be shadowed by cached shim paths
 	ok "Build dependencies installed."
 }
 
@@ -310,17 +331,19 @@ install_vim_build_deps() {
 
 install_linuxbrew() {
 	local brew_prefix=""
-	if command -v brew &>/dev/null; then
+	if have_native_cmd brew; then
 		brew_prefix="$(dirname "$(dirname "$(command -v brew)")")"
 		ok "Homebrew already installed at $brew_prefix."
 	else
 		info "Installing Homebrew/Linuxbrew..."
-		# The Homebrew installer runs `sudo -k` on exit to invalidate the sudo
-		# ticket (its security design). That would disable the -1/global ticket
-		# we just established, making every later sudo re-prompt. So: download
-		# the installer to a temp file, replace the `sudo -k` in its exit trap
-		# with true, and run the local file (instead of piping curl straight
-		# into bash).
+		# NOTE: the installer's exit trap runs `sudo -k` (and the `brew`
+		# commands it spawns reset the timestamp too) — that used to require
+		# sed-patching the installer, but the temporary NOPASSWD drop-in
+		# makes the timestamp irrelevant, so the official installer runs
+		# unmodified. If the NOPASSWD drop-in failed to install, the next
+		# privileged command simply re-authenticates once (sudo_cmd).
+		# Download fully before executing: `curl | bash` would run a
+		# truncated script if the connection drops mid-stream.
 		local installer="/tmp/homebrew_install.$$.sh"
 		local fetched=0 attempt
 		# `curl -fsSL -o` is silent: on a slow network the download (and its
@@ -337,7 +360,6 @@ install_linuxbrew() {
 			warn "Homebrew installer download failed — continuing without Homebrew."
 			return 0
 		fi
-		sed -i 's|/usr/bin/sudo -k|/usr/bin/true|g' "$installer"
 		NONINTERACTIVE=1 /bin/bash "$installer" ||
 			warn "Homebrew installer failed — continuing without Homebrew."
 		rm -f "$installer"
@@ -372,6 +394,7 @@ install_linuxbrew() {
 # ────────────────── Step 3: Build Vim from source ──────────────────
 
 check_vim_version() {
+	have_native_cmd vim || return 1
 	local ver
 	ver=$(vim --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
 	if [[ -z "$ver" ]]; then
