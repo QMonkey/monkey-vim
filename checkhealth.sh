@@ -113,7 +113,16 @@ os_detect() {
 OS=$(os_detect)
 
 sudo_cmd() {
+	# Lazy re-auth: Homebrew resets the sudo timestamp on EVERY invocation
+	# (brew.sh runs `sudo --reset-timestamp` at startup), so a ticket that
+	# was valid a minute ago can be dead here. Re-authenticate proactively
+	# with an explanatory prompt instead of letting the command fail or
+	# spring a context-free password prompt. `-n true` never prompts; the
+	# interactive `-v` only runs when the ticket is actually gone.
 	if command -v sudo &>/dev/null; then
+		if ! sudo -n true 2>/dev/null; then
+			sudo -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
+		fi
 		sudo "$@"
 	else
 		"$@"
@@ -124,6 +133,24 @@ sudo_cmd() {
 # manager: system repos ship versions that lag far behind (fzf: 0.44 on
 # Ubuntu noble vs current 0.7x). Append more names here as needed.
 BREW_FIRST=(fzf)
+
+# System package manager install (no Homebrew). Returns non-zero when the
+# OS is unknown or the manager fails, so callers can fall back to brew.
+install_with_system_mgr() {
+	case "$OS" in
+	debian) sudo_cmd apt-get install -y "$@" ;;
+	arch) sudo_cmd pacman -S --noconfirm "$@" ;;
+	opensuse) sudo_cmd zypper --non-interactive install -y "$@" ;;
+	centos)
+		# Some tools (universal-ctags, global, global-ctags, fzf, bat, pygments) come from EPEL
+		sudo_cmd dnf install -y epel-release || true
+		local -a _args=("$@")
+		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
+		sudo_cmd dnf install -y "${_args[@]}"
+		;;
+	*) return 1 ;;
+	esac
+}
 
 install_pkg() {
 	if ! $INSTALL_MODE; then return 1; fi
@@ -139,26 +166,16 @@ install_pkg() {
 			rest+=("$p")
 		fi
 	done
-	if ((${#brew_pkgs[@]} > 0)); then
-		if ! brew install "${brew_pkgs[@]}"; then
-			rest+=("${brew_pkgs[@]}") # brew failed — fall back to the system manager
-		fi
-	fi
+	# System-manager batch FIRST, Homebrew LAST: every `brew` invocation
+	# resets the sudo timestamp (brew.sh runs `sudo --reset-timestamp` at
+	# startup), so any sudo work after a brew call would re-prompt. Doing
+	# all sudo work before brew keeps the run at one password entry.
 	if ((${#rest[@]} > 0)); then
-		case "$OS" in
-		debian) sudo_cmd apt-get install -y "${rest[@]}" || brew install "${rest[@]}" ;;
-		arch) sudo_cmd pacman -S --noconfirm "${rest[@]}" || brew install "${rest[@]}" ;;
-		opensuse) sudo_cmd zypper --non-interactive install -y "${rest[@]}" || brew install "${rest[@]}" ;;
-		centos)
-			# Some tools (universal-ctags, global, global-ctags, fzf, bat, pygments) come from EPEL
-			sudo_cmd dnf install -y epel-release || true
-			local -a _args=("${rest[@]}")
-			[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-			sudo_cmd dnf install -y "${_args[@]}" || brew install "${rest[@]}"
-			;;
-		macos) brew install "${rest[@]}" ;;
-		*) brew install "${rest[@]}" 2>/dev/null || return 1 ;;
-		esac
+		install_with_system_mgr "${rest[@]}" ||
+			brew install "${rest[@]}" # system manager failed — brew fallback
+	fi
+	if ((${#brew_pkgs[@]} > 0)); then
+		brew install "${brew_pkgs[@]}" || install_with_system_mgr "${brew_pkgs[@]}"
 	fi
 }
 
@@ -187,6 +204,14 @@ ensure_go_env() {
 		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
 		export PATH="$gopath/bin:$PATH"
 	fi
+}
+
+go_install() {
+	# 'go install' is silent for its ENTIRE module download + compile, which
+	# takes minutes on the first run — announce it so the wait is explainable.
+	# The notice goes to stdout on purpose: call sites may discard stderr.
+	echo -e "  ${CYAN}→ go install ${1%@*} (building, no output — may take a few minutes)${NC}"
+	go install "$@"
 }
 
 ensure_npm() {
@@ -218,14 +243,16 @@ install_optional_bin() {
 	ensure_go_env
 	case "$bin" in
 	rg)
-		install_pkg "$(pkg_name "$bin")" || cargo install ripgrep 2>/dev/null || ok=false
+		install_pkg "$(pkg_name "$bin")" ||
+			{ echo -e "  ${CYAN}→ cargo install ripgrep (source build, no output — may take several minutes)${NC}"; cargo install ripgrep 2>/dev/null; } ||
+			ok=false
 		;;
 	gopls)
-		go install golang.org/x/tools/gopls@latest
+		go_install golang.org/x/tools/gopls@latest
 		;;
 	pylsp)
 		install_pkg "$(pkg_name "$bin")" 2>/dev/null ||
-			sudo pip3 install python-lsp-server 2>/dev/null ||
+			sudo_cmd pip3 install python-lsp-server 2>/dev/null ||
 			pip3 install python-lsp-server 2>/dev/null ||
 			ok=false
 		;;
@@ -243,14 +270,14 @@ install_optional_bin() {
 		npm_install_g bash-language-server
 		;;
 	shfmt)
-		go install mvdan.cc/sh/v3/cmd/shfmt@latest 2>/dev/null || install_pkg shfmt || ok=false
+		go_install mvdan.cc/sh/v3/cmd/shfmt@latest 2>/dev/null || install_pkg shfmt || ok=false
 		;;
 	staticcheck)
-		go install honnef.co/go/tools/cmd/staticcheck@latest 2>/dev/null || ok=false
+		go_install honnef.co/go/tools/cmd/staticcheck@latest 2>/dev/null || ok=false
 		;;
 	black)
 		install_pkg "$(pkg_name "$bin")" 2>/dev/null ||
-			sudo pip3 install black 2>/dev/null ||
+			sudo_cmd pip3 install black 2>/dev/null ||
 			pip3 install black 2>/dev/null ||
 			ok=false
 		;;
@@ -276,13 +303,13 @@ install_optional_bin() {
 		install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
 		;;
 	glow)
-		install_pkg "$(pkg_name "$bin")" || brew install glow 2>/dev/null || go install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
+		install_pkg "$(pkg_name "$bin")" || brew install glow 2>/dev/null || go_install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
 		;;
 	marksman)
 		install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
 		;;
 	efm-langserver)
-		go install github.com/mattn/efm-langserver@latest 2>/dev/null || ok=false
+		go_install github.com/mattn/efm-langserver@latest 2>/dev/null || ok=false
 		;;
 	prettier)
 		npm_install_g prettier
