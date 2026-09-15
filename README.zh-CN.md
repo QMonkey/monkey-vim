@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 脚本按顺序执行：
 
 1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
-2. 预授权一次 `sudo` 并在后台保活——长时间下载/编译不会中途再次索要密码（无人值守也不会卡住）。WSL 下若为 GNU sudo 还会安装一个**持久化**的 sudoers drop-in：`timestamp_type=global` + `timestamp_timeout=-1` 让票据只按用户记录——新开终端、SSH 会话、WSL 时钟回跳、tty 变化都不会再次索要密码（sudo-rs 系统跳过此 drop-in）
+2. 预授权一次 `sudo`——整个流程唯一一次密码输入——并为当前用户安装**临时** NOPASSWD sudoers drop-in，脚本退出时自动删除。Homebrew 每次运行都会重置 sudo 时间戳，WSL2 时钟跳变会使票据失效，而 NOPASSWD 让整个流程对两者完全免疫、与命令顺序无关。若 drop-in 安装失败，脚本回退为后台保活 + 惰性重认证
 3. 安装 Homebrew（Linuxbrew）作为兜底包管理器——即使 brew 已存在，也会把 shellenv 持久化到 shell rc 文件（带 PATH 去重保护）
 4. 克隆并编译 Vim 源码，然后 `make install`
 5. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
@@ -549,11 +549,17 @@ Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
 Leader+Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
 Leader+Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
 
-Ctrl+h      跳转到左窗口
-Ctrl+j      跳转到下窗口
-Ctrl+k      跳转到上窗口
-Ctrl+l      跳转到右窗口
-Leader+z    窗口放大/恢复
+Alt+h      跳转到左窗口（普通模式）
+Alt+j      跳转到下窗口（普通模式）
+Alt+k      跳转到上窗口（普通模式）
+Alt+l      跳转到右窗口（普通模式）
+Ctrl+h     跳转到左窗口（普通模式别名）
+Ctrl+j     跳转到下窗口（普通模式别名）
+Ctrl+k     跳转到上窗口（普通模式别名）
+Ctrl+l     跳转到右窗口（普通模式别名）
+Leader+z   窗口放大/恢复
+
+Alt+h/j/k/l 在所有模式（普通/插入/终端）下都可用。tmux 发送的 Alt+字母是 ESC 前缀形式，vim 默认无法解码（|map-alt-keys|），因此将 ESC+键 声明为键码；从插入/终端模式聚焦到终端窗口时自动恢复输入，popup（fzf）及自行处理 Alt 键的终端 job 不会被劫持（见 WinNav）。
 ```
 
 #### 1.5 Tab
@@ -727,11 +733,13 @@ F5      切换全局终端（右侧，半宽）
 
 F4/F5 切换同一个全局终端 —— 可见时按任意键隐藏；隐藏后在当前 tab 重开（job 与滚动历史保留）。F3 每次打开一个额外终端，命令作为 job 运行，结束后窗口保留并显示 `[Process exited N]`。
 
-使用 `<Ctrl-\><Ctrl-n>` 从终端模式切换到普通模式。普通模式下 `<ScrollWheelUp>` 和 `<ScrollWheelDown>` 可滚动终端缓冲区。
+使用 `<Ctrl-\><Ctrl-n>` 从终端模式切换到普通模式。`Alt+h/j/k/l` 可在终端模式下直接切换分屏，焦点回到终端窗口时自动恢复终端模式。普通模式下 `<ScrollWheelUp>` 和 `<ScrollWheelDown>` 可滚动终端缓冲区。
+
+`Alt+;` 是所有模式通用的"回到普通模式"——终端、插入、命令行、可视，以及 vim-visual-multi：插入类模式先回到普通模式（再按一次退出多光标），其他模式直接退出。相关修复：`r` 后跟特殊键（如 `Alt+;`）会像 `Esc` 一样中止，而不是把该键当作替换字符插入（对 vim-visual-multi 的 `r` 同样生效）。
 
 #### 1.17 发送到 pane（,s 组）
 
-文本发送到 tmux pane；不在 tmux 时发送到 F4/F5 全局终端（首次发送自动以右侧 vsplit 打开）。在 tmux 内，首次发送会弹出 fzf 选择 pane 并自动挂载（本次 Vim 会话内记住），之后的发送直达挂载目标。挂载项在 picker 中以 `*` 标记，Vim 自身的 pane 不在列表中，目标消失时自动摘除。
+文本发送到 tmux pane；不在 tmux 时发送到 F4/F5 全局终端（首次发送自动以右侧 vsplit 打开）。在 tmux 内，首次发送会弹出 fzf 选择 pane 并自动挂载（本次 Vim 会话内记住），之后的发送直达挂载目标。挂载项在 picker 中以 `*` 标记，Vim 自身的 pane 不在列表中；目标消失或被替换（如 tmux 重启后复用 pane id，通过 pane 上存储的 uuid 校验身份）时自动摘除。
 
 ```text
 ,ss     将可视选区/当前行粘贴到 tmux pane（fzf 选择）
