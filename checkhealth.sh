@@ -44,8 +44,30 @@ done
 
 # ──────────────────────────── helpers ────────────────────────────
 
+# WSL interop appends the WINDOWS PATH to ours, so tools installed on the
+# Windows side (node, python, git, ...) appear as /mnt/c/... shims. They are
+# NOT Linux binaries: `sudo` cannot even see them (secure_path drops /mnt/*),
+# and a global `npm install -g` through the shim would land on the WINDOWS
+# side, invisible to WSL vim. Treat /mnt/* resolutions as "not installed" so
+# the real Linux packages get installed instead.
+have_native_cmd() {
+	command -v "$1" &>/dev/null || return 1
+	case "$(command -v "$1")" in
+	/mnt/*) return 1 ;; # WSL Windows-interop shim
+	esac
+	return 0
+}
+
+# Absolute path to a LINUX sudo, or non-zero.
+native_sudo() {
+	local p
+	have_native_cmd sudo || return 1
+	p=$(command -v sudo)
+	printf '%s' "$p"
+}
+
 check_bin() {
-	if command -v "$1" &>/dev/null; then
+	if have_native_cmd "$1"; then
 		echo -e "  ${PASS} ${2:-$1}"
 		return 0
 	else
@@ -119,14 +141,15 @@ sudo_cmd() {
 	# with an explanatory prompt instead of letting the command fail or
 	# spring a context-free password prompt. `-n true` never prompts; the
 	# interactive `-v` only runs when the ticket is actually gone.
-	if command -v sudo &>/dev/null; then
-		if ! sudo -n true 2>/dev/null; then
-			sudo -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
-		fi
-		sudo "$@"
-	else
+	local sudo_bin
+	sudo_bin=$(native_sudo) || {
 		"$@"
+		return
+	}
+	if ! "$sudo_bin" -n true 2>/dev/null; then
+		"$sudo_bin" -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
 	fi
+	"$sudo_bin" "$@"
 }
 
 # Package names that should prefer Homebrew over the system package
@@ -160,7 +183,7 @@ install_pkg() {
 	local -a brew_pkgs=() rest=()
 	local p
 	for p in "$@"; do
-		if [[ " ${BREW_FIRST[*]} " == *" $p "* ]] && command -v brew &>/dev/null; then
+		if [[ " ${BREW_FIRST[*]} " == *" $p "* ]] && have_native_cmd brew; then
 			brew_pkgs+=("$p")
 		else
 			rest+=("$p")
@@ -177,11 +200,15 @@ install_pkg() {
 	if ((${#brew_pkgs[@]} > 0)); then
 		brew install "${brew_pkgs[@]}" || install_with_system_mgr "${brew_pkgs[@]}"
 	fi
+	# Freshly installed binaries may be shadowed by bash's per-process
+	# command hash cache (a /mnt shim executed earlier in this same run);
+	# re-scan PATH.
+	hash -r
 }
 
 ensure_rust() {
 	# Install Rust via rustup if not present
-	if ! command -v rustup &>/dev/null; then
+	if ! have_native_cmd rustup; then
 		echo -e "  ${YELLOW}→ installing rustup...${NC}"
 		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
 			sh -s -- -y 2>/dev/null || {
@@ -193,13 +220,13 @@ ensure_rust() {
 		# shellcheck disable=SC1091
 		. "$HOME/.cargo/env"
 	fi
-	command -v cargo &>/dev/null
+	have_native_cmd cargo && return 0
 }
 
 ensure_go_env() {
 	# 'go install' drops binaries in $(go env GOPATH)/bin (default ~/go/bin),
 	# which is usually not on PATH — make them visible for this run.
-	if command -v go &>/dev/null; then
+	if have_native_cmd go; then
 		local gopath
 		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
 		export PATH="$gopath/bin:$PATH"
@@ -217,9 +244,16 @@ go_install() {
 ensure_npm() {
 	# Debian/Ubuntu: `apt install nodejs` does NOT bring npm (it is only a
 	# Suggests), so npm must be installed explicitly.
-	command -v npm &>/dev/null && return 0
+	have_native_cmd node && have_native_cmd npm && return 0
 	echo -e "  ${YELLOW}→ installing npm...${NC}"
 	install_pkg "$(pkg_name npm)"
+	# Verify the install actually put a native npm on PATH: install_pkg can
+	# return success ("already newest") while PATH still only resolves to a
+	# Windows shim — fail loudly instead of silently using the shim.
+	have_native_cmd npm || {
+		echo -e "  ${RED}→ npm is still not a native Linux binary (Windows shim on PATH?)${NC}"
+		return 1
+	}
 }
 
 # Global npm install that works everywhere:
@@ -244,7 +278,10 @@ install_optional_bin() {
 	case "$bin" in
 	rg)
 		install_pkg "$(pkg_name "$bin")" ||
-			{ echo -e "  ${CYAN}→ cargo install ripgrep (source build, no output — may take several minutes)${NC}"; cargo install ripgrep 2>/dev/null; } ||
+			{
+				echo -e "  ${CYAN}→ cargo install ripgrep (source build, no output — may take several minutes)${NC}"
+				cargo install ripgrep 2>/dev/null
+			} ||
 			ok=false
 		;;
 	gopls)
@@ -481,7 +518,7 @@ if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 	if install_pkg "${pkgs[@]}"; then
 		MISSING_REQUIRED=()
 		for bin in "${REQUIRED_BINS[@]}"; do
-			if command -v "$bin" &>/dev/null; then
+			if have_native_cmd "$bin"; then
 				echo -e "  ${PASS} $(dep_name "$bin") installed"
 			else
 				MISSING_REQUIRED+=("$bin")
@@ -537,7 +574,7 @@ if $INSTALL_MODE; then
 	MISSING_OPTIONAL=()
 	for group in "${DEP_GROUPS[@]}"; do
 		for bin in $(deps_for_group "$group"); do
-			if ! command -v "$bin" &>/dev/null; then
+			if ! have_native_cmd "$bin"; then
 				MISSING_OPTIONAL+=("$bin")
 			fi
 		done
