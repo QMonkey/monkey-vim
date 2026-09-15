@@ -747,7 +747,7 @@ enddef
 g:session_switch_filetypes = ['dir']
 g:session_switch_buftypes = ['terminal']
 
-def IsSessionSwitchBuffer(bufnr: number): bool
+def IsSessionExcludedBuffer(bufnr: number): bool
 	return index(g:session_switch_filetypes, getbufvar(bufnr, '&filetype')) >= 0
 		|| index(g:session_switch_buftypes, getbufvar(bufnr, '&buftype')) >= 0
 enddef
@@ -761,12 +761,12 @@ def IsDirExists(path: string): bool
 	return isdirectory(expand(substitute(path, '\\\(\S\)', '\1', 'g')))
 enddef
 
-def SwitchSessionFiletypeWindows()
+def CleanSessionExcludedWindows()
 	# Fallback: the first listed, named buffer that is not excluded.
 	var bufinfos = getbufinfo({buflisted: 1})
 	var fallback = -1
 	for b in bufinfos
-		if !IsSessionSwitchBuffer(b.bufnr) && !empty(b.name)
+		if !IsSessionExcludedBuffer(b.bufnr) && !empty(b.name)
 			fallback = b.bufnr
 			break
 		endif
@@ -774,20 +774,30 @@ def SwitchSessionFiletypeWindows()
 	if fallback == -1
 		return
 	endif
-	var cur_wid = win_getid()
 	var alt_bufnr = bufnr('#')
-	for win in range(1, winnr('$'))
-		if !IsSessionSwitchBuffer(winbufnr(win))
+
+	# Quitting the sole window of a tab closes the tab as well. The last window
+	# of the last tab cannot be quit, so its buffer is switched instead.
+	for w in reverse(copy(getwininfo()))
+		if !IsSessionExcludedBuffer(w.bufnr)
 			continue
 		endif
-		win_gotoid(win_getid(win))
-		if alt_bufnr > 0 && alt_bufnr != bufnr('%') && buflisted(alt_bufnr) && !IsSessionSwitchBuffer(alt_bufnr)
-			execute 'buffer' alt_bufnr
+		var pos = win_id2tabwin(w.winid)
+		if pos == [0, 0]
+			continue
+		endif
+		if tabpagenr('$') == 1 && pos == [1, 1] && tabpagewinnr(1, '$') == 1
+			# Last remaining window: switching is the only safe option.
+			win_gotoid(w.winid)
+			if alt_bufnr > 0 && alt_bufnr != bufnr('%') && buflisted(alt_bufnr) && !IsSessionExcludedBuffer(alt_bufnr)
+				execute 'buffer' alt_bufnr
+			else
+				execute 'buffer' fallback
+			endif
 		else
-			execute 'buffer' fallback
+			win_execute(w.winid, 'quit')
 		endif
 	endfor
-	win_gotoid(cur_wid)
 enddef
 
 def SanitizeSessionFile(file: string)
@@ -820,7 +830,7 @@ enddef
 # session is tracked (v:this_session set, either by BackupSession or by a restored session).
 def WriteSessionFile(session_filename: string)
 	mkdir(fnamemodify(session_filename, ':h'), 'p')
-	SwitchSessionFiletypeWindows()
+	CleanSessionExcludedWindows()
 	execute 'mksession!' fnameescape(session_filename)
 	v:this_session = session_filename
 	SanitizeSessionFile(session_filename)
