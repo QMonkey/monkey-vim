@@ -30,17 +30,19 @@ EOF
 	exit 0
 }
 
-while [[ $# -gt 0 ]]; do
-	case "$1" in
-	-i | --install) INSTALL_MODE=true ;;
-	-h | --help) usage ;;
-	*)
-		echo "Unknown option: $1"
-		usage
-		;;
-	esac
-	shift
-done
+parse_args() {
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+		-i | --install) INSTALL_MODE=true ;;
+		-h | --help) usage ;;
+		*)
+			echo "Unknown option: $1"
+			usage
+			;;
+		esac
+		shift
+	done
+}
 
 # ──────────────────────────── helpers ────────────────────────────
 
@@ -379,6 +381,38 @@ get_install_hint() {
 	esac
 }
 
+# Install hint for an optional binary (used outside --install mode).
+hint_for() {
+	case "$1" in
+	clangd) echo "$(get_install_hint clangd)  # or clangd-15+" ;;
+	gcc | g++ | python3) echo "$(get_install_hint "$1")" ;;
+	go) echo "https://go.dev/dl/" ;;
+	gopls) echo "go install golang.org/x/tools/gopls@latest" ;;
+	pylsp) echo "$(get_install_hint "$(pkg_name pylsp)")  # or: pip install python-lsp-server" ;;
+	cargo) echo "https://rustup.rs/  # then: rustup component add rust-analyzer" ;;
+	rust-analyzer) echo "rustup component add rust-analyzer" ;;
+	node) echo "https://nodejs.org/  # or: $(get_install_hint nodejs npm)" ;;
+	bash-language-server) echo "npm install -g bash-language-server" ;;
+	shfmt) echo "go install mvdan.cc/sh/v3/cmd/shfmt@latest" ;;
+	staticcheck) echo "go install honnef.co/go/tools/cmd/staticcheck@latest" ;;
+	black) echo "$(get_install_hint "$(pkg_name black)")  # or: pip3 install black" ;;
+	clang-tidy) echo "$(get_install_hint clang-tidy)" ;;
+	vim-language-server) echo "npm install -g vim-language-server" ;;
+	typescript-language-server) echo "npm install -g typescript-language-server typescript" ;;
+	tsc) echo "npm install -g typescript" ;;
+	vscode-json-language-server) echo "npm install -g vscode-langservers-extracted" ;;
+	yaml-language-server) echo "npm install -g yaml-language-server" ;;
+	lua-language-server) echo "$(get_install_hint lua-language-server)" ;;
+	efm-langserver) echo "go install github.com/mattn/efm-langserver@latest" ;;
+	prettier) echo "npm install -g prettier" ;;
+	markdownlint-cli2) echo "npm install -g markdownlint-cli2" ;;
+	marksman) echo "$(get_install_hint marksman)" ;;
+	zig) echo "brew install zig  # or: https://ziglang.org/download/" ;;
+	zls) echo "brew install zls  # or: https://zigtools.org/zls/install/  (must match zig version)" ;;
+	glow) echo "$(get_install_hint glow)  # or: go install github.com/charmbracelet/glow@latest" ;;
+	esac
+}
+
 # ────────────────── dependency definitions ──────────────────
 # NOTE: no `declare -A` anywhere — macOS still ships bash 3.2, which does
 # not support associative arrays. Bin→name and bin→package lookups are
@@ -477,43 +511,54 @@ deps_for_group() {
 	esac
 }
 
-# ──────────────────── main ────────────────────
+# ──────────────────── phases ────────────────────
 
-echo -e "${BOLD}monkey-vim dependency check${NC}"
-echo ""
+print_header() {
+	echo -e "${BOLD}monkey-vim dependency check${NC}"
+	echo ""
+}
 
-echo -e "${BOLD}Vim version${NC}"
-check_vim_version
-echo ""
+print_vim_version() {
+	echo -e "${BOLD}Vim version${NC}"
+	check_vim_version
+	echo ""
+}
 
-# Check the OS
-echo -e "${BOLD}Platform${NC}"
-echo -e "  OS: ${CYAN}$(uname -s)${NC}"
-case "$OS" in
-debian) echo -e "  Package manager: ${CYAN}apt${NC}" ;;
-opensuse) echo -e "  Package manager: ${CYAN}zypper${NC}" ;;
-centos) echo -e "  Package manager: ${CYAN}dnf${NC}" ;;
-arch) echo -e "  Package manager: ${CYAN}pacman${NC}" ;;
-macos) echo -e "  Package manager: ${CYAN}homebrew${NC}" ;;
-*) echo -e "  ${WARN} Unsupported OS — install dependencies manually" ;;
-esac
-echo ""
+print_platform() {
+	echo -e "${BOLD}Platform${NC}"
+	echo -e "  OS: ${CYAN}$(uname -s)${NC}"
+	case "$OS" in
+	debian) echo -e "  Package manager: ${CYAN}apt${NC}" ;;
+	opensuse) echo -e "  Package manager: ${CYAN}zypper${NC}" ;;
+	centos) echo -e "  Package manager: ${CYAN}dnf${NC}" ;;
+	arch) echo -e "  Package manager: ${CYAN}pacman${NC}" ;;
+	macos) echo -e "  Package manager: ${CYAN}homebrew${NC}" ;;
+	*) echo -e "  ${WARN} Unsupported OS — install dependencies manually" ;;
+	esac
+	echo ""
+}
 
-# ──── required tools ────
-echo -e "${BOLD}Required tools${NC}"
-MISSING_REQUIRED=()
-for bin in "${REQUIRED_BINS[@]}"; do
-	if check_bin "$bin" "$(dep_name "$bin")"; then
-		:
-	else
-		MISSING_REQUIRED+=("$bin")
+# Sets MISSING_REQUIRED.
+check_required_tools() {
+	echo -e "${BOLD}Required tools${NC}"
+	MISSING_REQUIRED=()
+	local bin
+	for bin in "${REQUIRED_BINS[@]}"; do
+		if check_bin "$bin" "$(dep_name "$bin")"; then
+			:
+		else
+			MISSING_REQUIRED+=("$bin")
+		fi
+	done
+	echo ""
+}
+
+install_missing_required() {
+	if ! $INSTALL_MODE || [[ ${#MISSING_REQUIRED[@]} -eq 0 ]]; then
+		return 0
 	fi
-done
-echo ""
-
-if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 	echo -e "${YELLOW}Installing: ${MISSING_REQUIRED[*]}...${NC}"
-	pkgs=()
+	local pkgs=() bin b
 	for b in "${MISSING_REQUIRED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
 	if install_pkg "${pkgs[@]}"; then
 		MISSING_REQUIRED=()
@@ -534,33 +579,35 @@ if $INSTALL_MODE && [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
 		echo -e "${RED}Install command failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
 	fi
 	echo ""
-fi
+}
 
-if [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
-	ALL_PASSED=false
-fi
-
-# ──── recommended tools ────
-echo -e "${BOLD}Recommended tools${NC}"
-echo "  (Missing won't block monkey-vim, but will degrade preview / gtags experience)"
-MISSING_RECOMMENDED=()
-for bin in "${RECOMMENDED_BINS[@]}"; do
-	if check_bin "$bin" "$(dep_name "$bin")"; then
-		:
-	else
-		if [[ "$bin" == "bat" ]] && command -v batcat &>/dev/null; then
-			echo -e "    ${PASS} batcat (Debian alias for bat)"
+# Sets MISSING_RECOMMENDED.
+check_recommended_tools() {
+	echo -e "${BOLD}Recommended tools${NC}"
+	echo "  (Missing won't block monkey-vim, but will degrade preview / gtags experience)"
+	MISSING_RECOMMENDED=()
+	local bin
+	for bin in "${RECOMMENDED_BINS[@]}"; do
+		if check_bin "$bin" "$(dep_name "$bin")"; then
+			:
 		else
-			echo -e "    ${FAIL} $(dep_name "$bin")"
-			MISSING_RECOMMENDED+=("$bin")
+			if [[ "$bin" == "bat" ]] && have_native_cmd batcat; then
+				echo -e "    ${PASS} batcat (Debian alias for bat)"
+			else
+				echo -e "    ${FAIL} $(dep_name "$bin")"
+				MISSING_RECOMMENDED+=("$bin")
+			fi
 		fi
-	fi
-done
-echo ""
+	done
+	echo ""
+}
 
-if $INSTALL_MODE && [[ ${#MISSING_RECOMMENDED[@]} -gt 0 ]]; then
+install_missing_recommended() {
+	if ! $INSTALL_MODE || [[ ${#MISSING_RECOMMENDED[@]} -eq 0 ]]; then
+		return 0
+	fi
 	echo -e "${YELLOW}Installing: ${MISSING_RECOMMENDED[*]}...${NC}"
-	pkgs=()
+	local pkgs=() b
 	for b in "${MISSING_RECOMMENDED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
 	if install_pkg "${pkgs[@]}"; then
 		echo -e "${GREEN}Done.${NC}"
@@ -568,10 +615,14 @@ if $INSTALL_MODE && [[ ${#MISSING_RECOMMENDED[@]} -gt 0 ]]; then
 		echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
 	fi
 	echo ""
-fi
+}
 
-if $INSTALL_MODE; then
+install_optional_deps() {
+	if ! $INSTALL_MODE; then
+		return 0
+	fi
 	MISSING_OPTIONAL=()
+	local group bin
 	for group in "${DEP_GROUPS[@]}"; do
 		for bin in $(deps_for_group "$group"); do
 			if ! have_native_cmd "$bin"; then
@@ -596,132 +647,128 @@ if $INSTALL_MODE; then
 		echo -e "${GREEN}All optional LSP servers & tools already installed.${NC}"
 	fi
 	echo ""
-fi
-
-# ──── optional LSP servers ────
-echo -e "${BOLD}Optional: LSP servers & language tools${NC}"
-echo "  (Install only what you need; missing servers won't block monkey-vim)"
-echo ""
-
-# Install hint for an optional binary (used outside --install mode).
-hint_for() {
-	case "$1" in
-	clangd) echo "$(get_install_hint clangd)  # or clangd-15+" ;;
-	gcc | g++ | python3) echo "$(get_install_hint "$1")" ;;
-	go) echo "https://go.dev/dl/" ;;
-	gopls) echo "go install golang.org/x/tools/gopls@latest" ;;
-	pylsp) echo "$(get_install_hint "$(pkg_name pylsp)")  # or: pip install python-lsp-server" ;;
-	cargo) echo "https://rustup.rs/  # then: rustup component add rust-analyzer" ;;
-	rust-analyzer) echo "rustup component add rust-analyzer" ;;
-	node) echo "https://nodejs.org/  # or: $(get_install_hint nodejs npm)" ;;
-	bash-language-server) echo "npm install -g bash-language-server" ;;
-	shfmt) echo "go install mvdan.cc/sh/v3/cmd/shfmt@latest" ;;
-	staticcheck) echo "go install honnef.co/go/tools/cmd/staticcheck@latest" ;;
-	black) echo "$(get_install_hint "$(pkg_name black)")  # or: pip3 install black" ;;
-	clang-tidy) echo "$(get_install_hint clang-tidy)" ;;
-	vim-language-server) echo "npm install -g vim-language-server" ;;
-	typescript-language-server) echo "npm install -g typescript-language-server typescript" ;;
-	tsc) echo "npm install -g typescript" ;;
-	vscode-json-language-server) echo "npm install -g vscode-langservers-extracted" ;;
-	yaml-language-server) echo "npm install -g yaml-language-server" ;;
-	lua-language-server) echo "$(get_install_hint lua-language-server)" ;;
-	efm-langserver) echo "go install github.com/mattn/efm-langserver@latest" ;;
-	prettier) echo "npm install -g prettier" ;;
-	markdownlint-cli2) echo "npm install -g markdownlint-cli2" ;;
-	marksman) echo "$(get_install_hint marksman)" ;;
-	zig) echo "brew install zig  # or: https://ziglang.org/download/" ;;
-	zls) echo "brew install zls  # or: https://zigtools.org/zls/install/  (must match zig version)" ;;
-	glow) echo "$(get_install_hint glow)  # or: go install github.com/charmbracelet/glow@latest" ;;
-	esac
 }
 
-for group in "${DEP_GROUPS[@]}"; do
-	echo -e "  ${BOLD}${group}${NC}"
-	for bin in $(deps_for_group "$group"); do
-		status=0
-		check_bin "$bin" &>/dev/null || status=$?
-		if [[ $status -eq 0 ]]; then
-			echo -e "    ${PASS} ${bin}"
-		else
-			echo -e "    ${FAIL} ${bin}  ${NC}$(hint_for "$bin")"
-		fi
-	done
+check_optional_listing() {
+	echo -e "${BOLD}Optional: LSP servers & language tools${NC}"
+	echo "  (Install only what you need; missing servers won't block monkey-vim)"
 	echo ""
-done
 
-# ──── terminal capabilities ────
-echo -e "${BOLD}Terminal capabilities${NC}"
-if [[ -n "${COLORTERM:-}" ]]; then
-	echo -e "  ${PASS} COLORTERM=${COLORTERM}"
-elif [[ "$TERM" =~ (256color|tmux|screen|alacritty|kitty|wezterm|xterm-kitty) ]]; then
-	echo -e "  ${PASS} TERM=${TERM} (true color capable)"
-else
-	echo -e "  ${WARN} TERM=${TERM} — true color may not work"
-fi
-if [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" || "$OS" == "macos" ]]; then
-	echo -e "  ${PASS} Clipboard support available"
-else
-	echo -e "  ${WARN} No display server — clipboard may be unavailable"
-fi
-if [[ "$LANG" == *".UTF-8" || "$LANG" == *".utf8" ]]; then
-	echo -e "  ${PASS} LANG=${LANG}"
-else
-	echo -e "  ${WARN} LANG=${LANG} (UTF-8 recommended)"
-fi
-echo ""
+	local group bin status
+	for group in "${DEP_GROUPS[@]}"; do
+		echo -e "  ${BOLD}${group}${NC}"
+		for bin in $(deps_for_group "$group"); do
+			status=0
+			check_bin "$bin" &>/dev/null || status=$?
+			if [[ $status -eq 0 ]]; then
+				echo -e "    ${PASS} ${bin}"
+			else
+				echo -e "    ${FAIL} ${bin}  ${NC}$(hint_for "$bin")"
+			fi
+		done
+		echo ""
+	done
+}
 
-# ──── config files ────
-echo -e "${BOLD}Config files${NC}"
-VIMRC="${HOME}/.vimrc"
-REPO_DIR=""
-if [[ -L "$VIMRC" ]]; then
-	TARGET=$(readlink -f "$VIMRC" 2>/dev/null || readlink "$VIMRC")
-	REPO_DIR=$(dirname "$TARGET")
-	echo -e "  ${PASS} .vimrc → ${TARGET}"
-elif [[ -f "$VIMRC" ]]; then
-	echo -e "  ${WARN} .vimrc exists but is not a symlink"
-else
-	echo -e "  ${FAIL} .vimrc not found (run: ln -sf $(pwd)/.vimrc ~/.vimrc)"
-	ALL_PASSED=false
-fi
-
-SWAP_DIR="${HOME}/.cache/vim/swap"
-if [ -d "$SWAP_DIR" ]; then
-	echo -e "  ${PASS} swap/ dir exists"
-else
-	echo -e "  ${WARN} swap/ dir not found (auto-created on first vim launch)"
-fi
-
-if [ -L "${HOME}/.config/efm-langserver" ] || [ -f "${HOME}/.config/efm-langserver/config.yaml" ]; then
-	echo -e "  ${PASS} efm-langserver config"
-elif [ -d "configs/efm-langserver" ]; then
-	echo -e "  ${WARN} efm-langserver config not linked (run: ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
-fi
-
-CACHE_DIR="${HOME}/.cache/vim/sessions"
-if [ -d "$CACHE_DIR" ]; then
-	echo -e "  ${PASS} session cache dir exists"
-else
-	echo -e "  ${WARN} session cache dir not found (auto-created on first session save)"
-fi
-
-VIMINFO_DIR="${HOME}/.cache/vim/viminfo"
-if [ -d "$VIMINFO_DIR" ]; then
-	echo -e "  ${PASS} viminfo dir exists"
-else
-	echo -e "  ${WARN} viminfo dir not found (auto-created on first vim launch)"
-fi
-
-echo ""
-
-# ──── summary ────
-if $ALL_PASSED; then
-	echo -e "${GREEN}${BOLD}All required dependencies satisfied.${NC}"
-	exit 0
-else
-	echo -e "${RED}${BOLD}Some required dependencies are missing.${NC}"
-	if ! $INSTALL_MODE; then
-		echo -e "Run ${CYAN}$0 --install${NC} to install them automatically."
+check_terminal_caps() {
+	echo -e "${BOLD}Terminal capabilities${NC}"
+	if [[ -n "${COLORTERM:-}" ]]; then
+		echo -e "  ${PASS} COLORTERM=${COLORTERM}"
+	elif [[ "$TERM" =~ (256color|tmux|screen|alacritty|kitty|wezterm|xterm-kitty) ]]; then
+		echo -e "  ${PASS} TERM=${TERM} (true color capable)"
+	else
+		echo -e "  ${WARN} TERM=${TERM} — true color may not work"
 	fi
-	exit 1
-fi
+	if [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" || "$OS" == "macos" ]]; then
+		echo -e "  ${PASS} Clipboard support available"
+	else
+		echo -e "  ${WARN} No display server — clipboard may be unavailable"
+	fi
+	if [[ "$LANG" == *".UTF-8" || "$LANG" == *".utf8" ]]; then
+		echo -e "  ${PASS} LANG=${LANG}"
+	else
+		echo -e "  ${WARN} LANG=${LANG} (UTF-8 recommended)"
+	fi
+	echo ""
+}
+
+check_config_files() {
+	echo -e "${BOLD}Config files${NC}"
+	local vimrc="${HOME}/.vimrc" swap_dir="${HOME}/.cache/vim/swap"
+	local cache_dir="${HOME}/.cache/vim/sessions" viminfo_dir="${HOME}/.cache/vim/viminfo"
+	if [[ -L "$vimrc" ]]; then
+		local target
+		target=$(readlink -f "$vimrc" 2>/dev/null || readlink "$vimrc")
+		echo -e "  ${PASS} .vimrc → ${target}"
+	elif [[ -f "$vimrc" ]]; then
+		echo -e "  ${WARN} .vimrc exists but is not a symlink"
+	else
+		echo -e "  ${FAIL} .vimrc not found (run: ln -sf $(pwd)/.vimrc ~/.vimrc)"
+		ALL_PASSED=false
+	fi
+
+	if [ -d "$swap_dir" ]; then
+		echo -e "  ${PASS} swap/ dir exists"
+	else
+		echo -e "  ${WARN} swap/ dir not found (auto-created on first vim launch)"
+	fi
+
+	if [ -L "${HOME}/.config/efm-langserver" ] || [ -f "${HOME}/.config/efm-langserver/config.yaml" ]; then
+		echo -e "  ${PASS} efm-langserver config"
+	elif [ -d "configs/efm-langserver" ]; then
+		echo -e "  ${WARN} efm-langserver config not linked (run: ln -sf $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
+	fi
+
+	if [ -d "$cache_dir" ]; then
+		echo -e "  ${PASS} session cache dir exists"
+	else
+		echo -e "  ${WARN} session cache dir not found (auto-created on first session save)"
+	fi
+
+	if [ -d "$viminfo_dir" ]; then
+		echo -e "  ${PASS} viminfo dir exists"
+	else
+		echo -e "  ${WARN} viminfo dir not found (auto-created on first vim launch)"
+	fi
+
+	echo ""
+}
+
+print_summary() {
+	if $ALL_PASSED; then
+		echo -e "${GREEN}${BOLD}All required dependencies satisfied.${NC}"
+		exit 0
+	else
+		echo -e "${RED}${BOLD}Some required dependencies are missing.${NC}"
+		if ! $INSTALL_MODE; then
+			echo -e "Run ${CYAN}$0 --install${NC} to install them automatically."
+		fi
+		exit 1
+	fi
+}
+
+# ──────────────────── main ────────────────────
+
+main() {
+	parse_args "$@"
+	OS=$(os_detect)
+	print_header
+	print_vim_version
+	print_platform
+	check_required_tools
+	install_missing_required
+	# NOTE: bare `check_vim_version`/`check_cmd` failures abort the script
+	# via set -e before this point (pre-existing behavior, preserved).
+	if [[ ${#MISSING_REQUIRED[@]} -gt 0 ]]; then
+		ALL_PASSED=false
+	fi
+	check_recommended_tools
+	install_missing_recommended
+	install_optional_deps
+	check_optional_listing
+	check_terminal_caps
+	check_config_files
+	print_summary
+}
+
+main "$@"
