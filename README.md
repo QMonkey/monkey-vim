@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 What the script does, step by step:
 
 1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
-2. Pre-authorize `sudo` once and keep the credentials alive in a background loop, so long downloads/compiles never trigger a mid-run password re-prompt (unattended runs won't stall). On WSL with GNU sudo it also installs a **persistent** sudoers drop-in with `timestamp_type=global` + `timestamp_timeout=-1`: tickets are keyed by uid only, so new terminal and SSH sessions, WSL clock jumps and tty changes never re-prompt (sudo-rs-based systems skip this drop-in)
+2. Pre-authorize `sudo` once — the only password entry of the whole run — and install a **temporary** NOPASSWD sudoers drop-in for the invoking user, removed automatically on exit. Homebrew resets the sudo timestamp on every `brew` invocation and WSL2 clock jumps invalidate tickets; NOPASSWD makes the run immune to both in any command order. If the drop-in cannot be installed, the script falls back to a background keepalive plus lazy re-authentication
 3. Install Homebrew (Linuxbrew) as the fallback package manager — its shellenv is persisted to your shell rc files (with PATH dedup guards) even when Homebrew already existed
 4. Clone and compile Vim from source, then `make install`
 5. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
@@ -555,8 +555,19 @@ Ctrl+h      Jump to the left split
 Ctrl+j      Jump to the below split
 Ctrl+k      Jump to the above split
 Ctrl+l      Jump to the right split
+Alt+h       Jump to the left split (also from insert & terminal mode)
+Alt+j       Jump to the below split (also from insert & terminal mode)
+Alt+k       Jump to the above split (also from insert & terminal mode)
+Alt+l       Jump to the right split (also from insert & terminal mode)
 Leader+z    Toggle zoom
 ```
+
+Alt+h/j/k/l work in every mode (normal/insert/terminal). Terminals send
+Alt+letter as an ESC prefix, which vim cannot decode by default
+(|map-alt-keys|), so the ESC+key sequences are declared as key codes. When a
+terminal window is focused from insert/terminal mode it resumes input
+automatically; popups (fzf) and terminal jobs forwarding their own Alt keys
+are handed the key untouched (see WinNav).
 
 #### 1.5 Tab
 
@@ -736,14 +747,22 @@ window stays open showing `[Process exited N]` afterwards.
 Use `<Ctrl-\><Ctrl-n>` to switch from terminal mode to normal mode. In normal
 mode, `<ScrollWheelUp>` and `<ScrollWheelDown>` scroll the terminal buffer.
 
+`Alt+;` is a universal "back to normal mode" key for every mode — terminal,
+insert, command-line, visual and vim-visual-multi alike: insert-like modes
+return to normal (a second press then exits the multi-cursors), other modes
+leave directly. Related fix: `r` followed by a special key (such as `Alt+;`)
+aborts like `Esc` instead of inserting the key as the replacement character
+(vim-visual-multi's `r` behaves the same way).
+
 #### 1.17 Send to pane (,s group)
 
 Text goes to a tmux pane or, outside tmux, to the F4/F5 global terminal
 (auto-opened as a right split on first send). Inside tmux the first send opens
 an fzf pane picker and attaches the pick for the rest of this Vim session;
 later sends go straight to the attached pane. The attached pane is marked `*`
-in the picker, the pane running vim itself is excluded, and a vanished pane
-auto-detaches.
+in the picker, the pane running vim itself is excluded, and a pane that
+vanished or was replaced (e.g. a reused pane id after a tmux restart, detected
+via a uuid stored on the pane) auto-detaches.
 
 ```text
 ,ss     Paste the visual selection / current line into a tmux pane (fzf)
