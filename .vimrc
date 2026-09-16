@@ -1092,7 +1092,8 @@ augroup END
 # }
 
 # Encoding {
-language message en_US.UTF-8
+# ignore E197 when en_US.UTF-8 locale is not generated on the system
+silent! language message en_US.UTF-8
 set langmenu=en_US.UTF-8
 set encoding=utf-8
 scriptencoding utf-8
