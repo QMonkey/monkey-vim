@@ -196,22 +196,27 @@ setup_sudo() {
 	if [ "$(id -u)" -eq 0 ]; then
 		return 0
 	fi
-	# Pre-authenticate once so the password is entered at the very start
-	# instead of mid-run after a long download/compile.
-	"$SUDO_BIN" -v || fail "sudo authorization failed — run this script in an interactive terminal."
-	# Temporary NOPASSWD for the duration of the run — the core of the
-	# one-password design. Three things would otherwise kill the sudo
-	# ticket mid-run and force a re-auth prompt:
-	#   1. Homebrew resets the sudo timestamp on EVERY `brew` invocation
-	#      (brew.sh runs `sudo --reset-timestamp` at startup) — even a
-	#      never-expiring ticket dies after each brew command;
-	#   2. WSL2 clock steps (host sleep/resume, TSC skew) make sudo
-	#      disable tickets "from the future";
-	#   3. plain expiry (default 15 minutes) on long downloads/compiles.
-	# With NOPASSWD, authentication is granted by the sudoers rule itself
-	# and the timestamp is never consulted — on both GNU sudo and sudo-rs
-	# — so the run is immune to all three in ANY command order, and the
-	# only password entry is the `sudo -v` above.
+	# Pre-authenticate so the password is entered at the very start instead
+	# of mid-run after a long download/compile, then grant NOPASSWD for the
+	# rest of the run:
+	#
+	# Probe first (`-n true`, a command): when credentials are already
+	# valid — this run's own drop-in from a previous stage, or an outer
+	# installer's grant — skip the authenticate step entirely; chained
+	# stages never re-prompt. Failure means no valid grant exists and
+	# `sudo -v` prompts for the one password of the run.
+	#
+	# Why the drop-in is NOPASSWD: authentication is granted by the rule
+	# itself and the timestamp is never consulted, so brew's
+	# --reset-timestamp, clock jumps and plain expiry are all harmless.
+	# GNU sudo resolves conflicting rules last-match-wins, so this drop-in
+	# (parsed after the distro's password-required rule) always wins.
+	# sudo-rs would defeat this tag for VALIDATE (max_by_key picks the
+	# password-required rule) — but every sudo in this script is a command
+	# or the probe, where NOPASSWD wins on both implementations.
+	if ! "$SUDO_BIN" -n true 2>/dev/null; then
+		"$SUDO_BIN" -v || fail "sudo authorization failed — run this script in an interactive terminal."
+	fi
 	# Scoped to the invoking user and REMOVED on exit (incl. Ctrl-C);
 	# if the script is SIGKILLed the file survives — remove manually with
 	# `sudo rm $NOPASSWD_DROPIN`. If you prefer a permanent passwordless
