@@ -102,25 +102,29 @@ sudo_cmd() {
 	# spring a context-free password prompt. `-n true` never prompts; the
 	# interactive `-v` only runs when the ticket is actually gone.
 	local sudo_bin
-	sudo_bin=$(native_sudo) || { "$@"; return; }
+	sudo_bin=$(native_sudo) || {
+		"$@"
+		return
+	}
 	if ! "$sudo_bin" -n true 2>/dev/null; then
 		"$sudo_bin" -v -p "[monkey-vim] sudo credentials needed to continue — enter your password: " || return 1
 	fi
 	"$sudo_bin" "$@"
 }
 
-# Print login profile + interactive rc file for the detected shell.
-# Login files (.profile/.zprofile/.bash_profile) cover login shells (SSH,
-# macOS Terminal); rc files (.bashrc/.zshrc) cover non-login interactive
-# shells (Linux desktop terminals). We write to both so tools are on PATH
-# everywhere.
+# Print the shell startup files for the detected shell. Two cases:
+#   - zsh: profile ONLY (~/.zprofile). rc files like ~/.zshrc are often
+#     repo-managed dotfiles — appending to them dirties the repo; non-login
+#     zsh shells get the profile via a `source ~/.zprofile` guard in the rc file instead.
+#   - bash: profile AND rc (~/.profile + ~/.bashrc). Non-login interactive
+#     bash (WSL's wsl.exe, desktop terminal emulators, VS Code terminal)
+#     only reads ~/.bashrc — .profile does not get pulled in there — so both files are needed.
 shell_env_files() {
 	local shell="${SHELL:-bash}"
 	shell="${shell##*/}"
 	case "$shell" in
 	zsh)
 		printf '%s\n' "$HOME/.zprofile"
-		printf '%s\n' "$HOME/.zshrc"
 		;;
 	bash)
 		if [ -f "$HOME/.bash_profile" ]; then
@@ -602,11 +606,11 @@ persist_path() {
 	# go install drops binaries in $(go env GOPATH)/bin (default ~/go/bin);
 	# rustup installs cargo & rust-analyzer to ~/.cargo/bin; built vim lives
 	# in /usr/local/bin. None is guaranteed to be on PATH, so persist exports
-	# for the detected shell (zsh→.zprofile + .zshrc, bash→.profile/.bash_profile + .bashrc).
+	# for the detected shell (zsh→.zprofile, bash→.profile/.bash_profile).
 	local block='case ":$PATH:" in *":/usr/local/bin:"*) ;; *) export PATH="/usr/local/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/go/bin:"*) ;; *) export PATH="$HOME/go/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac'
-	append_env_block "monkey-vim PATH" "$block"
+	append_env_block "monkey PATH" "$block"
 	ok "PATH persistence added for /usr/local/bin, go/bin and cargo/bin."
 }
 
