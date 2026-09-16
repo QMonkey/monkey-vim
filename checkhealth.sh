@@ -420,7 +420,7 @@ hint_for() {
 # arrays (supported since bash 2.0).
 
 REQUIRED_BINS=(curl git rg ctags fzf)
-RECOMMENDED_BINS=(bat global pygmentize)
+RECOMMENDED_BINS=(bat global pygmentize python)
 
 # Human-readable name for a dependency binary.
 dep_name() {
@@ -429,6 +429,7 @@ dep_name() {
 	ctags) echo "universal-ctags" ;;
 	global) echo "global (GNU Global, for gtags)" ;;
 	pygmentize) echo "pygments (gtags parser for non-C/C++ languages)" ;;
+	python) echo "python (unversioned → python3, gtags pygments parser runtime)" ;;
 	*) echo "$1" ;;
 	esac
 }
@@ -608,13 +609,49 @@ install_missing_recommended() {
 	fi
 	echo -e "${YELLOW}Installing: ${MISSING_RECOMMENDED[*]}...${NC}"
 	local pkgs=() b
-	for b in "${MISSING_RECOMMENDED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
-	if install_pkg "${pkgs[@]}"; then
-		echo -e "${GREEN}Done.${NC}"
-	else
-		echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
+	for b in "${MISSING_RECOMMENDED[@]}"; do
+		# python needs a distro-specific install (see install_python_for_gtags)
+		[[ "$b" == python ]] && continue
+		pkgs+=("$(pkg_name "$b")")
+	done
+	if ((${#pkgs[@]} > 0)); then
+		if install_pkg "${pkgs[@]}"; then
+			echo -e "${GREEN}Done.${NC}"
+		else
+			echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
+		fi
+	fi
+	if [[ " ${MISSING_RECOMMENDED[*]} " == *" python "* ]]; then
+		if install_python_for_gtags; then
+			echo -e "  ${GREEN}✓ python available${NC}"
+		else
+			echo -e "  ${RED}✗ failed to set up unversioned python${NC}"
+			echo -e "    hint: $(get_install_hint python-is-python3) or: sudo ln -sf "$(command -v python3)" /usr/local/bin/python"
+		fi
 	fi
 	echo ""
+}
+
+# gtags pygments parser plugins invoke unversioned `python`, but there is
+# no reliable cross-distro package for it: Debian ships /usr/bin/python only
+# through the python-is-python3 shim; openSUSE provides none; the RHEL/Fedora
+# python-unversioned-command package is missing on some releases (CentOS 7)
+# — so: install python3, then fall back to a /usr/local/bin/python symlink.
+# /usr/bin/python3 is distro-managed and stable everywhere, and /usr/local/bin
+# precedes /usr/bin on PATH.
+install_python_for_gtags() {
+	have_native_cmd python && return 0
+	if [[ "$OS" == debian ]]; then
+		install_pkg python-is-python3 && return 0
+	else
+		install_pkg "$(pkg_name python3)" || true
+	fi
+	have_native_cmd python && return 0
+	local py3
+	py3=$(command -v python3 2>/dev/null) || return 1
+	sudo_cmd ln -sf "$py3" /usr/local/bin/python
+	hash -r
+	have_native_cmd python
 }
 
 install_optional_deps() {
