@@ -635,7 +635,7 @@ setup_symlinks() {
 			if [ -e "$HOME/.clang-format" ] || [ -L "$HOME/.clang-format" ]; then
 				info "~/.clang-format already exists — skipping."
 			else
-				ln -s "$INSTALL_DIR/configs/.clang-format" "$HOME/.clang-format"
+				ln -sf "$INSTALL_DIR/configs/.clang-format" "$HOME/.clang-format"
 				ok ".clang-format → $INSTALL_DIR/configs/.clang-format"
 			fi
 		fi
@@ -644,7 +644,7 @@ setup_symlinks() {
 				info "efm-langserver config already exists — skipping."
 			else
 				mkdir -p "$HOME/.config"
-				ln -s "$INSTALL_DIR/configs/efm-langserver" "$HOME/.config/efm-langserver"
+				ln -sf "$INSTALL_DIR/configs/efm-langserver" "$HOME/.config/efm-langserver"
 				ok "efm-langserver config → $HOME/.config/efm-langserver"
 			fi
 		fi
