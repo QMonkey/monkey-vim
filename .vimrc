@@ -2091,9 +2091,8 @@ nmap <silent>]h <Plug>(GitGutterNextHunk)
 
 # fzf.vim {
 # Preview scrolling in every fzf window:
-# alt-u/alt-d half-page up/down, alt-f/alt-b page down/up, alt-j/
-# alt-k line down/up inside the preview pane.
-$FZF_DEFAULT_OPTS = '--layout=reverse --bind=alt-u:preview-half-page-up,alt-d:preview-half-page-down,alt-f:preview-page-down,alt-b:preview-page-up,alt-j:preview-down,alt-k:preview-up'
+# alt-u/alt-d half-page up/down, alt-j/alt-k line down/up inside the preview pane.
+$FZF_DEFAULT_OPTS = '--layout=reverse --bind=alt-u:preview-half-page-up,alt-d:preview-half-page-down,alt-j:preview-down,alt-k:preview-up'
 g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.9 } }
 g:fzf_preview_window = ['right:60%']
 g:fzf_action = {
