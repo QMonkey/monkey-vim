@@ -120,7 +120,27 @@ sudo_cmd() {
 #     bash (WSL's wsl.exe, desktop terminal emulators, VS Code terminal)
 #     only reads ~/.bashrc — .profile does not get pulled in there — so both files are needed.
 shell_env_files() {
-	local shell="${SHELL:-bash}"
+	# The TARGET login shell, queried from the user database: on a
+	# zsh-default machine (or after the login shell has been switched to
+	# zsh) it is zsh and the env blocks belong in ~/.zprofile; on bash
+	# machines they land in the bash profile files. Falls back to $SHELL,
+	# then bash (macOS has no getent; its $SHELL already reflects the
+	# login shell).
+	local shell
+	# getent does not exist on macOS — guard the call, otherwise the
+	# command-not-found failure (127) would trip `set -e` and kill the
+	# script before the dscl fallback below ever runs.
+	if have_native_cmd getent; then
+		shell=$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f7)
+	fi
+	if [ -z "$shell" ] && [ "$(uname -s)" = Darwin ]; then
+		# No getent on macOS — query the directory service instead ($SHELL
+		# is a login-time snapshot and goes stale right after a chsh in
+		# the same session).
+		shell=$(dscl . -read /Users/"$(id -un)" UserShell 2>/dev/null | awk '{print $2}')
+	fi
+	shell=${shell:-${SHELL:-bash}}
+	shell=${shell##*/}
 	shell="${shell##*/}"
 	case "$shell" in
 	zsh)
