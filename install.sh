@@ -438,11 +438,23 @@ install_vim_build_deps() {
 # ────────────────── Step 2: Install Homebrew / Linuxbrew ──────────────────
 
 install_linuxbrew() {
-	local brew_prefix=""
+	local brew_prefix="" cand
 	if have_native_cmd brew; then
 		brew_prefix="$(dirname "$(dirname "$(command -v brew)")")"
 		ok "Homebrew already installed at $brew_prefix."
 	else
+		# brew may exist at a standard prefix without being on PATH — an
+		# earlier monkey-* component installed it and this process did not
+		# inherit the profile. Adopt it instead of re-downloading.
+		for cand in /home/linuxbrew/.linuxbrew /opt/homebrew /usr/local; do
+			if [ -x "$cand/bin/brew" ]; then
+				brew_prefix="$cand"
+				ok "Homebrew found at $brew_prefix (not on PATH — adopting)."
+				break
+			fi
+		done
+	fi
+	if [ -z "$brew_prefix" ]; then
 		info "Installing Homebrew/Linuxbrew..."
 		# NOTE: the installer's exit trap runs `sudo -k` (and the `brew`
 		# commands it spawns reset the timestamp too) — that used to require
@@ -472,7 +484,6 @@ install_linuxbrew() {
 			warn "Homebrew installer failed — continuing without Homebrew."
 		rm -f "$installer"
 
-		local cand
 		for cand in /home/linuxbrew/.linuxbrew /opt/homebrew /usr/local; do
 			if [ -x "$cand/bin/brew" ]; then
 				brew_prefix="$cand"
@@ -711,7 +722,7 @@ run_checkhealth() {
 	# cheap verifications. Three attempts, exit code 0 wins.
 	local attempt ok=0
 	for attempt in 1 2 3; do
-		if bash "$INSTALL_DIR/checkhealth.sh" --install; then
+		if bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
 			ok=1
 			break
 		fi
@@ -772,7 +783,7 @@ setup_symlinks() {
 				info "efm-langserver config already exists — skipping."
 			else
 				mkdir -p "$HOME/.config"
-				ln -sf "$INSTALL_DIR/configs/efm-langserver" "$HOME/.config/efm-langserver"
+				ln -sfn "$INSTALL_DIR/configs/efm-langserver" "$HOME/.config/efm-langserver"
 				ok "efm-langserver config → $HOME/.config/efm-langserver"
 			fi
 		fi
