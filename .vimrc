@@ -90,10 +90,18 @@ g:maplocalleader = ','
 # }
 
 # Terminal type detection {
-# Detect the outermost terminal type by walking up the real process
-# tree from the current Vim (or its tmux client). Needed before the
-# color block because a tmux client running on a physical tty reports
-# &term = tmux-256color, hiding the 8/16-color console behind it.
+# Detect the effective terminal by walking the real process tree from the
+# current Vim (or its tmux client). Needed before the color block because
+# a tmux client running on a physical tty reports &term = tmux-256color,
+# hiding the 8/16-color console behind it.
+# The authoritative terminal is the FIRST (innermost) valid tty on the walk:
+# the controlling terminal of the tmux client / of Vim itself is where output
+# is actually rendered. Walking further up may reach the graphical
+# compositor's own tty (e.g. Hyprland launched from tty1), which must not
+# classify as 'tty'. The walk continues past that point purely to look for
+# kmscon/sshd/login markers. Judged from the process tree of the tmux
+# client, not environment variables, which would reflect the tmux server's
+# start environment instead.
 # Return value: 'kmscon' | 'tty' | 'physical_console' | 'pseudo_terminal' | 'remote_ssh' | 'no_tty' | 'unknown'
 def GetRootTerminalType(): string
 	var pid = getpid()
@@ -130,7 +138,7 @@ def GetRootTerminalType(): string
 		if comm =~# '^sshd'
 			saw_sshd = true
 		endif
-		if tty != '' && tty != '?'
+		if tty != '' && tty != '?' && last_tty == ''
 			last_tty = tty
 		endif
 		if ppid == '' || str2nr(ppid) <= 1
@@ -143,10 +151,14 @@ def GetRootTerminalType(): string
 		return 'no_tty'
 	endif
 	if uname =~? 'Linux'
-		if last_tty =~ '^tty[0-9]\+$' || saw_login
+		if last_tty =~ '^tty[0-9]\+$'
 			return 'tty'
 		elseif last_tty =~ '^pts/'
 			return saw_sshd ? 'remote_ssh' : 'pseudo_terminal'
+		elseif last_tty == ''
+			# No controlling tty anywhere (e.g. shell spawned by a daemon), but
+			# a console login is in the ancestry: assume the physical console.
+			return 'tty'
 		endif
 	endif
 	if uname =~? 'Darwin'
