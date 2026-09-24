@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly CYAN='\033[0;36m'
+readonly BOLD='\033[1m'
+readonly NC='\033[0m'
 
-PASS="[${GREEN}✓${NC}]"
-FAIL="[${RED}✗${NC}]"
-WARN="[${YELLOW}!${NC}]"
+# List-item helpers: 2-space indent, brackets outside the color span,
+# OK centered as [ OK ]. fail() does not abort — checkhealth must keep
+# going and summarize (exit status comes from REQUIRED_FAILURES).
+info() { echo -e "  [${CYAN}INFO${NC}] $*"; }
+ok() { echo -e "  [${GREEN} OK ${NC}] $*"; }
+warn() { echo -e "  [${YELLOW}WARN${NC}] $*"; }
+fail() {
+	echo -e "  [${RED}FAIL${NC}] $*"
+}
 
-ALL_PASSED=true
+REQUIRED_FAILURES=0
 INSTALL_MODE=false
 SKIP_CONFIG_CHECKS=false
 
@@ -75,10 +81,10 @@ native_sudo() {
 
 check_bin() {
 	if have_native_cmd "$1"; then
-		echo -e "  ${PASS} ${2:-$1}"
+		ok "${2:-$1}"
 		return 0
 	else
-		echo -e "  ${FAIL} ${2:-$1}"
+		fail "${2:-$1}"
 		return 1
 	fi
 }
@@ -88,11 +94,11 @@ check_cmd() {
 	local desc="$1"
 	shift
 	if "$@" &>/dev/null; then
-		echo -e "  ${PASS} ${desc}"
+		ok "${desc}"
 		return 0
 	else
-		echo -e "  ${FAIL} ${desc}"
-		ALL_PASSED=false
+		fail "${desc}"
+		REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
 		return 1
 	fi
 }
@@ -101,19 +107,19 @@ check_vim_version() {
 	local ver
 	ver=$(vim --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
 	if [[ -z "$ver" ]]; then
-		echo -e "  ${FAIL} vim (not found)"
-		ALL_PASSED=false
+		fail "vim (not found)"
+		REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
 		return 1
 	fi
 	local major minor
 	major=${ver%%.*}
 	minor=${ver#*.}
 	if ((major > 9 || (major == 9 && minor >= 1))); then
-		echo -e "  ${PASS} vim ${ver}"
+		ok "vim ${ver}"
 		return 0
 	else
-		echo -e "  ${FAIL} vim ${ver} (need >= 9.1)"
-		ALL_PASSED=false
+		fail "vim ${ver} (need >= 9.1)"
+		REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
 		return 1
 	fi
 }
@@ -140,6 +146,7 @@ os_detect() {
 }
 
 OS=$(os_detect)
+readonly OS
 
 sudo_cmd() {
 	# Lazy re-auth: Homebrew resets the sudo timestamp on EVERY invocation
@@ -188,9 +195,10 @@ refresh_pkg() {
 	return 0
 }
 
-# System package manager install (no Homebrew). Returns non-zero when the
-# OS is unknown or the manager fails, so callers can fall back to brew.
-install_with_system_mgr() {
+# System package manager install (no Homebrew). Low-level path used inside
+# install_pkg (already gated on --install) and as the brew-failure
+# fallback — returns non-zero when the OS is unknown or the manager fails.
+install_sys_pkg() {
 	refresh_pkg
 	case "$OS" in
 	debian) sudo_cmd apt-get install -y "$@" ;;
@@ -227,12 +235,12 @@ install_pkg() {
 	# startup), so any sudo work after a brew call would re-prompt. Doing
 	# all sudo work before brew keeps the run at one password entry.
 	if ((${#rest[@]} > 0)); then
-		install_with_system_mgr "${rest[@]}" ||
+		install_sys_pkg "${rest[@]}" ||
 			brew install "${rest[@]}" ||
 			_rc=1 # system manager failed — brew fallback
 	fi
 	if ((${#brew_pkgs[@]} > 0)); then
-		brew install "${brew_pkgs[@]}" || install_with_system_mgr "${brew_pkgs[@]}" || _rc=1
+		brew install "${brew_pkgs[@]}" || install_sys_pkg "${brew_pkgs[@]}" || _rc=1
 	fi
 	# Freshly installed binaries may be shadowed by bash's per-process
 	# command hash cache (a /mnt shim executed earlier in this same run);
@@ -568,7 +576,7 @@ print_platform() {
 	centos) echo -e "  Package manager: ${CYAN}dnf${NC}" ;;
 	arch) echo -e "  Package manager: ${CYAN}pacman${NC}" ;;
 	macos) echo -e "  Package manager: ${CYAN}homebrew${NC}" ;;
-	*) echo -e "  ${WARN} Unsupported OS — install dependencies manually" ;;
+	*) warn "Unsupported OS — install dependencies manually" ;;
 	esac
 	echo ""
 }
@@ -599,17 +607,17 @@ check_python3() {
 
 # The required checks, in ONE place: main runs them up front, and
 # install_missing_required re-runs them after installing — the install
-# changed the world, so the verdict (ALL_PASSED / MISSING_REQUIRED) is
+# changed the world, so the verdict (REQUIRED_FAILURES / MISSING_REQUIRED) is
 # always recomputed from here and never carried over stale.
 run_required_checks() {
-	ALL_PASSED=true
+	REQUIRED_FAILURES=0
 	MISSING_REQUIRED=()
 	print_vim_version
 	check_required_tools
 	check_python3
 	# check_bin records into MISSING_REQUIRED without poisoning — the
 	# verdict must also reflect what the checks recorded.
-	[[ ${#MISSING_REQUIRED[@]} -eq 0 ]] || ALL_PASSED=false
+	[[ ${#MISSING_REQUIRED[@]} -eq 0 ]] || REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
 }
 
 install_missing_required() {
@@ -643,9 +651,9 @@ check_recommended_tools() {
 			:
 		else
 			if [[ "$bin" == "bat" ]] && have_native_cmd batcat; then
-				echo -e "    ${PASS} batcat (Debian alias for bat)"
+				ok "  batcat (Debian alias for bat)"
 			else
-				echo -e "    ${FAIL} $(dep_name "$bin")"
+				fail "  $(dep_name "$bin")"
 				MISSING_RECOMMENDED+=("$bin")
 			fi
 		fi
@@ -748,9 +756,9 @@ check_optional_listing() {
 			status=0
 			check_bin "$bin" &>/dev/null || status=$?
 			if [[ $status -eq 0 ]]; then
-				echo -e "    ${PASS} ${bin}"
+				ok "  ${bin}"
 			else
-				echo -e "    ${FAIL} ${bin}  ${NC}$(hint_for "$bin")"
+				fail "  ${bin}  ${NC}$(hint_for "$bin")"
 			fi
 		done
 		echo ""
@@ -760,21 +768,21 @@ check_optional_listing() {
 check_terminal_caps() {
 	echo -e "${BOLD}Terminal capabilities${NC}"
 	if [[ -n "${COLORTERM:-}" ]]; then
-		echo -e "  ${PASS} COLORTERM=${COLORTERM}"
+		ok "COLORTERM=${COLORTERM}"
 	elif [[ "$TERM" =~ (256color|tmux|screen|alacritty|kitty|wezterm|xterm-kitty) ]]; then
-		echo -e "  ${PASS} TERM=${TERM} (true color capable)"
+		ok "TERM=${TERM} (true color capable)"
 	else
-		echo -e "  ${WARN} TERM=${TERM} — true color may not work"
+		warn "TERM=${TERM} — true color may not work"
 	fi
 	if [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" || "$OS" == "macos" ]]; then
-		echo -e "  ${PASS} Clipboard support available"
+		ok "Clipboard support available"
 	else
-		echo -e "  ${WARN} No display server — clipboard may be unavailable"
+		warn "No display server — clipboard may be unavailable"
 	fi
 	if [[ "$LANG" == *".UTF-8" || "$LANG" == *".utf8" ]]; then
-		echo -e "  ${PASS} LANG=${LANG}"
+		ok "LANG=${LANG}"
 	else
-		echo -e "  ${WARN} LANG=${LANG} (UTF-8 recommended)"
+		warn "LANG=${LANG} (UTF-8 recommended)"
 	fi
 	echo ""
 }
@@ -785,7 +793,7 @@ check_config_files() {
 	# chained run and burn all three retries. Standalone runs (the manual
 	# diagnosis entry point) still get the full check.
 	if $SKIP_CONFIG_CHECKS; then
-		echo -e "  ${WARN} config checks skipped (handled by the installer)"
+		warn "config checks skipped (handled by the installer)"
 		return 0
 	fi
 	echo -e "${BOLD}Config files${NC}"
@@ -794,43 +802,43 @@ check_config_files() {
 	if [[ -L "$vimrc" ]]; then
 		local target
 		target=$(readlink -f "$vimrc" 2>/dev/null || readlink "$vimrc")
-		echo -e "  ${PASS} .vimrc → ${target}"
+		ok ".vimrc → ${target}"
 	elif [[ -f "$vimrc" ]]; then
-		echo -e "  ${WARN} .vimrc exists but is not a symlink"
+		warn ".vimrc exists but is not a symlink"
 	else
-		echo -e "  ${FAIL} .vimrc not found (run: ln -sf $(pwd)/.vimrc ~/.vimrc)"
-		ALL_PASSED=false
+		fail ".vimrc not found (run: ln -sf $(pwd)/.vimrc ~/.vimrc)"
+		REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
 	fi
 
 	if [ -d "$swap_dir" ]; then
-		echo -e "  ${PASS} swap/ dir exists"
+		ok "swap/ dir exists"
 	else
-		echo -e "  ${WARN} swap/ dir not found (auto-created on first vim launch)"
+		warn "swap/ dir not found (auto-created on first vim launch)"
 	fi
 
 	if [ -L "${HOME}/.config/efm-langserver" ] || [ -f "${HOME}/.config/efm-langserver/config.yaml" ]; then
-		echo -e "  ${PASS} efm-langserver config"
+		ok "efm-langserver config"
 	elif [ -d "configs/efm-langserver" ]; then
-		echo -e "  ${WARN} efm-langserver config not linked (run: ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
+		warn "efm-langserver config not linked (run: ln -sfn $(pwd)/configs/efm-langserver ~/.config/efm-langserver)"
 	fi
 
 	if [ -d "$cache_dir" ]; then
-		echo -e "  ${PASS} session cache dir exists"
+		ok "session cache dir exists"
 	else
-		echo -e "  ${WARN} session cache dir not found (auto-created on first session save)"
+		warn "session cache dir not found (auto-created on first session save)"
 	fi
 
 	if [ -d "$viminfo_dir" ]; then
-		echo -e "  ${PASS} viminfo dir exists"
+		ok "viminfo dir exists"
 	else
-		echo -e "  ${WARN} viminfo dir not found (auto-created on first vim launch)"
+		warn "viminfo dir not found (auto-created on first vim launch)"
 	fi
 
 	echo ""
 }
 
 print_summary() {
-	if $ALL_PASSED; then
+	if [ "$REQUIRED_FAILURES" -eq 0 ]; then
 		echo -e "${GREEN}${BOLD}All required dependencies satisfied.${NC}"
 		exit 0
 	else
@@ -846,7 +854,6 @@ print_summary() {
 
 main() {
 	parse_args "$@"
-	OS=$(os_detect)
 	print_header
 	print_platform
 	run_required_checks

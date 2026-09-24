@@ -6,19 +6,19 @@ set -euo pipefail
 # Usage: curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
 # ──────────────────────────────────────────────────────────────
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly CYAN='\033[0;36m'
+readonly BOLD='\033[1m'
+readonly NC='\033[0m'
 
-INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-vim}"
-VIM_SRC_DIR="${VIM_SRC_DIR:-$HOME/Documents/vim}"
-JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
-SUDOERS_D_DIR="${SUDOERS_D_DIR:-/etc/sudoers.d}"
+readonly INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-vim}"
+readonly VIM_SRC_DIR="${VIM_SRC_DIR:-$HOME/Documents/vim}"
+readonly JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
+readonly SUDOERS_D_DIR="${SUDOERS_D_DIR:-/etc/sudoers.d}"
 SUDO_NOPASSWD=0
-NOPASSWD_DROPIN="$SUDOERS_D_DIR/zz-monkey-vim-nopasswd"
+readonly NOPASSWD_DROPIN="$SUDOERS_D_DIR/zz-monkey-vim-nopasswd"
 
 # Never let a missing HOME fail later under `set -u`.
 [ -n "${HOME:-}" ] || {
@@ -58,17 +58,16 @@ os_detect() {
 	esac
 }
 
-is_wsl_kernel() {
-	[[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" ]]
-}
-
-is_wsl_kernel() {
-	# Kernel-release-based WSL detection: does not rely on the WSL_* env
-	# vars, which some shells and exec contexts do not inherit.
-	# uname -r works everywhere — macOS has no /proc (returns a Darwin
-	# release, no match); WSL1 reports "...-Microsoft", WSL2
-	# "...-microsoft-standard-*" — hence the case-insensitive match.
-	uname -r | grep -qi 'microsoft'
+# True under WSL (1 or 2): both kernels carry "microsoft" in the release
+# string (WSL1 "...-Microsoft", WSL2 "...-microsoft-standard-WSL2").
+# uname -r works everywhere — macOS has no /proc and reports a Darwin
+# release (no match). Unlike the WSL_* env vars it does not depend on the
+# shell or exec context inheriting them.
+is_wsl() {
+	case "$(uname -r)" in
+	*[Mm]icrosoft*) return 0 ;;
+	*) return 1 ;;
+	esac
 }
 
 # WSL interop appends the WINDOWS PATH to ours, so tools installed on the
@@ -93,10 +92,11 @@ native_sudo() {
 }
 
 OS=$(os_detect)
+readonly OS
 
 # TIOCSTI injection right: a chaining wrapper may pre-set this to its
 # own name — then THIS script must not inject. Standalone runs self-claim.
-ACQUIRE_TIOCSTI="${ACQUIRE_TIOCSTI:-monkey-vim}"
+readonly ACQUIRE_TIOCSTI="${ACQUIRE_TIOCSTI:-monkey-vim}"
 
 sudo_cmd() {
 	# Lazy re-auth: Homebrew resets the sudo timestamp on EVERY invocation
@@ -240,19 +240,26 @@ refresh_path() {
 # ────────────────── sudo setup (auth + drop-ins + keepalive) ──────────────────
 
 SUDO_KEEPALIVE_PID=""
+SUDO_BIN=""
 
 cleanup_sudo() {
 	# Kill the keepalive (if running) and remove the temporary NOPASSWD
 	# drop-in. `sudo -n rm` works while NOPASSWD is still in place — the
-	# file grants it, so removal never needs a password.
+	# file grants it, so removal never needs a password. State flags are
+	# reset so a second call (explicit from main + the EXIT trap) is a
+	# no-op. The `|| true` guards matter under set -e: `wait` reports
+	# 128+SIGTERM for a killed keepalive and `kill` fails on an already
+	# dead one — either would abort the drop-in removal below.
 	if [ -n "$SUDO_KEEPALIVE_PID" ]; then
-		kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
-		wait "$SUDO_KEEPALIVE_PID" 2>/dev/null
+		kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+		wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+		SUDO_KEEPALIVE_PID=""
 	fi
 	if [ "$SUDO_NOPASSWD" -eq 1 ] && [ -n "$SUDO_BIN" ]; then
 		"$SUDO_BIN" -n rm -f "$NOPASSWD_DROPIN" 2>/dev/null ||
 			warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $NOPASSWD_DROPIN"
 	fi
+	SUDO_NOPASSWD=0
 }
 
 setup_sudo() {
@@ -329,9 +336,7 @@ setup_sudo() {
 	trap 'exit 143' TERM
 }
 
-# ────────────────── Step 1: Install build deps for Vim ──────────────────
-
-# ────────────────── package index refresh ──────────────────
+# ────────────────── package index refresh & install ──────────────────
 # Refresh the package index before installing: a stale or missing index is
 # the usual cause of "Unable to locate package" on freshly provisioned
 # machines. Retried once for transient network failures; a failed refresh
@@ -355,6 +360,8 @@ refresh_pkg() {
 	return 0
 }
 
+# ────────────────── Step 1: Install build deps for Vim ──────────────────
+
 install_vim_build_deps() {
 	info "Installing Vim build dependencies..."
 	refresh_pkg
@@ -365,7 +372,7 @@ install_vim_build_deps() {
 			libgpm-dev libncurses-dev
 			python3-dev lua5.4 liblua5.4-dev
 			perl libperl-dev ruby ruby-dev)
-		if is_wsl_kernel; then
+		if is_wsl; then
 			gui=(libgtk-3-dev libx11-dev libxt-dev libxpm-dev)
 		else
 			# Non-WSL: prefer GTK4 (no X11 dependency)
@@ -377,7 +384,7 @@ install_vim_build_deps() {
 		common=(base-devel git curl
 			wayland gpm ncurses
 			lua perl python ruby)
-		if is_wsl_kernel; then
+		if is_wsl; then
 			gui=(gtk3 libx11 libxt libxpm)
 		else
 			gui=(gtk4)
@@ -396,7 +403,7 @@ install_vim_build_deps() {
 			gpm-devel ncurses-devel
 			python3-devel
 			ruby-devel lua-devel perl)
-		if is_wsl_kernel; then
+		if is_wsl; then
 			gui=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
 		else
 			gui=(gtk4-devel)
@@ -411,7 +418,7 @@ install_vim_build_deps() {
 			python3-devel ruby-devel lua-devel
 			perl perl-devel perl-ExtUtils-ParseXS
 			perl-ExtUtils-CBuilder perl-ExtUtils-Embed)
-		if is_wsl_kernel; then
+		if is_wsl; then
 			gui=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
 		else
 			gui=(gtk4-devel)
@@ -562,7 +569,7 @@ vim_features_ok() {
 	case "$OS" in
 	macos) return 0 ;;
 	esac
-	if is_wsl_kernel; then
+	if is_wsl; then
 		has_vim_feature xterm_clipboard
 	elif pkg-config --exists gtk4 2>/dev/null; then
 		has_vim_feature wayland_clipboard
@@ -577,7 +584,7 @@ vim_missing_features() {
 	local req f
 	req=("${VIM_REQUIRED_FEATURES[@]}" clipboard clipboard_provider)
 	if [ "$OS" != macos ]; then
-		if is_wsl_kernel; then
+		if is_wsl; then
 			req+=(xterm_clipboard)
 		elif pkg-config --exists gtk4 2>/dev/null; then
 			req+=(wayland_clipboard)
@@ -641,7 +648,7 @@ build_vim() {
 		;;
 	*)
 		configure_args+=(--enable-gpm)
-		if is_wsl_kernel; then
+		if is_wsl; then
 			# WSLg clipboard goes through XWayland — must keep GTK3 + --with-x
 			configure_args+=(--enable-gui=gtk3 --with-x --with-wayland)
 		elif pkg-config --exists gtk4 2>/dev/null; then
@@ -697,6 +704,9 @@ clone_monkey_vim() {
 	if [ -d "$INSTALL_DIR/.git" ]; then
 		info "monkey-vim already exists at $INSTALL_DIR — pulling latest..."
 		git -C "$INSTALL_DIR" pull --ff-only || warn "git pull failed — keeping existing version."
+	elif [ -e "$INSTALL_DIR" ]; then
+		# Existing non-git dir is fine (e.g. git clone with .git removed).
+		warn "$INSTALL_DIR exists but is not a git repository — using it as-is."
 	else
 		info "Cloning monkey-vim to $INSTALL_DIR..."
 		git clone https://github.com/QMonkey/monkey-vim.git "$INSTALL_DIR"
@@ -817,7 +827,7 @@ main() {
 	echo ""
 
 	info "Detected OS: ${CYAN}${OS}${NC}"
-	if is_wsl_kernel; then
+	if is_wsl; then
 		info "Detected WSL — building Vim with GTK3 + X11 (WSLg clipboard)."
 	fi
 	info "monkey-vim: ${CYAN}${INSTALL_DIR}${NC}"
