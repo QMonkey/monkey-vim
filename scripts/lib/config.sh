@@ -4,26 +4,35 @@
 # Sourced by scripts/install.sh and scripts/checkhealth.sh.
 #
 # Data contract (project side):
-#   SYMLINKS=("src|dst" "src|dst|keep")   link_config per entry
+#   SYMLINKS=("src|dst" "src|dst|keep")   link_config <src> <dst> <mode>
 #   ENSURE_DIRS=("path" ...)              mkdir -p, reported once per dir
 #   ENSURE_FILES=("path" ...)             touch when missing
 #   CONFIG_LINKS=("src|dst|desc|mode|name|hint")  checkhealth: required links
 #   CONFIG_HINTS=("type|params|ok|incomplete|missing")  advisory, config section
 #   ADVISORY_SECTIONS=("title|note|type|params|ok|incomplete|missing")
 #
-# Link modes: "" (default) — a foreign target is left alone with a warning,
-#             "keep" — existing target is skipped with an info line, a
-#                      missing source is skipped silently,
-#             "strict" — the link must resolve to THIS repo (checkhealth).
+# Link modes (install side, the third SYMLINKS field):
+#   "" (default) — a foreign target is left alone with a warning,
+#   "keep"       — an existing target is skipped with an info line and a
+#                  missing source is skipped silently (efm-langserver,
+#                  .clang-format — the repo may not even ship the source),
+#   "strict"     — checkhealth only: the link must resolve to THIS repo.
 
 # ──────────────────────── install side ────────────────────────
-# Usage: link_config <src> <dst>. Never overwrites an existing target that is
-# not this repo's link (ln -sfn into a real directory would create the link
-# INSIDE it).
+# Usage: link_config <src> <dst> [mode]. Never overwrites an existing target
+# that is not this repo's link (ln -sfn into a real directory would create the
+# link INSIDE it).
+#
+# mode ""     — a foreign target is reported with a warning + the re-link line
+#        keep  — an existing target is skipped with an info line, and a missing
+#                source is skipped silently: the entry guards something the repo
+#                may not even ship (efm-langserver, .clang-format, configs/<dir>)
 link_config() {
-	local src="$1" dst="$2"
+	local src="$1" dst="$2" mode="${3:-}"
 	if [ -e "$dst" ] || [ -L "$dst" ]; then
-		if [ -L "$dst" ] && [ "$(readlink -f "$dst" 2>/dev/null || readlink "$dst")" = "$(readlink -f "$src" 2>/dev/null || readlink "$src")" ]; then
+		if [ "$mode" = "keep" ]; then
+			info "$(basename "$dst") already exists — skipping."
+		elif [ -L "$dst" ] && [ "$(readlink -f "$dst" 2>/dev/null || readlink "$dst")" = "$(readlink -f "$src" 2>/dev/null || readlink "$src")" ]; then
 			ok "$(basename "$dst") already linked."
 		else
 			warn "$dst exists and is not this repo's link — skipping."
@@ -31,28 +40,12 @@ link_config() {
 		fi
 		return 0
 	fi
-	if [ ! -e "$src" ]; then
-		# "keep" entries guard optional sources (configs/<dir> in the repo).
-		return 0
-	fi
+	# A missing source is always silent: SYMLINKS may list optional files.
+	[ -e "$src" ] || return 0
 	mkdir -p "$(dirname "$dst")"
 	ln -sfn "$src" "$dst"
 	# Label = dst without the home prefix (".zshrc → <repo>/.zshrc"), which
 	# is how the per-repo installers have always reported their links.
-	ok "${dst#"$HOME"/} → $src"
-}
-
-# link_config for entries that must not warn when the target already exists
-# (efm-langserver, .clang-format — the repo may not even ship the source).
-link_config_keep() {
-	local src="$1" dst="$2"
-	if [ -e "$dst" ] || [ -L "$dst" ]; then
-		info "$(basename "$dst") already exists — skipping."
-		return 0
-	fi
-	[ -e "$src" ] || return 0
-	mkdir -p "$(dirname "$dst")"
-	ln -sfn "$src" "$dst"
 	ok "${dst#"$HOME"/} → $src"
 }
 
@@ -63,10 +56,7 @@ setup_symlinks() {
 		IFS='|' read -r src dst mode <<EOF
 $entry
 EOF
-		case "$mode" in
-		keep) link_config_keep "$src" "$dst" ;;
-		*) link_config "$src" "$dst" ;;
-		esac
+		link_config "$src" "$dst" "$mode"
 	done
 	local d f
 	for d in ${ENSURE_DIRS[@]+"${ENSURE_DIRS[@]}"}; do

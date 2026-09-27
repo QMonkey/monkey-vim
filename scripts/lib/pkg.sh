@@ -15,32 +15,32 @@
 # notif, ...) overrides pkg_name() after sourcing and delegates the rest to
 # this function.
 default_pkg_name() {
-	case "${OS_FAMILY:-$(os_family "${OS:-unknown}")}:$1" in
+	case "${OS:-unknown}:$1" in
 	# Go / Node / shell utilities
-	debian:go) echo "golang-go" ;;
-	centos:go) echo "golang" ;;
-	debian:node | arch:node | opensuse:node | centos:node) echo "nodejs" ;;
-	debian:which) echo "debianutils" ;;
+	debian:go | ubuntu:go) echo "golang-go" ;;
+	centos:go | fedora:go) echo "golang" ;;
+	debian:node | ubuntu:node | arch:node | opensuse:node | centos:node | fedora:node) echo "nodejs" ;;
+	debian:which | ubuntu:which) echo "debianutils" ;;
 	arch:python3 | macos:python3) echo "python" ;;
 	# Editors / language servers / gtags tooling (monkey-nvim, monkey-vim)
-	debian:rg | arch:rg | macos:rg | opensuse:rg | centos:rg) echo "ripgrep" ;;
-	debian:ctags | macos:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
-	arch:ctags) echo "ctags" ;; # Arch ships universal-ctags as "ctags"
-	debian:pygmentize) echo "python3-pygments" ;;
+	debian:rg | ubuntu:rg | arch:rg | macos:rg | opensuse:rg | centos:rg | fedora:rg) echo "ripgrep" ;;
+	debian:ctags | ubuntu:ctags | macos:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
+	arch:ctags | fedora:ctags) echo "ctags" ;; # Arch & Fedora ship universal-ctags as "ctags"
+	debian:pygmentize | ubuntu:pygmentize) echo "python3-pygments" ;;
 	arch:pygmentize) echo "python-pygments" ;;
 	macos:pygmentize) echo "pygments" ;;
 	opensuse:pygmentize) echo "python3-Pygments" ;;
-	centos:pygmentize) echo "python3-pygments" ;;
-	debian:pylsp) echo "python3-pylsp" ;;
+	centos:pygmentize | fedora:pygmentize) echo "python3-pygments" ;;
+	debian:pylsp | ubuntu:pylsp) echo "python3-pylsp" ;;
 	arch:pylsp | macos:pylsp) echo "python-lsp-server" ;;
 	opensuse:pylsp) echo "python-python-lsp-server" ;;
-	centos:pylsp) echo "python3-lsp-server" ;;
-	debian:clangd | debian:clang-tidy | arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
+	centos:pylsp | fedora:pylsp) echo "python3-lsp-server" ;;
+	debian:clangd | debian:clang-tidy | ubuntu:clangd | ubuntu:clang-tidy | arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
 	macos:clangd | macos:clang-tidy) echo "llvm" ;;
-	centos:clangd | centos:clang-tidy) echo "clang-tools-extra" ;;
+	centos:clangd | centos:clang-tidy | fedora:clangd | fedora:clang-tidy) echo "clang-tools-extra" ;;
 	arch:g++ | macos:g++) echo "gcc" ;;
-	opensuse:g++ | centos:g++) echo "gcc-c++" ;;
-	arch:black | opensuse:black | centos:black) echo "python-black" ;;
+	opensuse:g++ | centos:g++ | fedora:g++) echo "gcc-c++" ;;
+	arch:black | opensuse:black | centos:black | fedora:black) echo "python-black" ;;
 	*) echo "$1" ;;
 	esac
 }
@@ -70,11 +70,11 @@ refresh_pkg() {
 	PKG_DB_REFRESHED=1
 	local attempt
 	for attempt in 1 2; do
-		case "$OS_FAMILY" in
-		debian) sudo_cmd apt-get update ;;
+		case "$OS" in
+		debian | ubuntu) sudo_cmd apt-get update ;;
 		arch) sudo_cmd pacman -Sy ;;
 		opensuse) sudo_cmd zypper --non-interactive refresh ;;
-		centos) sudo_cmd dnf makecache -q ;;
+		centos | fedora) sudo_cmd dnf makecache -q ;;
 		*) return 0 ;;
 		esac && return 0
 		[ "$attempt" -lt 2 ] && sleep 2
@@ -86,8 +86,8 @@ refresh_pkg() {
 # returns non-zero when the OS is unknown or the manager fails.
 install_sys_pkg() {
 	refresh_pkg
-	case "$OS_FAMILY" in
-	debian) sudo_cmd apt-get install -y "$@" ;;
+	case "$OS" in
+	debian | ubuntu) sudo_cmd apt-get install -y "$@" ;;
 	arch) sudo_cmd pacman -S --noconfirm "$@" ;;
 	opensuse) sudo_cmd zypper --non-interactive install -y "$@" ;;
 	centos)
@@ -96,6 +96,10 @@ install_sys_pkg() {
 		local -a _args=("$@")
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
 		sudo_cmd dnf install -y "${_args[@]}"
+		;;
+	fedora)
+		# No EPEL on Fedora — the names below ship in the base repos.
+		sudo_cmd dnf install -y "$@"
 		;;
 	macos) return 1 ;; # Homebrew owns macOS — install_pkg routes there
 	*) return 1 ;;
@@ -147,11 +151,11 @@ install_pkg() {
 }
 
 get_install_hint() {
-	case "$OS_FAMILY" in
-	debian) echo "sudo apt-get install ${*}" ;;
+	case "$OS" in
+	debian | ubuntu) echo "sudo apt-get install ${*}" ;;
 	arch) echo "sudo pacman -S ${*}" ;;
 	opensuse) echo "sudo zypper install ${*}" ;;
-	centos) echo "sudo dnf install ${*}" ;;
+	centos | fedora) echo "sudo dnf install ${*}" ;;
 	macos) echo "brew install ${*}" ;;
 	linux-unknown) echo "install ${*} manually or 'brew install ${*}'" ;;
 	*) echo "install ${*} manually" ;;

@@ -22,10 +22,6 @@ cleanup_sudo() {
 		"$SUDO_BIN" -n rm -f "$(nopasswd_dropin_path)" 2>/dev/null ||
 			warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $(nopasswd_dropin_path)"
 	fi
-	# Temp dir created by the curl|bash bootstrap of scripts/ (see README).
-	if [ -n "${MONKEY_SCRIPTS_TMP:-}" ]; then
-		rm -rf "${MONKEY_SCRIPTS_TMP}" 2>/dev/null || true
-	fi
 }
 
 # Pre-authenticate once, then grant NOPASSWD for the rest of the run.
