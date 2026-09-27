@@ -13,8 +13,9 @@
 #   checkhealth_main "$@"
 #
 # Sourcing fails fast (with an actionable message) when scripts/ is missing —
-# that only happens if the repo was cloned without the subtree; install.sh
-# (which can fetch monkey-scripts on the fly) is the recovery path.
+# that only happens if the repo was cloned without the subtree; the project's
+# install.sh (which clones the project, scripts/ included, when run without a
+# checkout) is the recovery path.
 
 # fail() must not abort the run: checkhealth collects failures and reports
 # them in print_summary, which decides the exit status.
@@ -25,8 +26,8 @@ SKIP_CONFIG_CHECKS=false
 _MONKEY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ ! -f "$_MONKEY_LIB_DIR/lib/common.sh" ]; then
 	echo "monkey-scripts not found next to this file ($_MONKEY_LIB_DIR/lib)." >&2
-	echo "Clone the repo with its subtree, or run its install.sh first:" >&2
-	echo "  git subtree add -P scripts master https://github.com/QMonkey/monkey-scripts.git" >&2
+	echo "This checkout's scripts/ is incomplete (outdated or partial clone)." >&2
+	echo "  git -C $(dirname "$_MONKEY_LIB_DIR") pull    # or run the project's install.sh" >&2
 	exit 1
 fi
 # shellcheck source=/dev/null
@@ -146,7 +147,6 @@ checkhealth_main() {
 	parse_args "$@"
 	require_home
 	OS=$(os_detect)
-	OS_FAMILY=$(os_family "$OS")
 
 	print_header
 	print_header_extra

@@ -67,11 +67,14 @@ go_install() {
 # elsewhere symlink /usr/local/bin/python to python3.
 install_python_for_gtags() {
 	have_native_cmd python && return 0
-	if [ "$OS_FAMILY" = "debian" ]; then
+	case "$OS" in
+	debian | ubuntu)
 		install_pkg python-is-python3 && return 0
-	else
+		;;
+	*)
 		install_pkg "$(pkg_name python3)" || true
-	fi
+		;;
+	esac
 	have_native_cmd python && return 0
 	local py3
 	py3=$(command -v python3 2>/dev/null) || return 1

@@ -25,8 +25,8 @@ MONKEY_FAIL_EXITS=true
 _MONKEY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ ! -f "$_MONKEY_LIB_DIR/lib/common.sh" ]; then
 	echo "monkey-scripts not found next to this file ($_MONKEY_LIB_DIR/lib)." >&2
-	echo "Clone the repo with its subtree, or run install.sh after:" >&2
-	echo "  git subtree add -P scripts master https://github.com/QMonkey/monkey-scripts.git" >&2
+	echo "This checkout's scripts/ is incomplete (outdated or partial clone)." >&2
+	echo "  git -C $(dirname "$_MONKEY_LIB_DIR") pull    # or re-clone the project" >&2
 	exit 1
 fi
 # shellcheck source=/dev/null
@@ -78,16 +78,15 @@ run_checkhealth_step() {
 install_main() {
 	require_home
 	OS=$(os_detect)
-	OS_FAMILY=$(os_family "$OS")
 
 	print_banner "${PROJECT} installer"
 	if [ "$LINUX_ONLY" = 1 ] && { [ "$OS" = "macos" ] || [ "$OS" = "unknown" ]; }; then
 		warn "Current system is not Linux — ${PROJECT} is Wayland/Linux-only, skipping."
 		exit 0
 	fi
-	# The original installers print their folded OS id (ubuntu → debian), so
-	# report the family, not the granular id.
-	info "Detected OS: ${CYAN}${OS_FAMILY}${NC}"
+	# One id per distro (Ubuntu is no longer folded into Debian, and neither
+	# is Fedora into CentOS), so the line reports exactly what was detected.
+	info "Detected OS: ${CYAN}${OS}${NC}"
 	# Build-flavor notes (monkey-vim's WSL GTK3 line) belong right after the
 	# OS announcement, before the layout lines.
 	install_print_info

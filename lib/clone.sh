@@ -11,8 +11,13 @@
 #   INSTALL_RUN_CHECKHEALTH  1 (default) → run checkhealth --install in main
 
 clone_monkey_project() {
+	# On the curl|bash path this function is not what obtained the checkout:
+	# the bootstrap in the project's install.sh had to clone before it could
+	# reach this framework at all, and it clones into the same INSTALL_DIR.
+	# So the first branch normally just confirms a checkout this run already
+	# has (and pulls it, a no-op right after a clone) — one clone, not two.
 	if [ -d "$INSTALL_DIR/.git" ]; then
-		info "$PROJECT already exists at $INSTALL_DIR — pulling latest..."
+		info "$PROJECT is at $INSTALL_DIR — pulling latest..."
 		git -C "$INSTALL_DIR" pull --ff-only || warn "git pull failed — keeping existing version."
 	elif [ -e "$INSTALL_DIR" ]; then
 		# Existing non-git dir is fine (e.g. git clone with .git removed).

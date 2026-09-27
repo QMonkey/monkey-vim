@@ -87,10 +87,16 @@ is_wsl() {
 	esac
 }
 
-# Granular OS id: debian | ubuntu | arch | opensuse | centos | macos |
-# linux-unknown | unknown. Package-manager switching and most package-name
-# lookups use OS_FAMILY instead — ubuntu is merged back into debian there,
-# since only a couple of repos (hyprland) care about the split.
+# Granular OS id: debian | ubuntu | arch | opensuse | centos | fedora |
+# macos | linux-unknown | unknown. Every supported distro is its own id:
+# nothing is folded into a neighbour (Ubuntu is NOT Debian, Fedora is NOT
+# CentOS), so the package tables below can give each one the names its own
+# repositories use. Derivative distros are normalised here, at the only
+# place that reads /etc/os-release.
+#
+# This is also the one place to fold an id into a sibling's rows: an RHEL
+# rebuild whose package names match CentOS belongs on the `centos` line
+# above, and every package table follows automatically.
 os_detect() {
 	case "$(uname -s)" in
 	Linux)
@@ -102,7 +108,8 @@ os_detect() {
 			debian) echo "debian" ;;
 			arch | manjaro | endeavouros) echo "arch" ;;
 			opensuse | opensuse-leap | opensuse-tumbleweed | opensuse-microos | suse | sles) echo "opensuse" ;;
-			centos | rhel | fedora | rocky | almalinux | ol) echo "centos" ;;
+			centos | rhel | rocky | almalinux | ol) echo "centos" ;;
+			fedora) echo "fedora" ;;
 			*) echo "linux-unknown" ;;
 			esac
 		else
@@ -114,21 +121,13 @@ os_detect() {
 	esac
 }
 
-# Package-manager family: ubuntu → debian, everything else passes through.
-os_family() {
-	case "$1" in
-	ubuntu) echo "debian" ;;
-	*) echo "$1" ;;
-	esac
-}
-
 # Human-readable package manager for the Platform section.
 pkg_manager_name() {
-	case "${OS_FAMILY:-$(os_family "${OS:-unknown}")}" in
-	debian) echo "apt" ;;
+	case "${OS:-unknown}" in
+	debian | ubuntu) echo "apt" ;;
 	arch) echo "pacman" ;;
 	opensuse) echo "zypper" ;;
-	centos) echo "dnf" ;;
+	centos | fedora) echo "dnf" ;;
 	macos) echo "homebrew" ;;
 	*) echo "" ;;
 	esac

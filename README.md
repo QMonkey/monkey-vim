@@ -31,19 +31,36 @@ Neither entry point is meant to be executed on its own.
 
 ```bash
 # first-time fetch:
-git subtree add -P scripts master https://github.com/QMonkey/monkey-scripts.git
+git subtree add -P scripts https://github.com/QMonkey/monkey-scripts.git master
 # later updates:
-git subtree pull -P scripts master --squash
+git subtree pull -P scripts --squash https://github.com/QMonkey/monkey-scripts.git master
 ```
 
-### curl|bash bootstrap (no subtree yet)
+### Where `scripts/` comes from
 
-On the `curl | bash` path `scripts/` is not in the repo the user downloaded,
-so each project's `install.sh` fetches a snapshot of this repository from
-`https://codeload.github.com/QMonkey/monkey-scripts/tar.gz/HEAD` into a
-temporary directory and sources it from there. `checkhealth.sh` does **not**
-bootstrap: it fails fast with the `git subtree add` command above — running
-the project's `install.sh` is the recovery path.
+**git clone** — once this repository is committed into a project's repo (the
+`git subtree add` above, then pushed), a regular clone of that project
+already contains `scripts/`: consumers never clone or pull monkey-scripts
+themselves. Refreshing `scripts/` from upstream is the project maintainer's
+`git subtree pull`; consumers pick it up with an ordinary `git pull` of the
+project.
+
+**curl|bash** — the user downloads only the project's `install.sh`, with no
+checkout at all, so `install.sh` clones _the project itself_ straight into
+`INSTALL_DIR` (`~/Documents/monkey-<name>`) and runs the `install.sh` from that
+clone, which carries its own `scripts/`. The installer and the framework it
+loads therefore always come from the same revision, and nothing is fetched
+from this repository directly. If `INSTALL_DIR` exists, is not empty and is not a git
+clone, `install.sh` refuses to touch it and says so — there is no throwaway
+fallback, so the checkout is always at the documented path. (An existing _empty_
+directory is fine: that is what `git clone` itself accepts.) If the clone has no
+`scripts/` either, the project repo does not carry the subtree commit yet and
+`install.sh` says so and stops.
+
+`checkhealth.sh` never fetches anything: in a checkout that predates the
+subtree commit (no `scripts/` next to it) it fails fast and tells you to
+update the checkout — `git pull` or re-clone — or to run the project's
+`install.sh`, which bootstraps the framework itself.
 
 ## checkhealth.sh contract
 
@@ -155,21 +172,50 @@ A project's `install.sh` looks like this:
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
-_monkey_scripts="$(dirname "${BASH_SOURCE[0]:-$0}")/scripts"
-if [ ! -f "$_monkey_scripts/install.sh" ]; then
-    # curl|bash path: fetch a snapshot instead (removed on exit)
-    MONKEY_SCRIPTS_TMP=$(mktemp -d)
-    curl -fsSL https://codeload.github.com/QMonkey/monkey-scripts/tar.gz/HEAD |
-        tar -xz -C "$MONKEY_SCRIPTS_TMP" --strip-components=1
-    _monkey_scripts="$MONKEY_SCRIPTS_TMP"
-fi
-. "$_monkey_scripts/install.sh"
+# Repository identity first — the bootstrap needs both values.
 PROJECT=monkey-zsh
 PROJECT_REPO=https://github.com/QMonkey/monkey-zsh.git
+INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-zsh}"
+
+_monkey_scripts="$(dirname "${BASH_SOURCE[0]:-$0}")/scripts"
+if [ ! -f "$_monkey_scripts/install.sh" ]; then
+    _monkey_self="${BASH_SOURCE[0]:-$0}"          # a real file next to a checkout?
+    _monkey_dir="$(dirname "$_monkey_self")"
+    if [ -f "$_monkey_self" ] && [ -d "$_monkey_dir/.git" ]; then
+        git -C "$_monkey_dir" pull --ff-only || true   # pull the subtree in
+        _monkey_scripts="$_monkey_dir/scripts"
+        [ -f "$_monkey_scripts/install.sh" ] || {
+            echo "monkey-scripts missing from $_monkey_dir (no scripts/ subtree)." >&2
+            exit 1
+        }
+    else                                        # curl|bash: no checkout at all
+        # Clone THIS project into INSTALL_DIR — where clone_monkey_project
+        # would have put it anyway — and run the installer from that checkout,
+        # so install.sh and scripts/ cannot drift apart.
+        if [ -d "$INSTALL_DIR/.git" ]; then
+            git -C "$INSTALL_DIR" pull --ff-only || true
+        elif [ -d "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR")" ]; then
+            echo "$INSTALL_DIR is not empty and is not a git clone." >&2
+            echo "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
+            exit 1
+        else
+            git clone "$PROJECT_REPO" "$INSTALL_DIR" || exit 1
+        fi
+        exec bash "$INSTALL_DIR/install.sh" "$@" </dev/null
+    fi
+fi
+. "$_monkey_scripts/install.sh"
 install_step_tool() { install_zsh; echo ""; }
 SUMMARY_LINES=(...)
 install_main "$@"
 ```
+
+Both halves agree on `INSTALL_DIR`, which is all the seam between them needs:
+the bootstrap had to clone before it could reach this framework, and it puts
+the checkout exactly where the `clone` step would have put it, so that step
+confirms and pulls (a no-op right after a clone) instead of cloning a second
+copy. There is no marker variable and nothing to inherit — which also matters
+for `monkey-env`, whose component installers run as child processes.
 
 Hook order inside `install_main` (each hook prints its own trailing blank):
 
@@ -186,22 +232,45 @@ Step hooks (override after sourcing): `install_step_prepare`,
 
 Data switches:
 
-| Switch                                   | Meaning                                                                                                        |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step (`keep` = skip an existing target with an info line)                         |
-| `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                                               |
-| `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                                                    |
-| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                                                       |
-| `PERSIST_PATH=1`                         | write go/bin & cargo/bin PATH exports to the detected shell profile (zsh → `~/.zprofile`, bash → `~/.profile`) |
-| `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                                                    |
-| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                                                     |
-| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                                            |
-| `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                                                  |
-| `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                                                |
-| `BREW_FIRST=(pkg…)`                      | package names installed via Homebrew when available                                                            |
+| Switch                                   | Meaning                                                                                                                                                  |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step — `link_config <src> <dst> <mode>`; `keep` = skip an existing target with an info line, silently skip a missing source |
+| `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                                                                                         |
+| `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                                                                                              |
+| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                                                                                                 |
+| `PERSIST_PATH=1`                         | write go/bin & cargo/bin PATH exports to the detected shell profile (zsh → `~/.zprofile`, bash → `~/.profile`)                                           |
+| `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                                                                                              |
+| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                                                                                               |
+| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                                                                                      |
+| `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                                                                                            |
+| `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                                                                                          |
+| `BREW_FIRST=(pkg…)`                      | package names installed via Homebrew when available                                                                                                      |
 
 Unlike `checkhealth.sh`, `fail()` aborts the installer at the first fatal
 step (`MONKEY_FAIL_EXITS=true`).
+
+## OS ids
+
+`os_detect` normalises `/etc/os-release` to one id per distro. Derivative
+distros are mapped to their base id; nothing else is shared:
+
+| id         | `/etc/os-release` ids mapped here    | manager  |
+| ---------- | ------------------------------------ | -------- |
+| `debian`   | debian                               | apt      |
+| `ubuntu`   | ubuntu, linuxmint, pop, elementary, zorin | apt |
+| `arch`     | arch, manjaro, endeavouros           | pacman   |
+| `opensuse` | opensuse, leap, tumbleweed, microos, suse, sles | zypper |
+| `centos`   | centos, rhel, rocky, almalinux, ol   | dnf      |
+| `fedora`   | fedora                               | dnf      |
+| `macos`    | darwin (uname)                       | homebrew |
+
+`OS` holds the id, and it is what every package table keys on
+(`default_pkg_name` in `lib/pkg.sh`) — so Ubuntu and Fedora carry their own
+package names while only the _commands_ are shared, e.g. `debian | ubuntu)`
+for `apt-get install` and `centos | fedora)` for a plain `dnf install`. EPEL
+stays a CentOS-only step, since Fedora has no EPEL. `os_detect` is the only
+place that reads `/etc/os-release`: to give one id another's package names, add
+it to that id's line above and every table follows.
 
 ## Conventions
 
