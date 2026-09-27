@@ -454,6 +454,26 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 
 应解析到 `getty@.service`。
 
+## `scripts/`（共享框架）
+
+`scripts/` 目录是 [monkey-scripts](https://github.com/QMonkey/monkey-scripts) 的
+[git subtree](https://git-scm.com/docs/git-subtree) —— 本仓库 `install.sh` 与
+`checkhealth.sh` 所依赖的共享安装/检查框架。请勿在此目录内直接修改，更新应来自上游：
+
+```bash
+# 首次拉取（克隆时未带 subtree）：
+git subtree add -P scripts https://github.com/QMonkey/monkey-scripts.git master
+# 后续更新：
+git subtree pull -P scripts --squash https://github.com/QMonkey/monkey-scripts.git master
+```
+
+一键安装无需 subtree：`curl | bash` 路径会把**本仓库** clone 到临时目录
+（退出时删除）并运行其中的 `install.sh`，因此安装脚本与它加载的 `scripts/`
+必定来自同一版本。上面的 subtree 提交并推送后，正常 `git clone` 本仓库即已
+包含 `scripts/` —— 无需再单独 clone 或 pull monkey-scripts，更新只需 `git pull`
+本仓库。只有早于该提交的旧 checkout 缺少 `scripts/`：`git pull`（或重新运行
+`install.sh`，它会在该 checkout 上直接 pull）即可修复。
+
 ## 插件列表
 
 | 插件                                                                                  | 用途                                  |

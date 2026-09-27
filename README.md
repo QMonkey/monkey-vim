@@ -455,6 +455,32 @@ readlink -f /etc/systemd/system/autovt@.service /usr/lib/systemd/system/autovt@.
 
 It should resolve to `getty@.service`.
 
+## `scripts/` (shared framework)
+
+The `scripts/` directory is a [git subtree](https://git-scm.com/docs/git-subtree)
+of [monkey-scripts](https://github.com/QMonkey/monkey-scripts) — the shared
+install/checkhealth framework that this repo's `install.sh` and
+`checkhealth.sh` are built on. Do not edit it here; update it from upstream:
+
+```bash
+# first-time fetch (cloned without the subtree):
+git subtree add -P scripts https://github.com/QMonkey/monkey-scripts.git master
+# later updates:
+git subtree pull -P scripts --squash https://github.com/QMonkey/monkey-scripts.git master
+```
+
+The one-click installer works without a subtree: on the `curl | bash` path it
+clones _this_ repo straight into the install directory (`~/Documents/monkey-vim`)
+and runs the `install.sh` from that clone, so the installer and the `scripts/`
+it loads always come from the same revision. If that directory already exists
+but is not a git clone, the installer refuses to touch it and tells you so.
+Once the subtree above is committed and
+pushed, a regular `git clone` of this repo already contains `scripts/` —
+there is nothing extra to clone or pull; updates arrive through a plain
+`git pull`. Only a checkout from before that commit lacks `scripts/`:
+`git pull` (or re-running `install.sh`, which pulls that checkout in place)
+fixes it.
+
 ## Plugin list
 
 | Plugin                                                                                | Purpose                                          |
