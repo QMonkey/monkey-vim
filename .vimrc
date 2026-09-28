@@ -2226,14 +2226,13 @@ def FzfRgSink(lines: list<string>)
 	endif
 
 	# single selection: jump like s:ag_handler
-	try
-		execute list[0].lnum
-		if has_key(list[0], 'col')
-			cursor(0, list[0].col)
-		endif
-		normal! zvzz
-	catch
-	endtry
+	# ':' prefix: in vim9script a bare number passed to execute() is a range
+	# without a command (E1050), so the goto-line command needs the colon
+	execute $':{list[0].lnum}'
+	if has_key(list[0], 'col')
+		cursor(0, list[0].col)
+	endif
+	normal! zvzz
 enddef
 
 def FzfRgToggle()
