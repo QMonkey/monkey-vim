@@ -39,6 +39,8 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
 ```
 
+> 这条一行命令除了 `curl` 本身还需要 `git`：安装脚本会先把本仓库克隆到 `~/Documents/monkey-vim`，然后才能安装任何东西。如果缺少 `git`，脚本会报错停止——用系统的包管理器安装 git 后，重新运行同一条命令即可。
+
 脚本按顺序执行：
 
 1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
@@ -78,6 +80,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | fzf.vim 代码搜索（F1/Leader+a）                                       | 是       |
 | universal-ctags                                               | gutentags 标签生成                                                    | 是       |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航                                    | 推荐     |
+| [Pygments](https://pygments.org/) (`pygmentize`)              | gtags 解析器，用于非 C/C++ 语言（Python、Go、Rust、JS 等）            | 推荐     |
 | [fzf](https://github.com/junegunn/fzf)                        | 模糊搜索器（fzf.vim 依赖）                                            | 是       |
 | [bat](https://github.com/sharkdp/bat)                         | fzf 语法高亮文件预览                                                  | 推荐     |
 | [Homebrew](https://brew.sh/)                                  | 系统仓库缺失时的后备包管理器（lua-language-server、marksman、fzf 等） | 必须     |
@@ -94,7 +97,7 @@ brew install fzf bat
 # OpenSUSE
 sudo zypper install curl git ripgrep universal-ctags global python3-Pygments fzf bat nodejs npm gcc
 
-# CentOS（部分软件包来自 EPEL）
+# CentOS（ripgrep/ctags/global/pygments/fzf/bat 需启用 EPEL）
 sudo dnf install epel-release
 sudo dnf install curl git ripgrep universal-ctags global global-ctags python3-pygments fzf bat nodejs npm gcc
 
@@ -467,11 +470,12 @@ git subtree add -P scripts https://github.com/QMonkey/monkey-scripts.git master
 git subtree pull -P scripts --squash https://github.com/QMonkey/monkey-scripts.git master
 ```
 
-一键安装无需 subtree：`curl | bash` 路径会把**本仓库** clone 到临时目录
-（退出时删除）并运行其中的 `install.sh`，因此安装脚本与它加载的 `scripts/`
-必定来自同一版本。上面的 subtree 提交并推送后，正常 `git clone` 本仓库即已
-包含 `scripts/` —— 无需再单独 clone 或 pull monkey-scripts，更新只需 `git pull`
-本仓库。只有早于该提交的旧 checkout 缺少 `scripts/`：`git pull`（或重新运行
+一键安装无需 subtree：`curl | bash` 路径会把**本仓库**直接 clone 到安装目录
+（`~/Documents/monkey-vim`）并运行其中的 `install.sh`，因此安装脚本与它加载的
+`scripts/` 必定来自同一版本。若该目录已存在但不是 git clone，安装程序会拒绝
+改动并给出提示。上面的 subtree 提交并推送后，正常 `git clone` 本仓库即已
+包含 `scripts/` —— 无需再单独 clone 或 pull，更新只需 `git pull` 本仓库。
+只有早于该提交的旧 checkout 缺少 `scripts/`：`git pull`（或重新运行
 `install.sh`，它会在该 checkout 上直接 pull）即可修复。
 
 ## 插件列表
@@ -569,18 +573,18 @@ Leader+o    输入打开文件的路径，并在当前窗口打开一个缓冲
 Leader+Leader+s    输入打开文件的路径，并创建一个水平分屏的窗口
 Leader+Leader+v    输入打开文件的路径，并创建一个垂直分屏的窗口
 
-Alt+h      跳转到左窗口（普通模式）
-Alt+j      跳转到下窗口（普通模式）
-Alt+k      跳转到上窗口（普通模式）
-Alt+l      跳转到右窗口（普通模式）
-Ctrl+h     跳转到左窗口（普通模式别名）
-Ctrl+j     跳转到下窗口（普通模式别名）
-Ctrl+k     跳转到上窗口（普通模式别名）
-Ctrl+l     跳转到右窗口（普通模式别名）
+Ctrl+h     跳转到左窗口
+Ctrl+j     跳转到下窗口
+Ctrl+k     跳转到上窗口
+Ctrl+l     跳转到右窗口
+Alt+h      跳转到左窗口（普通/插入/终端模式均可）
+Alt+j      跳转到下窗口（普通/插入/终端模式均可）
+Alt+k      跳转到上窗口（普通/插入/终端模式均可）
+Alt+l      跳转到右窗口（普通/插入/终端模式均可）
 Leader+z   窗口放大/恢复
-
-Alt+h/j/k/l 在所有模式（普通/插入/终端）下都可用。tmux 发送的 Alt+字母是 ESC 前缀形式，vim 默认无法解码（|map-alt-keys|），因此将 ESC+键 声明为键码；从插入/终端模式聚焦到终端窗口时自动恢复输入，popup（fzf）及自行处理 Alt 键的终端 job 不会被劫持（见 WinNav）。
 ```
+
+Alt+h/j/k/l 在所有模式（普通/插入/终端）下都可用。终端发送的 Alt+字母是 ESC 前缀形式，vim 默认无法解码（|map-alt-keys|），因此将 ESC+键 声明为键码；从插入/终端模式聚焦到终端窗口时自动恢复输入，popup（fzf）及自行处理 Alt 键的终端 job 不会被劫持（见 WinNav）。
 
 #### 1.5 Tab
 
