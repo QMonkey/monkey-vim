@@ -11,6 +11,10 @@
 #   INSTALL_RUN_CHECKHEALTH  1 (default) → run checkhealth --install in main
 
 clone_monkey_project() {
+	# git must exist before anything here runs: the pull and the clone both
+	# need it. ensure_git installs it via the package manager when missing
+	# (setup_sudo has already run by the time this step is reached).
+	ensure_git
 	# On the curl|bash path this function is not what obtained the checkout:
 	# the bootstrap in the project's install.sh had to clone before it could
 	# reach this framework at all, and it clones into the same INSTALL_DIR.
