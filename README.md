@@ -39,6 +39,8 @@ Build Vim and install monkey-vim with all dependencies and plugins automatically
 curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
 ```
 
+> The one-liner needs `git` besides `curl` itself: the installer clones this repository into `~/Documents/monkey-vim` before it can install anything. If `git` is missing, the script stops with an error — install it with your system's package manager and re-run the same command.
+
 What the script does, step by step:
 
 1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
