@@ -44,6 +44,11 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
 		# lives in the very scripts/ being fetched. INSTALL_DIR is where the
 		# framework's clone step would have put the checkout too, so that step
 		# only confirms it.
+
+		if ! command -v git >/dev/null 2>&1; then
+			echo "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
+			exit 1
+		fi
 		if [ -d "$INSTALL_DIR/.git" ]; then
 			# An install already lives here: update it, then run that one.
 			git -C "$INSTALL_DIR" pull --ff-only || true
