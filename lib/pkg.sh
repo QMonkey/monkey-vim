@@ -14,6 +14,14 @@
 # here; a repo with a one-off mapping (monkey-sway's swaymsg, monkey-hyprland's
 # notif, ...) overrides pkg_name() after sourcing and delegates the rest to
 # this function.
+# openSUSE Python module packages carry the interpreter's ABI flavor
+# prefix (python314-black, python314-python-lsp-server — NOT python3-*),
+# and the flavor follows the default python3 version, so derive it at
+# runtime. Prints nothing if python3 is unavailable.
+python_flavor() {
+	python3 -c 'import sys;print("python%d%d"%sys.version_info[:2])' 2>/dev/null
+}
+
 default_pkg_name() {
 	case "${OS:-unknown}:$1" in
 	# Go / Node / shell utilities
@@ -29,18 +37,26 @@ default_pkg_name() {
 	debian:pygmentize | ubuntu:pygmentize) echo "python3-pygments" ;;
 	arch:pygmentize) echo "python-pygments" ;;
 	macos:pygmentize) echo "pygments" ;;
-	opensuse:pygmentize) echo "python3-Pygments" ;;
+	opensuse:pygmentize) echo "$(python_flavor)-Pygments" ;;
 	centos:pygmentize | fedora:pygmentize) echo "python3-pygments" ;;
 	debian:pylsp | ubuntu:pylsp) echo "python3-pylsp" ;;
 	arch:pylsp | macos:pylsp) echo "python-lsp-server" ;;
-	opensuse:pylsp) echo "python-python-lsp-server" ;;
+	opensuse:pylsp) echo "$(python_flavor)-python-lsp-server" ;;
 	centos:pylsp | fedora:pylsp) echo "python3-lsp-server" ;;
-	debian:clangd | debian:clang-tidy | ubuntu:clangd | ubuntu:clang-tidy | arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
+	# Debian/Ubuntu split clangd & clang-tidy into their own (unversioned
+	# metapackages — `clang` there ships only clang/clang++, so mapping them
+	# to `clang` installs nothing the probes look for. Arch's `clang` DOES
+	# ship both binaries; openSUSE's `clang` carries them too.
+	arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
+	debian:clangd | ubuntu:clangd) echo "clangd" ;;
+	debian:clang-tidy | ubuntu:clang-tidy) echo "clang-tidy" ;;
 	macos:clangd | macos:clang-tidy) echo "llvm" ;;
 	centos:clangd | centos:clang-tidy | fedora:clangd | fedora:clang-tidy) echo "clang-tools-extra" ;;
 	arch:g++ | macos:g++) echo "gcc" ;;
 	opensuse:g++ | centos:g++ | fedora:g++) echo "gcc-c++" ;;
-	arch:black | opensuse:black | centos:black | fedora:black) echo "python-black" ;;
+	arch:black) echo "python-black" ;;
+	opensuse:black) echo "$(python_flavor)-black" ;;
+	centos:black | fedora:black) echo "python3-black" ;;
 	*) echo "$1" ;;
 	esac
 }
@@ -99,7 +115,11 @@ install_sys_pkg() {
 		;;
 	fedora)
 		# No EPEL on Fedora — the names below ship in the base repos.
-		sudo_cmd dnf install -y "$@"
+		# gtags needs the global-ctags subpackage (ctags back-end config),
+		# same as CentOS; without it gtags is unusable.
+		local -a _args=("$@")
+		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
+		sudo_cmd dnf install -y "${_args[@]}"
 		;;
 	macos) return 1 ;; # Homebrew owns macOS — install_pkg routes there
 	*) return 1 ;;

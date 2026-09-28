@@ -299,14 +299,19 @@ PYEOF
 }
 
 # ────────────────────── banner ──────────────────────
-# Fixed 40-column box; the title is centered inside it.
+# 80-column box (the smallest standard terminal width); the title is
+# centered inside it. The border is generated from WIDTH so the character
+# count can never drift from the padding math again.
 print_banner() {
-	local title="$1" pad
-	pad=$(( (40 - ${#title}) / 2 ))
+	local title="$1" width=80 pad border right
+	printf -v border '═%.0s' {1..80}
+	pad=$(( (width - ${#title}) / 2 ))
 	[ "$pad" -gt 0 ] || pad=0
+	right=$(( width - pad - ${#title} ))
+	[ "$right" -gt 0 ] || right=0
 	echo ""
-	echo -e "${BOLD}╔══════════════════════════════════════════╗${NC}"
-	echo -e "${BOLD}║$(printf '%*s' "$pad" '')${title}$(printf '%*s' $(( 40 - pad - ${#title} )) '')║${NC}"
-	echo -e "${BOLD}╚══════════════════════════════════════════╝${NC}"
+	echo -e "${BOLD}╔${border}╗${NC}"
+	echo -e "${BOLD}║$(printf '%*s' "$pad" '')${title}$(printf '%*s' "$right" '')║${NC}"
+	echo -e "${BOLD}╚${border}╝${NC}"
 	echo ""
 }

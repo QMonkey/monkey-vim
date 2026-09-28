@@ -192,6 +192,10 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
         # Clone THIS project into INSTALL_DIR — where clone_monkey_project
         # would have put it anyway — and run the installer from that checkout,
         # so install.sh and scripts/ cannot drift apart.
+        if ! command -v git >/dev/null 2>&1; then
+            echo "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
+            exit 1
+        fi
         if [ -d "$INSTALL_DIR/.git" ]; then
             git -C "$INSTALL_DIR" pull --ff-only || true
         elif [ -d "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR")" ]; then
@@ -254,15 +258,15 @@ step (`MONKEY_FAIL_EXITS=true`).
 `os_detect` normalises `/etc/os-release` to one id per distro. Derivative
 distros are mapped to their base id; nothing else is shared:
 
-| id         | `/etc/os-release` ids mapped here    | manager  |
-| ---------- | ------------------------------------ | -------- |
-| `debian`   | debian                               | apt      |
-| `ubuntu`   | ubuntu, linuxmint, pop, elementary, zorin | apt |
-| `arch`     | arch, manjaro, endeavouros           | pacman   |
-| `opensuse` | opensuse, leap, tumbleweed, microos, suse, sles | zypper |
-| `centos`   | centos, rhel, rocky, almalinux, ol   | dnf      |
-| `fedora`   | fedora                               | dnf      |
-| `macos`    | darwin (uname)                       | homebrew |
+| id         | `/etc/os-release` ids mapped here               | manager  |
+| ---------- | ----------------------------------------------- | -------- |
+| `debian`   | debian                                          | apt      |
+| `ubuntu`   | ubuntu, linuxmint, pop, elementary, zorin       | apt      |
+| `arch`     | arch, manjaro, endeavouros                      | pacman   |
+| `opensuse` | opensuse, leap, tumbleweed, microos, suse, sles | zypper   |
+| `centos`   | centos, rhel, rocky, almalinux, ol              | dnf      |
+| `fedora`   | fedora                                          | dnf      |
+| `macos`    | darwin (uname)                                  | homebrew |
 
 `OS` holds the id, and it is what every package table keys on
 (`default_pkg_name` in `lib/pkg.sh`) — so Ubuntu and Fedora carry their own
