@@ -151,7 +151,7 @@ install_optional_bin() {
 		install_pkg "$(pkg_name "$bin")" ||
 			{
 				echo -e "  ${CYAN}→ cargo install ripgrep (source build, no output — may take several minutes)${NC}"
-				cargo install ripgrep 2>/dev/null
+				retry -t 1800 -s "cargo install ripgrep" cargo install ripgrep
 			} ||
 			ok=false
 		;;
@@ -160,8 +160,11 @@ install_optional_bin() {
 		;;
 	pylsp)
 		install_pkg "$(pkg_name "$bin")" 2>/dev/null ||
-			sudo_cmd pip3 install python-lsp-server 2>/dev/null ||
-			pip3 install python-lsp-server 2>/dev/null ||
+		{
+			ensure_pip &&
+				{ retry -t 1800 -s "pip3 install python-lsp-server" sudo_cmd pip3 install python-lsp-server ||
+					retry -t 1800 -s "pip3 install python-lsp-server" pip3 install python-lsp-server; }
+		} ||
 			ok=false
 		;;
 	cargo)
@@ -169,7 +172,7 @@ install_optional_bin() {
 		;;
 	rust-analyzer)
 		if ensure_rust; then
-			rustup component add rust-analyzer
+			retry -t 1800 -s "rustup component add rust-analyzer" rustup component add rust-analyzer
 		else
 			ok=false
 		fi
@@ -185,8 +188,11 @@ install_optional_bin() {
 		;;
 	black)
 		install_pkg "$(pkg_name "$bin")" 2>/dev/null ||
-			sudo_cmd pip3 install black 2>/dev/null ||
-			pip3 install black 2>/dev/null ||
+		{
+			ensure_pip &&
+				{ retry -t 1800 -s "pip3 install black" sudo_cmd pip3 install black ||
+					retry -t 1800 -s "pip3 install black" pip3 install black; }
+		} ||
 			ok=false
 		;;
 	clang-tidy)
@@ -208,13 +214,13 @@ install_optional_bin() {
 		npm_install_g yaml-language-server
 		;;
 	lua-language-server)
-		install_pkg "$(pkg_name "$bin")" || brew install lua-language-server 2>/dev/null || ok=false
+		install_pkg "$(pkg_name "$bin")" || retry -t 1800 -s "brew install lua-language-server" brew install lua-language-server || ok=false
 		;;
 	glow)
-		install_pkg "$(pkg_name "$bin")" || brew install glow 2>/dev/null || go_install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
+		install_pkg "$(pkg_name "$bin")" || retry -t 1800 -s "brew install glow" brew install glow || go_install github.com/charmbracelet/glow@latest 2>/dev/null || ok=false
 		;;
 	marksman)
-		install_pkg "$(pkg_name "$bin")" || brew install marksman 2>/dev/null || ok=false
+		install_pkg "$(pkg_name "$bin")" || retry -t 3600 -s "brew install marksman" brew install marksman || ok=false
 		;;
 	efm-langserver)
 		go_install github.com/mattn/efm-langserver@latest 2>/dev/null || ok=false
@@ -226,10 +232,10 @@ install_optional_bin() {
 		npm_install_g markdownlint-cli2
 		;;
 	zig)
-		brew install zig 2>/dev/null || install_pkg "$(pkg_name "$bin")" || ok=false
+		retry -t 3600 -s "brew install zig" brew install zig || install_pkg "$(pkg_name "$bin")" || ok=false
 		;;
 	zls)
-		brew install zls 2>/dev/null || install_pkg "$(pkg_name "$bin")" || ok=false
+		retry -t 3600 -s "brew install zls" brew install zls || install_pkg "$(pkg_name "$bin")" || ok=false
 		;;
 	*)
 		install_pkg "$(pkg_name "$bin")" || ok=false
