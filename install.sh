@@ -141,7 +141,7 @@ install_vim_build_deps() {
 			# Non-WSL: prefer GTK4 (no X11 dependency)
 			gui=(libgtk-4-dev)
 		fi
-		retry -s "apt-get install" sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
+		retry -t 1800 -s "apt-get install" sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
 		;;
 	arch)
 		common=(base-devel git curl
@@ -152,10 +152,10 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4)
 		fi
-		retry -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
+		retry -t 1800 -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
 		;;
 	opensuse)
-		retry -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
+		retry -t 1800 -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
 		# Leap 16 names: python-devel and perl-devel do not exist (python3
 		# needs -devel-suffixed python3-devel only; perl headers ship in the
 		# main perl package), and xorg-x11-devel was removed — use the
@@ -171,7 +171,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		retry -s "zypper install" sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
+		retry -t 1800 -s "zypper install" sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
 		;;
 	centos)
 		sudo_cmd dnf install -y epel-release || true
@@ -186,7 +186,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		retry -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		retry -t 1800 -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
 		;;
 	fedora)
 		# No EPEL on Fedora — the same names ship in the base repos.
@@ -201,13 +201,13 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		retry -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		retry -t 1800 -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
 		;;
 	macos)
 		# Terminal-only build (--enable-gui=no); no gtk/cairo needed. git is
 		# required regardless — build_vim and the clone both pull sources.
 		if have_native_cmd brew; then
-			brew install git python3 ruby lua
+			retry -t 1800 -s "brew install build deps" brew install git python3 ruby lua
 		else
 			warn "Homebrew not found — cannot install vim build deps. Install it first: https://brew.sh"
 		fi
@@ -326,7 +326,7 @@ build_vim() {
 		# every later attempt (and re-run) fail with "already exists" — clean
 		# it up before giving up, but only when git created it (.git inside)
 		# or it is empty, never when it holds pre-existing user data.
-		if ! retry -s "git clone vim" git clone https://github.com/vim/vim.git "$VIM_SRC_DIR"; then
+		if ! retry -t 1800 -s "git clone vim" git clone https://github.com/vim/vim.git "$VIM_SRC_DIR"; then
 			if [ -d "$VIM_SRC_DIR" ] && { [ -z "$(ls -A "$VIM_SRC_DIR")" ] || [ -d "$VIM_SRC_DIR/.git" ]; }; then
 				rm -rf "$VIM_SRC_DIR"
 			fi
@@ -445,8 +445,11 @@ install_plugins() {
 	# instead of looking like a hang.
 	info "Installing Vim plugins (vim-plug) — no output below until done, may take a few minutes..."
 	# vim-plug is auto-bootstrapped by .vimrc on first launch.
-	# We run vim headless to trigger PlugInstall.
-	vim -es -u "$HOME/.vimrc" \
+	# We run vim headless to trigger PlugInstall. Retried like every other
+	# network download — the run clones every plugin; a retry resumes
+	# (already-cloned repos are skipped by vim-plug).
+	retry -t 3600 -s "headless PlugInstall" \
+		vim -es -u "$HOME/.vimrc" \
 		+"PlugInstall --sync" \
 		+qall 2>/dev/null || {
 		warn "Headless PlugInstall failed. Plugins will be installed on first launch."
