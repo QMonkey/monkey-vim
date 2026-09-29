@@ -90,18 +90,19 @@ g:maplocalleader = ','
 # }
 
 # Terminal type detection {
-# Detect the effective terminal by walking the real process tree from the
-# current Vim (or its tmux client). Needed before the color block because
-# a tmux client running on a physical tty reports &term = tmux-256color,
-# hiding the 8/16-color console behind it.
-# The authoritative terminal is the FIRST (innermost) valid tty on the walk:
-# the controlling terminal of the tmux client / of Vim itself is where output
-# is actually rendered. Walking further up may reach the graphical
-# compositor's own tty (e.g. Hyprland launched from tty1), which must not
-# classify as 'tty'. The walk continues past that point purely to look for
-# kmscon/sshd/login markers. Judged from the process tree of the tmux
-# client, not environment variables, which would reflect the tmux server's
-# start environment instead.
+# Detects the real display by walking the process tree from the tmux client
+# (or Vim itself) up the ancestry. Needed because under tmux &term is
+# tmux-256color even on a physical console, hiding the 8/16-color fallback.
+# The FIRST (innermost) valid tty decides: it is where output is actually
+# rendered. Compositor ttys further up (e.g. Hyprland from tty1) must never
+# classify as 'tty'. kmscon is the display only when everything below it
+# lives on the single pty it allocates; a second, distinct pty means it
+# merely launched a graphical session (e.g. Hyprland). Under kmscon the
+# innermost tty is always a pty. sshd in the ancestry outranks both: a
+# remote pty renders on the remote side, not on any local display.
+# The walk exists only to find kmscon/sshd/login markers, and reads the
+# process tree, not environment variables (which would mirror the tmux
+# server's start environment instead).
 # Return value: 'kmscon' | 'tty' | 'physical_console' | 'pseudo_terminal' | 'remote_ssh' | 'no_tty' | 'unknown'
 def GetRootTerminalType(): string
 	var pid = getpid()
@@ -118,6 +119,7 @@ def GetRootTerminalType(): string
 	endif
 
 	var last_tty = ''
+	var two_ptys = false
 	var saw_login = false
 	var saw_sshd = false
 	for _ in range(10)
@@ -130,6 +132,12 @@ def GetRootTerminalType(): string
 		var tty = parts[2]
 		var comm = parts[3]
 		if comm ==# 'kmscon'
+			if saw_sshd
+				return 'remote_ssh'
+			endif
+			if two_ptys
+				return 'pseudo_terminal'
+			endif
 			return 'kmscon'
 		endif
 		if comm ==# 'login'
@@ -138,8 +146,13 @@ def GetRootTerminalType(): string
 		if comm =~# '^sshd'
 			saw_sshd = true
 		endif
-		if tty != '' && tty != '?' && last_tty == ''
-			last_tty = tty
+		if tty != '' && tty != '?'
+			if last_tty == ''
+				last_tty = tty
+			endif
+			if last_tty =~ '^pts/' && tty != last_tty
+				two_ptys = true
+			endif
 		endif
 		if ppid == '' || str2nr(ppid) <= 1
 			break
