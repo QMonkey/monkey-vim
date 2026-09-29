@@ -1308,6 +1308,43 @@ Leader+rs
 
 ## 注意事项
 
+- **WSL2：在 `/etc/wsl.conf` 中设置默认用户（arch 及其他导入型发行版必做）**
+
+`$XDG_RUNTIME_DIR` 指向的 `/run/user/<UID>` 是 systemd-logind 在**登录会话建立时**创建的：`pam_systemd` 注册会话，logind 创建目录（0700、属主为该用户）并把 `$XDG_RUNTIME_DIR` 注入会话环境。WSL2 开启 `systemd=true` 后，只会为发行版的**默认用户**注册这样的会话——而 `/etc/wsl.conf` 没有 `[user]` 段时 WSL 兜底为 **root**。此时 vim 的 server 功能（`--servername`/`--serverlist`、远程插件）会失败：它们的 socket 就写在 `$XDG_RUNTIME_DIR` 下面。
+
+经验法则：**首次启动直接掉进 root shell 的，就需要设置。**
+
+| 发行版 / 安装方式                            | 需要设置 | 原因                                            |
+| -------------------------------------------- | -------- | ----------------------------------------------- |
+| Ubuntu / openSUSE / Fedora / Debian（Store） | 不需要   | 首启向导会创建用户并自动写入 `/etc/wsl.conf`    |
+| Arch（无 Store 镜像，通常 `wsl --import`）   | 需要     | 没有任何环节写 `/etc/wsl.conf`，WSL 兜底为 root |
+| 一切通过 `wsl --import` 导入的发行版         | 需要     | 导入的 tarball 天然没有默认用户                 |
+
+修复——先创建用户，再声明为默认（`<USERNAME>` 是占位符，下文所有出现处都替换成你的真实用户名）：
+
+```bash
+# 发行版内以 root 执行
+useradd -m -G wheel -s /bin/bash <USERNAME> # arch 的 sudo 组是 wheel（Debian 系是 sudo）
+passwd <USERNAME>
+```
+
+```ini
+# /etc/wsl.conf
+[boot]
+systemd=true
+
+[user]
+default=<USERNAME>
+```
+
+```powershell
+wsl.exe --shutdown # 或：wsl.exe --terminate <发行版名>
+```
+
+重新打开终端，`whoami` 必须输出 `<USERNAME>` 而不是 `root`。
+
+注意：从 root 会话里 `su - <USERNAME>` **不能**解决这个问题——`su` 不会开新的 logind 会话（arch 的 su PAM 栈没有 `pam_systemd`），继承下来的坏 `$XDG_RUNTIME_DIR` 原样保留。直接以普通用户登录才是修复。一键安装脚本检测到 `$XDG_RUNTIME_DIR` 不可用时会尝试自动修复——缺 `[user] default=` 时写入 `/etc/wsl.conf`（`wsl.exe --shutdown` 后生效），并对本次启动执行 enable-linger + `user-runtime-dir@<UID>`——但上面的默认用户才是根治。
+
 - **缩进规则** — monkey-vim 按文件类型应用缩进设置：
 
 | 文件类型                                          | 风格                     | 宽度 |
