@@ -45,26 +45,72 @@ fail() {
 RETRY_ACTIVE_COUNT=${RETRY_ACTIVE_COUNT:-0}
 export RETRY_ACTIVE_COUNT
 
+# Per-attempt timeout: GNU timeout on Linux, gtimeout (coreutils) on macOS.
+# Empty when neither exists — retry then runs commands unguarded rather
+# than breaking the run (a silent hang is recoverable by hand; a broken
+# run is not).
+if command -v timeout >/dev/null 2>&1; then
+	TIMEOUT_BIN=timeout
+elif command -v gtimeout >/dev/null 2>&1; then
+	TIMEOUT_BIN=gtimeout
+else
+	TIMEOUT_BIN=""
+fi
+
+# retry's execution helper. $1 = timeout seconds ("0" disables), rest =
+# command. timeout(1) can only exec binaries — and retry IS handed a shell
+# function (sudo_cmd) — so function-first commands re-enter through a
+# child bash with the function and its own helpers exported. Everything
+# else goes to the timeout binary directly.
+_retry_run() {
+	local t="$1"
+	shift
+	if [ -z "$TIMEOUT_BIN" ] || [ "$t" -eq 0 ]; then
+		"$@"
+		return
+	fi
+	if declare -F "$1" >/dev/null 2>&1; then
+		local fn
+		for fn in "$1" retry _retry_run native_sudo have_native_cmd; do
+			# export -f: export the FUNCTION named by $fn's value (dynamic
+			# by design — the wrapped command may be a framework function).
+			declare -F "$fn" >/dev/null 2>&1 && export -f "$fn"
+		done
+		"$TIMEOUT_BIN" "$t" bash -c '"$@"' _ "$@"
+	else
+		"$TIMEOUT_BIN" "$t" "$@"
+	fi
+}
+
 # ──────────────────────────── retry ────────────────────────────
 # Reusable retry wrapper for every network-flavoured command (downloads,
 # git, package managers). Runs <cmd> up to <attempts> times; between
-# attempts it sleeps base * 2^(attempt-1) seconds (2s, 4s, 8s, ...),
+# attempts it sleeps base * 2^(attempt-1) seconds (10s, 20s, 40s, ...),
 # capped at <max_delay>. Exponential backoff beats a fixed interval:
 # transient failures (mirror hiccup, rate limit, flaky GitHub) rarely
 # clear within a constant window, and the growing gaps cost nothing when
 # the first retry already succeeds.
 #
-# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-s desc] cmd...
-#   -n  total attempts, NOT retries (default 3)
-#   -d  first sleep in seconds (default 2)
-#   -m  sleep cap in seconds (default 8)
+# Every attempt also runs under a timeout: a black-holed connection
+# (SYN sent, nothing back — the 135s git fetch stalls seen against
+# github.com) would otherwise hang the installer forever with no output.
+# rc 124 is timeout's own exit code and gets its own message.
+#
+# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-t timeout]
+#              [-s desc] cmd...
+#   -n  total attempts, NOT retries (default 4)
+#   -d  first sleep in seconds (default 10)
+#   -m  sleep cap in seconds (default 60)
+#   -t  per-attempt timeout in seconds (default 600; 0 disables) — pass a
+#       larger value for operations that are legitimately long (package
+#       installs, big clones) so a slow-but-alive transfer is not killed
 #   -s  human description for the warning line (default: the command)
-# Returns the command's last exit code (0 on success). Safe under set -e:
-# the command runs inside an if-condition. cmd's own flags are untouched
-# — getopts stops at the first non-option word (e.g. `curl`), so only the
-# leading `-n/-d/-m/-s` belong to retry.
+# Returns the command's last exit code (0 on success; 124 = timed out).
+# Safe under set -e: the command runs inside an if-condition. cmd's own
+# flags are untouched — getopts stops at the first non-option word (e.g.
+# `curl`), so only the leading `-n/-d/-m/-t/-s` belong to retry.
 retry() {
-	local attempts=3 base=2 max=8 desc=""
+	local attempts=4 base=10 max=60 timeout_s=600 desc=""
 	local opt
 	# A leading -- may guard a wrapped command that itself starts with an
 	# option-looking word; strip it BEFORE parsing.
@@ -74,11 +120,12 @@ retry() {
 	# call would start parsing at the previous call's position and
 	# misparse everything.
 	OPTIND=1
-	while getopts ":n:d:m:s:" opt "$@"; do
+	while getopts ":n:d:m:t:s:" opt "$@"; do
 		case "$opt" in
 		n) attempts=$OPTARG ;;
 		d) base=$OPTARG ;;
 		m) max=$OPTARG ;;
+		t) timeout_s=$OPTARG ;;
 		s) desc=$OPTARG ;;
 		*) return 2 ;;
 		esac
@@ -89,7 +136,7 @@ retry() {
 	# the outer loop bounds the total attempts. The if/else keeps a failed
 	# command set -e-safe, exactly like the normal path below.
 	if [ "$RETRY_ACTIVE_COUNT" -gt 0 ]; then
-		if "$@"; then
+		if _retry_run "$timeout_s" "$@"; then
 			return 0
 		else
 			return "$?"
@@ -98,7 +145,7 @@ retry() {
 	RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT + 1))
 	local attempt rc=1 wait_s
 	for ((attempt = 1; attempt <= attempts; attempt++)); do
-		if "$@"; then
+		if _retry_run "$timeout_s" "$@"; then
 			RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
 			return 0
 		else
@@ -109,7 +156,11 @@ retry() {
 		if [ "$attempt" -lt "$attempts" ]; then
 			wait_s=$base
 			[ "$wait_s" -gt "$max" ] && wait_s=$max
-			warn "${desc:-$1} failed (attempt $attempt/$attempts) — retrying in ${wait_s}s..."
+			if [ "$rc" -eq 124 ] && [ -n "$TIMEOUT_BIN" ] && [ "$timeout_s" -gt 0 ]; then
+				warn "${desc:-$1} timed out after ${timeout_s}s (attempt $attempt/$attempts) — retrying in ${wait_s}s..."
+			else
+				warn "${desc:-$1} failed (attempt $attempt/$attempts) — retrying in ${wait_s}s..."
+			fi
 			sleep "$wait_s"
 			base=$((base * 2))
 		fi

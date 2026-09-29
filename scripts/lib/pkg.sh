@@ -30,6 +30,12 @@ default_pkg_name() {
 	debian:node | ubuntu:node | arch:node | opensuse:node | centos:node | fedora:node) echo "nodejs" ;;
 	debian:which | ubuntu:which) echo "debianutils" ;;
 	arch:python3 | macos:python3) echo "python" ;;
+	# pip3 is a standalone package on every distro (openSUSE's python313-pip
+	# is NOT pulled in by python3; Leap 16 proved this matters — see
+	# ensure_pip below).
+	debian:pip3 | ubuntu:pip3 | centos:pip3 | fedora:pip3) echo "python3-pip" ;;
+	arch:pip3) echo "python-pip" ;;
+	opensuse:pip3) echo "$(python_flavor)-pip" ;;
 	# Editors / language servers / gtags tooling (monkey-nvim, monkey-vim)
 	debian:rg | ubuntu:rg | arch:rg | macos:rg | opensuse:rg | centos:rg | fedora:rg) echo "ripgrep" ;;
 	debian:ctags | ubuntu:ctags | macos:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
@@ -85,10 +91,10 @@ refresh_pkg() {
 	[ "$PKG_DB_REFRESHED" -eq 1 ] && return 0
 	PKG_DB_REFRESHED=1
 	case "$OS" in
-	debian | ubuntu) retry -s "apt-get update" sudo_cmd apt-get update ;;
-	arch) retry -s "pacman -Sy" sudo_cmd pacman -Sy ;;
-	opensuse) retry -s "zypper refresh" sudo_cmd zypper --non-interactive refresh ;;
-	centos | fedora) retry -s "dnf makecache" sudo_cmd dnf makecache -q ;;
+	debian | ubuntu) retry -t 1800 -s "apt-get update" sudo_cmd apt-get update ;;
+	arch) retry -t 1800 -s "pacman -Sy" sudo_cmd pacman -Sy ;;
+	opensuse) retry -t 1800 -s "zypper refresh" sudo_cmd zypper --non-interactive refresh ;;
+	centos | fedora) retry -t 1800 -s "dnf makecache" sudo_cmd dnf makecache -q ;;
 	esac
 	# A failed refresh is never fatal — the install step still runs (dnf
 	# refreshes expired metadata on demand anyway, brew auto-updates).
@@ -100,15 +106,15 @@ refresh_pkg() {
 install_sys_pkg() {
 	refresh_pkg
 	case "$OS" in
-	debian | ubuntu) retry -s "apt-get install" sudo_cmd apt-get install -y "$@" ;;
-	arch) retry -s "pacman install" sudo_cmd pacman -S --noconfirm "$@" ;;
-	opensuse) retry -s "zypper install" sudo_cmd zypper --non-interactive install -y "$@" ;;
+	debian | ubuntu) retry -t 1800 -s "apt-get install" sudo_cmd apt-get install -y "$@" ;;
+	arch) retry -t 1800 -s "pacman install" sudo_cmd pacman -S --noconfirm "$@" ;;
+	opensuse) retry -t 1800 -s "zypper install" sudo_cmd zypper --non-interactive install -y "$@" ;;
 	centos)
 		# Some tools (universal-ctags, global, fzf, bat, pygments) come from EPEL.
 		sudo_cmd dnf install -y epel-release || true
 		local -a _args=("$@")
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-		retry -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
+		retry -t 1800 -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
 		;;
 	fedora)
 		# No EPEL on Fedora — the names below ship in the base repos.
@@ -116,7 +122,7 @@ install_sys_pkg() {
 		# same as CentOS; without it gtags is unusable.
 		local -a _args=("$@")
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-		retry -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
+		retry -t 1800 -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
 		;;
 	macos) return 1 ;; # Homebrew owns macOS — install_pkg routes there
 	*) return 1 ;;
@@ -150,14 +156,14 @@ install_pkg() {
 			if have_native_cmd brew; then
 				local -a bpkg=()
 				for b in "${rest[@]}"; do bpkg+=("$(pkg_name "$b" brew)"); done
-				brew install "${bpkg[@]}"
+				retry -t 1800 -s "brew install (fallback)" brew install "${bpkg[@]}"
 			else
 				false
 			fi
 		} || _rc=1
 	fi
 	if ((${#brew_pkgs[@]} > 0)); then
-		brew install "${brew_pkgs[@]}" || install_sys_pkg "${brew_pkgs[@]}" || _rc=1
+		retry -t 1800 -s "brew install" brew install "${brew_pkgs[@]}" || install_sys_pkg "${brew_pkgs[@]}" || _rc=1
 	fi
 	# Freshly installed binaries may be shadowed by bash's per-process
 	# command hash cache (a /mnt shim executed earlier in this same run);
@@ -189,6 +195,19 @@ ensure_git() {
 		install_pkg git || :
 	fi
 	have_native_cmd git || fail "git installation failed — install it manually: $(get_install_hint git)."
+}
+
+# pip3 must exist before any `pip:` install strategy runs: it is a separate
+# package on every distro, and the pip fallback dies with command-not-found
+# when it is missing. Surfaced by openSUSE Leap 16.0: its repos do not
+# package python-lsp-server at all (Tumbleweed does), so pylsp can only come
+# from the pip fallback — which silently failed while pip3 was absent.
+ensure_pip() {
+	have_native_cmd pip3 && return 0
+	info "Installing pip3 via the system package manager..."
+	install_pkg "$(pkg_name pip3)" || return 1
+	have_native_cmd pip3 || return 1
+	ok "pip3 installed."
 }
 
 # Install a binary from the system package manager if it is missing.

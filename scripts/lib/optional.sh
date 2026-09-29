@@ -13,11 +13,24 @@
 ensure_rust() {
 	if ! have_native_cmd rustup; then
 		info "installing rustup..."
-		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
-			sh -s -- -y 2>/dev/null || {
-			warn "rustup install failed"
+		# Download fully before executing, with retries — `curl | sh` would
+		# run a truncated script if the connection drops mid-stream (same
+		# pattern as the wezterm installer's rustup setup).
+		local rustup_init="/tmp/rustup_init.$$.sh"
+		if retry -t 1800 -s "rustup installer download" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "$rustup_init"; then
+			# The -y run downloads the whole toolchain (hundreds of MB) —
+			# long timeout, and retried: rustup-init is idempotent, a retry
+			# continues instead of starting over.
+			retry -t 3600 -s "rustup toolchain install" sh "$rustup_init" -y ||
+				{
+					warn "rustup install failed"
+					return 1
+				}
+			rm -f "$rustup_init"
+		else
+			warn "rustup installer download failed"
 			return 1
-		}
+		fi
 	fi
 	if [ -f "$HOME/.cargo/env" ]; then
 		# shellcheck disable=SC1091
@@ -84,16 +97,18 @@ npm_install_g() {
 	# Retried like every other network op. Inside run_checkhealth's outer
 	# retry this runs once per outer attempt (the RETRY_ACTIVE_COUNT
 	# guard), so the attempts stay bounded.
-	retry -s "npm install -g $*" npm install -g ${flags[@]+"${flags[@]}"} "$@"
+	retry -t 1800 -s "npm install -g $*" npm install -g ${flags[@]+"${flags[@]}"} "$@"
 	# Freshly installed binaries may be shadowed by bash's command hash.
 	hash -r
 }
 
 # 'go install' is silent for its ENTIRE module download + compile, which
 # takes minutes on the first run — announce it so the wait is explainable.
+# The module download is a network fetch: retried (go caches modules, so a
+# retry resumes instead of restarting).
 go_install() {
 	info "go install ${1%@*} (building, no output — may take a few minutes)"
-	go install "$@"
+	retry -t 1800 -s "go install ${1%@*}" go install "$@"
 }
 
 # `python` must exist as well as `python3` (global tooling such as gtags

@@ -228,21 +228,32 @@ _strategy_step() {
 		;;
 	cargo)
 		ensure_rust || return 1
-		cargo install $args
+		retry -t 1800 -s "cargo install $args" cargo install $args
 		;;
 	pip)
-		sudo_cmd pip3 install $args 2>/dev/null || pip3 install $args 2>/dev/null
+		# ensure_pip first: the fallback dies with command-not-found when
+		# pip3 is missing (Leap 16 does not ship it by default). stderr is
+		# left visible — a silently swallowed pip error is what made the
+		# Leap 16 pylsp failure undiagnosable.
+		ensure_pip || return 1
+		retry -t 1800 -s "pip3 install $args" sudo_cmd pip3 install $args ||
+			retry -t 1800 -s "pip3 install $args" pip3 install $args
 		;;
 	brew)
 		have_native_cmd brew || return 1
-		brew install $args
+		# zig/zls pull LLVM and marksman pulls the .NET runtime as formula
+		# dependencies — installs that dwarf a normal bottle.
+		case "$args" in
+		zig | zls | marksman) retry -t 3600 -s "brew install $args" brew install $args ;;
+		*) retry -t 1800 -s "brew install $args" brew install $args ;;
+		esac
 		;;
 	rustup)
 		ensure_rust
 		;;
 	rustup-component)
 		ensure_rust || return 1
-		rustup component add $args
+		retry -t 1800 -s "rustup component add $args" rustup component add $args
 		;;
 	python-unversioned)
 		install_python_for_gtags

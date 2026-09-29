@@ -52,7 +52,7 @@ _preseed_path() {
 run_checkhealth() {
 	_preseed_path
 	info "Running checkhealth.sh --install to install remaining dependencies..."
-	if retry -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
+	if retry -t 3600 -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
 		ok "Dependency check complete."
 	else
 		warn "Some dependencies could not be installed automatically."
