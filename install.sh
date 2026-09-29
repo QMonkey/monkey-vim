@@ -58,7 +58,24 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
 			echo "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
 			exit 1
 		else
-			git clone "$PROJECT_REPO" "$INSTALL_DIR" || exit 1
+			# No retry() available yet — the framework loads only after this
+			# clone succeeds — so inline the standard 3 attempts. A failed clone
+			# leaves a partial directory behind; remove it so the next attempt
+			# cannot trip over "already exists". This branch only runs on a
+			# fresh install (INSTALL_DIR did not exist or was empty), so the rm
+			# can never delete pre-existing data.
+			_monkey_rc=1
+			for _monkey_attempt in 1 2 3; do
+				if git clone "$PROJECT_REPO" "$INSTALL_DIR"; then
+					_monkey_rc=0
+					break
+				fi
+				rm -rf "$INSTALL_DIR"
+				if [ "$_monkey_attempt" -lt 3 ]; then
+					sleep 2
+				fi
+			done
+			[ "$_monkey_rc" -eq 0 ] || exit 1
 		fi
 		# </dev/null: on the curl|bash path stdin is the script pipe, and the
 		# inner installer must not read what is left of the outer one.
@@ -124,7 +141,7 @@ install_vim_build_deps() {
 			# Non-WSL: prefer GTK4 (no X11 dependency)
 			gui=(libgtk-4-dev)
 		fi
-		sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
+		retry -s "apt-get install" sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
 		;;
 	arch)
 		common=(base-devel git curl
@@ -135,10 +152,10 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4)
 		fi
-		sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
+		retry -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
 		;;
 	opensuse)
-		sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
+		retry -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
 		# Leap 16 names: python-devel and perl-devel do not exist (python3
 		# needs -devel-suffixed python3-devel only; perl headers ship in the
 		# main perl package), and xorg-x11-devel was removed — use the
@@ -154,7 +171,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
+		retry -s "zypper install" sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
 		;;
 	centos)
 		sudo_cmd dnf install -y epel-release || true
@@ -169,7 +186,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		retry -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
 		;;
 	fedora)
 		# No EPEL on Fedora — the same names ship in the base repos.
@@ -184,7 +201,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		retry -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
 		;;
 	macos)
 		# Terminal-only build (--enable-gui=no); no gtk/cairo needed. git is
@@ -302,9 +319,19 @@ build_vim() {
 	info "Building Vim from source (this may take a few minutes)..."
 	if [ -d "$VIM_SRC_DIR/.git" ]; then
 		info "Vim source already exists at $VIM_SRC_DIR — pulling latest..."
-		git -C "$VIM_SRC_DIR" pull --ff-only || warn "git pull failed — building from existing source."
+		retry -s "git pull" git -C "$VIM_SRC_DIR" pull --ff-only ||
+			warn "git pull failed — building from existing source."
 	else
-		git clone https://github.com/vim/vim.git "$VIM_SRC_DIR"
+		# A failed clone leaves a partial directory behind, which would make
+		# every later attempt (and re-run) fail with "already exists" — clean
+		# it up before giving up, but only when git created it (.git inside)
+		# or it is empty, never when it holds pre-existing user data.
+		if ! retry -s "git clone vim" git clone https://github.com/vim/vim.git "$VIM_SRC_DIR"; then
+			if [ -d "$VIM_SRC_DIR" ] && { [ -z "$(ls -A "$VIM_SRC_DIR")" ] || [ -d "$VIM_SRC_DIR/.git" ]; }; then
+				rm -rf "$VIM_SRC_DIR"
+			fi
+			fail "vim source clone failed after 3 attempts."
+		fi
 	fi
 
 	pushd "$VIM_SRC_DIR" >/dev/null
@@ -430,6 +457,10 @@ install_plugins() {
 # ──────────────────────── hooks ────────────────────────
 # A hook prints its own trailing blank line when it produced output.
 install_step_prepare() {
+	# First: make $XDG_RUNTIME_DIR usable — vim's server features
+	# (--servername/--serverlist) write runtime files there and fail on a
+	# sessionless WSL (root default user). See README 'Precautions' → WSL2.
+	ensure_xdg_runtime_dir
 	install_vim_build_deps
 	echo ""
 	install_linuxbrew
