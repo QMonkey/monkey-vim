@@ -22,13 +22,14 @@ clone_monkey_project() {
 	# has (and pulls it, a no-op right after a clone) — one clone, not two.
 	if [ -d "$INSTALL_DIR/.git" ]; then
 		info "$PROJECT is at $INSTALL_DIR — pulling latest..."
-		git -C "$INSTALL_DIR" pull --ff-only || warn "git pull failed — keeping existing version."
+		retry -s "git pull" git -C "$INSTALL_DIR" pull --ff-only ||
+			warn "git pull failed — keeping existing version."
 	elif [ -e "$INSTALL_DIR" ]; then
 		# Existing non-git dir is fine (e.g. git clone with .git removed).
 		warn "$INSTALL_DIR exists but is not a git repository — using it as-is."
 	else
 		info "Cloning $PROJECT to $INSTALL_DIR..."
-		git clone "$PROJECT_REPO" "$INSTALL_DIR"
+		retry -s "git clone" git clone "$PROJECT_REPO" "$INSTALL_DIR"
 	fi
 	ok "$PROJECT ready at $INSTALL_DIR."
 }
@@ -51,18 +52,7 @@ _preseed_path() {
 run_checkhealth() {
 	_preseed_path
 	info "Running checkhealth.sh --install to install remaining dependencies..."
-	local attempt ok_found=0
-	for attempt in 1 2 3; do
-		if bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
-			ok_found=1
-			break
-		fi
-		if [ "$attempt" -lt 3 ]; then
-			warn "checkhealth attempt $attempt/3 failed — retrying..."
-			sleep 2
-		fi
-	done
-	if [ "$ok_found" = 1 ]; then
+	if retry -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
 		ok "Dependency check complete."
 	else
 		warn "Some dependencies could not be installed automatically."
@@ -83,9 +73,10 @@ verify_checkhealth() {
 persist_path() {
 	local block='case ":$PATH:" in *":/usr/local/bin:"*) ;; *) export PATH="/usr/local/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/go/bin:"*) ;; *) export PATH="$HOME/go/bin:$PATH" ;; esac
-case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac'
+case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac
+case ":$PATH:" in *":$HOME/.npm-global/bin:"*) ;; *) export PATH="$HOME/.npm-global/bin:$PATH" ;; esac'
 	append_env_block "monkey PATH" "$block"
-	ok "PATH persistence added for /usr/local/bin, go/bin and cargo/bin."
+	ok "PATH persistence added for /usr/local/bin, go/bin, cargo/bin and npm-global/bin."
 }
 
 # ────────────────── compositor autostart (guarded VT login) ──────────────────

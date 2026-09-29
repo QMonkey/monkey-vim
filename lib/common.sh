@@ -34,6 +34,90 @@ fail() {
 	return 0
 }
 
+# Nested-call guard, exported on purpose: the nesting crosses a PROCESS
+# boundary — run_checkhealth retries `bash checkhealth.sh --install`, and
+# that child process re-enters retry from refresh_pkg / install_sys_pkg /
+# npm_install_g. A shell-local flag would not cross it, and unguarded
+# nesting multiplies attempts (3×3=9) while stacking the backoff sleeps —
+# on a down network one apt call could stall the install for many minutes.
+# While any outer retry is active (count > 0), an inner retry runs its
+# command ONCE: the outer loop already bounds the total attempts.
+RETRY_ACTIVE_COUNT=${RETRY_ACTIVE_COUNT:-0}
+export RETRY_ACTIVE_COUNT
+
+# ──────────────────────────── retry ────────────────────────────
+# Reusable retry wrapper for every network-flavoured command (downloads,
+# git, package managers). Runs <cmd> up to <attempts> times; between
+# attempts it sleeps base * 2^(attempt-1) seconds (2s, 4s, 8s, ...),
+# capped at <max_delay>. Exponential backoff beats a fixed interval:
+# transient failures (mirror hiccup, rate limit, flaky GitHub) rarely
+# clear within a constant window, and the growing gaps cost nothing when
+# the first retry already succeeds.
+#
+# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-s desc] cmd...
+#   -n  total attempts, NOT retries (default 3)
+#   -d  first sleep in seconds (default 2)
+#   -m  sleep cap in seconds (default 8)
+#   -s  human description for the warning line (default: the command)
+# Returns the command's last exit code (0 on success). Safe under set -e:
+# the command runs inside an if-condition. cmd's own flags are untouched
+# — getopts stops at the first non-option word (e.g. `curl`), so only the
+# leading `-n/-d/-m/-s` belong to retry.
+retry() {
+	local attempts=3 base=2 max=8 desc=""
+	local opt
+	# A leading -- may guard a wrapped command that itself starts with an
+	# option-looking word; strip it BEFORE parsing.
+	[ "${1:-}" = "--" ] && shift
+	# OPTIND=1 is required, not cosmetic: getopts resumes at $OPTIND on the
+	# next call in the same shell, so without the reset a second retry()
+	# call would start parsing at the previous call's position and
+	# misparse everything.
+	OPTIND=1
+	while getopts ":n:d:m:s:" opt "$@"; do
+		case "$opt" in
+		n) attempts=$OPTARG ;;
+		d) base=$OPTARG ;;
+		m) max=$OPTARG ;;
+		s) desc=$OPTARG ;;
+		*) return 2 ;;
+		esac
+	done
+	shift $((OPTIND - 1))
+	[ $# -gt 0 ] || return 2
+	# Nested call (see RETRY_ACTIVE_COUNT above): run once, no sleeps —
+	# the outer loop bounds the total attempts. The if/else keeps a failed
+	# command set -e-safe, exactly like the normal path below.
+	if [ "$RETRY_ACTIVE_COUNT" -gt 0 ]; then
+		if "$@"; then
+			return 0
+		else
+			return "$?"
+		fi
+	fi
+	RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT + 1))
+	local attempt rc=1 wait_s
+	for ((attempt = 1; attempt <= attempts; attempt++)); do
+		if "$@"; then
+			RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
+			return 0
+		else
+			# Inside the else, $? is still the wrapped command's status —
+			# after the if-statement it would already be reset to 0.
+			rc=$?
+		fi
+		if [ "$attempt" -lt "$attempts" ]; then
+			wait_s=$base
+			[ "$wait_s" -gt "$max" ] && wait_s=$max
+			warn "${desc:-$1} failed (attempt $attempt/$attempts) — retrying in ${wait_s}s..."
+			sleep "$wait_s"
+			base=$((base * 2))
+		fi
+	done
+	RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
+	return "$rc"
+}
+
 # Fatal for both entry points (bad argument, unusable environment).
 die() {
 	echo -e "  [${RED}FAIL${NC}] $*"
@@ -224,6 +308,121 @@ ensure_go_env() {
 	fi
 }
 
+# ────────────── /run/user/$UID repair (sessionless environments) ──────────────
+# Where $XDG_RUNTIME_DIR is supposed to come from: at login, pam_systemd
+# registers the session with systemd-logind, which creates /run/user/$UID
+# (0700, owned by the user) and injects $XDG_RUNTIME_DIR into the session
+# environment. No logind session → no directory → tools that write runtime
+# files there fail (nvim/vim serverstart, fzf-lua at require time, ...).
+#
+# WSL2 with `systemd=true` runs systemd as PID 1, but WSL only registers a
+# logind session for the distro's DEFAULT user — and WSL falls back to root
+# whenever /etc/wsl.conf has no [user] default (arch, anything installed via
+# `wsl --import`). Sessionless shells then carry a broken $XDG_RUNTIME_DIR.
+#
+# Keyed on the symptom rather than on is_wsl(): every sessionless
+# environment (WSL, containers, CI, `su` from a root session) hits this, and
+# a symptom test survives WSL changing its behaviour on a version bump. On
+# an ordinary Linux login session pam_systemd has already created the
+# directory and the first test returns — which is the entire point of
+# putting it at the top. The real fix is a proper default user — see the
+# consuming repos' README, "Precautions" → WSL2.
+ensure_xdg_runtime_dir() {
+	local uid user dir marker wslconf
+	uid=$(id -u)
+	user=$(id -un)
+	dir="${XDG_RUNTIME_DIR:-/run/user/$uid}"
+	wslconf=/etc/wsl.conf
+
+	# Already usable — the free path on every normal Linux login.
+	if [ -d "$dir" ] && [ -w "$dir" ]; then
+		return 0
+	fi
+
+	# Everything below needs root — report it once here rather than leaving
+	# the user to rediscover it later as a Lua/vim error with no causal
+	# trail.
+	if [ "$uid" -ne 0 ] && ! have_native_cmd sudo; then
+		warn "\$XDG_RUNTIME_DIR ($dir) is missing and no sudo is available — see README 'Precautions' (WSL2 default user)."
+		return 0
+	fi
+
+	# ── Tier 0: fix the root cause, not just this session ────────────────
+	# On WSL the distro boots as root whenever /etc/wsl.conf has no [user]
+	# default; declaring the current user (the installer runs as them, so
+	# it is the right name) makes future WSL sessions start directly into
+	# a real logind session for that user. Only written when default= is
+	# absent — an existing configuration (root on purpose, or a different
+	# user) is respected. INI-aware, not a blind append: a duplicated or
+	# misplaced section can break the distro at boot. Takes effect after
+	# `wsl.exe --shutdown`; tiers 1-2 below still repair the current boot.
+	if is_wsl && [ "$uid" -ne 0 ]; then
+		if sudo_cmd grep -Eq '^[[:space:]]*default[[:space:]]*=' "$wslconf" 2>/dev/null; then
+			: # a default user is already declared — respect the existing choice
+		elif sudo_cmd grep -q '^\[user\]' "$wslconf" 2>/dev/null; then
+			# [user] section exists without a default: insert right after
+			# its header — appending at EOF would land in the last section.
+			info "WSL boots as root (no default user) — setting $user in $wslconf..."
+			if sudo_cmd sed -i "/^\[user\]/a default=${user}" "$wslconf"; then
+				ok "WSL default user set to $user — effective after 'wsl.exe --shutdown'; the tiers below still repair the current boot."
+			else
+				warn "could not update $wslconf — add '[user] default=$user' manually (see README 'Precautions' → WSL2)."
+			fi
+		else
+			info "WSL boots as root (no default user) — setting $user in $wslconf..."
+			if printf '\n[user]\ndefault=%s\n' "$user" | sudo_cmd tee -a "$wslconf" >/dev/null; then
+				ok "WSL default user set to $user — effective after 'wsl.exe --shutdown'; the tiers below still repair the current boot."
+			else
+				warn "could not update $wslconf — add '[user] default=$user' manually (see README 'Precautions' → WSL2)."
+			fi
+		fi
+	fi
+
+	# Tiers 1-2 need systemd: without it there is no logind to create
+	# /run/user at all — that variant is wsl-init's problem (stop
+	# exporting $XDG_RUNTIME_DIR for a directory that is never created).
+	have_native_cmd systemctl || return 0
+
+	info "Repairing \$XDG_RUNTIME_DIR ($dir) — no login session here, so logind never created it."
+
+	# Tier 1: enable lingering for this user. That makes systemd-logind
+	# start user@$UID.service at boot, which pulls in
+	# user-runtime-dir@$UID.service and gets the directory created with
+	# logind's own 0700 mode — and repairs the user manager, so user dbus
+	# and gpg-agent work afterwards too. loginctl is the supported
+	# interface but registers the change against a seat, and WSL has no
+	# VT: on Debian 13 the seat daemon is the separate `seatd` package, so
+	# enable-linger fails with ENXIO ("No such device or address"). When it
+	# does, write the marker it would have written: that file IS the
+	# on-disk state enable-linger exists to produce, and systemd-logind
+	# reads it back at boot without ever consulting a seat.
+	marker="/var/lib/systemd/linger/$user"
+	if have_native_cmd loginctl && loginctl enable-linger "$user" >/dev/null 2>&1; then
+		ok "Enabled lingering for $user."
+	elif sudo_cmd mkdir -p "$(dirname "$marker")" >/dev/null 2>&1 &&
+		sudo_cmd touch "$marker" >/dev/null 2>&1; then
+		ok "Enabled lingering for $user via $marker."
+	fi
+
+	# Tier 2: create the directory now rather than at the next boot.
+	# user@.service only orders itself After=user-runtime-dir@%i.service —
+	# ordering, not a dependency — so name the runtime-dir unit explicitly
+	# and fall back to the user manager, which logind handles either way.
+	sudo_cmd systemctl start "user-runtime-dir@$uid.service" >/dev/null 2>&1 ||
+		sudo_cmd systemctl start "user@$uid.service" >/dev/null 2>&1 || true
+
+	if [ -d "$dir" ] && [ -w "$dir" ]; then
+		ok "\$XDG_RUNTIME_DIR is ready ($dir)."
+		return 0
+	fi
+
+	# Only reachable when both tiers failed outright (no logind/seatd): the
+	# directory stays broken for this session, so spell out both the
+	# boot-time fix and the immediate one.
+	warn "Could not create $dir — nvim/vim serverstart() will keep failing (fzf-lua and other RPC users)."
+	warn "  Manual fix:  sudo touch $marker && sudo systemctl start user-runtime-dir@$uid.service"
+}
+
 # Version comparison. GNU sort -V -C is what the upstream scripts used; BSD
 # sort (macOS) has neither flag, so fall back to a numeric field compare.
 if sort -V </dev/null >/dev/null 2>&1; then
@@ -305,9 +504,9 @@ PYEOF
 print_banner() {
 	local title="$1" width=80 pad border right
 	printf -v border '═%.0s' {1..80}
-	pad=$(( (width - ${#title}) / 2 ))
+	pad=$(((width - ${#title}) / 2))
 	[ "$pad" -gt 0 ] || pad=0
-	right=$(( width - pad - ${#title} ))
+	right=$((width - pad - ${#title}))
 	[ "$right" -gt 0 ] || right=0
 	echo ""
 	echo -e "${BOLD}╔${border}╗${NC}"
