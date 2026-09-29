@@ -41,18 +41,52 @@ ensure_npm() {
 }
 
 # Global npm install that works everywhere:
-#   - user-writable prefix (e.g. Homebrew): no sudo — also avoids the sudo
-#     secure_path problem, where root cannot see brew's npm at all;
-#   - system prefix (e.g. /usr from apt): retry with sudo.
+#   - user-writable prefix (Homebrew node, nvm, an adopted ~/.npm-global):
+#     installed directly, never through sudo — brew's npm is invisible to
+#     root via secure_path, and the postinstall scripts allow-listed below
+#     must not run as root anyway;
+#   - system prefix (e.g. /usr from apt): a plain `npm i -g` would die with
+#     EACCES (npm does NOT fall back to a user directory on its own), so
+#     the prefix is redirected ONCE to ~/.npm-global via a user-level
+#     npmrc — this install and every later `npm i -g` (ours or the user's)
+#     then run unprivileged. persist_path puts ~/.npm-global/bin on PATH
+#     for future shells; the current session is exported here.
+#   - npm >= 11.19 gates install scripts behind an allow-list (warn-only
+#     for now — a future major will hard-block). tree-sitter-cli's install
+#     script downloads its native binary from GitHub releases; a blocked
+#     script yields a CLI without a binary, so scripts are allowed for
+#     exactly the packages being handed in (the flag's own semantics —
+#     nothing third-party gets whitelisted). The list is comma-separated
+#     (docs + verified: a space-joined value does not match). The flag is
+#     unknown to older npm, hence the version gate. Global installs only:
+#     npm errors when --allow-scripts is passed to a project-scoped install.
 npm_install_g() {
 	ensure_npm || return 1
 	local prefix
 	prefix=$(npm config get prefix 2>/dev/null)
-	if [ -n "$prefix" ] && { [ -w "$prefix" ] || [ -w "$prefix/lib" ]; }; then
-		npm install -g "$@"
-	else
-		sudo_cmd npm install -g "$@"
+	if [ -z "$prefix" ] || { [ ! -w "$prefix" ] && [ ! -w "$prefix/lib" ]; }; then
+		info "npm prefix ${prefix:-<unset>} is not user-writable — switching global installs to $HOME/.npm-global."
+		# --location=user: write ~/.npmrc, never a project-local npmrc.
+		npm config set prefix "$HOME/.npm-global" --location=user || return 1
+		prefix="$HOME/.npm-global"
+		case ":$PATH:" in *":$prefix/bin:"*) ;; *) export PATH="$prefix/bin:$PATH" ;; esac
 	fi
+	local npmver joined
+	npmver=$(npm --version 2>/dev/null)
+	local -a flags=()
+	if [ -n "$npmver" ] && version_ge "$npmver" "11.19"; then
+		joined=$(
+			IFS=,
+			printf '%s' "$*"
+		)
+		flags+=(--allow-scripts="$joined")
+	fi
+	# Retried like every other network op. Inside run_checkhealth's outer
+	# retry this runs once per outer attempt (the RETRY_ACTIVE_COUNT
+	# guard), so the attempts stay bounded.
+	retry -s "npm install -g $*" npm install -g ${flags[@]+"${flags[@]}"} "$@"
+	# Freshly installed binaries may be shadowed by bash's command hash.
+	hash -r
 }
 
 # 'go install' is silent for its ENTIRE module download + compile, which

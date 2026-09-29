@@ -84,17 +84,14 @@ PKG_DB_REFRESHED=0
 refresh_pkg() {
 	[ "$PKG_DB_REFRESHED" -eq 1 ] && return 0
 	PKG_DB_REFRESHED=1
-	local attempt
-	for attempt in 1 2; do
-		case "$OS" in
-		debian | ubuntu) sudo_cmd apt-get update ;;
-		arch) sudo_cmd pacman -Sy ;;
-		opensuse) sudo_cmd zypper --non-interactive refresh ;;
-		centos | fedora) sudo_cmd dnf makecache -q ;;
-		*) return 0 ;;
-		esac && return 0
-		[ "$attempt" -lt 2 ] && sleep 2
-	done
+	case "$OS" in
+	debian | ubuntu) retry -s "apt-get update" sudo_cmd apt-get update ;;
+	arch) retry -s "pacman -Sy" sudo_cmd pacman -Sy ;;
+	opensuse) retry -s "zypper refresh" sudo_cmd zypper --non-interactive refresh ;;
+	centos | fedora) retry -s "dnf makecache" sudo_cmd dnf makecache -q ;;
+	esac
+	# A failed refresh is never fatal — the install step still runs (dnf
+	# refreshes expired metadata on demand anyway, brew auto-updates).
 	return 0
 }
 
@@ -103,15 +100,15 @@ refresh_pkg() {
 install_sys_pkg() {
 	refresh_pkg
 	case "$OS" in
-	debian | ubuntu) sudo_cmd apt-get install -y "$@" ;;
-	arch) sudo_cmd pacman -S --noconfirm "$@" ;;
-	opensuse) sudo_cmd zypper --non-interactive install -y "$@" ;;
+	debian | ubuntu) retry -s "apt-get install" sudo_cmd apt-get install -y "$@" ;;
+	arch) retry -s "pacman install" sudo_cmd pacman -S --noconfirm "$@" ;;
+	opensuse) retry -s "zypper install" sudo_cmd zypper --non-interactive install -y "$@" ;;
 	centos)
 		# Some tools (universal-ctags, global, fzf, bat, pygments) come from EPEL.
 		sudo_cmd dnf install -y epel-release || true
 		local -a _args=("$@")
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-		sudo_cmd dnf install -y "${_args[@]}"
+		retry -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
 		;;
 	fedora)
 		# No EPEL on Fedora — the names below ship in the base repos.
@@ -119,7 +116,7 @@ install_sys_pkg() {
 		# same as CentOS; without it gtags is unusable.
 		local -a _args=("$@")
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-		sudo_cmd dnf install -y "${_args[@]}"
+		retry -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
 		;;
 	macos) return 1 ;; # Homebrew owns macOS — install_pkg routes there
 	*) return 1 ;;
@@ -240,18 +237,12 @@ install_linuxbrew() {
 		# Download fully before executing: `curl | bash` would run a truncated
 		# script if the connection drops mid-stream.
 		local installer="/tmp/homebrew_install.$$.sh"
-		local fetched=0 attempt
 		# `curl -fsSL -o` is silent: on a slow network the download (and its
 		# retries) would look like a hang without this line.
 		info "Downloading the Homebrew installer..."
-		for attempt in 1 2 3; do
-			if curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"; then
-				fetched=1
-				break
-			fi
-			sleep 2
-		done
-		if [ "$fetched" != 1 ]; then
+		if retry -s "Homebrew installer download" curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"; then
+			:
+		else
 			warn "Homebrew installer download failed — continuing without Homebrew."
 			return 0
 		fi
