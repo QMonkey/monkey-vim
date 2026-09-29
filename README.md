@@ -1336,6 +1336,43 @@ tracked) and restored on startup from `~/.cache/vim/sessions/`.
 
 ## Precautions
 
+- **WSL2: set the default user in `/etc/wsl.conf` (arch and other imported distros)**
+
+`$XDG_RUNTIME_DIR` points at `/run/user/<UID>`, which systemd-logind creates when a **login session** opens: `pam_systemd` registers the session, logind creates the directory (0700, owned by the user) and injects `$XDG_RUNTIME_DIR` into the session environment. WSL2 with `systemd=true` only registers such a session for the distro's **default user** — and WSL falls back to **root** whenever `/etc/wsl.conf` has no `[user]` section. In that state Vim's server features (`--servername`/`--serverlist`, remote plugins) fail: their sockets live under `$XDG_RUNTIME_DIR`.
+
+The rule of thumb: **if the first launch dropped you into a root shell, you need this.**
+
+| Distro / install method                        | Needs it | Why                                                                      |
+| ---------------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| Ubuntu / openSUSE / Fedora / Debian (Store)    | No       | First-launch wizard creates your user and writes `/etc/wsl.conf` for you |
+| Arch (no Store image — usually `wsl --import`) | Yes      | Nothing writes `/etc/wsl.conf`, so WSL falls back to root                |
+| Anything installed via `wsl --import`          | Yes      | Imported tarballs never carry a default user                             |
+
+Fix — create the user, then declare it as the default (`<USERNAME>` is a placeholder; replace it with your real user name everywhere below):
+
+```bash
+# inside the distro, as root
+useradd -m -G wheel -s /bin/bash <USERNAME> # arch: wheel is the sudo group (Debian family: sudo)
+passwd <USERNAME>
+```
+
+```ini
+# /etc/wsl.conf
+[boot]
+systemd=true
+
+[user]
+default=<USERNAME>
+```
+
+```powershell
+wsl.exe --shutdown # or: wsl.exe --terminate <DistroName>
+```
+
+Re-open the terminal; `whoami` must print `<USERNAME>`, not `root`.
+
+Notes: `su - <USERNAME>` from a root session does **not** fix this — `su` opens no new logind session (on arch its PAM stack has no `pam_systemd`), so the broken inherited `$XDG_RUNTIME_DIR` remains. Logging in as the normal user directly is the fix. The one-click installer detects a broken `$XDG_RUNTIME_DIR` and attempts an automatic repair — it writes `[user] default=<your user>` into `/etc/wsl.conf` when the setting is missing (effective after `wsl.exe --shutdown`), then enables linger and starts `user-runtime-dir@<UID>` for the current boot — but the default user above is the real fix.
+
 - **Indentation convention** — monkey-vim applies indent settings per filetype:
 
 | Filetype                                          | Style                    | Width |
