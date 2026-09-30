@@ -582,6 +582,21 @@ install_clipboard() {
 }
 
 # ──────────────────────── install missing ────────────────────────
+# Dedupe package names, order kept: two different binaries can map to the
+# SAME package (nm-applet and nm-connection-editor both install
+# nm-connection-editor on dnf distros) and the "Run:" hint then repeats it.
+dedupe_pkgs() {
+	local -A seen=()
+	local -a out=()
+	local p
+	for p in "$@"; do
+		[ -z "${seen[$p]:-}" ] || continue
+		seen[$p]=1
+		out+=("$p")
+	done
+	echo "${out[*]-}"
+}
+
 install_missing_required() {
 	${INSTALL_MODE:-false} || return 0
 	[ ${#MISSING_REQUIRED[@]} -gt 0 ] || return 0
@@ -615,7 +630,7 @@ install_missing_required() {
 		for id in "${MISSING_REQUIRED[@]}"; do
 			hint_pkgs+=("$(pkg_name "$id")")
 		done
-		echo -e "${RED}Run: $(get_install_hint "${hint_pkgs[*]}")${NC}"
+		echo -e "${RED}Run: $(get_install_hint "$(dedupe_pkgs ${hint_pkgs[@]+"${hint_pkgs[@]}"})")${NC}"
 	fi
 	echo ""
 }
@@ -637,7 +652,7 @@ install_missing_recommended() {
 		if install_pkg "${pkgs[@]}"; then
 			echo -e "${GREEN}Done.${NC}"
 		else
-			echo -e "${RED}Failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
+			echo -e "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${pkgs[@]+"${pkgs[@]}"})")${NC}"
 		fi
 	fi
 	for id in "${MISSING_RECOMMENDED[@]}"; do
