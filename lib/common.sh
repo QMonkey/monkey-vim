@@ -57,6 +57,16 @@ else
 	TIMEOUT_BIN=""
 fi
 
+# Kill-after grace for retry's per-attempt timeout: SIGTERM alone can be
+# ignored (pacman mid-write, brew's ruby), and a command that survives TERM
+# would hang its timeout forever — holding a package-manager lock for the
+# rest of the install. After the TERM, timeout escalates to SIGKILL once
+# the grace elapses, so the attempt ALWAYS ends. Unset (or any value)
+# defaults to 30s; explicitly EMPTY disables the escalation — the -k flag
+# is then omitted entirely (timeout implementations without -k, or a
+# deliberate TERM-only policy).
+RETRY_KILL_AFTER=${RETRY_KILL_AFTER-30}
+
 # retry's execution helper. $1 = timeout seconds ("0" disables), rest =
 # command. timeout(1) can only exec binaries — and retry IS handed a shell
 # function (sudo_cmd) — so function-first commands re-enter through a
@@ -69,6 +79,13 @@ _retry_run() {
 		"$@"
 		return
 	fi
+	# -k only when a kill-after grace is configured: an empty
+	# RETRY_KILL_AFTER must reach timeout as a plain -t invocation, not as
+	# `-k ""` (which timeout rejects with rc 125).
+	local -a ka=()
+	if [ -n "$RETRY_KILL_AFTER" ]; then
+		ka=(-k "$RETRY_KILL_AFTER")
+	fi
 	if declare -F "$1" >/dev/null 2>&1; then
 		local fn
 		for fn in "$1" retry _retry_run native_sudo have_native_cmd; do
@@ -76,9 +93,9 @@ _retry_run() {
 			# by design — the wrapped command may be a framework function).
 			declare -F "$fn" >/dev/null 2>&1 && export -f "$fn"
 		done
-		"$TIMEOUT_BIN" "$t" bash -c '"$@"' _ "$@"
+		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" bash -c '"$@"' _ "$@"
 	else
-		"$TIMEOUT_BIN" "$t" "$@"
+		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" "$@"
 	fi
 }
 
@@ -378,11 +395,28 @@ ensure_go_env() {
 # directory and the first test returns — which is the entire point of
 # putting it at the top. The real fix is a proper default user — see the
 # consuming repos' README, "Precautions" → WSL2.
+# The runtime dir for the REAL current user. $XDG_RUNTIME_DIR is inherited
+# correctly on normal logins, but under `sudo bash` / `su` it points at the
+# OTHER user's /run/user/$UID (root's /run/user/0 behind a sudo install.sh) —
+# the repair below would then try to create and verify a directory the real
+# user can never own, ending in the misleading "could not create /run/user/0".
+runtime_dir_path() {
+	local uid
+	uid=$(id -u)
+	case "$XDG_RUNTIME_DIR" in
+	"" | "/run/user/$uid") echo "${XDG_RUNTIME_DIR:-/run/user/$uid}" ;;
+	# Another user's /run/user/N: unownable for this uid — ignore it.
+	/run/user/*) echo "/run/user/$uid" ;;
+	# A deliberate custom path (containers, test rigs): respect it.
+	*) echo "$XDG_RUNTIME_DIR" ;;
+	esac
+}
+
 ensure_xdg_runtime_dir() {
 	local uid user dir marker wslconf
 	uid=$(id -u)
 	user=$(id -un)
-	dir="${XDG_RUNTIME_DIR:-/run/user/$uid}"
+	dir=$(runtime_dir_path)
 	wslconf=/etc/wsl.conf
 
 	# Already usable — the free path on every normal Linux login.

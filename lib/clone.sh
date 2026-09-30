@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # monkey-scripts/lib/clone.sh — clone / checkhealth / autostart / finish.
 #
 # Sourced by scripts/install.sh (not by checkhealth.sh).
@@ -35,13 +36,25 @@ clone_monkey_project() {
 }
 
 # PATH preseed before detection: checkhealth runs as a subprocess and only
-# inherits the current shell's env. persist_path writes the go/bin &
-# cargo/bin blocks to the profile LATER in main, so on a first run freshly
-# go/cargo-installed binaries would be reported missing and re-installed by
-# the retry loop. Export only — nothing is written to any profile here.
+# inherits the current shell's env. persist_path writes the go/bin, cargo/bin
+# and npm-global/bin blocks to the profile LATER in main, so on a first run
+# freshly installed binaries would be reported missing and re-installed by
+# the retry loop. The brew prefixes cover components that never install brew
+# themselves (sway/hyprland) but lean on brew fallbacks in their checkhealth:
+# a brew at a standard prefix without being on PATH would silently disable
+# those fallbacks. Brew entries are skipped when the dir does not exist, so
+# machines without Homebrew are unaffected. Export only — nothing is written
+# to any profile here.
 _preseed_path() {
-	case ":$PATH:" in *":$HOME/go/bin:"*) ;; *) export PATH="$HOME/go/bin:$PATH" ;; esac
-	case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac
+	local d
+	for d in "$HOME/go/bin" \
+		"$HOME/.cargo/bin" \
+		"$HOME/.npm-global/bin" \
+		/home/linuxbrew/.linuxbrew/bin \
+		/opt/homebrew/bin; do
+		[ -d "$d" ] || continue
+		case ":$PATH:" in *":$d:"*) ;; *) export PATH="$d:$PATH" ;; esac
+	done
 }
 
 # Run $INSTALL_DIR/checkhealth.sh --install --skip-check-config with retries.
@@ -71,6 +84,7 @@ verify_checkhealth() {
 # tool lives in /usr/local/bin. None is guaranteed to be on PATH, so persist
 # exports for the detected shell (zsh→.zprofile, bash→.profile/.bash_profile).
 persist_path() {
+	# shellcheck disable=SC2016 # the block is written to profiles verbatim
 	local block='case ":$PATH:" in *":/usr/local/bin:"*) ;; *) export PATH="/usr/local/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/go/bin:"*) ;; *) export PATH="$HOME/go/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac
@@ -93,20 +107,40 @@ case ":$PATH:" in *":$HOME/.npm-global/bin:"*) ;; *) export PATH="$HOME/.npm-glo
 #   3. no <proc> running — single-instance policy: once the compositor owns a
 #      session, VT logins on other consoles fall through to a plain shell (the
 #      escape hatch instead of a second compositor).
-# Other desktops (X11 or Wayland) are deliberately NOT checked: logind
-# arbitrates the seat per session, so the compositor coexists with them.
+#   4. kmscon session (TERM=kmscon — the kmscon >= 10.0.0 default, terminfo
+#      shipped alongside) → wrap the compositor in kmscon-launch-gui: the
+#      wrapper backgrounds the kmscon terminal (private OSC escape), lets the
+#      compositor take DRM master on the same VT, and restores kmscon after.
+#      Without the wrapper installed, skip the GUI start instead of bare-
+#      execing the compositor underneath a live kmscon renderer. The TERM
+#      check is deliberately the ONLY detection: sessions that do not set
+#      TERM=kmscon are pre-10.0.0 or user-overridden builds, and those lack
+#      the OSC background/foreground handoff the wrapper depends on — for
+#      them the plain exec is as good as it gets.
 autostart_block() {
 	local exec_cmd="$1" pgrep_name="$2"
 	cat <<EOF
 # $PROJECT autostart (remove these lines to disable)
-# Keep this block ABOVE any "exec tmux" auto-start block: on a bare TTY
+# Keep the block below ABOVE any "exec tmux" auto-start block: on a bare TTY
 # exec replaces the login shell with the compositor, so the tmux
 # auto-start line is never reached and the desktop never runs inside a
 # tmux pane. Inside a desktop terminal the env guards short-circuit and
 # the tmux auto-start runs normally.
 if [ -z "\${WAYLAND_DISPLAY:-}" ] && [ -z "\${DISPLAY:-}" ]; then
     case "\$(tty 2>/dev/null)" in
-    /dev/tty[0-9]*) pgrep -x $pgrep_name >/dev/null 2>&1 || exec $exec_cmd ;;
+    /dev/tty[0-9]*)
+        if pgrep -x $pgrep_name >/dev/null 2>&1; then
+            : # single instance: the compositor already owns a session
+        elif [ "\${TERM:-}" = kmscon ]; then
+            if command -v kmscon-launch-gui >/dev/null 2>&1; then
+                exec kmscon-launch-gui $exec_cmd
+            else
+                echo "kmscon session: kmscon-launch-gui not found — start $exec_cmd manually." >&2
+            fi
+        else
+            exec $exec_cmd
+        fi
+        ;;
     esac
 fi
 EOF

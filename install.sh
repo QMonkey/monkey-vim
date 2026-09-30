@@ -35,6 +35,7 @@ fi
 . "$_MONKEY_LIB_DIR/lib/pkg.sh"
 . "$_MONKEY_LIB_DIR/lib/config.sh"
 . "$_MONKEY_LIB_DIR/lib/clone.sh"
+. "$_MONKEY_LIB_DIR/lib/kmscon.sh"
 
 # Data defaults — a project overwrites whatever it uses after sourcing.
 SYMLINKS=()

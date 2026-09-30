@@ -21,6 +21,7 @@ Nothing generic is duplicated per project.
 | `lib/config.sh`   | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`) |
 | `lib/checks.sh`   | Spec parser, probes, section markers, install batching                                        |
 | `lib/clone.sh`    | Git clone helpers used by the clone step                                                      |
+| `lib/kmscon.sh`   | kmscon install & VT takeover (`ensure_kmscon tty2`, getty masking, launch-gui presence check) |
 | `lib/optional.sh` | Optional-tool install machinery (strategy chain, `install_optional_bin`)                      |
 
 Neither entry point is meant to be executed on its own.
@@ -233,6 +234,29 @@ banner → OS info → setup_sudo → prepare → tool → post → clone
 Step hooks (override after sourcing): `install_step_prepare`,
 `install_step_tool`, `install_step_post_tool`, `install_step_autostart`,
 `install_step_symlinks`, `install_step_after`, `install_print_info`.
+
+### Optional: kmscon console takeover
+
+`lib/kmscon.sh` exposes `ensure_kmscon <tty[,tty...]>` for projects that want
+the kmscon console: it installs the kmscon package, writes
+`/etc/systemd/system/kmscon@.service` (+ PAM), enables `kmscon@ttyN` and masks
+the matching `getty@ttyN` for each listed VT (1–63; N>6 is enabled but has no
+getty to mask). The enabled/masked set is asserted to EXACTLY equal the
+requested list. The bare getty is deliberately kept on every VT NOT listed —
+callers opt into a "full" replacement by listing tty1..tty6 themselves.
+`ensure_kmscon` warns and skips (rc 0) when the environment cannot host kmscon
+(no systemd, no `/dev/dri`, failed install) and returns non-zero only for
+invalid arguments or a self-check mismatch — callers are expected to
+`|| warn "... continuing"` and never abort the install. It warns on advisory
+conditions too (an enabled display manager owning tty1). Call it
+from `install_step_autostart`, before `write_tty_autostart` (sudo is
+guaranteed there); guard it with `is_wsl` the same way. The flag parsing
+(`--with-kmscon [tty[,tty...]]`, default `tty2`) belongs to the calling
+project's installer; an orchestrating meta-installer calls it once itself
+instead of forwarding the flag to components. The generated autostart block
+is kmscon-aware: inside a kmscon session it wraps the compositor in
+`kmscon-launch-gui` (shipped by distro kmscon packages) instead of exec'ing
+it directly.
 
 Data switches:
 
