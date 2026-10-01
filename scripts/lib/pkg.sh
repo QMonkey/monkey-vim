@@ -27,9 +27,22 @@ default_pkg_name() {
 	# Go / Node / shell utilities
 	debian:go | ubuntu:go) echo "golang-go" ;;
 	centos:go | fedora:go) echo "golang" ;;
-	debian:node | ubuntu:node | arch:node | opensuse:node | centos:node | fedora:node) echo "nodejs" ;;
+	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) echo "nodejs" ;;
 	debian:which | ubuntu:which) echo "debianutils" ;;
 	arch:python3 | macos:python3) echo "python" ;;
+	# Tumbleweed's index has no package literally named "python3" — the
+	# interpreter ships as python313 (provides /usr/bin/python3 via
+	# update-alternatives). Without this mapping the name probes as missing
+	# and the retry loop re-fails on every attempt (observed on openSUSE:
+	# monkey-zsh checkhealth lost all 4 attempts this way). Leap 15 ships a
+	# real python3; its probe finds it before this row matters.
+	opensuse:python3) echo "python313" ;;
+	# Same class: no package named "node" (nodejs22 and friends), and an
+	# unmapped node falls through to the brew fallback — whose node formula
+	# drags python@3.14 in, which is HOW brew's python came to shadow
+	# /usr/bin/python3 on openSUSE. Version rolls with Tumbleweed: bump
+	# when the default nodejs major moves.
+	opensuse:node) echo "nodejs22" ;;
 	# pip3 is a standalone package on every distro (openSUSE's python313-pip
 	# is NOT pulled in by python3; Leap 16 proved this matters — see
 	# ensure_pip below).
@@ -76,6 +89,30 @@ pkg_name() {
 # current 0.7x). Projects append names here.
 BREW_FIRST=()
 
+# Homebrew's bin dirs. Appended to PATH (see install_linuxbrew), never
+# prepended — overridable for tests.
+BREW_BIN_DIRS="/home/linuxbrew/.linuxbrew/bin /opt/homebrew/bin"
+
+# The brew-first whitelist: a BREW_FIRST tool installed via brew gets a
+# symlink in ~/.local/bin, which _preseed_path seeds at the FRONT of PATH.
+# This is what keeps those tools beating the system versions now that brew
+# itself sits at the BACK. Idempotent; never replaces anything that is not a
+# symlink (a user's own script in ~/.local/bin stays untouched).
+_brew_first_link() {
+	local p prefix
+	prefix="$(brew --prefix 2>/dev/null)" || return 0
+	[ -d "$prefix/bin" ] || return 0
+	mkdir -p "$HOME/.local/bin" || return 0
+	for p in "$@"; do
+		[ -x "$prefix/bin/$p" ] || continue
+		if [ -e "$HOME/.local/bin/$p" ] && [ ! -L "$HOME/.local/bin/$p" ]; then
+			warn "$HOME/.local/bin/$p exists and is not a symlink — not touching it."
+			continue
+		fi
+		ln -sfn "$prefix/bin/$p" "$HOME/.local/bin/$p"
+	done
+}
+
 # ────────────────── package index refresh ──────────────────
 # Refresh the package index before installing: a stale or missing index is
 # the usual cause of "Unable to locate package" on freshly provisioned
@@ -92,7 +129,7 @@ PKG_DB_REFRESHED=0
 # mid-transaction (retry timeout, OOM, crash) leaves /var/lib/pacman/db.lck
 # behind, and EVERY later transaction then fails with "unable to lock
 # database: File exists" until the file is removed by hand — monkey-vim lost
-# exactly this way during the 2026-09 install run. Remove the lock only when
+# exactly this way. Remove the lock only when
 # no pacman process is alive; a live holder (another pacman really is
 # running) is left alone — stealing its lock would corrupt the database.
 PACMAN_DB_LCK=${PACMAN_DB_LCK:-/var/lib/pacman/db.lck}
@@ -238,7 +275,12 @@ filter_pkgs() {
 
 warn_unknown_pkgs() {
 	local p
+	local -A seen=()
 	for p in ${UNKNOWN_PKGS[@]+"${UNKNOWN_PKGS[@]}"}; do
+		# The same unmapped name arrives once per batch (required AND
+		# recommended both referenced wlogout) — report it once.
+		[ -z "${seen[$p]:-}" ] || continue
+		seen[$p]=1
 		warn "$p not found in the package index — skipped (one bad name would fail the whole batch)"
 	done
 }
@@ -297,6 +339,12 @@ install_pkg() {
 		warn_unknown_pkgs
 		if ((${#PKG_VALID[@]} > 0)); then
 			retry -t 1800 -s "brew install" brew install ${PKG_VALID[@]+"${PKG_VALID[@]}"} || install_sys_pkg ${PKG_VALID[@]+"${PKG_VALID[@]}"} || _rc=1
+			# Whitelist the brew-first tools into ~/.local/bin so they keep
+			# beating the system versions now that brew sits at the BACK of
+			# PATH (see install_linuxbrew).
+			if [ "$_rc" -eq 0 ]; then
+				_brew_first_link ${PKG_VALID[@]+"${PKG_VALID[@]}"}
+			fi
 		else
 			_rc=1
 		fi
@@ -443,18 +491,22 @@ install_linuxbrew() {
 	fi
 
 	if [ -n "$brew_prefix" ] && brew_functional "$brew_prefix"; then
-		eval "$("$brew_prefix/bin/brew" shellenv)"
-		ok "Homebrew/Linuxbrew ready at $brew_prefix."
-		# Persist shellenv for future shells (login + interactive rc). Runs
-		# even when brew pre-dates this run: without it, brew-installed tools
-		# (node/npm/...) vanish from PATH in new shells. Idempotent —
-		# append_env_block skips if the marker is already present. The case
-		# guard makes re-sourcing (e.g. a login .profile sourcing .bashrc,
-		# both carrying this block) a no-op instead of prepending brew's
-		# bin/sbin to PATH twice.
+		# APPEND brew to PATH — the opposite of what `brew shellenv` does.
+		# Prepending let brew's binaries shadow the system's wholesale:
+		# brew's python@3.x hid /usr/bin/python3 and vim linked against it.
+		# With brew at the back, system binaries
+		# keep precedence and brew only fills gaps; tools that must beat the
+		# system version are whitelisted individually via _brew_first_link.
+		case ":$PATH:" in
+		*":$brew_prefix/bin:"*) ;;
+		*) export PATH="$PATH:$brew_prefix/bin:$brew_prefix/sbin" ;;
+		esac
+		ok "Homebrew/Linuxbrew ready at $brew_prefix (appended to PATH)."
+		# Persist the append block for future shells. Idempotent —
+		# append_env_block skips if the marker is already present.
 		local line
-		line="case \":\$PATH:\" in *\":${brew_prefix}/bin:\"*) ;; *) eval \"\$(${brew_prefix}/bin/brew shellenv)\" ;; esac"
-		append_env_block "Homebrew shellenv" "$line"
+		line="case \":\$PATH:\" in *\":${brew_prefix}/bin:\"*) ;; *) export PATH=\"\$PATH:${brew_prefix}/bin:${brew_prefix}/sbin\" ;; esac"
+		append_env_block "Homebrew PATH (appended)" "$line"
 	else
 		# Two flavors of "no usable brew": never installed, or installed but
 		# dead (bin/brew present, vendor ruby missing). Name the difference so

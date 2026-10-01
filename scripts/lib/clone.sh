@@ -39,21 +39,28 @@ clone_monkey_project() {
 # inherits the current shell's env. persist_path writes the go/bin, cargo/bin
 # and npm-global/bin blocks to the profile LATER in main, so on a first run
 # freshly installed binaries would be reported missing and re-installed by
-# the retry loop. The brew prefixes cover components that never install brew
-# themselves (sway/hyprland) but lean on brew fallbacks in their checkhealth:
-# a brew at a standard prefix without being on PATH would silently disable
-# those fallbacks. Brew entries are skipped when the dir does not exist, so
-# machines without Homebrew are unaffected. Export only — nothing is written
-# to any profile here.
+# the retry loop.
+#
+# Two PATH tiers by design:
+#   FRONT  ~/.local/bin — the brew-first whitelist (see _brew_first_link in
+#          pkg.sh): only tools explicitly meant to beat the system versions.
+#   BACK   Homebrew's bin dirs — appended, NEVER prepended: brew's binaries
+#          must not shadow the system's (brew's python@3.x used to hide
+#          /usr/bin/python3). Skipped when the dir does not exist, so
+#          machines without Homebrew are unaffected.
+# Export only — nothing is written to any profile here.
 _preseed_path() {
 	local d
-	for d in "$HOME/go/bin" \
+	for d in "$HOME/.local/bin" \
+		"$HOME/go/bin" \
 		"$HOME/.cargo/bin" \
-		"$HOME/.npm-global/bin" \
-		/home/linuxbrew/.linuxbrew/bin \
-		/opt/homebrew/bin; do
+		"$HOME/.npm-global/bin"; do
 		[ -d "$d" ] || continue
 		case ":$PATH:" in *":$d:"*) ;; *) export PATH="$d:$PATH" ;; esac
+	done
+	for d in $BREW_BIN_DIRS; do
+		[ -d "$d" ] || continue
+		case ":$PATH:" in *":$d:"*) ;; *) export PATH="$PATH:$d" ;; esac
 	done
 }
 
@@ -86,11 +93,12 @@ verify_checkhealth() {
 persist_path() {
 	# shellcheck disable=SC2016 # the block is written to profiles verbatim
 	local block='case ":$PATH:" in *":/usr/local/bin:"*) ;; *) export PATH="/usr/local/bin:$PATH" ;; esac
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/go/bin:"*) ;; *) export PATH="$HOME/go/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/.cargo/bin:"*) ;; *) export PATH="$HOME/.cargo/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/.npm-global/bin:"*) ;; *) export PATH="$HOME/.npm-global/bin:$PATH" ;; esac'
 	append_env_block "monkey PATH" "$block"
-	ok "PATH persistence added for /usr/local/bin, go/bin, cargo/bin and npm-global/bin."
+	ok "PATH persistence added for /usr/local/bin, ~/.local/bin, go/bin, cargo/bin and npm-global/bin."
 }
 
 # ────────────────── compositor autostart (guarded VT login) ──────────────────
