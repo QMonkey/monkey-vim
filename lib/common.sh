@@ -99,9 +99,9 @@ _retry_run() {
 			# by design — the wrapped command may be a framework function).
 			declare -F "$fn" >/dev/null 2>&1 && export -f "$fn"
 		done
-		"$TIMEOUT_BIN" -k "$RETRY_KILL_AFTER" "$t" bash -c '"$@"' _ "$@"
+		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" bash -c '"$@"' _ "$@"
 	else
-		"$TIMEOUT_BIN" -k "$RETRY_KILL_AFTER" "$t" "$@"
+		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" "$@"
 	fi
 }
 
@@ -240,17 +240,18 @@ have_native_cmd() {
 # emitted into login profiles (may be zsh).
 native_bin_path() {
 	local cmd="$1"
-	local hit=0 pre='' post='' rest="$PATH" e
+	local rest="$PATH" e
 	if ! is_wsl; then
-		e=$(command -v "$cmd" 2>/dev/null) && { printf '%s' "$e"; return 0; }
+		e=$(command -v "$cmd" 2>/dev/null) && {
+			printf '%s' "$e"
+			return 0
+		}
 		return 1
 	fi
 	while [ -n "$rest" ]; do
 		e=${rest%%:*}
 		case "$rest" in *:*) rest=${rest#*:} ;; *) rest="" ;; esac
-		if [ "$hit" = 0 ]; then
-			case "$e" in /mnt/*) hit=1; continue ;; esac
-		fi
+		case "$e" in /mnt/*) continue ;; esac
 		[ -x "$e/$cmd" ] || continue
 		printf '%s' "$e/$cmd"
 		return 0
@@ -608,53 +609,68 @@ version_ge() {
 # executes it as if the user had typed it — AFTER this script (and any
 # wrapper chaining it) has fully exited, so injection can never disturb the
 # run itself. Needs python3 or perl; any failure returns non-zero so callers
-# can fall back to a printed hint. Never fatal.
+# can fall back to a printed hint. Never fatal — but the UNDERLYING error is
+# surfaced with warn() before returning: TIOCSTI fails for real, diagnosable
+# reasons (no controlling tty; kernel 6.2+ gating TIOCSTI behind
+# CAP_SYS_ADMIN unless the tty is the caller's controlling terminal → EPERM).
 inject_tty() {
-	local cmd="$1" tiocsti
+	local cmd="$1" tiocsti err=""
 	[ -n "$cmd" ] || return 1
 	# No writable controlling terminal (CI, nested pipes) — nothing to inject
 	# into. access(W_OK) on /dev/tty fails with ENXIO when the process has no
 	# controlling tty.
-	[ -w /dev/tty ] || return 1
+	if ! [ -w /dev/tty ]; then
+		warn "inject_tty: /dev/tty is not writable — no controlling terminal to inject into."
+		return 1
+	fi
 	# python3 first: termios.TIOCSTI carries the correct constant per platform
-	# (Linux 0x5412, Darwin 0x80047412).
+	# (Linux 0x5412, Darwin 0x80047412). stderr is captured, not discarded —
+	# the failure reason reaches the user through the warn() below.
 	if have_native_cmd python3; then
-		python3 - "$cmd" <<'PYEOF' 2>/dev/null && return 0
+		err=$(
+			python3 - "$cmd" 2>&1 <<'PYEOF'
 import sys, os, fcntl, termios
 cmd = sys.argv[1] + "\n"
 try:
     fd = os.open("/dev/tty", os.O_WRONLY)
     ioctl = termios.TIOCSTI
-except (OSError, AttributeError):
-    sys.exit(1)
+except (OSError, AttributeError) as e:
+    sys.exit("cannot inject: {}".format(e))
 # TIOCSTI's third argument is a POINTER to the byte to inject, not the byte
 # itself: passing ord(ch) hands the kernel a small integer as an address and
 # every call dies with EFAULT. A one-byte buffer passes the byte's address;
 # encoding to UTF-8 also makes multi-byte characters inject correctly.
-buf = bytearray(1)
 for b in cmd.encode():
+    buf = bytearray(1)
     buf[0] = b
     try:
         fcntl.ioctl(fd, ioctl, buf)
-    except OSError:
-        sys.exit(1)
+    except OSError as e:
+        sys.exit("TIOCSTI ioctl failed: {}".format(e))
 PYEOF
+		) && return 0
 	fi
 	# perl fallback: macOS ships /usr/bin/perl, Debian/Ubuntu perl-base is
 	# Essential. TIOCSTI's value differs per platform.
 	tiocsti=0x5412
 	[ "$(uname -s)" = "Darwin" ] && tiocsti=0x80047412
-	perl -e '
-		my ($cmd, $tio) = @ARGV;
-		open(my $tty, ">", "/dev/tty") or exit 1;
-		# TIOCSTI wants a pointer to the byte: pass the character STRING
-		# itself (perl hands over its buffer). ord($ch) would pass the
-		# codepoint as an address -> EFAULT. split // on the byte string
-		# injects UTF-8 bytes, so multi-byte characters survive.
-		for my $ch (split //, $cmd . "\n") {
-			ioctl($tty, hex($tio), $ch) or exit 1;
-		}
-	' "$cmd" "$tiocsti" 2>/dev/null && return 0
+	if have_native_cmd perl; then
+		err=$(perl -e '
+			my ($cmd, $tio) = @ARGV;
+			open(my $tty, ">", "/dev/tty") or die "open /dev/tty: $!\n";
+			# TIOCSTI wants a pointer to the byte: pass the character STRING
+			# itself (perl hands over its buffer). ord($ch) would pass the
+			# codepoint as an address -> EFAULT. split // on the byte string
+			# injects UTF-8 bytes, so multi-byte characters survive.
+			for my $ch (split //, $cmd . "\n") {
+				ioctl($tty, hex($tio), $ch) or die "TIOCSTI ioctl failed: $!\n";
+			}
+		' "$cmd" "$tiocsti" 2>&1) && return 0
+	fi
+	# Surface WHY it failed instead of a bare non-zero exit.
+	if [ -n "$err" ]; then
+		warn "inject_tty failed: $err"
+	fi
 	return 1
 }
 
