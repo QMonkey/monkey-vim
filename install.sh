@@ -25,30 +25,30 @@ INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-vim}"
 # commit (pull it in and carry on) or `curl | bash`, which has no checkout
 # at all. The latter clones THIS project and runs the install.sh from that
 # checkout, so installer and scripts/ always come from the same revision.
+# No scripts/ next to this file: either a checkout predating the subtree
+# commit (pull it in and carry on), a .git-less directory (zip/tarball),
+# or `curl | bash`, which has no checkout at all. The latter two bootstrap
+# through INSTALL_DIR and run the install.sh from that checkout, so
+# installer and scripts/ always come from the same revision.
 _monkey_scripts="$(dirname "${BASH_SOURCE[0]:-$0}")/scripts"
 if [ ! -f "$_monkey_scripts/install.sh" ]; then
 	_monkey_self="${BASH_SOURCE[0]:-$0}"
 	_monkey_dir="$(dirname "$_monkey_self")"
 	if [ -f "$_monkey_self" ] && [ -d "$_monkey_dir/.git" ]; then
+		# Outdated checkout: update it in place and keep running from it.
 		git -C "$_monkey_dir" pull --ff-only || true
-		_monkey_scripts="$_monkey_dir/scripts"
-		if [ ! -f "$_monkey_scripts/install.sh" ]; then
+		if [ ! -f "$_monkey_dir/scripts/install.sh" ]; then
 			echo "monkey-scripts missing from $_monkey_dir (no scripts/ subtree)." >&2
 			echo "  git -C $_monkey_dir pull    # outdated checkout — or the repo never added the subtree" >&2
 			exit 1
 		fi
+		_monkey_scripts="$_monkey_dir/scripts"
 	else
-		# curl|bash: no checkout at all. Get one that carries scripts/ and
-		# hand over to its installer, so install.sh and scripts/ can never be
-		# different revisions. clone_monkey_project cannot do this job — it
-		# lives in the very scripts/ being fetched. INSTALL_DIR is where the
-		# framework's clone step would have put the checkout too, so that step
-		# only confirms it.
-
-		if ! command -v git >/dev/null 2>&1; then
-			echo "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
-			exit 1
-		fi
+		# curl|bash or a .git-less directory: the only path to a
+		# same-revision scripts/ is the INSTALL_DIR checkout.
+		# clone_monkey_project cannot do this job — it lives in the very
+		# scripts/ being fetched. INSTALL_DIR is where the framework's clone
+		# step would have put the checkout too, so that step only confirms it.
 		if [ -d "$INSTALL_DIR/.git" ]; then
 			# An install already lives here: update it, then run that one.
 			git -C "$INSTALL_DIR" pull --ff-only || true
@@ -58,12 +58,19 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
 			echo "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
 			exit 1
 		else
+			# Fresh clone — the ONLY sub-branch where git is hard-required:
+			# the pull sub-branch above degrades gracefully without it, and
+			# a zip/tarball must not fail here just for a missing git.
+			if ! command -v git >/dev/null 2>&1; then
+				echo "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
+				exit 1
+			fi
 			# No retry() available yet — the framework loads only after this
-			# clone succeeds — so inline the standard 3 attempts. A failed clone
-			# leaves a partial directory behind; remove it so the next attempt
-			# cannot trip over "already exists". This branch only runs on a
-			# fresh install (INSTALL_DIR did not exist or was empty), so the rm
-			# can never delete pre-existing data.
+			# clone succeeds — so inline the standard 3 attempts. A failed
+			# clone leaves a partial directory behind; remove it so the next
+			# attempt cannot trip over "already exists". This branch only
+			# runs on a fresh install (INSTALL_DIR did not exist or was
+			# empty), so the rm can never delete pre-existing data.
 			_monkey_rc=1
 			for _monkey_attempt in 1 2 3; do
 				if git clone "$PROJECT_REPO" "$INSTALL_DIR"; then
