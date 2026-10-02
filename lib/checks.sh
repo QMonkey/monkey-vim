@@ -354,8 +354,7 @@ run_required_checks() {
 			group_open=0
 			config_placed=1
 			;;
-		@*)
-			;;
+		@*) ;;
 		*)
 			check_spec "$entry" required || true
 			;;
@@ -622,15 +621,53 @@ install_missing_required() {
 		info "installing ${id}..."
 		install_strategy "$spec" || warn "could not install ${id}"
 	done
-	run_required_checks
-	if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
-		echo -e "${GREEN}All required tools now available.${NC}"
-	else
-		local -a hint_pkgs=()
-		for id in "${MISSING_REQUIRED[@]}"; do
-			hint_pkgs+=("$(pkg_name "$id")")
+	# Project-level re-probe (sway/hyprland upstream style): instead of
+	# re-printing the whole required section, walk REQUIRED_REPROBE_LIST —
+	# one "installed" / "still missing" line per binary, probed via the
+	# project's own REQUIRED_REPROBE_FN (default: PATH + known ext paths)
+	# and displayed via REQUIRED_NAME_FN (default: the binary name) — then
+	# a project-provided manual hint when anything is left over. Projects
+	# without the list keep the run_required_checks behaviour below.
+	if [ "${REQUIRED_REPROBE_LIST[@]+SET}" = "SET" ] && [ ${#REQUIRED_REPROBE_LIST[@]} -gt 0 ]; then
+		local rb probe_fn name_fn label
+		probe_fn=${REQUIRED_REPROBE_FN:-_reprobe_default}
+		name_fn=${REQUIRED_NAME_FN:-}
+		MISSING_REQUIRED=()
+		REQUIRED_FAILURES=0
+
+		# Default re-probe for the REQUIRED_REPROBE_LIST walk (see
+		# install_missing_required): a binary counts as installed when it resolves
+		# on PATH or at one of the known extension paths.
+		_reprobe_default() {
+			have_native_cmd "$1" || ext_paths_ok "$1"
+		}
+		for rb in ${REQUIRED_REPROBE_LIST[@]+"${REQUIRED_REPROBE_LIST[@]}"}; do
+			label="$rb"
+			if [ -n "$name_fn" ]; then label=$("$name_fn" "$rb"); fi
+			if "$probe_fn" "$rb"; then
+				ok "$label installed"
+			else
+				MISSING_REQUIRED+=("$rb")
+				fail "$label still missing"
+				REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+			fi
 		done
-		echo -e "${RED}Run: $(get_install_hint "$(dedupe_pkgs ${hint_pkgs[@]+"${hint_pkgs[@]}"})")${NC}"
+		if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
+			echo -e "${GREEN}All required tools now available.${NC}"
+		elif [ -n "${REQUIRED_MANUAL_HINT:-}" ]; then
+			echo -e "${RED}${REQUIRED_MANUAL_HINT}${NC}"
+		fi
+	else
+		run_required_checks
+		if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
+			echo -e "${GREEN}All required tools now available.${NC}"
+		else
+			local -a hint_pkgs=()
+			for id in "${MISSING_REQUIRED[@]}"; do
+				hint_pkgs+=("$(pkg_name "$id")")
+			done
+			echo -e "${RED}Run: $(get_install_hint "$(dedupe_pkgs ${hint_pkgs[@]+"${hint_pkgs[@]}"})")${NC}"
+		fi
 	fi
 	echo ""
 }

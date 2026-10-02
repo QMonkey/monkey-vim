@@ -11,17 +11,11 @@
 # whole drm stack breaks — so a "full replacement" (tty1-6) is never
 # implicit: the caller must list each VT.
 #
-# Test knobs (defaults are the real paths):
-#   KMSCON_DRM_PATH  drm device dir required before installing (/dev/dri)
-#   KMSCON_UNIT_PATH /etc/systemd/system/kmscon@.service
-#   KMSCON_PAM_PATH  /etc/pam.d/kmscon
-#   KMSCON_PAM_GUARD_PATHS  space-separated existing PAM files that suppress
-#                  writing (default: "/etc/pam.d/kmscon /usr/lib/pam.d/kmscon")
 # shellcheck shell=bash
 
-KMSCON_DRM_PATH=${KMSCON_DRM_PATH:-/dev/dri}
-KMSCON_UNIT_PATH=${KMSCON_UNIT_PATH:-/etc/systemd/system/kmscon@.service}
-KMSCON_PAM_PATH=${KMSCON_PAM_PATH:-/etc/pam.d/kmscon}
+KMSCON_DRM_PATH=/dev/dri
+KMSCON_UNIT_PATH=/etc/systemd/system/kmscon@.service
+KMSCON_PAM_PATH=/etc/pam.d/kmscon
 KMSCON_UNIT_MARKER="managed by monkey-scripts (kmscon setup) v1"
 
 # Parse "<tty[,tty...]>" or "<N,N>" into KMSCON_VTS (VT numbers). Returns 1
@@ -163,7 +157,7 @@ EOF
 # The kmscon package normally installs this; only fill the gap.
 _kmscon_write_pam() {
 	local p
-	for p in ${KMSCON_PAM_GUARD_PATHS:-/etc/pam.d/kmscon /usr/lib/pam.d/kmscon}; do
+	for p in /etc/pam.d/kmscon /usr/lib/pam.d/kmscon; do
 		[ -f "$p" ] && return 0
 	done
 	sudo_cmd mkdir -p "$(dirname "$KMSCON_PAM_PATH")"

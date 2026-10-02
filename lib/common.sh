@@ -215,11 +215,35 @@ require_home() {
 # WINDOWS side. Treat /mnt/* resolutions as "not installed" so the real Linux
 # packages get installed instead.
 have_native_cmd() {
-	command -v "$1" &>/dev/null || return 1
-	case "$(command -v "$1")" in
-	/mnt/*) return 1 ;; # WSL Windows-interop shim
-	esac
-	return 0
+	native_bin_path "$1" >/dev/null
+}
+
+# Resolve <cmd> to a NATIVE (Linux) binary path. Under WSL interop the
+# Windows PATH is injected with /mnt/* entries that can shadow the native
+# one (a Windows npm's "global prefix" is the Windows tree — `npm i -g`
+# there installs where Linux tools can never see it), so shim candidates
+# are skipped and the next match in PATH wins; the shim pattern defaults
+# to /mnt/*.
+# Non-WSL: plain `command -v`. POSIX expansions only — also
+# emitted into login profiles (may be zsh).
+native_bin_path() {
+	local cmd="$1"
+	local hit=0 pre='' post='' rest="$PATH" e
+	if ! is_wsl; then
+		e=$(command -v "$cmd" 2>/dev/null) && { printf '%s' "$e"; return 0; }
+		return 1
+	fi
+	while [ -n "$rest" ]; do
+		e=${rest%%:*}
+		case "$rest" in *:*) rest=${rest#*:} ;; *) rest="" ;; esac
+		if [ "$hit" = 0 ]; then
+			case "$e" in /mnt/*) hit=1; continue ;; esac
+		fi
+		[ -x "$e/$cmd" ] || continue
+		printf '%s' "$e/$cmd"
+		return 0
+	done
+	return 1
 }
 
 # Absolute path to a LINUX sudo, or non-zero. Windows 11 ships an optional
@@ -407,7 +431,7 @@ runtime_dir_path() {
 	"" | "/run/user/$uid") echo "${XDG_RUNTIME_DIR:-/run/user/$uid}" ;;
 	# Another user's /run/user/N: unownable for this uid — ignore it.
 	/run/user/*) echo "/run/user/$uid" ;;
-	# A deliberate custom path (containers, test rigs): respect it.
+	# A deliberate custom path (containers, custom setups): respect it.
 	*) echo "$XDG_RUNTIME_DIR" ;;
 	esac
 }
@@ -508,6 +532,36 @@ ensure_xdg_runtime_dir() {
 	warn "  Manual fix:  sudo touch $marker && sudo systemctl start user-runtime-dir@$uid.service"
 }
 
+# Insert <dir> into $PATH immediately BEFORE the WSL interop section (the
+# /mnt/* entries WSL appends at session start). Brew tools then beat Windows
+# shims (npm/node: the Windows npm's "global prefix" is the Windows tree —
+# `npm i -g` there installs where Linux tools can never see it), while
+# system paths keep precedence over brew (the append design's whole point).
+# Falls back to a plain append when the PATH carries no Windows section
+# (non-WSL, or interop disabled). Idempotent. POSIX expansions only: the
+# same loop is emitted into login profiles, which may be zsh (no word
+# splitting on unquoted $PATH).
+path_add_pre_win() {
+	local d="$1"
+	case ":$PATH:" in *":$d:"*) return 0 ;; esac
+	case $PATH in
+	# Windows interop section present: insert brew right before it.
+	# %%:/mnt/* keeps everything before the FIRST Windows entry; ${PATH#
+	# "$pre":} keeps the Windows section itself. PATH entries cannot
+	# contain colons, so the ":/mnt/" boundary is exact.
+	*:/mnt/*)
+		local pre=${PATH%%:/mnt/*}
+		PATH="$pre:$d:${PATH#"$pre":}"
+		;;
+	# PATH starts inside the Windows section (no Linux entries): brew wins
+	# over it by simply going first.
+	/mnt/*) PATH="$d:$PATH" ;;
+	# No interop section: plain append.
+	*) PATH="$PATH:$d" ;;
+	esac
+	export PATH
+}
+
 # Version comparison. GNU sort -V -C is what the upstream scripts used; BSD
 # sort (macOS) has neither flag, so fall back to a numeric field compare.
 if sort -V </dev/null >/dev/null 2>&1; then
@@ -561,9 +615,15 @@ try:
     ioctl = termios.TIOCSTI
 except (OSError, AttributeError):
     sys.exit(1)
-for ch in cmd:
+# TIOCSTI's third argument is a POINTER to the byte to inject, not the byte
+# itself: passing ord(ch) hands the kernel a small integer as an address and
+# every call dies with EFAULT. A one-byte buffer passes the byte's address;
+# encoding to UTF-8 also makes multi-byte characters inject correctly.
+buf = bytearray(1)
+for b in cmd.encode():
+    buf[0] = b
     try:
-        fcntl.ioctl(fd, ioctl, ord(ch))
+        fcntl.ioctl(fd, ioctl, buf)
     except OSError:
         sys.exit(1)
 PYEOF
@@ -575,8 +635,12 @@ PYEOF
 	perl -e '
 		my ($cmd, $tio) = @ARGV;
 		open(my $tty, ">", "/dev/tty") or exit 1;
+		# TIOCSTI wants a pointer to the byte: pass the character STRING
+		# itself (perl hands over its buffer). ord($ch) would pass the
+		# codepoint as an address -> EFAULT. split // on the byte string
+		# injects UTF-8 bytes, so multi-byte characters survive.
 		for my $ch (split //, $cmd . "\n") {
-			ioctl($tty, hex($tio), ord($ch)) or exit 1;
+			ioctl($tty, hex($tio), $ch) or exit 1;
 		}
 	' "$cmd" "$tiocsti" 2>/dev/null && return 0
 	return 1
