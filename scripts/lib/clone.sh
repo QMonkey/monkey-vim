@@ -41,6 +41,10 @@ clone_monkey_project() {
 # freshly installed binaries would be reported missing and re-installed by
 # the retry loop.
 #
+# Public (no underscore): install.sh's component chain calls it too — after
+# each component, the same re-exposure lets later components find what
+# earlier ones installed instead of re-downloading it.
+#
 # Two PATH tiers by design:
 #   FRONT  ~/.local/bin — the brew-first whitelist (see _brew_first_link in
 #          pkg.sh): only tools explicitly meant to beat the system versions.
@@ -49,7 +53,7 @@ clone_monkey_project() {
 #          /usr/bin/python3). Skipped when the dir does not exist, so
 #          machines without Homebrew are unaffected.
 # Export only — nothing is written to any profile here.
-_preseed_path() {
+preseed_path() {
 	local d
 	for d in "$HOME/.local/bin" \
 		"$HOME/go/bin" \
@@ -76,7 +80,7 @@ _preseed_path() {
 # everything installed is skipped, so retries are cheap verifications.
 # Three attempts, exit code 0 wins.
 run_checkhealth() {
-	_preseed_path
+	preseed_path
 	info "Running checkhealth.sh --install to install remaining dependencies..."
 	if retry -t 3600 -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
 		ok "Dependency check complete."
@@ -88,7 +92,7 @@ run_checkhealth() {
 
 # Plain run (no --install): verification only, never fatal.
 verify_checkhealth() {
-	_preseed_path
+	preseed_path
 	bash "$INSTALL_DIR/checkhealth.sh" --skip-check-config || true
 }
 
