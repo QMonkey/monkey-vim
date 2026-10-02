@@ -109,25 +109,6 @@ OPTIONAL_CHECKS=(
 # Verbatim upstream: batch-install the missing package names, then
 # re-run the required checks (re-print) and hint at what is left.
 
-install_missing_required() {
-	if ! $INSTALL_MODE || [[ ${#MISSING_REQUIRED[@]} -eq 0 ]]; then
-		return 0
-	fi
-	echo -e "${YELLOW}Installing: ${MISSING_REQUIRED[*]}...${NC}"
-	local pkgs=() bin b
-	for b in "${MISSING_REQUIRED[@]}"; do pkgs+=("$(pkg_name "$b")"); done
-	if install_pkg "${pkgs[@]}"; then
-		run_required_checks
-		if [[ ${#MISSING_REQUIRED[@]} -eq 0 ]]; then
-			echo -e "${GREEN}All required tools now available.${NC}"
-		else
-			echo -e "${RED}Run: $(get_install_hint "$(for b in "${MISSING_REQUIRED[@]}"; do pkg_name "$b"; done | tr '\n' ' ')")${NC}"
-		fi
-	else
-		echo -e "${RED}Install command failed. Run: $(get_install_hint "${pkgs[*]}")${NC}"
-	fi
-	echo ""
-}
 
 # Verbatim upstream install table and hints: the generic strategy
 # chain cannot reproduce upstream's per-binary fallbacks (e.g. the
