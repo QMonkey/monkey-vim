@@ -88,14 +88,20 @@ _retry_run() {
 	fi
 	if declare -F "$1" >/dev/null 2>&1; then
 		local fn
-		for fn in "$1" retry _retry_run native_sudo have_native_cmd; do
+		# The whitelist must carry the WHOLE dependency closure of the
+		# wrapped command: have_native_cmd calls native_bin_path, which
+		# calls is_wsl — missing one link makes every exported-function
+		# call die with "command not found" inside the child (observed on
+		# openSUSE: sudo_cmd -> native_sudo -> have_native_cmd ->
+		# native_bin_path, which the old whitelist did not carry).
+		for fn in "$1" retry _retry_run native_sudo have_native_cmd native_bin_path is_wsl; do
 			# export -f: export the FUNCTION named by $fn's value (dynamic
 			# by design — the wrapped command may be a framework function).
 			declare -F "$fn" >/dev/null 2>&1 && export -f "$fn"
 		done
-		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" bash -c '"$@"' _ "$@"
+		"$TIMEOUT_BIN" -k "$RETRY_KILL_AFTER" "$t" bash -c '"$@"' _ "$@"
 	else
-		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" "$@"
+		"$TIMEOUT_BIN" -k "$RETRY_KILL_AFTER" "$t" "$@"
 	fi
 }
 
@@ -215,6 +221,12 @@ require_home() {
 # WINDOWS side. Treat /mnt/* resolutions as "not installed" so the real Linux
 # packages get installed instead.
 have_native_cmd() {
+	# Delegate to native_bin_path: ONE resolver owns the shim-skip logic
+	# (no drift between this probe and path resolution), and it keeps
+	# scanning past /mnt/* shims to a native candidate later in PATH
+	# instead of rejecting on the first hit. This works inside _retry_run's
+	# bash -c child because the export whitelist carries native_bin_path
+	# and is_wsl (the openSUSE failure was exactly that missing link).
 	native_bin_path "$1" >/dev/null
 }
 
@@ -250,10 +262,10 @@ native_bin_path() {
 # sudo.exe that WSL interop exposes as /mnt/.../sudo.exe — running it from
 # WSL would be meaningless.
 native_sudo() {
-	local p
-	have_native_cmd sudo || return 1
-	p=$(command -v sudo)
-	printf '%s' "$p"
+	# native_bin_path (not plain `command -v`): resolves the sudo path while
+	# skipping /mnt/* Windows shims, and keeps working when a distro shim
+	# for sudo sits earlier in PATH than the real one.
+	native_bin_path sudo
 }
 
 is_wsl() {
