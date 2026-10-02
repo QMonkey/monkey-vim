@@ -58,9 +58,15 @@ _preseed_path() {
 		[ -d "$d" ] || continue
 		case ":$PATH:" in *":$d:"*) ;; *) export PATH="$d:$PATH" ;; esac
 	done
+	# BACK: Homebrew's bin dirs — inserted before the WSL interop section
+	# (/mnt/*, which precedes the brew append in login shells) so brew
+	# beats Windows shims, and AFTER the system paths so brew never
+	# shadows the system (its python@3.x used to hide /usr/bin/python3).
+	# Skipped when the dir does not exist, so machines without Homebrew
+	# are unaffected. Export only — nothing is written to any profile here.
 	for d in $BREW_BIN_DIRS; do
 		[ -d "$d" ] || continue
-		case ":$PATH:" in *":$d:"*) ;; *) export PATH="$PATH:$d" ;; esac
+		path_add_pre_win "$d"
 	done
 }
 

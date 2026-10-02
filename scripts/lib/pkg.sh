@@ -49,6 +49,39 @@ default_pkg_name() {
 	debian:pip3 | ubuntu:pip3 | centos:pip3 | fedora:pip3) echo "python3-pip" ;;
 	arch:pip3) echo "python-pip" ;;
 	opensuse:pip3) echo "$(python_flavor)-pip" ;;
+	# ── compositor tooling (monkey-sway / monkey-hyprland) ──
+	# Merged from the per-repo checkhealth tables: one mapping table, no
+	# drift. Arms whose package name equals the binary name need no row —
+	# they fall through to the plain name below.
+	*:swaymsg | *:swaynag) echo "sway" ;;
+	*:wl-copy) echo "wl-clipboard" ;;
+	*:wpctl) echo "wireplumber" ;;
+	*:hyprctl) echo "hyprland" ;;
+	# hyprland-dialog: the upstream hyprland-qtutils helpers; coverage
+	# varies per release (Ubuntu < 26.04, Debian trixie: absent) — the
+	# availability probe degrades gracefully when missing.
+	ubuntu:hyprland-dialog) echo "hyprland-qtutils" ;;
+	debian:hyprland-dialog | arch:hyprland-dialog | opensuse:hyprland-dialog) echo "hyprland-guiutils" ;;
+	# notification-daemon sentinel: dunst is the safe default where it is
+	# packaged (EPEL ships dunst only); mako everywhere else.
+	debian:notif | ubuntu:notif | centos:notif | fedora:notif) echo "dunst" ;;
+	*:notif) echo "mako" ;;
+	# polkit authentication agents: the GNOME agent is gone from
+	# Fedora/EPEL (retired upstream) — on those distros the checkhealth
+	# spec downgrades gracefully; mate-polkit is the pending replacement.
+	debian:polkit-gnome-authentication-agent-1) echo "policykit-1-gnome" ;;
+	arch:polkit-gnome-authentication-agent-1 | fedora:polkit-gnome-authentication-agent-1) echo "polkit-gnome" ;;
+	# tray / network manager
+	debian:nm-applet | ubuntu:nm-applet) echo "network-manager-gnome" ;;
+	opensuse:nm-applet) echo "NetworkManager-applet" ;;
+	arch:nm-applet) echo "network-manager-applet" ;;
+	centos:nm-applet | fedora:nm-applet) echo "nm-connection-editor" ;;
+	# nm-connection-editor is a binary of network-manager-gnome on
+	# Debian/Ubuntu — there is no separate package
+	debian:nm-connection-editor | ubuntu:nm-connection-editor) echo "network-manager-gnome" ;;
+	opensuse:nm-connection-editor) echo "NetworkManager-connection-editor" ;;
+	# notification daemons: Debian/Ubuntu call mako "mako-notifier"
+	debian:mako | ubuntu:mako) echo "mako-notifier" ;;
 	# Editors / language servers / gtags tooling (monkey-nvim, monkey-vim)
 	debian:rg | ubuntu:rg | arch:rg | macos:rg | opensuse:rg | centos:rg | fedora:rg) echo "ripgrep" ;;
 	debian:ctags | ubuntu:ctags | macos:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
@@ -90,7 +123,7 @@ pkg_name() {
 BREW_FIRST=()
 
 # Homebrew's bin dirs. Appended to PATH (see install_linuxbrew), never
-# prepended — overridable for tests.
+# prepended.
 BREW_BIN_DIRS="/home/linuxbrew/.linuxbrew/bin /opt/homebrew/bin"
 
 # The brew-first whitelist: a BREW_FIRST tool installed via brew gets a
@@ -132,7 +165,7 @@ PKG_DB_REFRESHED=0
 # exactly this way. Remove the lock only when
 # no pacman process is alive; a live holder (another pacman really is
 # running) is left alone — stealing its lock would corrupt the database.
-PACMAN_DB_LCK=${PACMAN_DB_LCK:-/var/lib/pacman/db.lck}
+PACMAN_DB_LCK=/var/lib/pacman/db.lck
 clear_stale_pacman_lock() {
 	[ "$OS" = arch ] || return 0
 	command -v pacman >/dev/null 2>&1 || return 0
@@ -491,22 +524,33 @@ install_linuxbrew() {
 	fi
 
 	if [ -n "$brew_prefix" ] && brew_functional "$brew_prefix"; then
-		# APPEND brew to PATH — the opposite of what `brew shellenv` does.
-		# Prepending let brew's binaries shadow the system's wholesale:
-		# brew's python@3.x hid /usr/bin/python3 and vim linked against it.
-		# With brew at the back, system binaries
-		# keep precedence and brew only fills gaps; tools that must beat the
-		# system version are whitelisted individually via _brew_first_link.
-		case ":$PATH:" in
-		*":$brew_prefix/bin:"*) ;;
-		*) export PATH="$PATH:$brew_prefix/bin:$brew_prefix/sbin" ;;
-		esac
-		ok "Homebrew/Linuxbrew ready at $brew_prefix (appended to PATH)."
-		# Persist the append block for future shells. Idempotent —
-		# append_env_block skips if the marker is already present.
+		# BREW GOES AFTER the system paths but BEFORE the WSL-injected
+		# Windows section — the opposite of what `brew shellenv` does
+		# (prepend) on both ends. Prepending let brew's binaries shadow the
+		# system's wholesale: brew's python@3.x hid /usr/bin/python3 and vim
+		# linked against it. Plain-appending put brew BEHIND the /mnt/*
+		# interop section, so a plain `npm` resolved to the Windows shim and
+		# `npm i -g` installed into the Windows tree. path_add_pre_win
+		# splits the difference: system > brew > Windows shims; tools that
+		# must beat the system version are whitelisted via _brew_first_link.
+		path_add_pre_win "$brew_prefix/bin"
+		path_add_pre_win "$brew_prefix/sbin"
+		ok "Homebrew/Linuxbrew ready at $brew_prefix (before Windows shims, after system paths)."
+		# Persist the same insert for future shells (POSIX expansions only:
+		# the login profile may be zsh, which does not word-split unquoted
+		# $PATH — hence no loops over it). Idempotent — append_env_block
+		# skips if the marker is already present.
 		local line
-		line="case \":\$PATH:\" in *\":${brew_prefix}/bin:\"*) ;; *) export PATH=\"\$PATH:${brew_prefix}/bin:${brew_prefix}/sbin\" ;; esac"
-		append_env_block "Homebrew PATH (appended)" "$line"
+		line='case $PATH in
+*":'"$brew_prefix"'/bin:"*) ;;
+*:/mnt/*)
+	pre=${PATH%%:/mnt/*}
+	PATH="$pre:'"$brew_prefix"'/bin:'"$brew_prefix"'/sbin:${PATH#"$pre":}" ;;
+/mnt/*) PATH="'"$brew_prefix"'/bin:'"$brew_prefix"'/sbin:$PATH" ;;
+*) PATH="$PATH:'"$brew_prefix"'/bin:'"$brew_prefix"'/sbin" ;;
+esac
+unset pre'
+		append_env_block "Homebrew PATH (before Windows shims)" "$line"
 	else
 		# Two flavors of "no usable brew": never installed, or installed but
 		# dead (bin/brew present, vendor ruby missing). Name the difference so

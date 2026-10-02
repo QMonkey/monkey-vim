@@ -40,17 +40,40 @@ ensure_rust() {
 	have_native_cmd cargo && return 0
 }
 
+# ─────────────────────────── npm / node ───────────────────────────
+# WSL interop injects the Windows PATH after the Linux one but BEFORE the
+# brew append lands (login shells build PATH: interop, then profile blocks)
+# — so a plain `npm` can resolve to a /mnt/* Windows shim whose "global
+# prefix" is the Windows tree: `npm i -g` installs where Linux tools can
+# never see it. Every npm/node lookup that matters goes through
+# native_bin_path, which skips shim candidates (its shim pattern defaults
+# pattern.
 # Debian/Ubuntu: `apt install nodejs` does NOT bring npm (it is only a
 # Suggests), so npm must be installed explicitly. Verify afterwards: install_pkg
 # can return success while PATH still resolves to a Windows shim.
 ensure_npm() {
-	have_native_cmd node && have_native_cmd npm && return 0
+	# have_native_cmd is shim-aware (it wraps native_bin_path): a /mnt/*
+	# Windows shim counts as "not installed", so the native node/npm below
+	# get installed even when the Windows tree carries its own. PATH
+	# ordering — brew before the Windows shims, system before brew — is
+	# guaranteed by path_add_pre_win (common.sh) in the preseed, re-expose
+	# and persisted-profile layers, so a plain `npm` call in npm_install_g
+	# resolves to the native binary everywhere.
+	if have_native_cmd npm && have_native_cmd node; then
+		return 0
+	fi
 	info "installing npm..."
 	install_pkg "$(pkg_name npm)" || true
-	have_native_cmd npm || {
-		warn "npm is still not a native Linux binary (Windows shim on PATH?)"
-		return 1
-	}
+	if ! have_native_cmd npm && have_native_cmd brew; then
+		# Last native source on distros whose index has no nodejs/npm —
+		# and whose only npm would otherwise be the Windows shim.
+		retry -t 1800 -s "brew install node" brew install node || true
+	fi
+	if have_native_cmd npm && have_native_cmd node; then
+		return 0
+	fi
+	warn "npm is still not available as a native binary — npm-based tools cannot be installed."
+	return 1
 }
 
 # Global npm install that works everywhere:
@@ -75,6 +98,9 @@ ensure_npm() {
 #     npm errors when --allow-scripts is passed to a project-scoped install.
 npm_install_g() {
 	ensure_npm || return 1
+	# ensure_npm has verified a NATIVE npm (shims rejected via
+	# have_native_cmd — see native_bin_path) and the PATH ordering puts it
+	# first, so the plain name resolves to it.
 	local prefix
 	prefix=$(npm config get prefix 2>/dev/null)
 	if [ -z "$prefix" ] || { [ ! -w "$prefix" ] && [ ! -w "$prefix/lib" ]; }; then
