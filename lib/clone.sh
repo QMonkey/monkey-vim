@@ -11,6 +11,60 @@
 #   FINISH_INJECT      1 (default) → print/perform the TIOCSTI injection hint
 #   INSTALL_RUN_CHECKHEALTH  1 (default) → run checkhealth --install in main
 
+# ────────────────── interrupted-clone repair ──────────────────
+# A git clone killed mid-transfer (retry timeout, network drop) leaves a
+# directory carrying .git but no checked-out worktree and no HEAD. Every
+# later operation on it then fails forever: `git pull` dies, a fresh
+# `git clone` refuses with "already exists", and nvim's vim.pack lock
+# repair dies with "ambiguous argument 'HEAD'" — taking every OTHER plugin
+# down with it (observed on openSUSE: one clone timeout, 34 plugins dead).
+# A directory whose HEAD is unreadable cannot resume — removal is the only
+# repair, so the caller's clone/pull starts clean. Healthy checkouts and
+# dirs without .git are untouched.
+repair_broken_clone() {
+	local dir="$1"
+	[ -n "$dir" ] && [ -d "$dir/.git" ] || return 0
+	if ! git -C "$dir" rev-parse HEAD >/dev/null 2>&1; then
+		warn "removing broken git clone (interrupted clone, no HEAD): ${dir#"$HOME"/}"
+		rm -rf -- "$dir"
+	fi
+	return 0
+}
+
+# clone_repo <url> <dir> [git-clone-args...] — the framework's git clone,
+# a patch over `git clone` that owns the three states a target dir can be
+# in, so projects stop hand-rolling the if/else:
+#   missing            → clone (extra args like --depth=1 pass through)
+#   .git, HEAD ok      → pull --ff-only (failure keeps the checkout, rc 0)
+#   .git, HEAD broken  → rm -rf, then a clean clone (an interrupted clone
+#                        cannot resume, and `git clone` would refuse
+#                        "already exists" forever)
+#   no .git            → left untouched with a warning, rc 1 (user data —
+#                        `git clone` would refuse too)
+# A killed clone attempt leaves a .git-only partial dir behind — repaired
+# before returning, so the caller's next outer attempt (checkhealth retry,
+# re-run) can actually clone.
+clone_repo() {
+	local url="$1" dir="$2"
+	shift 2
+	repair_broken_clone "$dir"
+	if [ -d "$dir/.git" ]; then
+		info "git repo already at ${dir#"$HOME"/} — pulling latest..."
+		retry -s "git pull" git -C "$dir" pull --ff-only ||
+			warn "git pull failed — keeping the existing checkout."
+		return 0
+	fi
+	if [ -e "$dir" ]; then
+		warn "$dir exists and is not a git clone — leaving it untouched."
+		return 1
+	fi
+	if retry -t 1800 -s "git clone ${dir##*/}" git clone "$@" "$url" "$dir"; then
+		return 0
+	fi
+	repair_broken_clone "$dir"
+	return 1
+}
+
 clone_monkey_project() {
 	# git must exist before anything here runs: the pull and the clone both
 	# need it. ensure_git installs it via the package manager when missing
@@ -19,19 +73,11 @@ clone_monkey_project() {
 	# On the curl|bash path this function is not what obtained the checkout:
 	# the bootstrap in the project's install.sh had to clone before it could
 	# reach this framework at all, and it clones into the same INSTALL_DIR.
-	# So the first branch normally just confirms a checkout this run already
-	# has (and pulls it, a no-op right after a clone) — one clone, not two.
-	if [ -d "$INSTALL_DIR/.git" ]; then
-		info "$PROJECT is at $INSTALL_DIR — pulling latest..."
-		retry -s "git pull" git -C "$INSTALL_DIR" pull --ff-only ||
-			warn "git pull failed — keeping existing version."
-	elif [ -e "$INSTALL_DIR" ]; then
-		# Existing non-git dir is fine (e.g. git clone with .git removed).
+	# So clone_repo normally just confirms (and pulls) a checkout this run
+	# already has — one clone, not two. A non-git INSTALL_DIR (zip extract,
+	# stray files) is left untouched — the install proceeds with it as-is.
+	clone_repo "$PROJECT_REPO" "$INSTALL_DIR" ||
 		warn "$INSTALL_DIR exists but is not a git repository — using it as-is."
-	else
-		info "Cloning $PROJECT to $INSTALL_DIR..."
-		retry -s "git clone" git clone "$PROJECT_REPO" "$INSTALL_DIR"
-	fi
 	ok "$PROJECT ready at $INSTALL_DIR."
 }
 
