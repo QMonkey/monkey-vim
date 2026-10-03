@@ -324,22 +324,8 @@ build_vim() {
 	fi
 
 	info "Building Vim from source (this may take a few minutes)..."
-	if [ -d "$VIM_SRC_DIR/.git" ]; then
-		info "Vim source already exists at $VIM_SRC_DIR — pulling latest..."
-		retry -s "git pull" git -C "$VIM_SRC_DIR" pull --ff-only ||
-			warn "git pull failed — building from existing source."
-	else
-		# A failed clone leaves a partial directory behind, which would make
-		# every later attempt (and re-run) fail with "already exists" — clean
-		# it up before giving up, but only when git created it (.git inside)
-		# or it is empty, never when it holds pre-existing user data.
-		if ! retry -t 1800 -s "git clone vim" git clone https://github.com/vim/vim.git "$VIM_SRC_DIR"; then
-			if [ -d "$VIM_SRC_DIR" ] && { [ -z "$(ls -A "$VIM_SRC_DIR")" ] || [ -d "$VIM_SRC_DIR/.git" ]; }; then
-				rm -rf "$VIM_SRC_DIR"
-			fi
-			fail "vim source clone failed after 3 attempts."
-		fi
-	fi
+	clone_repo https://github.com/vim/vim.git "$VIM_SRC_DIR" ||
+		fail "vim source clone failed."
 
 	pushd "$VIM_SRC_DIR" >/dev/null
 
@@ -455,13 +441,31 @@ install_plugins() {
 	# We run vim headless to trigger PlugInstall. Retried like every other
 	# network download — the run clones every plugin; a retry resumes
 	# (already-cloned repos are skipped by vim-plug).
-	retry -t 3600 -s "headless PlugInstall" \
-		vim -es -u "$HOME/.vimrc" \
-		+"PlugInstall --sync" \
-		+qall 2>/dev/null || {
-		warn "Headless PlugInstall failed. Plugins will be installed on first launch."
-	}
-	ok "Plugins installed."
+	#
+	# stderr goes to a log, not /dev/null: a hidden failure (a GitHub clone
+	# error — every plugin download crosses the network) used to fall
+	# through to the success line below and the plugins were simply missing
+	# (observed on Ubuntu 2026-10: 4 failed attempts, cause invisible).
+	# The success gate lives INSIDE the retried command: vim's exit code
+	# AND an error line in the log both turn into a non-zero exit, so retry
+	# treats it as a failed attempt and re-runs. vim-plug is idempotent
+	# (clones only what is missing), so a re-attempt continues where the
+	# last one died.
+	local pluglog=/tmp/vim-plugins.log
+	if retry -t 3600 -s "headless PlugInstall" bash -c '
+		vim -es -u "$HOME/.vimrc" +"PlugInstall --sync" +qall 2>&1 | tee /tmp/vim-plugins.log
+		rc=${PIPESTATUS[0]}
+		if [ "$rc" -ne 0 ] || grep -qE "^(Error|E[0-9]+)" /tmp/vim-plugins.log; then
+			exit 1
+		fi
+		exit 0
+	'; then
+		ok "Plugins installed."
+	else
+		warn "Headless PlugInstall failed — see $pluglog."
+		warn "Plugins retry automatically on the next vim launch, or run:"
+		warn "  vim -es -u $HOME/.vimrc +\"PlugInstall --sync\" +qall"
+	fi
 }
 
 # ──────────────────────── hooks ────────────────────────
