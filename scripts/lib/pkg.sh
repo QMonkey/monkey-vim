@@ -14,15 +14,13 @@
 # here; a repo with a one-off mapping (monkey-sway's swaymsg, monkey-hyprland's
 # notif, ...) overrides pkg_name() after sourcing and delegates the rest to
 # this function.
-# openSUSE Python module packages carry the interpreter's ABI flavor
-# prefix (python314-black, python314-python-lsp-server — NOT python3-*),
-# and the flavor follows the default python3 version, so derive it at
-# runtime. Prints nothing if python3 is unavailable.
-python_flavor() {
-	python3 -c 'import sys;print("python%d%d"%sys.version_info[:2])' 2>/dev/null
-}
 
 default_pkg_name() {
+	# The arms below cover ONLY logical names whose package differs from the
+	# command (go→golang-go, node→nodejs, black→python3-black, ...). A tool
+	# whose package name equals its command name (git, tmux, ripgrep, fzf,
+	# ...) needs no row here — it falls through to `*) echo "$1"` at the
+	# bottom.
 	case "${OS:-unknown}:$1" in
 	# Go / Node / shell utilities
 	debian:go | ubuntu:go) echo "golang-go" ;;
@@ -30,25 +28,25 @@ default_pkg_name() {
 	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) echo "nodejs" ;;
 	debian:which | ubuntu:which) echo "debianutils" ;;
 	arch:python3 | macos:python3) echo "python" ;;
-	# Tumbleweed's index has no package literally named "python3" — the
-	# interpreter ships as python313 (provides /usr/bin/python3 via
-	# update-alternatives). Without this mapping the name probes as missing
-	# and the retry loop re-fails on every attempt (observed on openSUSE:
-	# monkey-zsh checkhealth lost all 4 attempts this way). Leap 15 ships a
-	# real python3; its probe finds it before this row matters.
-	opensuse:python3) echo "python313" ;;
-	# Same class: no package named "node" (nodejs22 and friends), and an
-	# unmapped node falls through to the brew fallback — whose node formula
-	# drags python@3.14 in, which is HOW brew's python came to shadow
-	# /usr/bin/python3 on openSUSE. Version rolls with Tumbleweed: bump
-	# when the default nodejs major moves.
-	opensuse:node) echo "nodejs22" ;;
-	# pip3 is a standalone package on every distro (openSUSE's python313-pip
+	# python3 needs no versioned mapping: Leap 16 ships a literal python3
+	# package, and Tumbleweed resolves `python3` through the python313
+	# capability — probe_pkg_name's dry-run fallback covers both (verified
+	# 2026-10: `zypper install python3` works on both releases).
+	# No package named "node" either — `nodejs` resolves through the
+	# nodejs22 (Leap 16) / nodejs26 (Tumbleweed) capability, which drags the
+	# matching npm in as a recommended package, so npm needs no mapping
+	# either (see ensure_npm's node-first step).
+	opensuse:node) echo "nodejs" ;;
+	# pip3 is a standalone package on every distro (openSUSE's python3-pip
 	# is NOT pulled in by python3; Leap 16 proved this matters — see
-	# ensure_pip below).
+	# ensure_pip below). The python3- names resolve on openSUSE through
+	# capabilities (python313-pip provides python3-pip — verified 2026-10),
+	# so no interpreter-flavor versioning anywhere: a hard python313- name
+	# dies the day the default python rolls (python_flavor used to chase
+	# this at runtime and returned an empty prefix when python3 was absent).
 	debian:pip3 | ubuntu:pip3 | centos:pip3 | fedora:pip3) echo "python3-pip" ;;
 	arch:pip3) echo "python-pip" ;;
-	opensuse:pip3) echo "$(python_flavor)-pip" ;;
+	opensuse:pip3) echo "python3-pip" ;;
 	# ── compositor tooling (monkey-sway / monkey-hyprland) ──
 	# Merged from the per-repo checkhealth tables: one mapping table, no
 	# drift. Arms whose package name equals the binary name need no row —
@@ -89,11 +87,11 @@ default_pkg_name() {
 	debian:pygmentize | ubuntu:pygmentize) echo "python3-pygments" ;;
 	arch:pygmentize) echo "python-pygments" ;;
 	macos:pygmentize) echo "pygments" ;;
-	opensuse:pygmentize) echo "$(python_flavor)-Pygments" ;;
+	opensuse:pygmentize) echo "python3-Pygments" ;; # capability: python313-Pygments provides it
 	centos:pygmentize | fedora:pygmentize) echo "python3-pygments" ;;
 	debian:pylsp | ubuntu:pylsp) echo "python3-pylsp" ;;
 	arch:pylsp | macos:pylsp) echo "python-lsp-server" ;;
-	opensuse:pylsp) echo "$(python_flavor)-python-lsp-server" ;;
+	opensuse:pylsp) echo "python3-python-lsp-server" ;; # Leap has NO provider — probe fails → pip fallback (correct)
 	centos:pylsp | fedora:pylsp) echo "python3-lsp-server" ;;
 	# Debian/Ubuntu split clangd & clang-tidy into their own (unversioned
 	# metapackages — `clang` there ships only clang/clang++, so mapping them
@@ -107,7 +105,7 @@ default_pkg_name() {
 	arch:g++ | macos:g++) echo "gcc" ;;
 	opensuse:g++ | centos:g++ | fedora:g++) echo "gcc-c++" ;;
 	arch:black) echo "python-black" ;;
-	opensuse:black) echo "$(python_flavor)-black" ;;
+	opensuse:black) echo "python3-black" ;;
 	centos:black | fedora:black) echo "python3-black" ;;
 	*) echo "$1" ;;
 	esac
@@ -307,7 +305,17 @@ probe_pkg_name() {
 		;;
 	opensuse)
 		command -v zypper >/dev/null 2>&1 || return 0
-		zypper --non-interactive info "$1" >/dev/null 2>&1
+		# Literal package name first. openSUSE ships several tools ONLY as
+		# capabilities — `nodejs` is provided by nodejs22 (Leap 16) /
+		# nodejs26 (Tumbleweed), `python3` by python313 (Tumbleweed; Leap 16
+		# has a literal python3) — so when the literal name is missing, fall
+		# back to a dry-run resolve: it answers exactly the question "would
+		# `zypper install $1` succeed?" without hardcoding versioned names
+		# that a rolling release drops (nodejs22 did).
+		if zypper --non-interactive info "$1" >/dev/null 2>&1; then
+			return 0
+		fi
+		zypper --non-interactive install --dry-run "$1" >/dev/null 2>&1
 		;;
 	centos | fedora)
 		command -v dnf >/dev/null 2>&1 || return 0
@@ -502,10 +510,12 @@ install_pkg() {
 			# attempt (or a later component) is not blocked for its timeout.
 			[ "$brc" -eq 124 ] && cleanup_timed_out_brew
 			[ "$brc" -eq 0 ] || install_sys_pkg ${PKG_VALID[@]+"${PKG_VALID[@]}"} || _rc=1
-			# Whitelist the brew-first tools into ~/.local/bin so they keep
-			# beating the system versions now that brew sits at the BACK of
-			# PATH (see install_linuxbrew).
-			if [ "$_rc" -eq 0 ]; then
+			# Link on the BREW BATCH's own outcome — NOT on _rc, which also
+			# carries unrelated names' failures from the system batch
+			# (observed on openSUSE Tumbleweed: brew fzf succeeded, but a
+			# failed node in the same "fzf node" batch suppressed the
+			# ~/.local/bin link).
+			if [ "$brc" -eq 0 ]; then
 				_brew_first_link ${PKG_VALID[@]+"${PKG_VALID[@]}"}
 			fi
 		else
@@ -672,10 +682,16 @@ ensure_rustup() {
 # package python-lsp-server at all (Tumbleweed does), so pylsp can only come
 # from the pip fallback — which silently failed while pip3 was absent.
 ensure_pip() {
-	have_native_cmd pip3 && return 0
-	info "Installing pip3 via the system package manager..."
-	install_pkg "$(pkg_name pip3)" || return 1
-	have_native_cmd pip3 || return 1
+	# The run-check below must apply to a PRE-EXISTING pip3 too: a pip3 that
+	# exists but crashes on import must not short-circuit the repair —
+	# observed on Leap 16 2026-10, where every pip: install (pylsp) died in
+	# pip's own import chain while ensure_pip reported success because the
+	# binary was present.
+	if ! have_native_cmd pip3; then
+		info "Installing pip3 via the system package manager..."
+		install_pkg "$(pkg_name pip3)" || return 1
+		have_native_cmd pip3 || return 1
+	fi
 	# pip3 must actually RUN, not just exist: on a not-fully-updated system
 	# the distro python can be newer than its runtime libraries, and pip
 	# dies at import (it pulls in pyexpat → libexpat). Leap 16.0 shipped
@@ -692,7 +708,7 @@ ensure_pip() {
 			return 1
 		fi
 	fi
-	ok "pip3 installed."
+	ok "pip3 ready."
 }
 
 # Install a binary from the system package manager if it is missing.

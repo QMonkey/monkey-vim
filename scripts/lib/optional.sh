@@ -64,6 +64,13 @@ ensure_npm() {
 	fi
 	info "installing npm..."
 	install_pkg "$(pkg_name npm)" || true
+	# openSUSE has no standalone npm name on some releases — the unversioned
+	# nodejs package pulls the matching npm as a dependency, so installing
+	# node repairs npm without dragging brew's node in (which used to be the
+	# outcome here: every global package then landed in the brew prefix).
+	if ! have_native_cmd npm && ! have_native_cmd node; then
+		install_pkg "$(pkg_name node)" || true
+	fi
 	if ! have_native_cmd npm && have_native_cmd brew; then
 		# Last native source on distros whose index has no nodejs/npm —
 		# and whose only npm would otherwise be the Windows shim.
@@ -101,10 +108,23 @@ npm_install_g() {
 	# ensure_npm has verified a NATIVE npm (shims rejected via
 	# have_native_cmd — see native_bin_path) and the PATH ordering puts it
 	# first, so the plain name resolves to it.
-	local prefix
+	local prefix in_brew=false
 	prefix=$(npm config get prefix 2>/dev/null)
-	if [ -z "$prefix" ] || { [ ! -w "$prefix" ] && [ ! -w "$prefix/lib" ]; }; then
-		info "npm prefix ${prefix:-<unset>} is not user-writable — switching global installs to $HOME/.npm-global."
+	# A prefix inside Homebrew's tree (node installed via the brew fallback)
+	# is user-writable, but npm globals must not live there: they would be
+	# wiped with the Cellar on a brew upgrade/reinstall of node, and
+	# ~/.npm-global keeps them user-owned and independent of which node
+	# currently owns /usr/bin or brew/bin (observed on openSUSE Tumbleweed:
+	# every global package landed in /home/linuxbrew/.linuxbrew).
+	if have_native_cmd brew; then
+		local brew_prefix
+		brew_prefix="$(brew --prefix 2>/dev/null)"
+		case "$prefix" in
+		"$brew_prefix" | "$brew_prefix"/*) in_brew=true ;;
+		esac
+	fi
+	if [ -z "$prefix" ] || { [ ! -w "$prefix" ] && [ ! -w "$prefix/lib" ]; } || [ "$in_brew" = true ]; then
+		info "npm prefix ${prefix:-<unset>} is not user-owned — switching global installs to $HOME/.npm-global."
 		# --location=user: write ~/.npmrc, never a project-local npmrc.
 		npm config set prefix "$HOME/.npm-global" --location=user || return 1
 		prefix="$HOME/.npm-global"

@@ -34,6 +34,24 @@ fail() {
 	return 0
 }
 
+# ────────────────────── banner ──────────────────────
+# 80-column box (the smallest standard terminal width); the title is
+# centered inside it. The border is generated from WIDTH so the character
+# count can never drift from the padding math again.
+print_banner() {
+	local title="$1" width=80 pad border right
+	printf -v border '═%.0s' {1..80}
+	pad=$(((width - ${#title}) / 2))
+	[ "$pad" -gt 0 ] || pad=0
+	right=$((width - pad - ${#title}))
+	[ "$right" -gt 0 ] || right=0
+	echo ""
+	echo -e "${BOLD}╔${border}╗${NC}"
+	echo -e "${BOLD}║$(printf '%*s' "$pad" '')${title}$(printf '%*s' "$right" '')║${NC}"
+	echo -e "${BOLD}╚${border}╝${NC}"
+	echo ""
+}
+
 # Nested-call guard, exported on purpose: the nesting crosses a PROCESS
 # boundary — run_checkhealth retries `bash checkhealth.sh --install`, and
 # that child process re-enters retry from refresh_pkg / install_sys_pkg /
@@ -108,11 +126,13 @@ _retry_run() {
 # ──────────────────────────── retry ────────────────────────────
 # Reusable retry wrapper for every network-flavoured command (downloads,
 # git, package managers). Runs <cmd> up to <attempts> times; between
-# attempts it sleeps base * 2^(attempt-1) seconds (10s, 20s, 40s, ...),
+# attempts it sleeps base * 2^(attempt-1) seconds (15s, 30s, 60s, 120s),
 # capped at <max_delay>. Exponential backoff beats a fixed interval:
 # transient failures (mirror hiccup, rate limit, flaky GitHub) rarely
 # clear within a constant window, and the growing gaps cost nothing when
-# the first retry already succeeds.
+# the first retry already succeeds. With the defaults the wait before the
+# LAST attempt is exactly 120s — the longest gap sits right before the
+# final shot, where a longer pause buys the most.
 #
 # Every attempt also runs under a timeout: a black-holed connection
 # (SYN sent, nothing back — the 135s git fetch stalls seen against
@@ -121,9 +141,9 @@ _retry_run() {
 #
 # Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-t timeout]
 #              [-s desc] cmd...
-#   -n  total attempts, NOT retries (default 4)
-#   -d  first sleep in seconds (default 10)
-#   -m  sleep cap in seconds (default 60)
+#   -n  total attempts, NOT retries (default 5)
+#   -d  first sleep in seconds (default 15)
+#   -m  sleep cap in seconds (default 120)
 #   -t  per-attempt timeout in seconds (default 600; 0 disables) — pass a
 #       larger value for operations that are legitimately long (package
 #       installs, big clones) so a slow-but-alive transfer is not killed
@@ -133,7 +153,9 @@ _retry_run() {
 # flags are untouched — getopts stops at the first non-option word (e.g.
 # `curl`), so only the leading `-n/-d/-m/-t/-s` belong to retry.
 retry() {
-	local attempts=4 base=10 max=60 timeout_s=600 desc=""
+	# Defaults: 5 attempts, backoff 15s→30s→60s→120s (the last wait before
+	# the final attempt is the 120s maximum).
+	local attempts=5 base=15 max=120 timeout_s=600 desc=""
 	local opt
 	# A leading -- may guard a wrapped command that itself starts with an
 	# option-looking word; strip it BEFORE parsing.
@@ -608,86 +630,70 @@ version_ge() {
 # Type <cmd> + newline into the controlling terminal: the parent shell
 # executes it as if the user had typed it — AFTER this script (and any
 # wrapper chaining it) has fully exited, so injection can never disturb the
-# run itself. Needs python3 or perl; any failure returns non-zero so callers
-# can fall back to a printed hint. Never fatal — but the UNDERLYING error is
-# surfaced with warn() before returning: TIOCSTI fails for real, diagnosable
-# reasons (no controlling tty; kernel 6.2+ gating TIOCSTI behind
-# CAP_SYS_ADMIN unless the tty is the caller's controlling terminal → EPERM).
+# run itself.
+#
+# macOS: TIOCSTI exists (0x80017472 — codex#45119 verified injection
+# succeeding on an unsandboxed PTY) and no kernel gate applies, so macOS runs
+# the PLAIN attempts — no sudo needed. Sandboxed/Seatbelt contexts deny it
+# with EPERM; the surfaced error covers that.
+# Linux: the injection ALWAYS runs under sudo — kernel 6.2+ gates TIOCSTI
+# behind CAP_SYS_ADMIN (CONFIG_LEGACY_TIOCSTI off — WSL2 ships it off),
+# which root carries in the initial namespace, so the sudo run works on
+# gated and ungated kernels alike, silently under the installer's NOPASSWD
+# drop-in. The controlling terminal survives sudo, so the keys land in the
+# same terminal. python3 first, perl as fallback, plain error when both
+# are missing.
 inject_tty() {
-	local cmd="$1" tiocsti err=""
+	local cmd="$1" err py3 perlx tiocsti=0x5412 label=""
 	[ -n "$cmd" ] || return 1
-	# No writable controlling terminal (CI, nested pipes) — nothing to inject
-	# into. access(W_OK) on /dev/tty fails with ENXIO when the process has no
-	# controlling tty.
+	# No writable controlling terminal (CI, nested pipes) — nothing to
+	# inject into. access(W_OK) on /dev/tty fails with ENXIO when the
+	# process has no controlling tty.
 	if ! [ -w /dev/tty ]; then
 		warn "inject_tty: /dev/tty is not writable — no controlling terminal to inject into."
 		return 1
 	fi
-	# python3 first: termios.TIOCSTI carries the correct constant per platform
-	# (Linux 0x5412, Darwin 0x80047412). stderr is captured, not discarded —
-	# the failure reason reaches the user through the warn() below.
-	if have_native_cmd python3; then
-		err=$(
-			python3 - "$cmd" 2>&1 <<'PYEOF'
-import sys, os, fcntl, termios
-cmd = sys.argv[1] + "\n"
-try:
-    fd = os.open("/dev/tty", os.O_WRONLY)
-    ioctl = termios.TIOCSTI
-except (OSError, AttributeError) as e:
-    sys.exit("cannot inject: {}".format(e))
-# TIOCSTI's third argument is a POINTER to the byte to inject, not the byte
-# itself: passing ord(ch) hands the kernel a small integer as an address and
-# every call dies with EFAULT. A one-byte buffer passes the byte's address;
-# encoding to UTF-8 also makes multi-byte characters inject correctly.
-for b in cmd.encode():
-    buf = bytearray(1)
-    buf[0] = b
-    try:
-        fcntl.ioctl(fd, ioctl, buf)
-    except OSError as e:
-        sys.exit("TIOCSTI ioctl failed: {}".format(e))
-PYEOF
-		) && return 0
+	py3=$(command -v python3 2>/dev/null)
+	perlx=$(command -v perl 2>/dev/null)
+	# One implementation, two platforms — only the PREFIX and the perl
+	# constant differ:
+	#   Linux: kernel 6.2+ gates TIOCSTI behind CAP_SYS_ADMIN
+	#          (CONFIG_LEGACY_TIOCSTI off — WSL2 ships it off), so the
+	# injection is prefixed with sudo — root carries the capability,
+	# and the NOPASSWD drop-in keeps it silent during installs.
+	#   macOS: no gate — plain run; sudo would only add a password prompt.
+	# The controlling terminal survives sudo, so the keys land in the same
+	# terminal either way.
+	local -a runner=()
+	if [ "$(uname -s)" != Darwin ] && have_native_cmd sudo; then
+		runner=(sudo_cmd)
+		label=" (via sudo)"
 	fi
-	# perl fallback: macOS ships /usr/bin/perl, Debian/Ubuntu perl-base is
-	# Essential. TIOCSTI's value differs per platform.
-	tiocsti=0x5412
-	[ "$(uname -s)" = "Darwin" ] && tiocsti=0x80047412
-	if have_native_cmd perl; then
-		err=$(perl -e '
+	[ "$(uname -s)" = Darwin ] && tiocsti=0x80017472
+	if [ -n "$py3" ]; then
+		# termios.TIOCSTI carries the per-platform constant automatically.
+		if err=$(${runner[@]+"${runner[@]}"} "$py3" -c 'import sys,os,fcntl,termios
+cmd = sys.argv[1] + "\n"
+fd = os.open("/dev/tty", os.O_WRONLY)
+for b in cmd.encode():
+    buf = bytearray(1); buf[0] = b
+    fcntl.ioctl(fd, termios.TIOCSTI, buf)' "$cmd" 2>&1); then
+			ok "injected${label}."
+			return 0
+		fi
+	fi
+	if [ -n "$perlx" ]; then
+		if err=$(${runner[@]+"${runner[@]}"} "$perlx" -e '
 			my ($cmd, $tio) = @ARGV;
 			open(my $tty, ">", "/dev/tty") or die "open /dev/tty: $!\n";
-			# TIOCSTI wants a pointer to the byte: pass the character STRING
-			# itself (perl hands over its buffer). ord($ch) would pass the
-			# codepoint as an address -> EFAULT. split // on the byte string
-			# injects UTF-8 bytes, so multi-byte characters survive.
 			for my $ch (split //, $cmd . "\n") {
 				ioctl($tty, hex($tio), $ch) or die "TIOCSTI ioctl failed: $!\n";
 			}
-		' "$cmd" "$tiocsti" 2>&1) && return 0
+		' "$cmd" "$tiocsti" 2>&1); then
+			ok "injected${label}."
+			return 0
+		fi
 	fi
-	# Surface WHY it failed instead of a bare non-zero exit.
-	if [ -n "$err" ]; then
-		warn "inject_tty failed: $err"
-	fi
+	warn "inject_tty failed: ${err:-python3/perl not found}"
 	return 1
-}
-
-# ────────────────────── banner ──────────────────────
-# 80-column box (the smallest standard terminal width); the title is
-# centered inside it. The border is generated from WIDTH so the character
-# count can never drift from the padding math again.
-print_banner() {
-	local title="$1" width=80 pad border right
-	printf -v border '═%.0s' {1..80}
-	pad=$(((width - ${#title}) / 2))
-	[ "$pad" -gt 0 ] || pad=0
-	right=$((width - pad - ${#title}))
-	[ "$right" -gt 0 ] || right=0
-	echo ""
-	echo -e "${BOLD}╔${border}╗${NC}"
-	echo -e "${BOLD}║$(printf '%*s' "$pad" '')${title}$(printf '%*s' "$right" '')║${NC}"
-	echo -e "${BOLD}╚${border}╝${NC}"
-	echo ""
 }
