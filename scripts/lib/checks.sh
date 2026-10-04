@@ -628,7 +628,10 @@ install_missing_required() {
 	# and displayed via REQUIRED_NAME_FN (default: the binary name) — then
 	# a project-provided manual hint when anything is left over. Projects
 	# without the list keep the run_required_checks behaviour below.
-	if [ "${REQUIRED_REPROBE_LIST[@]+SET}" = "SET" ] && [ ${#REQUIRED_REPROBE_LIST[@]} -gt 0 ]; then
+	# -n on the @+ guard, never `[ "$x" = SET ]`: for an unset OR empty
+	# array the @+ alternative yields NOTHING, and `[ = "SET" ]` then
+	# prints "unary operator expected" on every run.
+	if [ -n "${REQUIRED_REPROBE_LIST[@]+SET}" ] && [ ${#REQUIRED_REPROBE_LIST[@]} -gt 0 ]; then
 		local rb probe_fn name_fn label
 		probe_fn=${REQUIRED_REPROBE_FN:-_reprobe_default}
 		name_fn=${REQUIRED_NAME_FN:-}

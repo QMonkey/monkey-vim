@@ -315,7 +315,17 @@ probe_pkg_name() {
 		if zypper --non-interactive info "$1" >/dev/null 2>&1; then
 			return 0
 		fi
-		zypper --non-interactive install --dry-run "$1" >/dev/null 2>&1
+		# The dry-run goes through sudo_cmd: `zypper install` is a
+		# privileged command even with --dry-run, and unprivileged it dies
+		# with rc 5 (ERR_PRIVILEGES) before the solver ever runs — which
+		# silently dropped EVERY capability name on Tumbleweed (python3,
+		# python3-black, python3-python-lsp-server, python3-Pygments) while
+		# literal names passed `zypper info` above. rc 104
+		# (INF_CAP_NOT_FOUND) is the ONLY "not found" verdict; any other
+		# failure must NOT filter the name — the real install reports it.
+		local rc=0
+		sudo_cmd zypper --non-interactive install --dry-run "$1" >/dev/null 2>&1 || rc=$?
+		[ "$rc" -ne 104 ]
 		;;
 	centos | fedora)
 		command -v dnf >/dev/null 2>&1 || return 0
@@ -737,6 +747,43 @@ brew_functional() {
 	[ -x "$1/bin/brew" ] && "$1/bin/brew" --version >/dev/null 2>&1
 }
 
+# The portable-ruby unpack needs tar AND gzip (the bottle is a .tar.gz)
+ensure_brew_unpack_tools() {
+	local tool
+	for tool in tar gzip; do
+		have_native_cmd "$tool" && continue
+		install_pkg "$tool" ||
+			warn "$tool is missing — the Homebrew install will likely fail halfway."
+	done
+}
+
+# fetch_url_or_clone <url> <repo-url> <dest> [label] — download <url>; when
+# the CDN is unreachable (raw.githubusercontent.com went down for minutes at
+# a time while github.com git endpoints still responded — 2026-10, Tumbleweed
+# and Arch), fall back to a shallow clone of <repo-url> and copy the script
+# out. <dest> must end with the script's basename.
+fetch_url_or_clone() {
+	local url="$1" repo_url="$2" dest="$3" label="${4:-download}"
+	if retry -s "$label download" curl -fsSL "$url" -o "$dest"; then
+		return 0
+	fi
+	local base dir
+	base="${url##*/}"
+	warn "$label download failed — falling back to a git clone..."
+	dir="$(mktemp -d)" || return 1
+	if ! retry -t 1800 -s "$label git clone" git clone --depth=1 "$repo_url" "$dir"; then
+		rm -rf "$dir"
+		return 1
+	fi
+	if [ ! -f "$dir/$base" ]; then
+		warn "$base not found in $repo_url — the git clone fallback cannot help."
+		rm -rf "$dir"
+		return 1
+	fi
+	mkdir -p "$(dirname "$dest")"
+	mv "$dir/$base" "$dest" && rm -rf "$dir"
+}
+
 install_linuxbrew() {
 	local brew_prefix="" cand
 	if have_native_cmd brew; then
@@ -768,12 +815,12 @@ install_linuxbrew() {
 		# `curl -fsSL -o` is silent: on a slow network the download (and its
 		# retries) would look like a hang without this line.
 		info "Downloading the Homebrew installer..."
-		# The portable-ruby unpack needs tar; a minimal install without it
-		# (openSUSE Tumbleweed) makes the installer fail halfway through and
-		# leaves a brew that cannot run. Install it up front when missing.
-		have_native_cmd tar || install_pkg tar ||
-			warn "tar is missing — the Homebrew install will likely fail halfway."
-		if retry -s "Homebrew installer download" curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"; then
+		# The portable-ruby unpack needs tar AND gzip; a minimal install
+		# without them (openSUSE Tumbleweed) makes the installer fail
+		# halfway through and leaves a brew that cannot run. Install them
+		# up front when missing.
+		ensure_brew_unpack_tools
+		if fetch_url_or_clone "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" "https://github.com/Homebrew/install" "$installer" "Homebrew installer"; then
 			:
 		else
 			warn "Homebrew installer download failed — continuing without Homebrew."

@@ -643,9 +643,79 @@ version_ge() {
 # drop-in. The controlling terminal survives sudo, so the keys land in the
 # same terminal. python3 first, perl as fallback, plain error when both
 # are missing.
+
+# ────────────────────── interactive-reader guard ──────────────────────
+# A succeeding TIOCSTI ioctl only proves the bytes entered the tty input
+# queue — someone must READ the queue afterwards. When the installer chain
+# was pulled up without an interactive shell behind the terminal (SSH
+# one-shot commands, piped harness runs that auto-answer every prompt),
+# nothing is reading when the chain exits: the pty dies and the queued
+# command evaporates while the log says OK (observed on an openSUSE
+# Tumbleweed VM run, 2026-10). The guard walks the ancestor chain for an
+# interactive shell — one that will be sitting at a prompt reading the tty
+# the moment this process exits — and refuses to inject without one.
+#
+# `ps` is the single source of truth on every platform: `args=` prints the
+# full command line (Linux procps and macOS BSD ps agree on the keyword)
+# and `ppid=` drives the walk — one code path, no /proc vs ps branches to
+# drift. -ww disables output-width truncation.
+
+_is_interactive_shell() {
+	# Interactive = argv0 is a shell and every remaining argument is a pure
+	# option flag: `zsh`, `zsh -i`, `zsh -l -i` all sit at a prompt reading
+	# the tty; `zsh -c cmd`, `bash script.sh` and `bash -lc '...'` never do.
+	# Known limit: ps flattens quoting, so a flag with a SEPARATE value word
+	# (zsh -o SOMETHING) reads as a positional — real interactive shells are
+	# launched bare (`zsh`, `-zsh`, `zsh -i`), so this never bites in
+	# practice.
+	local -a words
+	read -r -a words <<<"$(ps -ww -o args= -p "$1" 2>/dev/null)"
+	((${#words[@]} > 0)) || return 1
+	local prog="${words[0]##*/}" a
+	prog="${prog#-}" # login shells carry a leading dash ("-zsh")
+	case "$prog" in
+	zsh | bash | sh | dash | ksh | mksh | fish | csh | tcsh) ;;
+	*) return 1 ;;
+	esac
+	for a in "${words[@]:1}"; do
+		case "$a" in
+		-c | --command | --eval) return 1 ;;
+		--) return 1 ;;
+		-*) ;; # pure flag (-i, -l, --norc, ...)
+		*) return 1 ;; # positional: a script file or inline command
+		esac
+	done
+	return 0
+}
+
+_has_interactive_reader() {
+	# The guard blocks only on POSITIVE knowledge: the whole chain walked to
+	# init without finding an interactive shell. Any ps trouble along the
+	# way (missing, failing) means "cannot judge" — inject as before.
+	command -v ps >/dev/null 2>&1 || return 0
+	local pid ppid n=0
+	pid=$$
+	while [ "$pid" -gt 1 ] && [ "$n" -lt 25 ]; do
+		_is_interactive_shell "$pid" && return 0
+		ppid=$(ps -o ppid= -p "$pid" 2>/dev/null) || return 0
+		ppid="${ppid//[!0-9]/}"
+		[ -n "$ppid" ] || return 0
+		pid=$ppid
+		n=$((n + 1))
+	done
+	return 1
+}
+
 inject_tty() {
 	local cmd="$1" err py3 perlx tiocsti=0x5412 label=""
 	[ -n "$cmd" ] || return 1
+	# The reader guard comes FIRST: without an interactive shell to consume
+	# the queued bytes the injection is a silent no-op, however many
+	# ioctls "succeed".
+	if ! _has_interactive_reader; then
+		warn "no interactive shell is attached to this terminal — skipping injection; run: $cmd"
+		return 1
+	fi
 	# No writable controlling terminal (CI, nested pipes) — nothing to
 	# inject into. access(W_OK) on /dev/tty fails with ENXIO when the
 	# process has no controlling tty.
