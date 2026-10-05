@@ -382,7 +382,11 @@ ensure_aur_helper() {
 		rm -rf "$dir"
 		return 1
 	}
-	retry -t 1800 -s "AUR ${AUR_HELPER}-bin build" makepkg -si --noconfirm || rc=$?
+	# makepkg refuses to run outside a directory holding a PKGBUILD — build
+	# in a SUBSHELL cd'ed into the checkout, so the caller's cwd survives.
+	# Missing this cd made the build die with "PKGBUILD does not exist" on
+	# every run, leaving every AUR-only package (wlogout) unavailable.
+	(cd "$dir" && retry -t 1800 -s "AUR ${AUR_HELPER}-bin build" makepkg -si --noconfirm) || rc=$?
 	rm -rf "$dir"
 	[ "$rc" -eq 0 ] || {
 		warn "${AUR_HELPER}-bin build failed — AUR packages unavailable."
@@ -489,18 +493,45 @@ install_pkg() {
 	if ((${#rest[@]} > 0)); then
 		install_sys_pkg "${rest[@]}" || {
 			if have_native_cmd brew; then
+				# Brew is the fallback for names the system index LACKS —
+				# never for system-packaged tools whose install failed.
+				# A blind fallback once installed wl-clipboard,
+				# wireplumber and mako (node dragged in as mako's brew
+				# dependency) from bottles on arch while pacman was down:
+				# an unreachable index makes every probe reject, so the
+				# canary below skips the fallback entirely during outages
+				# and the outer checkhealth retry heals when the network
+				# returns. macOS has no system manager — brew is primary.
 				local -a bpkg=()
-				for b in "${rest[@]}"; do bpkg+=("$(pkg_name "$b" brew)"); done
-				filter_pkgs probe_brew_name "${bpkg[@]}"
-				warn_unknown_pkgs
-				# All names filtered: the arithmetic test fails, the group
-				# returns non-zero and _rc records it — same as an actual
-				# failed brew call.
-				if ((${#PKG_VALID[@]} > 0)); then
-					local fbrc=0
-					retry -t 1800 -s "brew install (fallback)" brew install ${PKG_VALID[@]+"${PKG_VALID[@]}"} || fbrc=$?
-					[ "$fbrc" -eq 124 ] && cleanup_timed_out_brew
-					[ "$fbrc" -eq 0 ]
+				local b canary fallback_allowed=1
+				if [ "${OS:-}" != macos ]; then
+					canary=$(_pkg_index_canary)
+					if [ -n "$canary" ] && ! probe_pkg_name "$canary"; then
+						warn "system package index unreachable — skipping the brew fallback; the retry loop heals later."
+						fallback_allowed=0
+					fi
+					if [ "$fallback_allowed" -eq 1 ]; then
+						for b in "${rest[@]}"; do
+							probe_pkg_name "$(pkg_name "$b")" || bpkg+=("$(pkg_name "$b")")
+						done
+					fi
+				else
+					for b in "${rest[@]}"; do bpkg+=("$(pkg_name "$b" brew)"); done
+				fi
+				if [ "$fallback_allowed" -eq 1 ]; then
+					filter_pkgs probe_brew_name "${bpkg[@]}"
+					warn_unknown_pkgs
+					# All names filtered: the arithmetic test fails, the group
+					# returns non-zero and _rc records it — same as an actual
+					# failed brew call.
+					if ((${#PKG_VALID[@]} > 0)); then
+						local fbrc=0
+						retry -t 1800 -s "brew install (fallback)" brew install ${PKG_VALID[@]+"${PKG_VALID[@]}"} || fbrc=$?
+						[ "$fbrc" -eq 124 ] && cleanup_timed_out_brew
+						[ "$fbrc" -eq 0 ]
+					else
+						false
+					fi
 				else
 					false
 				fi
@@ -538,6 +569,18 @@ install_pkg() {
 	# install status.
 	hash -r
 	return "$_rc"
+}
+
+# A package present in every repo set of its distro — the probe canary for
+# install_pkg's brew fallback: when the canary itself probes negative, the
+# index is unreachable (network outage) and every "unknown" verdict is a
+# false negative. macOS: no system manager, no canary.
+_pkg_index_canary() {
+	case "$OS" in
+	debian | ubuntu) echo "dpkg" ;;
+	arch | opensuse | centos | fedora) echo "filesystem" ;;
+	*) return 1 ;;
+	esac
 }
 
 get_install_hint() {
@@ -702,18 +745,36 @@ ensure_pip() {
 		install_pkg "$(pkg_name pip3)" || return 1
 		have_native_cmd pip3 || return 1
 	fi
-	# pip3 must actually RUN, not just exist: on a not-fully-updated system
-	# the distro python can be newer than its runtime libraries, and pip
-	# dies at import (it pulls in pyexpat → libexpat). Leap 16.0 shipped
-	# python3.13 built against libexpat 2.7 while GA media had an older
-	# one — updating libexpat1 fixes it.
-	if ! pip3 --version >/dev/null; then
+	# pip3 must actually RUN, not just exist. Two failure shapes on a
+	# not-fully-updated openSUSE Leap 16, both caused by python3.13 being
+	# built against a newer libexpat than the installed runtime:
+	#   1. pip3 dies at startup (the --version check below catches it), and
+	#   2. --version is green but the first real install crashes importing
+	#      pyexpat (undefined symbol XML_SetAllocTrackerActivationThreshold
+	#      — pip's HTML parsing pulls it in; observed 2026-11 where the
+	#      pylsp pip fallback died while --version stayed green).
+	# Both heal by updating libexpat1. The pyexpat probe is openSUSE-gated:
+	# elsewhere pip3's interpreter may differ from python3.
+	pip_ok() {
+		pip3 --version >/dev/null 2>&1 || return 1
+		[ "${OS:-}" = opensuse ] || return 0
+		python3 -c 'import pyexpat' >/dev/null 2>&1
+	}
+	if ! pip_ok; then
 		warn "pip3 is installed but fails to run — runtime library mismatch on a not-fully-updated system?"
 		if [ "${OS:-}" = opensuse ] && have_native_cmd zypper; then
 			info "updating libexpat1 (the known Leap 16 victim)..."
 			sudo_cmd zypper update -y libexpat1 >/dev/null 2>&1 || true
+			# The targeted update may not be enough when python3 came from
+			# a newer snapshot than the rest of the system — escalate to a
+			# full upgrade: slow, but it heals every such version skew at
+			# once (any of them breaks pip the same way).
+			if ! pip_ok; then
+				info "libexpat1 alone did not fix it — running a full system upgrade (this can take a while)..."
+				retry -t 3600 -s "zypper update (full)" sudo_cmd zypper update -y --auto-agree-with-licenses >/dev/null 2>&1 || true
+			fi
 		fi
-		if ! pip3 --version >/dev/null; then
+		if ! pip_ok; then
 			warn "pip3 still not runnable — update the system packages and re-run."
 			return 1
 		fi

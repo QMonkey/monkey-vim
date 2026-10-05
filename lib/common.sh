@@ -681,22 +681,50 @@ _is_interactive_shell() {
 		case "$a" in
 		-c | --command | --eval) return 1 ;;
 		--) return 1 ;;
-		-*) ;; # pure flag (-i, -l, --norc, ...)
+		-*) ;;         # pure flag (-i, -l, --norc, ...)
 		*) return 1 ;; # positional: a script file or inline command
 		esac
 	done
 	return 0
 }
 
+# _stdin_tty_of <pid> — what process <pid> has open on fd 0, empty when
+# unknown. Command-based (lsof) so it works on macOS too, where /proc does
+# not exist; Linux falls back to a /proc readlink when lsof is absent.
+_stdin_tty_of() {
+	if command -v lsof >/dev/null 2>&1; then
+		lsof -a -p "$1" -d 0 -Fn 2>/dev/null | sed -n 's/^n//p' | head -n 1
+	elif [ -d "/proc/$1" ]; then
+		readlink "/proc/$1/fd/0" 2>/dev/null
+	fi
+}
+
 _has_interactive_reader() {
 	# The guard blocks only on POSITIVE knowledge: the whole chain walked to
-	# init without finding an interactive shell. Any ps trouble along the
-	# way (missing, failing) means "cannot judge" — inject as before.
+	# init without finding a shell that will read the injected bytes. Any ps
+	# trouble along the way (missing, failing) means "cannot judge" — inject
+	# as before.
 	command -v ps >/dev/null 2>&1 || return 0
-	local pid ppid n=0
+	local my_tty pid ppid fd0 n=0
+	# The tty the queued bytes must land in: OUR controlling terminal.
+	my_tty=$(ps -o tty= -p "$$" 2>/dev/null)
+	my_tty="${my_tty//[[:space:]]/}"
 	pid=$$
 	while [ "$pid" -gt 1 ] && [ "$n" -lt 25 ]; do
-		_is_interactive_shell "$pid" && return 0
+		if _is_interactive_shell "$pid"; then
+			# ...AND it must actually read the terminal: its fd 0 is our
+			# controlling tty. An interactive-LOOKING shell with a pipe on
+			# fd 0 (harness-driven `zsh -i < feeder`, `bash -s < script`)
+			# never consumes the tty queue — the false positive that logged
+			# "injected (via sudo)" while nothing executed.
+			# _stdin_tty_of covers macOS via lsof; an empty answer
+			# (dead/foreign/uninspectable PID) just fails the match and the
+			# walk continues.
+			fd0=$(_stdin_tty_of "$pid")
+			if [ -n "$my_tty" ] && { [ "$fd0" = "/dev/$my_tty" ] || [ "$fd0" = "/dev/tty" ]; }; then
+				return 0
+			fi
+		fi
 		ppid=$(ps -o ppid= -p "$pid" 2>/dev/null) || return 0
 		ppid="${ppid//[!0-9]/}"
 		[ -n "$ppid" ] || return 0
