@@ -710,6 +710,10 @@ _has_interactive_reader() {
 	my_tty=$(ps -o tty= -p "$$" 2>/dev/null)
 	my_tty="${my_tty//[[:space:]]/}"
 	pid=$$
+	# Diagnostic breadcrumbs for the log file inject_tty keeps: WHO the walk
+	# trusted as the reader, and which ancestors it inspected and rejected.
+	TIOCSTI_READER_DESC=""
+	TIOCSTI_CHAIN_DESC=""
 	while [ "$pid" -gt 1 ] && [ "$n" -lt 25 ]; do
 		if _is_interactive_shell "$pid"; then
 			# ...AND it must actually read the terminal: its fd 0 is our
@@ -721,9 +725,13 @@ _has_interactive_reader() {
 			# (dead/foreign/uninspectable PID) just fails the match and the
 			# walk continues.
 			fd0=$(_stdin_tty_of "$pid")
+			TIOCSTI_CHAIN_DESC="$TIOCSTI_CHAIN_DESC ${pid}:${fd0:-unknown}"
 			if [ -n "$my_tty" ] && { [ "$fd0" = "/dev/$my_tty" ] || [ "$fd0" = "/dev/tty" ]; }; then
+				TIOCSTI_READER_DESC="${pid} $(_ps_args "$pid") tty=$fd0"
 				return 0
 			fi
+		else
+			TIOCSTI_CHAIN_DESC="$TIOCSTI_CHAIN_DESC ${pid}:non-int($(_ps_args "$pid"))"
 		fi
 		ppid=$(ps -o ppid= -p "$pid" 2>/dev/null) || return 0
 		ppid="${ppid//[!0-9]/}"
@@ -734,6 +742,19 @@ _has_interactive_reader() {
 	return 1
 }
 
+# ps -o args= — one wrapper so the callers stay readable (and so a missing
+# ps degrades to an empty description instead of an error).
+_ps_args() {
+	ps -o args= -p "$1" 2>/dev/null
+}
+
+# _tiocsti_log <line> — append a diagnostic line for post-mortem analysis.
+# The next VM run answers "who did the guard trust, what did it inject,
+# what failed" without another round of archaeology.
+_tiocsti_log() {
+	printf '%s %s\n' "$(date "+%F %T")" "$1" >>"${TIOCSTI_LOG:-/tmp/tiocsti-debug.log}" 2>/dev/null || :
+}
+
 inject_tty() {
 	local cmd="$1" err py3 perlx tiocsti=0x5412 label=""
 	[ -n "$cmd" ] || return 1
@@ -741,6 +762,7 @@ inject_tty() {
 	# the queued bytes the injection is a silent no-op, however many
 	# ioctls "succeed".
 	if ! _has_interactive_reader; then
+		_tiocsti_log "SKIP no-reader chain='${TIOCSTI_CHAIN_DESC:-}'; run: $cmd"
 		warn "no interactive shell is attached to this terminal — skipping injection; run: $cmd"
 		return 1
 	fi
@@ -776,6 +798,7 @@ fd = os.open("/dev/tty", os.O_WRONLY)
 for b in cmd.encode():
     buf = bytearray(1); buf[0] = b
     fcntl.ioctl(fd, termios.TIOCSTI, buf)' "$cmd" 2>&1); then
+			_tiocsti_log "INJECT reader='${TIOCSTI_READER_DESC:-}' cmd='$cmd' via=python3 rc=0"
 			ok "injected${label}."
 			return 0
 		fi
@@ -788,10 +811,12 @@ for b in cmd.encode():
 				ioctl($tty, hex($tio), $ch) or die "TIOCSTI ioctl failed: $!\n";
 			}
 		' "$cmd" "$tiocsti" 2>&1); then
+			_tiocsti_log "INJECT reader='${TIOCSTI_READER_DESC:-}' cmd='$cmd' via=perl rc=0"
 			ok "injected${label}."
 			return 0
 		fi
 	fi
+	_tiocsti_log "FAIL reader='${TIOCSTI_READER_DESC:-}' cmd='$cmd' err=${err:-python3/perl not found}"
 	warn "inject_tty failed: ${err:-python3/perl not found}"
 	return 1
 }
