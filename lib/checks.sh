@@ -243,10 +243,17 @@ _strategy_step() {
 		have_native_cmd brew || return 1
 		# zig/zls pull LLVM and marksman pulls the .NET runtime as formula
 		# dependencies — installs that dwarf a normal bottle.
+		local brc=0
 		case "$args" in
-		zig | zls | marksman) retry -t 3600 -s "brew install $args" brew install $args ;;
-		*) retry -t 1800 -s "brew install $args" brew install $args ;;
+		zig | zls | marksman) retry -t 7200 -s "brew install $args" brew install $args || brc=$? ;;
+		*) retry -t 1800 -s "brew install $args" brew install $args || brc=$? ;;
 		esac
+		# A timed-out brew leaves an orphaned ruby worker holding the
+		# download flock — every later brew call then dies with "already
+		# locked". install_pkg's brew paths already clean up on 124; the strategy
+		# must too, BEFORE the retry ladder hits the same lock again.
+		[ "$brc" -eq 124 ] && cleanup_timed_out_brew
+		[ "$brc" -eq 0 ]
 		;;
 	rustup)
 		ensure_rust

@@ -367,18 +367,15 @@ have_aur_helper() {
 # `pacman -U` shells out to sudo itself, which the temporary NOPASSWD
 # drop-in already covers. Never run the helper itself under sudo_cmd —
 # paru refuses root, and its own privileged steps are makepkg's business.
-ensure_aur_helper() {
-	have_aur_helper && return 0
-	[ "$OS" = arch ] || return 1
-	info "installing $AUR_HELPER (AUR helper)..."
-	# makepkg's base: base-devel is a package GROUP, not a package — a
-	# pacman -Si probe cannot vouch for it, so this install goes straight
-	# to pacman instead of through install_pkg's probe pass. --needed
-	# keeps it a no-op on a machine that already has the toolchain.
-	refresh_pkg
-	retry -t 1800 -s "pacman install base-devel git" sudo_cmd pacman -S --needed --noconfirm base-devel git || return 1
-	local dir="/tmp/${AUR_HELPER}-build.$$" rc=0
-	retry -s "AUR ${AUR_HELPER}-bin clone" git clone "https://aur.archlinux.org/${AUR_HELPER}-bin.git" "$dir" || {
+# Build one AUR helper variant inside its cloned checkout; returns 0 when
+# makepkg succeeded. The caller decides whether the result actually RUNS.
+_ensure_aur_variant() {
+	# NB: two separate local statements — `local pkg="$1" dir="...${pkg}..."`
+	# expands ${pkg} BEFORE pkg is assigned (same command line), producing
+	# "/tmp/-build.$$" and silently defeating the variant logic below.
+	local pkg="$1"
+	local dir="/tmp/${pkg}-build.$$" rc=0
+	retry -s "AUR $pkg clone" git clone "https://aur.archlinux.org/${pkg}.git" "$dir" || {
 		rm -rf "$dir"
 		return 1
 	}
@@ -386,24 +383,60 @@ ensure_aur_helper() {
 	# in a SUBSHELL cd'ed into the checkout, so the caller's cwd survives.
 	# Missing this cd made the build die with "PKGBUILD does not exist" on
 	# every run, leaving every AUR-only package (wlogout) unavailable.
-	(cd "$dir" && retry -t 1800 -s "AUR ${AUR_HELPER}-bin build" makepkg -si --noconfirm) || rc=$?
+	(cd "$dir" && retry -t 1800 -s "AUR $pkg build" makepkg -si --noconfirm) || rc=$?
 	rm -rf "$dir"
-	[ "$rc" -eq 0 ] || {
-		warn "${AUR_HELPER}-bin build failed — AUR packages unavailable."
-		return 1
-	}
+	return "$rc"
+}
+
+ensure_aur_helper() {
+	# A -bin paru breaks whenever the system libalpm outgrows the SONAME the
+	# PREBUILT binary was linked against (a pacman update → "libalpm.so.15:
+	# cannot open shared object file"). Existing-but-dead must be REBUILT,
+	# not adopted — and because the -bin PKGBUILD downloads an upstream
+	# PREBUILT binary, rebuilding it re-downloads the SAME mismatched binary
+	# (the rebuild that did not cure the breakage, arch 2026-11). The ladder
+	# is therefore: paru-bin first (no Rust toolchain), functional check,
+	# and on failure the SOURCE paru — linked against the local libalpm at
+	# the cost of pulling Rust as a makedepends.
+	if have_aur_helper && "$AUR_HELPER" --version >/dev/null 2>&1; then
+		return 0
+	fi
+	[ "$OS" = arch ] || return 1
+	if have_aur_helper; then
+		warn "$AUR_HELPER exists but cannot run (system libalpm moved past its build?) — rebuilding..."
+	else
+		info "installing $AUR_HELPER (AUR helper)..."
+	fi
+	# makepkg's base: base-devel is a package GROUP, not a package — a
+	# pacman -Si probe cannot vouch for it, so this install goes straight
+	# to pacman instead of through install_pkg's probe pass. --needed
+	# keeps it a no-op on a machine that already has the toolchain.
+	refresh_pkg
+	retry -t 1800 -s "pacman install base-devel git" sudo_cmd pacman -S --needed --noconfirm base-devel git || return 1
+	local variant rc=1
+	for variant in paru-bin "$AUR_HELPER"; do
+		_ensure_aur_variant "$variant" || continue
+		if have_aur_helper && "$AUR_HELPER" --version >/dev/null 2>&1; then
+			rc=0
+			break
+		fi
+		warn "$variant was installed but cannot run (libalpm SONAME mismatch?) — trying the next variant..."
+	done
 	hash -r
-	have_aur_helper || {
-		warn "$AUR_HELPER still not available after build."
-		return 1
-	}
-	ok "$AUR_HELPER ready."
+	if [ "$rc" -eq 0 ]; then
+		ok "$AUR_HELPER ready."
+	else
+		warn "$AUR_HELPER still not available after every variant."
+	fi
+	return "$rc"
 }
 
 probe_aur_name() {
-	# `paru -Si` is an AUR-RPC query and fails on an unknown name. Without a
-	# helper there is nothing to probe against — don't filter (the real
-	# install attempt reports the error, same policy as probe_brew_name).
+	# `paru -Si` is an AUR-RPC query and fails on an unknown name. Probes are
+	# single-shot by policy — a transient failure drops the name, and the
+	# outer checkhealth retry heals on its next pass. Without a helper there
+	# is nothing to probe against — don't filter (the real install attempt
+	# reports the error, same policy as probe_brew_name).
 	have_aur_helper || return 0
 	"$AUR_HELPER" -Si "$1" >/dev/null 2>&1
 }
@@ -545,7 +578,9 @@ install_pkg() {
 		warn_unknown_pkgs
 		if ((${#PKG_VALID[@]} > 0)); then
 			local brc=0
-			retry -t 1800 -s "brew install" brew install ${PKG_VALID[@]+"${PKG_VALID[@]}"} || brc=$?
+			# The BREW_FIRST batch can carry heavy formulae (zig pulls
+			# llvm@22 + lld@22) — 7200 gives those downloads room.
+			retry -t 7200 -s "brew install" brew install ${PKG_VALID[@]+"${PKG_VALID[@]}"} || brc=$?
 			# A timed-out attempt leaves an orphaned ruby worker holding the
 			# cache flock — kill it BEFORE the system fallback, so the next
 			# attempt (or a later component) is not blocked for its timeout.
