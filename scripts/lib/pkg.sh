@@ -591,8 +591,16 @@ install_pkg() {
 			# (observed on openSUSE Tumbleweed: brew fzf succeeded, but a
 			# failed node in the same "fzf node" batch suppressed the
 			# ~/.local/bin link).
+			#
+			# Link the WHOLE whitelist, not just this batch's names: a batch
+			# can pull an unrelated BREW_FIRST tool as a DEPENDENCY (brew
+			# zls installs zig 0.17 transitively, after the zig batch itself had fallen back
+			# to the system package). Without the wide link that brew zig
+			# stays shadowed by /usr/bin/zig forever, because brew bin dirs
+			# are APPENDED to PATH. _brew_first_link skips any name brew
+			# does not actually provide, so the wide call is harmless.
 			if [ "$brc" -eq 0 ]; then
-				_brew_first_link ${PKG_VALID[@]+"${PKG_VALID[@]}"}
+				_brew_first_link ${BREW_FIRST[@]+"${BREW_FIRST[@]}"}
 			fi
 		else
 			_rc=1
