@@ -101,9 +101,13 @@ INSTALL_INFO=(
 )
 
 # src|dst — the swap/sessions/viminfo dirs under .cache are auto-created on
-# first launch, so only .vimrc is linked.
+# first launch, so only .vimrc is linked. "keep" mode: an existing target is
+# skipped with an info line, a missing source is skipped silently (the repo
+# may not even ship configs/.clang-format or configs/efm-langserver).
 SYMLINKS=(
 	"$INSTALL_DIR/.vimrc|$HOME/.vimrc"
+	"$INSTALL_DIR/configs/.clang-format|$HOME/.clang-format|keep"
+	"$INSTALL_DIR/configs/efm-langserver|$HOME/.config/efm-langserver|keep"
 )
 ENSURE_DIRS=(
 	"$HOME/.cache/vim/swap"
@@ -125,12 +129,6 @@ SUMMARY_LINES=(
 )
 
 # ──────────────────────── project steps ────────────────────────
-
-install_print_info() {
-	if is_wsl; then
-		info "Detected WSL — building Vim with GTK3 + X11 (WSLg clipboard)."
-	fi
-}
 
 install_vim_build_deps() {
 	info "Installing Vim build dependencies..."
@@ -404,32 +402,6 @@ build_vim() {
 	fi
 }
 
-# ──────────────────────── extra links (same block as the symlinks step) ──────
-
-# .clang-format and the efm-langserver config are repo-side files: link them
-# once, never touch an existing target (the repo may not even ship them).
-install_step_symlinks() {
-	if [ -d "$INSTALL_DIR/configs" ]; then
-		if [ -f "$INSTALL_DIR/configs/.clang-format" ]; then
-			if [ -e "$HOME/.clang-format" ] || [ -L "$HOME/.clang-format" ]; then
-				info "~/.clang-format already exists — skipping."
-			else
-				ln -sf "$INSTALL_DIR/configs/.clang-format" "$HOME/.clang-format"
-				ok ".clang-format → $INSTALL_DIR/configs/.clang-format"
-			fi
-		fi
-		if [ -d "$INSTALL_DIR/configs/efm-langserver" ]; then
-			if [ -e "$HOME/.config/efm-langserver" ] || [ -L "$HOME/.config/efm-langserver" ]; then
-				info "efm-langserver config already exists — skipping."
-			else
-				mkdir -p "$HOME/.config"
-				ln -sfn "$INSTALL_DIR/configs/efm-langserver" "$HOME/.config/efm-langserver"
-				ok "efm-langserver config → $HOME/.config/efm-langserver"
-			fi
-		fi
-	fi
-}
-
 # ──────────────────────── plugins ────────────────────────
 
 install_plugins() {
@@ -470,6 +442,11 @@ install_plugins() {
 
 # ──────────────────────── hooks ────────────────────────
 # A hook prints its own trailing blank line when it produced output.
+install_print_info() {
+	if is_wsl; then
+		info "Detected WSL — building Vim with GTK3 + X11 (WSLg clipboard)."
+	fi
+}
 install_step_prepare() {
 	# First: make $XDG_RUNTIME_DIR usable — vim's server features
 	# (--servername/--serverlist) write runtime files there and fail on a
