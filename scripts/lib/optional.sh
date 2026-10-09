@@ -13,29 +13,13 @@
 ensure_rust() {
 	if ! have_native_cmd rustup; then
 		info "installing rustup..."
-		# Download fully before executing, with retries — `curl | sh` would
-		# run a truncated script if the connection drops mid-stream (same
-		# pattern as the wezterm installer's rustup setup).
-		local rustup_init="/tmp/rustup_init.$$.sh"
-		if retry -t 1800 -s "rustup installer download" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "$rustup_init"; then
-			# The -y run downloads the whole toolchain (hundreds of MB) —
-			# long timeout, and retried: rustup-init is idempotent, a retry
-			# continues instead of starting over.
-			retry -t 3600 -s "rustup toolchain install" sh "$rustup_init" -y ||
-				{
-					warn "rustup install failed"
-					return 1
-				}
-			rm -f "$rustup_init"
-		else
-			warn "rustup installer download failed"
+		# _install_rustup_core (pkg.sh) owns the download/install mechanics;
+		# this strategy variant warns and returns 1 so install_strategy can
+		# continue with the next step instead of aborting the run.
+		_install_rustup_core || {
+			warn "rustup install failed"
 			return 1
-		fi
-	fi
-	if [ -f "$HOME/.cargo/env" ]; then
-		# shellcheck disable=SC1091
-		. "$HOME/.cargo/env"
-		export PATH="$HOME/.cargo/bin:$PATH"
+		}
 	fi
 	have_native_cmd cargo && return 0
 }
@@ -56,7 +40,7 @@ ensure_npm() {
 	# Windows shim counts as "not installed", so the native node/npm below
 	# get installed even when the Windows tree carries its own. PATH
 	# ordering — brew before the Windows shims, system before brew — is
-	# guaranteed by path_add_pre_win (common.sh) in the preseed, re-expose
+	# guaranteed by export_path_pre_win (env.sh) in the preseed, re-expose
 	# and persisted-profile layers, so a plain `npm` call in npm_install_g
 	# resolves to the native binary everywhere.
 	if have_native_cmd npm && have_native_cmd node; then
@@ -222,24 +206,14 @@ _strategy_hint() {
 # Default hint: join the hints of every strategy step with "# or:".
 # Projects may define their own `optional_hint` after sourcing this file.
 optional_hint() {
-	local bin="$1" spec strategy rest step kind args h out=""
+	local bin="$1" spec strategy rest h out=""
 	spec=$(find_spec "$bin") || spec="$bin"
 	parse_spec "$spec"
 	strategy="${SPEC_INSTALL:-pkg}"
 	rest="$strategy"
-	while [ -n "$rest" ]; do
-		step="${rest%%,*}"
-		if [ "$rest" = "$step" ]; then
-			rest=""
-		else
-			rest="${rest#*,}"
-		fi
-		kind="${step%%:*}"
-		args=""
-		if [ "$step" != "$kind" ]; then
-			args="${step#*:}"
-		fi
-		h=$(_strategy_hint "$kind" "$args")
+	while _strategy_split "$rest"; do
+		rest="$_STRATEGY_REST"
+		h=$(_strategy_hint "$_STRATEGY_KIND" "$_STRATEGY_ARGS")
 		[ -n "$h" ] || continue
 		if [ -z "$out" ]; then
 			out="$h"

@@ -6,7 +6,9 @@
 #   id|check|desc|install|ver_regex|fallback|token
 #     id        binary (or sentinel) name; recorded in MISSING_* and used
 #               for package-name lookups
-#     check     bin (default) | ext | anyof:a b c | anyofext:a b c | ver:MIN
+#     check     bin (default) | ext | anyof:a b c | anyofext:a b c |
+#               ver:MIN | ver:MIN!bad bad (versions that pass MIN but are
+#               known broken, exact match on the extracted version)
 #     desc      printed text (default: id)
 #     install   pkg (default) | pkg:name,name | npm:x | go:x | cargo:x |
 #               pip:x | brew:x | rustup | rustup-component:x |
@@ -29,23 +31,15 @@ MISSING_RECOMMENDED=()
 MISSING_OPTIONAL=()
 
 parse_spec() {
-	IFS='|' read -r SPEC_ID SPEC_CHECK SPEC_DESC SPEC_INSTALL SPEC_VER_RE SPEC_FALLBACK SPEC_TOKEN SPEC_GROUP <<<"$1"
+	# Plain heredoc, NOT a herestring (`<<<"$1"`): legacy sh.vim — nvim/vim
+	# without tree-sitter for sh — parses `<<<` as a heredoc begin whose
+	# delimiter never matches, rendering the rest of the file as one unterminated heredoc.
+	IFS='|' read -r SPEC_ID SPEC_CHECK SPEC_DESC SPEC_INSTALL SPEC_VER_RE SPEC_FALLBACK SPEC_TOKEN SPEC_GROUP <<EOF
+$1
+EOF
 	SPEC_CHECK="${SPEC_CHECK:-bin}"
 	SPEC_DESC="${SPEC_DESC:-$SPEC_ID}"
 	SPEC_INSTALL="${SPEC_INSTALL:-pkg}"
-}
-
-extract_version() {
-	local bin="$1" regex="${2:-[0-9]+\.[0-9]+}" flag ver="" out
-	for flag in --version -V -v; do
-		out=$("$bin" "$flag" 2>/dev/null) || out=""
-		[ -n "$out" ] || continue
-		ver=$(printf '%s\n' "$out" | grep -oE "$regex" | head -1)
-		if [ -n "$ver" ]; then
-			break
-		fi
-	done
-	printf '%s' "$ver"
 }
 
 # /usr/lib* lookup for D-Bus services and polkit agents that live outside PATH.
@@ -118,7 +112,14 @@ record_missing() {
 }
 
 check_version_spec() {
-	local mode="$1" min="${SPEC_CHECK#ver:}" ver
+	local mode="$1" ver
+	# "ver:MIN" or "ver:MIN!bad bad" — the exclusion list names versions that
+	# satisfy the minimum but are KNOWN BROKEN (e.g. tmux 3.7–3.7b: exiting
+	# a session crashes instead of switching; fixed in 3.7c). Exact string
+	# match on the extracted version.
+	local vspec="${SPEC_CHECK#ver:}"
+	local min="${vspec%%!*}" bad=""
+	[ "$vspec" != "$min" ] && bad="${vspec#*!}"
 	if ! have_native_cmd "$SPEC_ID"; then
 		if [ -n "$SPEC_FALLBACK" ] && have_native_cmd "$SPEC_FALLBACK"; then
 			warn "${SPEC_DESC} binary not found, but ${SPEC_FALLBACK} is available"
@@ -139,6 +140,14 @@ check_version_spec() {
 		record_missing "$mode" "$SPEC_INSTALL_ID"
 		return 1
 	fi
+	local v
+	for v in $bad; do
+		if [ "$ver" = "$v" ]; then
+			fail "${SPEC_DESC} ${ver} (known broken — need >= ${min}, excluding: ${bad})"
+			record_missing "$mode" "$SPEC_INSTALL_ID"
+			return 1
+		fi
+	done
 	if version_ge "$ver" "$min"; then
 		ok "${SPEC_DESC} ${ver}"
 		if [ -n "$SPEC_TOKEN" ]; then
@@ -153,6 +162,16 @@ check_version_spec() {
 	fail "${SPEC_DESC} ${ver} (need >= ${min})"
 	record_missing "$mode" "$SPEC_INSTALL_ID"
 	return 1
+}
+
+# Dispatch an "@call|fn" marker to a project-defined check function.
+_run_call_hook() {
+	local fn="$1"
+	if declare -F "$fn" >/dev/null 2>&1; then
+		"$fn"
+	else
+		warn "unknown check hook: $fn"
+	fi
 }
 
 # One dependency line. Sets SPEC_* globals for the caller.
@@ -223,7 +242,6 @@ _strategy_step() {
 		npm_install_g $args
 		;;
 	go)
-		ensure_go_env
 		go_install $args
 		;;
 	cargo)
@@ -243,17 +261,11 @@ _strategy_step() {
 		have_native_cmd brew || return 1
 		# zig/zls pull LLVM and marksman pulls the .NET runtime as formula
 		# dependencies — installs that dwarf a normal bottle.
-		local brc=0
+		local bt=1800
 		case "$args" in
-		zig | zls | marksman) retry -t 7200 -s "brew install $args" brew install $args || brc=$? ;;
-		*) retry -t 1800 -s "brew install $args" brew install $args || brc=$? ;;
+		zig | zls | marksman) bt=7200 ;;
 		esac
-		# A timed-out brew leaves an orphaned ruby worker holding the
-		# download flock — every later brew call then dies with "already
-		# locked". install_pkg's brew paths already clean up on 124; the strategy
-		# must too, BEFORE the retry ladder hits the same lock again.
-		[ "$brc" -eq 124 ] && cleanup_timed_out_brew
-		[ "$brc" -eq 0 ]
+		brew_install_retry "$bt" "brew install $args" $args
 		;;
 	rustup)
 		ensure_rust
@@ -274,28 +286,38 @@ _strategy_step() {
 	esac
 }
 
+# Split one comma-separated strategy step off <rest> (e.g. "pkg,pip:x"):
+# sets _STRATEGY_KIND / _STRATEGY_ARGS / _STRATEGY_REST (what remains after
+# the step) and returns 1 when the list is exhausted. Shared by
+# install_strategy (execution) and optional_hint (hint derivation).
+_strategy_split() {
+	[ -n "$1" ] || return 1
+	local step="${1%%,*}"
+	_STRATEGY_KIND="${step%%:*}"
+	_STRATEGY_ARGS=""
+	[ "$step" != "$_STRATEGY_KIND" ] && _STRATEGY_ARGS="${step#*:}"
+	if [ "$1" = "$step" ]; then
+		_STRATEGY_REST=""
+	else
+		_STRATEGY_REST="${1#*,}"
+	fi
+}
+
 # Install everything a spec's strategy asks for, step by step, stopping as
 # soon as the dependency actually probes positive.
 install_strategy() {
-	local spec="$1" strategy step rest kind args
+	local spec="$1" strategy rest
 	parse_spec "$spec"
 	strategy="$SPEC_INSTALL"
 	[ -n "$strategy" ] || strategy="pkg"
 	[ "$strategy" = "none" ] && return 1
 	rest="$strategy"
-	while [ -n "$rest" ]; do
-		step="${rest%%,*}"
-		if [ "$rest" = "$step" ]; then
-			rest=""
-		else
-			rest="${rest#*,}"
-		fi
-		kind="${step%%:*}"
-		args=""
-		if [ "$step" != "$kind" ]; then
-			args="${step#*:}"
-		fi
-		_strategy_step "$kind" "$args" "$spec" || true
+	while _strategy_split "$rest"; do
+		rest="$_STRATEGY_REST"
+		_strategy_step "$_STRATEGY_KIND" "$_STRATEGY_ARGS" "$spec" || true
+		# The step may have just CREATED a bin dir (go/cargo install into
+		# GOPATH[0]/bin, CARGO_HOME/bin, npm prefix/bin) — re-seed so the
+		# probe below can actually resolve the freshly installed binary.
 		if probe_spec "$spec"; then
 			return 0
 		fi
@@ -343,12 +365,7 @@ run_required_checks() {
 			echo "  ${entry#@note|}"
 			;;
 		@call\|*)
-			local fn="${entry#@call|}"
-			if declare -F "$fn" >/dev/null 2>&1; then
-				"$fn"
-			else
-				warn "unknown check hook: $fn"
-			fi
+			_run_call_hook "${entry#@call|}"
 			;;
 		@clipboard)
 			if [ "${CHECK_CLIPBOARD:-}" = "required" ]; then
@@ -386,12 +403,7 @@ check_recommended_tools() {
 		# Debian bat → batcat alias).
 		case "$entry" in
 		@call\|*)
-			local fn="${entry#@call|}"
-			if declare -F "$fn" >/dev/null 2>&1; then
-				"$fn"
-			else
-				warn "unknown check hook: $fn"
-			fi
+			_run_call_hook "${entry#@call|}"
 			;;
 		*)
 			check_spec "$entry" recommended || true
@@ -504,7 +516,7 @@ clipboard_state() {
 check_clipboard_required() {
 	if [ "$OS" = "macos" ]; then
 		check_spec "pbcopy|bin|pbcopy (macOS built-in)|none" || true
-	elif grep -qi microsoft /proc/version 2>/dev/null; then
+	elif is_wsl; then
 		if command -v clip.exe &>/dev/null; then
 			ok "clip.exe (WSL)"
 			if [ -r /proc/sys/fs/binfmt_misc/WSLInterop ] &&
@@ -603,23 +615,33 @@ dedupe_pkgs() {
 	echo "${out[*]-}"
 }
 
+# Collect the ids whose spec install strategy is plain "pkg" into
+# _PKG_BATCH_IDS (they batch into ONE package-manager call — a single
+# refresh, a single transaction, one password) with their package names in
+# _PKG_BATCH_NAMES; strategies with side effects (npm/go/pip/…) stay
+# per-tool. Shared by install_missing_required / _recommended / _optional.
+_collect_pkg_batch() {
+	_PKG_BATCH_IDS=()
+	_PKG_BATCH_NAMES=()
+	local id spec
+	for id in "$@"; do
+		spec=$(find_spec "$id") || spec="$id"
+		parse_spec "$spec"
+		if [ "${SPEC_INSTALL:-pkg}" = "pkg" ]; then
+			_PKG_BATCH_IDS+=("$id")
+			_PKG_BATCH_NAMES+=("$(pkg_name "$id")")
+		fi
+	done
+}
+
 install_missing_required() {
 	${INSTALL_MODE:-false} || return 0
 	[ ${#MISSING_REQUIRED[@]} -gt 0 ] || return 0
 	echo -e "${YELLOW}Installing: ${MISSING_REQUIRED[*]}...${NC}"
 	local id spec
-	local -a pkgs=()
-	# Batch every plain "pkg" dependency into ONE package-manager call — a
-	# single refresh, a single transaction, one password.
-	for id in "${MISSING_REQUIRED[@]}"; do
-		spec=$(find_spec "$id") || spec="$id"
-		parse_spec "$spec"
-		if [ "${SPEC_INSTALL:-pkg}" = "pkg" ]; then
-			pkgs+=("$(pkg_name "$id")")
-		fi
-	done
-	if [ ${#pkgs[@]} -gt 0 ]; then
-		install_pkg "${pkgs[@]}" || true
+	_collect_pkg_batch "${MISSING_REQUIRED[@]}"
+	if [ ${#_PKG_BATCH_NAMES[@]} -gt 0 ]; then
+		install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"} || true
 	fi
 	for id in "${MISSING_REQUIRED[@]}"; do
 		spec=$(find_spec "$id") || spec="$id"
@@ -654,15 +676,34 @@ install_missing_required() {
 			have_native_cmd "$1" || ext_paths_ok "$1"
 		}
 		for rb in ${REQUIRED_REPROBE_LIST[@]+"${REQUIRED_REPROBE_LIST[@]}"}; do
-			label="$rb"
-			if [ -n "$name_fn" ]; then label=$("$name_fn" "$rb"); fi
-			if "$probe_fn" "$rb"; then
-				ok "$label installed"
-			else
-				MISSING_REQUIRED+=("$rb")
-				fail "$label still missing"
-				REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
-			fi
+			case "$rb" in
+			@*) continue ;;
+			*\|*)
+				# A full spec entry: probe and label through the spec itself
+				# (anyof/anyofext/ext semantics included) — a project then
+				# keeps NO parallel name/availability tables beside
+				# REQUIRED_CHECKS: REQUIRED_REPROBE_LIST=("${REQUIRED_CHECKS[@]}").
+				parse_spec "$rb"
+				if probe_spec "$rb"; then
+					ok "$SPEC_DESC installed"
+				else
+					MISSING_REQUIRED+=("$SPEC_ID")
+					fail "$SPEC_DESC still missing"
+					REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+				fi
+				;;
+			*)
+				label="$rb"
+				if [ -n "$name_fn" ]; then label=$("$name_fn" "$rb"); fi
+				if "$probe_fn" "$rb"; then
+					ok "$label installed"
+				else
+					MISSING_REQUIRED+=("$rb")
+					fail "$label still missing"
+					REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+				fi
+				;;
+			esac
 		done
 		if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
 			echo -e "${GREEN}All required tools now available.${NC}"
@@ -689,19 +730,12 @@ install_missing_recommended() {
 	[ ${#MISSING_RECOMMENDED[@]} -gt 0 ] || return 0
 	echo -e "${YELLOW}Installing: ${MISSING_RECOMMENDED[*]}...${NC}"
 	local id spec
-	local -a pkgs=()
-	for id in "${MISSING_RECOMMENDED[@]}"; do
-		spec=$(find_spec "$id") || spec="$id"
-		parse_spec "$spec"
-		if [ "${SPEC_INSTALL:-pkg}" = "pkg" ]; then
-			pkgs+=("$(pkg_name "$id")")
-		fi
-	done
-	if [ ${#pkgs[@]} -gt 0 ]; then
-		if install_pkg "${pkgs[@]}"; then
+	_collect_pkg_batch "${MISSING_RECOMMENDED[@]}"
+	if [ ${#_PKG_BATCH_NAMES[@]} -gt 0 ]; then
+		if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
 			echo -e "${GREEN}Done.${NC}"
 		else
-			echo -e "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${pkgs[@]+"${pkgs[@]}"})")${NC}"
+			echo -e "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"})")${NC}"
 		fi
 	fi
 	for id in "${MISSING_RECOMMENDED[@]}"; do
@@ -739,19 +773,44 @@ install_missing_optional() {
 		return 0
 	fi
 	echo -e "${YELLOW}${OPTIONAL_INSTALL_TITLE:-Installing optional tools}: ${missing[*]}...${NC}"
-	local bin spec ok
+	# Plain pkg strategies are batched into ONE transaction (mirrors
+	# install_missing_required); side-effecting strategies (npm/go/pip/
+	# brew/…) install per tool below.
+	_collect_pkg_batch "${missing[@]}"
+	if [ ${#_PKG_BATCH_IDS[@]} -gt 0 ]; then
+		if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
+			local bin spec
+			for bin in "${_PKG_BATCH_IDS[@]}"; do
+				spec=$(find_spec "$bin") || spec="$bin"
+				if probe_spec "$spec"; then
+					echo -e "  ${GREEN}✓ ${bin} installed${NC}"
+				else
+					echo -e "  ${RED}✗ failed to install ${bin}${NC}"
+					echo -e "    hint: $(get_install_hint "$bin")"
+				fi
+			done
+		else
+			for bin in "${_PKG_BATCH_IDS[@]}"; do
+				echo -e "  ${RED}✗ failed to install ${bin}${NC}"
+				echo -e "    hint: $(get_install_hint "$bin")"
+			done
+		fi
+	fi
+	local installed_ok
 	for bin in "${missing[@]}"; do
 		spec=$(find_spec "$bin") || spec="$bin"
+		parse_spec "$spec"
+		[ "${SPEC_INSTALL:-pkg}" = "pkg" ] && continue # batched above
 		echo -e "  ${YELLOW}→ installing ${bin}...${NC}"
-		ok=true
+		installed_ok=true
 		# A project may carry upstream's per-binary install table verbatim
 		# (monkey-nvim / monkey-vim); otherwise run the spec strategy.
 		if declare -F install_optional_bin >/dev/null 2>&1; then
-			install_optional_bin "$bin" || ok=false
+			install_optional_bin "$bin" || installed_ok=false
 		elif ! install_strategy "$spec"; then
-			ok=false
+			installed_ok=false
 		fi
-		if $ok; then
+		if $installed_ok; then
 			echo -e "  ${GREEN}✓ ${bin} installed${NC}"
 		else
 			echo -e "  ${RED}✗ failed to install ${bin}${NC}"

@@ -25,6 +25,13 @@ cleanup_sudo() {
 }
 
 # Pre-authenticate once, then grant NOPASSWD for the rest of the run.
+# SUDO_DROPIN=0 skips the drop-in: the `sudo -v` below is the only
+# authentication and the run rides the sudo timestamp instead. Honest
+# limits of that mode: brew resets the timestamp on every invocation and
+# long runs can outlive it — and a re-auth needed INSIDE a retried command
+# cannot prompt (the retry child sits in a non-foreground process group, a
+# tty read stops on SIGTTIN), so sudo_cmd fails the attempt instead of
+# hanging. The drop-in stays the default because it has no expiry window.
 #
 # Probe first (`-n true`, a command): when credentials are already valid —
 # this run's own drop-in from a previous stage, or an outer installer's
@@ -54,6 +61,9 @@ setup_sudo() {
 	if ! "$SUDO_BIN" -n true 2>/dev/null; then
 		"$SUDO_BIN" -v || die "sudo authorization failed — run this script in an interactive terminal."
 	fi
+	# SUDO_DROPIN=0: timestamp-only mode — the password above was the only
+	# prompt, no drop-in is installed and there is nothing to clean up.
+	[ "${SUDO_DROPIN:-1}" = "1" ] || return 0
 	if printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$(id -un)" |
 		"$SUDO_BIN" -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$(nopasswd_dropin_path)" >/dev/null 2>&1; then
 		SUDO_NOPASSWD=1
@@ -80,6 +90,16 @@ sudo_cmd() {
 		return
 	}
 	if ! "$sudo_bin" -n true 2>/dev/null; then
+		# A prompt inside a retried command hangs: retry runs its child under
+		# timeout, in a NON-foreground process group, so the tty read is
+		# stopped by SIGTTIN and ^C never reaches it. Fail the attempt instead
+		# and let the retry loop report it. Reachable only without the
+		# drop-in (SUDO_DROPIN=0, or an install that failed) once the
+		# timestamp has expired.
+		if [ "${RETRY_ACTIVE_COUNT:-0}" -gt 0 ]; then
+			warn "sudo credentials expired inside a retried command — cannot prompt here (no NOPASSWD drop-in). Re-authenticate with 'sudo -v' and re-run."
+			return 1
+		fi
 		"$sudo_bin" -v -p "[${PROJECT:-monkey}] sudo credentials needed to continue — enter your password: " || return 1
 	fi
 	"$sudo_bin" "$@"

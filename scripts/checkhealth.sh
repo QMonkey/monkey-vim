@@ -35,6 +35,7 @@ fi
 . "$_MONKEY_LIB_DIR/lib/sudo.sh"
 . "$_MONKEY_LIB_DIR/lib/pkg.sh"
 . "$_MONKEY_LIB_DIR/lib/config.sh"
+. "$_MONKEY_LIB_DIR/lib/env.sh"
 . "$_MONKEY_LIB_DIR/lib/checks.sh"
 . "$_MONKEY_LIB_DIR/lib/optional.sh"
 
@@ -60,6 +61,15 @@ OPTIONS
                    Skip config-file checks (install.sh passes this: the
                    config symlinks are linked after this script runs)
   -h, --help       Show this help
+
+ENVIRONMENT
+  SUDO_DROPIN      With --install: 0 = no NOPASSWD drop-in (ONE sudo
+                   authentication up front, the run rides the sudo
+                   timestamp — brew use and long runs can expire it; an
+                   expired re-auth inside a retried command fails that
+                   attempt instead of prompting), 1 = install the drop-in.
+                   Default: 0 for a manual run, 1 when chained from an
+                   installer. An explicit value always wins.
 
 Exit code: 1 if any required dependency is missing, 0 otherwise.
 EOF
@@ -147,10 +157,38 @@ checkhealth_main() {
 	parse_args "$@"
 	require_home
 	OS=$(os_detect)
+	# Seed the framework bin dirs for THIS process: a standalone --install
+	# run creates dirs (cargo, npm-global, GOPATH) whose binaries must
+	# resolve in-session; install.sh's chain preseeds its own process the
+	# same way.
+	export_path
 
 	print_header
 	print_header_extra
 	print_platform
+	# --install reaches privileged steps through retry→timeout, and timeout
+	# runs its child in a NON-foreground process group: an interactive
+	# `sudo -v` there is stopped by SIGTTIN the moment it reads the password
+	# (the run hangs; ^C only reaches the foreground group). setup_sudo asks
+	# for the password up front, in the foreground (install.sh relies on the
+	# same invariant). The drop-in default follows the context:
+	#   chained --install (INSTALL_CHAIN, set by run_checkhealth)
+	#     → NOPASSWD drop-in: the installer's setup_sudo has already granted
+	#       and long chained runs must not trip the timestamp expiry;
+	#   manual --install → timestamp-only: ONE password up front, no
+	#     drop-in (an expired mid-run re-auth fails the attempt fast instead
+	#     of prompting — see sudo_cmd).
+	# An explicit SUDO_DROPIN always wins.
+	if $INSTALL_MODE; then
+		if [ -z "${SUDO_DROPIN:-}" ]; then
+			if [ -n "${INSTALL_CHAIN:-}" ]; then
+				SUDO_DROPIN=1
+			else
+				SUDO_DROPIN=0
+			fi
+		fi
+		setup_sudo
+	fi
 	run_required_checks
 	if [ "${ADVISORY_PHASE:-end}" = "early" ]; then
 		check_advisory_sections

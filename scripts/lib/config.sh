@@ -78,6 +78,11 @@ EOF
 }
 
 # ──────────────────────── checkhealth side ────────────────────────
+# Ready-made advisory section: Nerd Font presence (waybar-style UIs render
+# icons through it). Projects append it to ADVISORY_SECTIONS as
+# "$ADVISORY_NERDFONT".
+ADVISORY_NERDFONT="Fonts (optional)|(waybar icons use Nerd Font glyphs)|nerdfont||Nerd Font found||No Nerd Font detected — waybar icons may render as boxes\n    https://github.com/ryanoasis/nerd-fonts"
+
 # Advisory probe shared by CONFIG_HINTS and ADVISORY_SECTIONS.
 #   type=path   — any candidate exists (a trailing "/" requires a non-empty
 #                 directory); if none exists but ANY candidate's parent
@@ -119,7 +124,10 @@ probe_advisory() {
 		path | exec | marker)
 			case "$tok" in
 			*/)
-				if [ -d "${tok%/}" ] && [ -n "$(ls -A "${tok%/}" 2>/dev/null)" ]; then found="$tok"; break; fi
+				if [ -d "${tok%/}" ] && [ -n "$(ls -A "${tok%/}" 2>/dev/null)" ]; then
+					found="$tok"
+					break
+				fi
 				;;
 			*)
 				if [ -e "$tok" ]; then
@@ -161,7 +169,7 @@ probe_advisory() {
 			local ver=""
 			case "$type" in
 			cmd | any)
-				ver=$("$found" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)*' | head -1)
+				ver=$(extract_version "$found" '[0-9]+\.[0-9]+(\.[0-9]+)*')
 				;;
 			esac
 			ok "${ok_msg//\{ver\}/${ver:-?}}"
