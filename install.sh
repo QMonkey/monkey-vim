@@ -22,10 +22,6 @@ PROJECT_REPO=https://github.com/QMonkey/monkey-vim.git
 INSTALL_DIR="${INSTALL_DIR:-$HOME/Documents/monkey-vim}"
 
 # No scripts/ next to this file: either a checkout predating the subtree
-# commit (pull it in and carry on) or `curl | bash`, which has no checkout
-# at all. The latter clones THIS project and runs the install.sh from that
-# checkout, so installer and scripts/ always come from the same revision.
-# No scripts/ next to this file: either a checkout predating the subtree
 # commit (pull it in and carry on), a .git-less directory (zip/tarball),
 # or `curl | bash`, which has no checkout at all. The latter two bootstrap
 # through INSTALL_DIR and run the install.sh from that checkout, so
@@ -228,16 +224,7 @@ install_vim_build_deps() {
 # ──────────────────────── build Vim from source ────────────────────────
 
 check_vim_version() {
-	have_native_cmd vim || return 1
-	local ver
-	ver=$(vim --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' || true)
-	if [[ -z "$ver" ]]; then
-		return 1
-	fi
-	local major minor
-	major=${ver%%.*}
-	minor=${ver#*.}
-	((major > 9 || (major == 9 && minor >= 1)))
+	bin_at_least vim 9.1
 }
 
 # Core features every build must have — mirrors our --enable-* flags.
