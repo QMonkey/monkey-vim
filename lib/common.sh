@@ -85,6 +85,10 @@ fi
 # deliberate TERM-only policy).
 RETRY_KILL_AFTER=${RETRY_KILL_AFTER-30}
 
+# Parallel-jobs default for source builds (make -j"$JOBS", ...). An
+# explicitly exported JOBS always wins.
+JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
+
 # retry's execution helper. $1 = timeout seconds ("0" disables), rest =
 # command. timeout(1) can only exec binaries — and retry IS handed a shell
 # function (sudo_cmd) — so function-first commands re-enter through a
@@ -112,7 +116,7 @@ _retry_run() {
 		# call die with "command not found" inside the child (observed on
 		# openSUSE: sudo_cmd -> native_sudo -> have_native_cmd ->
 		# native_bin_path, which the old whitelist did not carry).
-		for fn in "$1" retry _retry_run native_sudo have_native_cmd native_bin_path is_wsl; do
+		for fn in "$1" retry _retry_run native_sudo have_native_cmd native_bin_path is_wsl warn; do
 			# export -f: export the FUNCTION named by $fn's value (dynamic
 			# by design — the wrapped command may be a framework function).
 			declare -F "$fn" >/dev/null 2>&1 && export -f "$fn"
@@ -357,84 +361,6 @@ print_platform() {
 	echo ""
 }
 
-# ────────────────────── shell env files / PATH ──────────────────────
-shell_env_files() {
-	# The TARGET login shell, queried from the user database: on a
-	# zsh-default machine (or after the login shell was switched to zsh) it
-	# is zsh and the env blocks belong in ~/.zprofile; on bash machines they
-	# land in the bash profile files. Falls back to $SHELL, then bash (macOS
-	# has no getent; its $SHELL already reflects the login shell).
-	local shell_bin
-	# getent does not exist on macOS — guard the call, otherwise the
-	# command-not-found failure (127) would trip `set -e` and kill the script
-	# before the dscl fallback below ever runs.
-	if have_native_cmd getent; then
-		shell_bin=$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f7)
-	fi
-	if [ -z "$shell_bin" ] && [ "$(uname -s)" = Darwin ]; then
-		# No getent on macOS — query the directory service instead ($SHELL is
-		# a login-time snapshot and goes stale right after a chsh in the same
-		# session).
-		shell_bin=$(dscl . -read /Users/"$(id -un)" UserShell 2>/dev/null | awk '{print $2}')
-	fi
-	shell_bin=${shell_bin:-${SHELL:-bash}}
-	shell_bin=${shell_bin##*/}
-	case "$shell_bin" in
-	zsh)
-		printf '%s\n' "$HOME/.zprofile"
-		;;
-	bash)
-		if [ -f "$HOME/.bash_profile" ]; then
-			printf '%s\n' "$HOME/.bash_profile"
-		else
-			printf '%s\n' "$HOME/.profile"
-		fi
-		printf '%s\n' "$HOME/.bashrc"
-		;;
-	*)
-		printf '%s\n' "$HOME/.profile"
-		;;
-	esac
-}
-
-append_env_block() {
-	# Usage: append_env_block <marker> <block>
-	# Appends <block> guarded by <marker> to every shell env file, once.
-	local marker="$1"
-	local block="$2"
-	local f
-	while IFS= read -r f; do
-		[ -n "$f" ] || continue
-		[ -f "$f" ] || touch "$f"
-		if ! grep -qF -- "$marker" "$f" 2>/dev/null; then
-			printf '\n# %s\n%b\n' "$marker" "$block" >>"$f"
-			ok "Added '$marker' to $f"
-		fi
-	done < <(shell_env_files)
-}
-
-refresh_path() {
-	# In-session PATH refresh so newly installed tools are found by this script.
-	if have_native_cmd go; then
-		local gopath
-		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
-		export PATH="$gopath/bin:$PATH"
-	fi
-	# Not `[ ... ] && . ...`: when the file is missing the function returns
-	# non-zero and, under set -e, silently aborts the whole script.
-	if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
-}
-
-# go install drops binaries in $(go env GOPATH)/bin (default ~/go/bin) and
-# `cargo install` in ~/.cargo/bin — neither is guaranteed on PATH for this run.
-ensure_go_env() {
-	if have_native_cmd go; then
-		local gopath
-		gopath=$(go env GOPATH 2>/dev/null || echo "$HOME/go")
-		case ":$PATH:" in *":$gopath/bin:"*) ;; *) export PATH="$gopath/bin:$PATH" ;; esac
-	fi
-}
-
 # ────────────── /run/user/$UID repair (sessionless environments) ──────────────
 # Where $XDG_RUNTIME_DIR is supposed to come from: at login, pam_systemd
 # registers the session with systemd-logind, which creates /run/user/$UID
@@ -567,36 +493,6 @@ ensure_xdg_runtime_dir() {
 	warn "  Manual fix:  sudo touch $marker && sudo systemctl start user-runtime-dir@$uid.service"
 }
 
-# Insert <dir> into $PATH immediately BEFORE the WSL interop section (the
-# /mnt/* entries WSL appends at session start). Brew tools then beat Windows
-# shims (npm/node: the Windows npm's "global prefix" is the Windows tree —
-# `npm i -g` there installs where Linux tools can never see it), while
-# system paths keep precedence over brew (the append design's whole point).
-# Falls back to a plain append when the PATH carries no Windows section
-# (non-WSL, or interop disabled). Idempotent. POSIX expansions only: the
-# same loop is emitted into login profiles, which may be zsh (no word
-# splitting on unquoted $PATH).
-path_add_pre_win() {
-	local d="$1"
-	case ":$PATH:" in *":$d:"*) return 0 ;; esac
-	case $PATH in
-	# Windows interop section present: insert brew right before it.
-	# %%:/mnt/* keeps everything before the FIRST Windows entry; ${PATH#
-	# "$pre":} keeps the Windows section itself. PATH entries cannot
-	# contain colons, so the ":/mnt/" boundary is exact.
-	*:/mnt/*)
-		local pre=${PATH%%:/mnt/*}
-		PATH="$pre:$d:${PATH#"$pre":}"
-		;;
-	# PATH starts inside the Windows section (no Linux entries): brew wins
-	# over it by simply going first.
-	/mnt/*) PATH="$d:$PATH" ;;
-	# No interop section: plain append.
-	*) PATH="$PATH:$d" ;;
-	esac
-	export PATH
-}
-
 # Version comparison. GNU sort -V -C is what the upstream scripts used; BSD
 # sort (macOS) has neither flag, so fall back to a numeric field compare.
 if sort -V </dev/null >/dev/null 2>&1; then
@@ -626,6 +522,36 @@ version_ge() {
 	return 0
 }
 
+# First version-looking token of a binary's version output. Tries --version,
+# -V and -v (tmux only answers -V; some tools answer several — the first
+# flag with output wins). The regex is caller-supplied so suffix-flavored
+# versions ("3.7b") survive: default regex is plain X.Y.
+extract_version() {
+	local bin="$1" regex="${2:-[0-9]+\.[0-9]+}" flag ver="" out
+	for flag in --version -V -v; do
+		out=$("$bin" "$flag" 2>/dev/null) || out=""
+		[ -n "$out" ] || continue
+		ver=$(printf '%s\n' "$out" | grep -oE "$regex" | head -1)
+		if [ -n "$ver" ]; then
+			break
+		fi
+	done
+	printf '%s' "$ver"
+}
+
+# Version gate for the INSTALL side (checkhealth's ver: specs are the
+# checkhealth-side counterpart): binary present AND its version >= min.
+# Returns 1 on "absent" and on "unparsable" alike — callers usually mean
+# "old or missing, (re)build".
+bin_at_least() {
+	local bin="$1" min="$2"
+	have_native_cmd "$bin" || return 1
+	local ver
+	ver=$(extract_version "$bin" "${3:-[0-9]+\.[0-9]+}")
+	[ -n "$ver" ] || return 1
+	version_ge "$ver" "$min"
+}
+
 # ────────────────────── TIOCSTI injection ──────────────────────
 # Type <cmd> + newline into the controlling terminal: the parent shell
 # executes it as if the user had typed it — AFTER this script (and any
@@ -640,9 +566,10 @@ version_ge() {
 # behind CAP_SYS_ADMIN (CONFIG_LEGACY_TIOCSTI off — WSL2 ships it off),
 # which root carries in the initial namespace, so the sudo run works on
 # gated and ungated kernels alike, silently under the installer's NOPASSWD
-# drop-in. The controlling terminal survives sudo, so the keys land in the
-# same terminal. python3 first, perl as fallback, plain error when both
-# are missing.
+# drop-in. The TARGET tty is resolved by path (TIOCSTI_TTY from the reader
+# guard), never "/dev/tty": sudo >= 1.9.14 runs the command in its own pty
+# by default (use_pty), and /dev/tty inside the child is that private pty —
+# bytes injected there die with sudo. python3 first, perl as fallback, plain error when both are missing.
 
 # ────────────────────── interactive-reader guard ──────────────────────
 # A succeeding TIOCSTI ioctl only proves the bytes entered the tty input
@@ -669,7 +596,19 @@ _is_interactive_shell() {
 	# launched bare (`zsh`, `-zsh`, `zsh -i`), so this never bites in
 	# practice.
 	local -a words
-	read -r -a words <<<"$(ps -ww -o args= -p "$1" 2>/dev/null)"
+	# NB: two statements, not `read <<<"$(...)"` — and the input goes
+	# through a plain heredoc, not a herestring. Legacy sh.vim (nvim/vim
+	# without tree-sitter for sh — the built-in fallback) parses `<<<` as a
+	# heredoc BEGIN whose delimiter is the rest of the line; that delimiter
+	# never matches a line, so EVERY following line renders as one
+	# unterminated heredoc (observed: the rest of this file highlighted as
+	# shHereDoc from _is_interactive_shell down, 2026-10). `read -a` splits
+	# on IFS whitespace exactly as the herestring did.
+	local ps_out
+	ps_out=$(ps -ww -o args= -p "$1" 2>/dev/null)
+	read -r -a words <<EOF
+$ps_out
+EOF
 	((${#words[@]} > 0)) || return 1
 	local prog="${words[0]##*/}" a
 	prog="${prog#-}" # login shells carry a leading dash ("-zsh")
@@ -707,8 +646,15 @@ _has_interactive_reader() {
 	command -v ps >/dev/null 2>&1 || return 0
 	local my_tty pid ppid fd0 n=0
 	# The tty the queued bytes must land in: OUR controlling terminal.
+	# Exported as TIOCSTI_TTY for inject_tty, which must NOT reopen
+	# /dev/tty under sudo: sudo >= 1.9.14 runs the command in its OWN pty
+	# by default (use_pty), so /dev/tty inside the child is sudo's private
+	# pty — the injected bytes then land in a queue that dies with sudo
+	# while the ioctl still returns 0. The REAL tty device path is immune to that.
 	my_tty=$(ps -o tty= -p "$$" 2>/dev/null)
 	my_tty="${my_tty//[[:space:]]/}"
+	TIOCSTI_TTY=""
+	[ -n "$my_tty" ] && TIOCSTI_TTY="/dev/$my_tty"
 	pid=$$
 	# Diagnostic breadcrumbs for the log file inject_tty keeps: WHO the walk
 	# trusted as the reader, and which ancestors it inspected and rejected.
@@ -782,8 +728,15 @@ inject_tty() {
 	# injection is prefixed with sudo — root carries the capability,
 	# and the NOPASSWD drop-in keeps it silent during installs.
 	#   macOS: no gate — plain run; sudo would only add a password prompt.
-	# The controlling terminal survives sudo, so the keys land in the same
-	# terminal either way.
+	# The TARGET is never "/dev/tty" under sudo: sudo >= 1.9.14 runs the
+	# command in its own pty by default (use_pty), and /dev/tty inside the
+	# child is that private pty — bytes injected there die with sudo (rc=0
+	# regardless, which is how the silent no-op slipped past every check).
+	# TIOCSTI_TTY names the installer's REAL controlling tty (resolved by
+	# the guard above); root may TIOCSTI any tty it can open, and without
+	# sudo the real tty IS the controlling terminal — correct on both
+	# paths. /dev/tty stays the fallback when no tty could be resolved.
+	local target="${TIOCSTI_TTY:-/dev/tty}"
 	local -a runner=()
 	if [ "$(uname -s)" != Darwin ] && have_native_cmd sudo; then
 		runner=(sudo_cmd)
@@ -794,24 +747,24 @@ inject_tty() {
 		# termios.TIOCSTI carries the per-platform constant automatically.
 		if err=$(${runner[@]+"${runner[@]}"} "$py3" -c 'import sys,os,fcntl,termios
 cmd = sys.argv[1] + "\n"
-fd = os.open("/dev/tty", os.O_WRONLY)
+fd = os.open(sys.argv[2], os.O_WRONLY)
 for b in cmd.encode():
     buf = bytearray(1); buf[0] = b
-    fcntl.ioctl(fd, termios.TIOCSTI, buf)' "$cmd" 2>&1); then
-			_tiocsti_log "INJECT reader='${TIOCSTI_READER_DESC:-}' cmd='$cmd' via=python3 rc=0"
+    fcntl.ioctl(fd, termios.TIOCSTI, buf)' "$cmd" "$target" 2>&1); then
+			_tiocsti_log "INJECT reader='${TIOCSTI_READER_DESC:-}' tty=$target cmd='$cmd' via=python3 rc=0"
 			ok "injected${label}."
 			return 0
 		fi
 	fi
 	if [ -n "$perlx" ]; then
 		if err=$(${runner[@]+"${runner[@]}"} "$perlx" -e '
-			my ($cmd, $tio) = @ARGV;
-			open(my $tty, ">", "/dev/tty") or die "open /dev/tty: $!\n";
+			my ($cmd, $tio, $tty_path) = @ARGV;
+			open(my $tty, ">", $tty_path) or die "open $tty_path: $!\n";
 			for my $ch (split //, $cmd . "\n") {
 				ioctl($tty, hex($tio), $ch) or die "TIOCSTI ioctl failed: $!\n";
 			}
-		' "$cmd" "$tiocsti" 2>&1); then
-			_tiocsti_log "INJECT reader='${TIOCSTI_READER_DESC:-}' cmd='$cmd' via=perl rc=0"
+		' "$cmd" "$tiocsti" "$target" 2>&1); then
+			_tiocsti_log "INJECT reader='${TIOCSTI_READER_DESC:-}' tty=$target cmd='$cmd' via=perl rc=0"
 			ok "injected${label}."
 			return 0
 		fi

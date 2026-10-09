@@ -190,7 +190,7 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
             exit 1
         }
     else                                        # curl|bash: no checkout at all
-        # Clone THIS project into INSTALL_DIR — where clone_monkey_project
+        # Clone THIS project into INSTALL_DIR — where clone_project
         # would have put it anyway — and run the installer from that checkout,
         # so install.sh and scripts/ cannot drift apart.
         if ! command -v git >/dev/null 2>&1; then
