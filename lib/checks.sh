@@ -31,9 +31,8 @@ MISSING_RECOMMENDED=()
 MISSING_OPTIONAL=()
 
 parse_spec() {
-	# Plain heredoc, NOT a herestring (`<<<"$1"`): legacy sh.vim — nvim/vim
-	# without tree-sitter for sh — parses `<<<` as a heredoc begin whose
-	# delimiter never matches, rendering the rest of the file as one unterminated heredoc.
+	# Plain heredoc, NOT a herestring (`<<<`): legacy sh.vim misparses `<<<`
+	# and breaks highlighting for the rest of the file.
 	IFS='|' read -r SPEC_ID SPEC_CHECK SPEC_DESC SPEC_INSTALL SPEC_VER_RE SPEC_FALLBACK SPEC_TOKEN SPEC_GROUP <<EOF
 $1
 EOF
@@ -114,9 +113,8 @@ record_missing() {
 check_version_spec() {
 	local mode="$1" ver
 	# "ver:MIN" or "ver:MIN!bad bad" — the exclusion list names versions that
-	# satisfy the minimum but are KNOWN BROKEN (e.g. tmux 3.7–3.7b: exiting
-	# a session crashes instead of switching; fixed in 3.7c). Exact string
-	# match on the extracted version.
+	# satisfy the minimum but are KNOWN BROKEN (e.g. tmux 3.7–3.7b). Exact
+	# string match on the extracted version.
 	local vspec="${SPEC_CHECK#ver:}"
 	local min="${vspec%%!*}" bad=""
 	[ "$vspec" != "$min" ] && bad="${vspec#*!}"
@@ -250,9 +248,9 @@ _strategy_step() {
 		;;
 	pip)
 		# ensure_pip first: the fallback dies with command-not-found when
-		# pip3 is missing (Leap 16 does not ship it by default). stderr is
-		# left visible — a silently swallowed pip error is what made the
-		# Leap 16 pylsp failure undiagnosable.
+		# pip3 is missing (Leap 16). stderr stays visible — a silently
+		# swallowed pip error is what made the Leap 16 pylsp failure
+		# undiagnosable.
 		ensure_pip || return 1
 		retry -t 1800 -s "pip3 install $args" sudo_cmd pip3 install $args ||
 			retry -t 1800 -s "pip3 install $args" pip3 install $args
@@ -326,11 +324,6 @@ install_strategy() {
 }
 
 # ──────────────────────── sections ────────────────────────
-print_header() {
-	echo -e "${BOLD}${PROJECT} dependency check${NC}"
-	echo ""
-}
-
 check_main_version() {
 	[ -n "${MAIN_VERSION:-}" ] || return 0
 	parse_spec "$MAIN_VERSION"
@@ -600,9 +593,8 @@ install_clipboard() {
 }
 
 # ──────────────────────── install missing ────────────────────────
-# Dedupe package names, order kept: two different binaries can map to the
-# SAME package (nm-applet and nm-connection-editor both install
-# nm-connection-editor on dnf distros) and the "Run:" hint then repeats it.
+# Dedupe package names, order kept: two binaries can map to the SAME package
+# and the "Run:" hint would then repeat it.
 dedupe_pkgs() {
 	local -A seen=()
 	local -a out=()
@@ -616,10 +608,9 @@ dedupe_pkgs() {
 }
 
 # Collect the ids whose spec install strategy is plain "pkg" into
-# _PKG_BATCH_IDS (they batch into ONE package-manager call — a single
-# refresh, a single transaction, one password) with their package names in
-# _PKG_BATCH_NAMES; strategies with side effects (npm/go/pip/…) stay
-# per-tool. Shared by install_missing_required / _recommended / _optional.
+# _PKG_BATCH_IDS / _PKG_BATCH_NAMES — they batch into ONE package-manager
+# call; strategies with side effects (npm/go/pip/…) stay per-tool. Shared by
+# the required / recommended / optional install passes.
 _collect_pkg_batch() {
 	_PKG_BATCH_IDS=()
 	_PKG_BATCH_NAMES=()
@@ -650,18 +641,12 @@ install_missing_required() {
 		info "installing ${id}..."
 		install_strategy "$spec" || warn "could not install ${id}"
 	done
-	# Project-level re-probe (sway/hyprland upstream style): instead of
-	# re-printing the whole required section, walk REQUIRED_REPROBE_LIST —
-	# one "installed" / "still missing" line per binary, probed via the
-	# project's own REQUIRED_REPROBE_FN (default: PATH + known ext paths)
-	# and displayed via REQUIRED_NAME_FN (default: the binary name) — then
-	# a project-provided manual hint when anything is left over. Projects
-	# without the list keep the run_required_checks behaviour below.
-	# [*] in the guard, never [@]: an UNSET array's @+ alternative expands
-	# to ZERO words, so `[ -n "${arr[@]+SET}" ]` degenerates to bare
-	# `[ -n ]` — always true — and the ${#arr[@]} count then dies with
-	# "unbound variable" under set -u. "${arr[*]+SET}" always yields exactly
-	# one word, so the -n test is meaningful in all three states.
+	# Project-level re-probe (sway/hyprland upstream style): one "installed" /
+	# "still missing" line per entry of REQUIRED_REPROBE_LIST, probed via
+	# REQUIRED_REPROBE_FN (default below) and displayed via REQUIRED_NAME_FN.
+	# Projects without the list keep the run_required_checks behaviour below.
+	# [*] in the guard, never [@]: an UNSET array's @+ expansion is zero
+	# words, so `[ -n "${arr[@]+SET}" ]` degenerates to always-true `[ -n ]`.
 	if [ -n "${REQUIRED_REPROBE_LIST[*]+SET}" ] && [ ${#REQUIRED_REPROBE_LIST[*]} -gt 0 ]; then
 		local rb probe_fn name_fn label
 		probe_fn=${REQUIRED_REPROBE_FN:-_reprobe_default}
@@ -669,9 +654,7 @@ install_missing_required() {
 		MISSING_REQUIRED=()
 		REQUIRED_FAILURES=0
 
-		# Default re-probe for the REQUIRED_REPROBE_LIST walk (see
-		# install_missing_required): a binary counts as installed when it resolves
-		# on PATH or at one of the known extension paths.
+		# Default re-probe: installed = resolves on PATH or a known ext path.
 		_reprobe_default() {
 			have_native_cmd "$1" || ext_paths_ok "$1"
 		}
@@ -679,10 +662,9 @@ install_missing_required() {
 			case "$rb" in
 			@*) continue ;;
 			*\|*)
-				# A full spec entry: probe and label through the spec itself
-				# (anyof/anyofext/ext semantics included) — a project then
-				# keeps NO parallel name/availability tables beside
-				# REQUIRED_CHECKS: REQUIRED_REPROBE_LIST=("${REQUIRED_CHECKS[@]}").
+				# A full spec entry: probe and label through the spec itself —
+				# REQUIRED_REPROBE_LIST=("${REQUIRED_CHECKS[@]}") then needs no
+				# parallel name/availability tables.
 				parse_spec "$rb"
 				if probe_spec "$rb"; then
 					ok "$SPEC_DESC installed"
@@ -753,8 +735,7 @@ install_missing_recommended() {
 }
 
 # Probes OPTIONAL_CHECKS itself instead of trusting MISSING_OPTIONAL: the
-# step runs BEFORE the listing (see checkhealth_main), so the listing's
-# verdict is not available yet.
+# step runs BEFORE the listing, so the listing's verdict is not available.
 install_missing_optional() {
 	${INSTALL_MODE:-false} || return 0
 	[ "${INSTALL_OPTIONAL:-0}" = 1 ] || return 0
@@ -773,9 +754,8 @@ install_missing_optional() {
 		return 0
 	fi
 	echo -e "${YELLOW}${OPTIONAL_INSTALL_TITLE:-Installing optional tools}: ${missing[*]}...${NC}"
-	# Plain pkg strategies are batched into ONE transaction (mirrors
-	# install_missing_required); side-effecting strategies (npm/go/pip/
-	# brew/…) install per tool below.
+	# Plain pkg strategies batch into ONE transaction; side-effecting
+	# strategies (npm/go/pip/brew/…) install per tool below.
 	_collect_pkg_batch "${missing[@]}"
 	if [ ${#_PKG_BATCH_IDS[@]} -gt 0 ]; then
 		if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
