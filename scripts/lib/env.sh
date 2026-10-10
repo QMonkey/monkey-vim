@@ -1,25 +1,22 @@
 # shellcheck shell=bash
-# monkey-scripts/lib/env.sh — environment management: PATH seeding /
-# persistence and the shell env-file infrastructure everything sits on.
-# Sourced by scripts/install.sh and scripts/checkhealth.sh (BEFORE clone.sh
-# and checks.sh, which rely on export_path mid-run).
+# monkey-scripts/lib/env.sh — PATH seeding / persistence, shell env-file
+# infrastructure, compositor autostart. Sourced by scripts/install.sh and
+# scripts/checkhealth.sh (BEFORE clone.sh and checks.sh, which rely on
+# export_path mid-run).
 #
 #   bin_dirs / export_path / persist_path — the framework bin-dir set: one
-#       source of truth emitting idempotent PATH-update lines, eval'd for
-#       the current process and appended to the profiles (resolution and
-#       priority: see bin_dirs)
+#       source of truth emitting idempotent PATH-update lines
 #   export_path_pre_win / persist_brew_path — Homebrew's POSITIONAL insert
-#       (live eval / profile block; install_linuxbrew) — NOT part of
-#       persist_path: it cannot be a prepend case-line and runs even when
-#       PERSIST_PATH=0
-#   write_tty_autostart / autostart_block — the guarded compositor exec
-#       block + AUTOSTART_FILES bookkeeping
+#       (not part of persist_path; runs even when PERSIST_PATH=0)
+#   write_tty_autostart / autostart_block — guarded compositor exec block
 #   shell_env_files / append_env_block — which profile files exist and how
 #       blocks land in them
 
-# Homebrew's bin dirs. Inserted positionally (see export_path_pre_win),
-# never prepended.
-BREW_BIN_DIRS="/home/linuxbrew/.linuxbrew/bin /opt/homebrew/bin"
+# Homebrew prefixes: the single source of truth. install_linuxbrew probes
+# these to adopt an existing install; export_path seeds each real prefix's
+# bin dir as the brew PATH tier. /usr/local/bin stays out of the tier: a
+# system path the default PATH already carries (see bin_dirs).
+BREW_PREFIXES="/home/linuxbrew/.linuxbrew /opt/homebrew /usr/local"
 
 # ────────────────────── shell env files ──────────────────────
 shell_env_files() {
@@ -85,26 +82,18 @@ append_env_block() {
 # ────────────────────── compositor autostart (guarded VT login) ──────────────────────
 # autostart_block — the guarded exec block. POSIX sh: it lands in
 # ~/.profile too, which display managers may source with a minimal shell.
-# Guards, cheapest first, so shells inside a desktop terminal or tmux pane
-# short-circuit with zero forks:
-#   1. $WAYLAND_DISPLAY / $DISPLAY both unset — one of them is set in any
-#      desktop session (Wayland or X11).
-#   2. stdin is a real VT (/dev/ttyN) — excludes ssh (/dev/pts/N), tmux
-#      panes and desktop terminals in one check. Immune to inherited env: a
-#      TTY-started tmux server passes XDG_VTNR down to its panes, but their
-#      stdin stays a pty.
-#   3. no <proc> running — single-instance policy: once the compositor owns
-#      a session, VT logins on other consoles fall through to a plain shell
-#      (the escape hatch instead of a second compositor).
-#   4. kmscon session (TERM=kmscon — the kmscon >= 10.0.0 default) → wrap
-#      the compositor in kmscon-launch-gui: the wrapper backgrounds the
-#      kmscon terminal (private OSC escape), lets the compositor take DRM
-#      master on the same VT, and restores kmscon after. Without the
-#      wrapper installed, skip the GUI start instead of bare-execing the
-#      compositor underneath a live kmscon renderer. The TERM check is
-#      deliberately the ONLY detection: sessions that do not set
-#      TERM=kmscon are pre-10.0.0 or user-overridden builds, and those lack
-#      the OSC handoff the wrapper depends on.
+# Guards, cheapest first (desktop terminals / tmux panes short-circuit with
+# zero forks):
+#   1. $WAYLAND_DISPLAY / $DISPLAY both unset
+#   2. stdin is a real VT (/dev/ttyN) — excludes ssh, tmux panes, desktop
+#      terminals (their stdin stays a pty even when the tmux server was
+#      VT-started)
+#   3. no <proc> running — single-instance policy: other VT logins fall
+#      through to a plain shell instead of a second compositor
+#   4. kmscon session (TERM=kmscon, the kmscon >= 10.0.0 default) → wrap
+#      the compositor in kmscon-launch-gui (backgrounds the terminal, lets
+#      the compositor take DRM master, restores kmscon). TERM is the ONLY
+#      detection: pre-10.0.0 builds lack the OSC handoff the wrapper needs.
 autostart_block() {
 	local exec_cmd="$1" pgrep_name="$2"
 	# NOTE: no marker line of its own — append_env_block writes it.
@@ -153,30 +142,23 @@ write_tty_autostart() {
 # ────────────────────── bin dirs / PATH ──────────────────────
 # bin_dirs — the ONE source of truth for the framework's bin-dir set;
 # emits idempotent PATH-update lines, LOW → HIGH priority order (consumers
-# prepend in yield order, so the LAST emitted dir ends up first on PATH —
-# the first GOPATH entry emits last among the go dirs). Resolution mirrors
-# the tools (pure parameter expansion — no `go env` subprocess):
+# prepend in yield order, so the LAST emitted dir ends up first on PATH).
+# Resolution mirrors the tools (pure parameter expansion, no `go env`):
 #   GOBIN, else every GOPATH entry's bin, else ~/go/bin ($HOME stays
-#   literal — eval and the profile expand it identically);
-#   ${CARGO_HOME:-$HOME/.cargo}/bin — resolved INSIDE the emitted line;
-#   plus the user-local ~/.local/bin and ~/.npm-global/bin.
+#   literal); ${CARGO_HOME:-$HOME/.cargo}/bin; ~/.local/bin; ~/.npm-global/bin.
 # (/usr/local/bin is deliberately absent: a system path the default PATH
 # already carries.)
-# Priority (high → low): ~/.local/bin, cargo, go, npm — on name collisions
-# compiled implementations beat Node-CLI ones, and ~/.local/bin carries
-# explicit user intent (hand-placed binaries + the _brew_first_link
-# symlinks). Consumers apply their own policy:
+# Priority (high → low): ~/.local/bin, cargo, go, npm.
 #   export_path  — eval: export every dir, existing or not
 #   persist_path — append_env_block: one case-line per dir (unconditional:
-#                  a not-yet-existing dir is future-proofing, not noise)
+#                  a not-yet-existing dir is future-proofing)
 bin_dirs() {
 	local -a go_dirs=()
 	if [ -n "${GOBIN:-}" ]; then
 		go_dirs+=("$GOBIN")
 	else
-		# Split GOPATH on ':' ONLY (a temporarily narrowed IFS, restored
-		# right after — paths with spaces survive as whole entries). The
-		# escaped default keeps $HOME literal for the common layout.
+		# Split GOPATH on ':' ONLY (temporarily narrowed IFS — paths with
+		# spaces survive); the escaped default keeps $HOME literal.
 		local gopath_entry old_ifs=$IFS
 		IFS=':'
 		for gopath_entry in ${GOPATH:-\$HOME/go}; do
@@ -200,9 +182,12 @@ export_path() {
 	# resolve the moment a binary lands in them — no re-seeds mid-run.
 	eval "$(bin_dirs)"
 	# Brew tier: AFTER system paths, BEFORE the WSL shims (see header).
-	local d
-	for d in $BREW_BIN_DIRS; do
-		export_path_pre_win "$d"
+	# Derived from BREW_PREFIXES; /usr/local/bin stays out — a system path
+	# the default PATH already carries (see bin_dirs).
+	local p
+	for p in $BREW_PREFIXES; do
+		[ "$p" = /usr/local ] && continue
+		export_path_pre_win "$p/bin"
 	done
 }
 
@@ -228,13 +213,13 @@ persist_brew_path() {
 	append_env_block "Homebrew PATH (before Windows shims)" "$block"
 }
 
+# ────────────────────── compositor autostart (guarded VT login) ──────────────────────
 # _path_pre_win_snippet <dir>... — the ONE rendering of the positioning
 # algorithm for a GROUP of dirs installed as a unit (brew's bin+sbin):
-# no-op when ANY group dir is already in PATH; insert the whole group
-# before the FIRST /mnt entry; front when /mnt is the first entry; plain
-# append when there is no /mnt section. POSIX text, dirs baked in, $PATH
-# left LIVE — export_path_pre_win evals it, persist_brew_path bakes it
-# into the profile.
+# no-op when ANY group dir is already in PATH; insert before the FIRST
+# /mnt entry; front when /mnt is first; plain append otherwise. POSIX text
+# with $PATH left LIVE — export_path_pre_win evals it, persist_brew_path
+# bakes it into the profile.
 _path_pre_win_snippet() {
 	[ $# -gt 0 ] || return 0
 	local gtext="" group="" d

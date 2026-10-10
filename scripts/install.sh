@@ -32,6 +32,7 @@ fi
 # shellcheck source=/dev/null
 . "$_MONKEY_LIB_DIR/lib/common.sh"
 . "$_MONKEY_LIB_DIR/lib/sudo.sh"
+. "$_MONKEY_LIB_DIR/lib/output.sh"
 . "$_MONKEY_LIB_DIR/lib/pkg.sh"
 . "$_MONKEY_LIB_DIR/lib/config.sh"
 . "$_MONKEY_LIB_DIR/lib/env.sh"
@@ -75,6 +76,32 @@ run_checkhealth_step() {
 		verify_checkhealth
 		;;
 	esac
+}
+
+# Run $INSTALL_DIR/checkhealth.sh --install --skip-check-config with retries.
+# --install checks first and installs after; transient failures (network
+# blips, apt locks, aborted downloads) heal on retry. After the first pass
+# everything installed is skipped, so retries are cheap verifications.
+# Three attempts, exit code 0 wins.
+run_checkhealth() {
+	info "Running checkhealth.sh --install to install remaining dependencies..."
+	# Chain marker: a chained --install keeps the NOPASSWD drop-in default —
+	# the installer's own setup_sudo has already granted, and long chained
+	# runs need it (see checkhealth_main in checkhealth.sh). Manual runs
+	# default to timestamp-only authentication.
+	INSTALL_CHAIN=1
+	export INSTALL_CHAIN
+	if retry -t 3600 -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
+		ok "Dependency check complete."
+	else
+		warn "Some dependencies could not be installed automatically."
+		warn "Run 'cd $INSTALL_DIR && ./checkhealth.sh' to review remaining items."
+	fi
+}
+
+# Plain run (no --install): verification only, never fatal.
+verify_checkhealth() {
+	bash "$INSTALL_DIR/checkhealth.sh" --skip-check-config || true
 }
 
 install_main() {

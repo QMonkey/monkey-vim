@@ -33,11 +33,11 @@ fi
 # shellcheck source=/dev/null
 . "$_MONKEY_LIB_DIR/lib/common.sh"
 . "$_MONKEY_LIB_DIR/lib/sudo.sh"
+. "$_MONKEY_LIB_DIR/lib/output.sh"
 . "$_MONKEY_LIB_DIR/lib/pkg.sh"
 . "$_MONKEY_LIB_DIR/lib/config.sh"
 . "$_MONKEY_LIB_DIR/lib/env.sh"
 . "$_MONKEY_LIB_DIR/lib/checks.sh"
-. "$_MONKEY_LIB_DIR/lib/optional.sh"
 
 # Data defaults: every project overwrites the ones it uses right after
 # sourcing this file, so an unused one is simply an empty list.

@@ -11,18 +11,19 @@ Nothing generic is duplicated per project.
 
 ## Layout
 
-| Path              | Contents                                                                                      |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `install.sh`      | Installer entry point — sourced by a project's `install.sh`, then `install_main`              |
-| `checkhealth.sh`  | Dependency-check entry point — sourced, then `checkhealth_main`                               |
-| `lib/common.sh`   | Colors, indented log lines (`[INFO]` / `[ OK ]`), `$HOME` guard, temp cleanup                 |
-| `lib/sudo.sh`     | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                |
-| `lib/pkg.sh`      | OS / package-manager abstraction + Homebrew fallback (`BREW_FIRST`)                           |
-| `lib/config.sh`   | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`) |
-| `lib/checks.sh`   | Spec parser, probes, section markers, install batching                                        |
-| `lib/clone.sh`    | Git clone helpers used by the clone step                                                      |
-| `lib/kmscon.sh`   | kmscon install & VT takeover (`ensure_kmscon tty2`, getty masking, launch-gui presence check) |
-| `lib/optional.sh` | Optional-tool install machinery (strategy chain, `install_optional_bin`)                      |
+| Path             | Contents                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `install.sh`     | Installer entry point — sourced by a project's `install.sh`, then `install_main`              |
+| `checkhealth.sh` | Dependency-check entry point — sourced, then `checkhealth_main`                               |
+| `lib/common.sh`  | Colors, indented log lines (`[INFO]` / `[ OK ]`), `$HOME` guard, temp cleanup                 |
+| `lib/sudo.sh`    | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                |
+| `lib/pkg.sh`     | OS / package-manager abstraction + Homebrew fallback (`BREW_FIRST`)                           |
+| `lib/config.sh`  | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`) |
+| `lib/env.sh`     | PATH seeding / persistence (`bin_dirs`, `export_path`), shell env files, autostart block      |
+| `lib/checks.sh`  | Spec parser, probes, section markers, install batching                                        |
+| `lib/clone.sh`   | Git clone helpers used by the clone step                                                      |
+| `lib/kmscon.sh`  | kmscon install & VT takeover (`ensure_kmscon tty2`, getty masking, launch-gui presence check) |
+| `lib/output.sh`  | Terminal output helpers: banner, section headers, platform block, install hints               |
 
 Neither entry point is meant to be executed on its own.
 
@@ -293,7 +294,7 @@ distros are mapped to their base id; nothing else is shared:
 | `macos`    | darwin (uname)                                  | homebrew |
 
 `OS` holds the id, and it is what every package table keys on
-(`default_pkg_name` in `lib/pkg.sh`) — so Ubuntu and Fedora carry their own
+(`pkg_name` in `lib/pkg.sh`) — so Ubuntu and Fedora carry their own
 package names while only the _commands_ are shared, e.g. `debian | ubuntu)`
 for `apt-get install` and `centos | fedora)` for a plain `dnf install`. EPEL
 stays a CentOS-only step, since Fedora has no EPEL. `os_detect` is the only
