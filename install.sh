@@ -15,7 +15,7 @@ set -euo pipefail
 
 # ──────────────────────── repository identity ────────────────────────
 # Declared before the framework is sourced: the bootstrap below needs both
-# values, and clones into the very directory clone_monkey_project would
+# values, and clones into the very directory clone_project would
 # have used — one clone per run, not two.
 PROJECT=monkey-vim
 PROJECT_REPO=https://github.com/QMonkey/monkey-vim.git
@@ -42,7 +42,7 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
 	else
 		# curl|bash or a .git-less directory: the only path to a
 		# same-revision scripts/ is the INSTALL_DIR checkout.
-		# clone_monkey_project cannot do this job — it lives in the very
+		# clone_project cannot do this job — it lives in the very
 		# scripts/ being fetched. INSTALL_DIR is where the framework's clone
 		# step would have put the checkout too, so that step only confirms it.
 		if [ -d "$INSTALL_DIR/.git" ]; then
@@ -410,21 +410,37 @@ install_plugins() {
 	# treats it as a failed attempt and re-runs. vim-plug is idempotent
 	# (clones only what is missing), so a re-attempt continues where the
 	# last one died.
+	# Headless mode needs a wrapper rc. The .vimrc is vim9script, and a
+	# vim9 script restores 'cpoptions' to its PRE-script value when it ends.
+	# Under `vim -es` that pre-value is the vi-compatible default (flag C —
+	# line continuations off), so every legacy plugin sourced after the
+	# vimrc fails its `\` continuations (fugitive E10, gutentags E116, ...)
+	# and vim exits 1 although PlugInstall itself succeeded (observed on
+	# Ubuntu 2026-10: 5 failed attempts, all plugins actually installed).
+	# A legacy wrapper that runs `set nocompatible` BEFORE sourcing the
+	# vimrc makes the pre-value the Vim default, so the restore is a no-op.
 	local pluglog=/tmp/vim-plugins.log
+	local headless_rc
+	headless_rc=$(mktemp /tmp/vim-headless-rc.XXXXXX)
+	cat >"$headless_rc" <<'EOF'
+set nocompatible
+source $HOME/.vimrc
+EOF
 	if retry -t 3600 -s "headless PlugInstall" bash -c '
-		vim -es -u "$HOME/.vimrc" +"PlugInstall --sync" +qall 2>&1 | tee /tmp/vim-plugins.log
+		vim -es -u "$1" +"PlugInstall --sync" +qall 2>&1 | tee /tmp/vim-plugins.log
 		rc=${PIPESTATUS[0]}
 		if [ "$rc" -ne 0 ] || grep -qE "^(Error|E[0-9]+)" /tmp/vim-plugins.log; then
 			exit 1
 		fi
 		exit 0
-	'; then
+	' _ "$headless_rc"; then
 		ok "Plugins installed."
 	else
 		warn "Headless PlugInstall failed — see $pluglog."
 		warn "Plugins retry automatically on the next vim launch, or run:"
-		warn "  vim -es -u $HOME/.vimrc +\"PlugInstall --sync\" +qall"
+		warn "  printf 'set nocompatible\\nsource \$HOME/.vimrc\\n' > /tmp/vimrc-headless && vim -es -u /tmp/vimrc-headless +\"PlugInstall --sync\" +qall"
 	fi
+	rm -f "$headless_rc"
 }
 
 # ──────────────────────── hooks ────────────────────────
