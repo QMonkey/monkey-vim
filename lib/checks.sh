@@ -218,72 +218,6 @@ find_spec() {
 }
 
 # ──────────────────────── install strategies ────────────────────────
-# Runs one strategy step; returns non-zero when the step failed.
-_strategy_step() {
-	local kind="$1" args="$2" spec="$3"
-	case "$kind" in
-	pkg)
-		if [ -n "$args" ]; then
-			# args are binaries, not package names: the distro package is
-			# whatever pkg_name maps them to (cc → gcc, then clang).
-			local -a names=() b
-			for b in $args; do
-				names+=("$(pkg_name "$b")")
-			done
-			install_pkg "${names[@]}"
-		else
-			install_pkg "$(pkg_name "$SPEC_ID")"
-		fi
-		;;
-	npm)
-		ensure_npm || return 1
-		npm_install_g $args
-		;;
-	go)
-		go_install $args
-		;;
-	cargo)
-		ensure_rust || return 1
-		retry -t 1800 -s "cargo install $args" cargo install $args
-		;;
-	pip)
-		# ensure_pip first: the fallback dies with command-not-found when
-		# pip3 is missing (Leap 16). stderr stays visible — a silently
-		# swallowed pip error is what made the Leap 16 pylsp failure
-		# undiagnosable.
-		ensure_pip || return 1
-		retry -t 1800 -s "pip3 install $args" sudo_cmd pip3 install $args ||
-			retry -t 1800 -s "pip3 install $args" pip3 install $args
-		;;
-	brew)
-		have_native_cmd brew || return 1
-		# zig/zls pull LLVM and marksman pulls the .NET runtime as formula
-		# dependencies — installs that dwarf a normal bottle.
-		local bt=1800
-		case "$args" in
-		zig | zls | marksman) bt=7200 ;;
-		esac
-		brew_install_retry "$bt" "brew install $args" $args
-		;;
-	rustup)
-		ensure_rust
-		;;
-	rustup-component)
-		ensure_rust || return 1
-		retry -t 1800 -s "rustup component add $args" rustup component add $args
-		;;
-	python-unversioned)
-		install_python_for_gtags
-		;;
-	none)
-		return 1
-		;;
-	*)
-		install_pkg "$kind${args:+:$args}"
-		;;
-	esac
-}
-
 # Split one comma-separated strategy step off <rest> (e.g. "pkg,pip:x"):
 # sets _STRATEGY_KIND / _STRATEGY_ARGS / _STRATEGY_REST (what remains after
 # the step) and returns 1 when the list is exhausted. Shared by
@@ -312,7 +246,7 @@ install_strategy() {
 	rest="$strategy"
 	while _strategy_split "$rest"; do
 		rest="$_STRATEGY_REST"
-		_strategy_step "$_STRATEGY_KIND" "$_STRATEGY_ARGS" "$spec" || true
+		install_strategy_step "$_STRATEGY_KIND" "$_STRATEGY_ARGS" || true
 		# The step may have just CREATED a bin dir (go/cargo install into
 		# GOPATH[0]/bin, CARGO_HOME/bin, npm prefix/bin) — re-seed so the
 		# probe below can actually resolve the freshly installed binary.
