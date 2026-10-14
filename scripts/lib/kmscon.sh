@@ -18,35 +18,6 @@ KMSCON_UNIT_PATH=/etc/systemd/system/kmscon@.service
 KMSCON_PAM_PATH=/etc/pam.d/kmscon
 KMSCON_UNIT_MARKER="managed by monkey-scripts (kmscon setup) v1"
 
-# Default argument pre-parser for installers offering --with-kmscon
-# [tty[,tty...]] (default tty2): consumes the flag BEFORE install_main sees
-# the args (it fills _INSTALL_ARGS; the caller runs `parse_install_args "$@"`
-# then `install_main "${_INSTALL_ARGS[@]}"`). Sets KMSCON_TTYS ("" = flag not
-# given) and KMSCON_DONE. Projects with extra flags override this and
-# delegate the leftover args themselves.
-parse_install_args() {
-	KMSCON_TTYS=""
-	KMSCON_DONE=""
-	local args=()
-	while [ $# -gt 0 ]; do
-		case "$1" in
-		--with-kmscon)
-			KMSCON_TTYS=tty2
-			if [ $# -gt 1 ]; then
-				case "$2" in
-				--*) ;; # next flag: keep the tty2 default
-				*) KMSCON_TTYS=$2
-					shift ;;
-				esac
-			fi
-			;;
-		*) args+=("$1") ;;
-		esac
-		shift
-	done
-	_INSTALL_ARGS=("${args[@]+"${args[@]}"}")
-}
-
 # Parse "<tty[,tty...]>" or "<N,N>" into KMSCON_VTS (VT numbers). Returns 1
 # on any malformed token (caller bug): the caller-listed set IS the
 # replacement set, so a typo must not silently widen or narrow it — the

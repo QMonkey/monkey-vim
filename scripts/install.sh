@@ -22,22 +22,8 @@
 # fail() aborts: an installer must stop at the first fatal step.
 MONKEY_FAIL_EXITS=true
 
-_MONKEY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ ! -f "$_MONKEY_LIB_DIR/lib/common.sh" ]; then
-	echo "monkey-scripts not found next to this file ($_MONKEY_LIB_DIR/lib)." >&2
-	echo "This checkout's scripts/ is incomplete (outdated or partial clone)." >&2
-	echo "  git -C $(dirname "$_MONKEY_LIB_DIR") pull    # or re-clone the project" >&2
-	exit 1
-fi
-# shellcheck source=/dev/null
-. "$_MONKEY_LIB_DIR/lib/common.sh"
-. "$_MONKEY_LIB_DIR/lib/sudo.sh"
-. "$_MONKEY_LIB_DIR/lib/output.sh"
-. "$_MONKEY_LIB_DIR/lib/pkg.sh"
-. "$_MONKEY_LIB_DIR/lib/config.sh"
-. "$_MONKEY_LIB_DIR/lib/env.sh"
-. "$_MONKEY_LIB_DIR/lib/clone.sh"
-. "$_MONKEY_LIB_DIR/lib/kmscon.sh"
+EXTRA_LIBS="kmscon"
+. "$(dirname "${BASH_SOURCE[0]}")/lib/bootstrap.sh"
 
 # Data defaults — a project overwrites whatever it uses after sourcing.
 SYMLINKS=()
@@ -67,6 +53,37 @@ install_step_after() { :; }
 # WSL build there).
 install_print_info() { :; }
 
+# Default argument pre-parser for installers offering --with-kmscon
+# [tty[,tty...]] (default tty2): consumes the flag BEFORE install_main sees
+# the args (it fills _INSTALL_ARGS; the caller runs `parse_install_args "$@"`
+# then `install_main "${_INSTALL_ARGS[@]}"`). Sets KMSCON_TTYS ("" = flag not
+# given) and KMSCON_DONE. Projects with extra flags override this and
+# delegate the leftover args themselves.
+parse_install_args() {
+	KMSCON_TTYS=""
+	KMSCON_DONE=""
+	local args=()
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		--with-kmscon)
+			KMSCON_TTYS=tty2
+			if [ $# -gt 1 ]; then
+				case "$2" in
+				--*) ;; # next flag: keep the tty2 default
+				*)
+					KMSCON_TTYS=$2
+					shift
+					;;
+				esac
+			fi
+			;;
+		*) args+=("$1") ;;
+		esac
+		shift
+	done
+	_INSTALL_ARGS=("${args[@]+"${args[@]}"}")
+}
+
 run_checkhealth_step() {
 	case "${CHECKHEALTH_MODE:-run}" in
 	run)
@@ -91,7 +108,7 @@ run_checkhealth() {
 	# default to timestamp-only authentication.
 	INSTALL_CHAIN=1
 	export INSTALL_CHAIN
-	if retry -t 3600 -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
+	if retry -t "$RETRY_T_HEAVY" -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
 		ok "Dependency check complete."
 	else
 		warn "Some dependencies could not be installed automatically."
@@ -102,6 +119,24 @@ run_checkhealth() {
 # Plain run (no --install): verification only, never fatal.
 verify_checkhealth() {
 	bash "$INSTALL_DIR/checkhealth.sh" --skip-check-config || true
+}
+
+# ──────────────────────── position-gated steps ────────────────────────
+# Steps the project can MOVE in the pipeline: CHECKHEALTH_POS (tool |
+# after_links) and PERSIST_POS (before_links | after_links) name the phase
+# each runs in. The gate helpers keep install_main a flat, linear sequence
+# — every step appears exactly once, at its default position.
+checkhealth_step() { # <pos: tool | after_links>
+	[ "${CHECKHEALTH_MODE:-run}" = none ] && return 0
+	[ "${CHECKHEALTH_POS:-tool}" = "$1" ] || return 0
+	run_checkhealth_step
+	echo ""
+}
+persist_path_step() { # <pos: before_links | after_links>
+	[ "$PERSIST_PATH" = 1 ] || return 0
+	[ "${PERSIST_POS:-after_links}" = "$1" ] || return 0
+	persist_path
+	echo ""
 }
 
 install_main() {
@@ -143,31 +178,19 @@ install_main() {
 	clone_project
 	echo ""
 
-	if [ "$CHECKHEALTH_POS" != "after_links" ] && [ "${CHECKHEALTH_MODE:-run}" != "none" ]; then
-		run_checkhealth_step
-		echo ""
-	fi
+	checkhealth_step tool
 
 	install_step_autostart
 
-	if [ "$PERSIST_PATH" = 1 ] && [ "${PERSIST_POS:-after_links}" = "before_links" ]; then
-		persist_path
-		echo ""
-	fi
+	persist_path_step before_links
 
 	setup_symlinks
 	install_step_symlinks
 	echo ""
 
-	if [ "$CHECKHEALTH_POS" = "after_links" ] && [ "${CHECKHEALTH_MODE:-run}" != "none" ]; then
-		run_checkhealth_step
-		echo ""
-	fi
+	checkhealth_step after_links
 
-	if [ "$PERSIST_PATH" = 1 ] && [ "${PERSIST_POS:-after_links}" = "after_links" ]; then
-		persist_path
-		echo ""
-	fi
+	persist_path_step after_links
 
 	install_step_after
 	finish_install

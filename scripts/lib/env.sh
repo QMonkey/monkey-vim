@@ -79,6 +79,116 @@ append_env_block() {
 	done < <(shell_env_files)
 }
 
+# ────────────── /run/user/$UID repair (sessionless environments) ──────────────
+# $XDG_RUNTIME_DIR comes from pam_systemd at login (logind creates
+# /run/user/$UID 0700). Sessionless shells — WSL2 (it registers a logind
+# session only for the distro's DEFAULT user, falling back to root without
+# a /etc/wsl.conf [user] default), containers, CI, `su` — have none, and
+# tools that write runtime files there fail (nvim/vim serverstart,
+# fzf-lua, ...). Keyed on the SYMPTOM, not is_wsl(); the real fix is a
+# proper default user (see consuming repos' README, "Precautions" → WSL2).
+# runtime_dir_path resolves the dir for the REAL current user: under
+# `sudo bash` / `su` $XDG_RUNTIME_DIR points at the OTHER user's
+# /run/user/$UID — unownable, and repairing it would end in the misleading
+# "could not create /run/user/0".
+runtime_dir_path() {
+	local uid
+	uid=$(id -u)
+	case "$XDG_RUNTIME_DIR" in
+	"" | "/run/user/$uid") echo "${XDG_RUNTIME_DIR:-/run/user/$uid}" ;;
+	# Another user's /run/user/N: unownable for this uid — ignore it.
+	/run/user/*) echo "/run/user/$uid" ;;
+	# A deliberate custom path (containers, custom setups): respect it.
+	*) echo "$XDG_RUNTIME_DIR" ;;
+	esac
+}
+
+ensure_xdg_runtime_dir() {
+	local uid user dir marker wslconf
+	uid=$(id -u)
+	user=$(id -un)
+	dir=$(runtime_dir_path)
+	wslconf=/etc/wsl.conf
+
+	# Already usable — the free path on every normal Linux login.
+	if [ -d "$dir" ] && [ -w "$dir" ]; then
+		return 0
+	fi
+
+	# Everything below needs root — report it here rather than letting the
+	# user rediscover it later as a Lua/vim error with no causal trail.
+	if [ "$uid" -ne 0 ] && ! have_native_cmd sudo; then
+		warn "\$XDG_RUNTIME_DIR ($dir) is missing and no sudo is available — see README 'Precautions' (WSL2 default user)."
+		return 0
+	fi
+
+	# ── Tier 0: fix the root cause ───────────────────────────────────────
+	# WSL boots as root whenever /etc/wsl.conf has no [user] default;
+	# declaring the current user gives future sessions a real logind
+	# session. Only written when default= is absent; INI-aware (a
+	# duplicated/misplaced section can break the boot). Effective after
+	# `wsl.exe --shutdown`; tiers 1-2 repair the current boot.
+	if is_wsl && [ "$uid" -ne 0 ]; then
+		local msg_set msg_ok msg_warn
+		msg_set="WSL boots as root (no default user) — setting $user in $wslconf..."
+		msg_ok="WSL default user set to $user — effective after 'wsl.exe --shutdown'; the tiers below still repair the current boot."
+		msg_warn="could not update $wslconf — add '[user] default=$user' manually (see README 'Precautions' → WSL2)."
+		if sudo_cmd grep -Eq '^[[:space:]]*default[[:space:]]*=' "$wslconf" 2>/dev/null; then
+			: # a default user is already declared — respect the existing choice
+		elif sudo_cmd grep -q '^\[user\]' "$wslconf" 2>/dev/null; then
+			# Insert right after the [user] header — appending at EOF would
+			# land in the last section.
+			info "$msg_set"
+			if sudo_cmd sed -i "/^\[user\]/a default=${user}" "$wslconf"; then
+				ok "$msg_ok"
+			else
+				warn "$msg_warn"
+			fi
+		else
+			info "$msg_set"
+			if printf '\n[user]\ndefault=%s\n' "$user" | sudo_cmd tee -a "$wslconf" >/dev/null; then
+				ok "$msg_ok"
+			else
+				warn "$msg_warn"
+			fi
+		fi
+	fi
+
+	# Tiers 1-2 need systemd; without it nothing can create /run/user here.
+	have_native_cmd systemctl || return 0
+
+	info "Repairing \$XDG_RUNTIME_DIR ($dir) — no login session here, so logind never created it."
+
+	# Tier 1: enable lingering — user@$UID.service at boot pulls in
+	# user-runtime-dir@$UID.service and creates the directory (0700), and
+	# repairs the user manager (dbus, gpg-agent). loginctl fails with ENXIO
+	# where the seat daemon is `seatd` (Debian 13, WSL has no VT): then
+	# write the linger marker directly — it IS the on-disk state
+	# enable-linger exists to produce.
+	marker="/var/lib/systemd/linger/$user"
+	if have_native_cmd loginctl && loginctl enable-linger "$user" >/dev/null 2>&1; then
+		ok "Enabled lingering for $user."
+	elif sudo_cmd mkdir -p "$(dirname "$marker")" >/dev/null 2>&1 &&
+		sudo_cmd touch "$marker" >/dev/null 2>&1; then
+		ok "Enabled lingering for $user via $marker."
+	fi
+
+	# Tier 2: create the directory now. Name the runtime-dir unit explicitly
+	# (user@.service only ORDERS After=user-runtime-dir@%i) and fall back to
+	# the user manager.
+	sudo_cmd systemctl start "user-runtime-dir@$uid.service" >/dev/null 2>&1 ||
+		sudo_cmd systemctl start "user@$uid.service" >/dev/null 2>&1 || true
+
+	if [ -d "$dir" ] && [ -w "$dir" ]; then
+		ok "\$XDG_RUNTIME_DIR is ready ($dir)."
+		return 0
+	fi
+
+	# Both tiers failed (no logind/seatd) — spell out both fixes.
+	warn "Could not create $dir — nvim/vim serverstart() will keep failing (fzf-lua and other RPC users)."
+	warn "  Manual fix:  sudo touch $marker && sudo systemctl start user-runtime-dir@$uid.service"
+}
+
 # ────────────────────── compositor autostart (guarded VT login) ──────────────────────
 # autostart_block — the guarded exec block. POSIX sh: it lands in
 # ~/.profile too, which display managers may source with a minimal shell.

@@ -240,7 +240,7 @@ EOF
 				ok "${desc} → ${target}"
 			else
 				fail "${desc} symlink broken → ${target}"
-				REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+				count_required_failure
 			fi
 		elif [ -e "$dst" ]; then
 			if [ "$mode" = "strict" ]; then
@@ -252,7 +252,7 @@ EOF
 			local missing_msg
 			missing_msg="${name} not found (run: ln -sfn ${src} ${dst/#$HOME/\~})"
 			fail "${hint:-$missing_msg}"
-			REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+			count_required_failure
 		fi
 	done
 }

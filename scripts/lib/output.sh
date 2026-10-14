@@ -50,12 +50,12 @@ print_header() {
 # ────────────────────── platform ──────────────────────
 # Human-readable package manager for the Platform block.
 pkg_manager_name() {
-	case "${OS:-unknown}" in
-	debian | ubuntu) echo "apt" ;;
-	arch) echo "pacman" ;;
-	opensuse) echo "zypper" ;;
-	centos | fedora) echo "dnf" ;;
-	macos) echo "homebrew" ;;
+	case "$(pkg_manager)" in
+	apt) echo "apt" ;;
+	pacman) echo "pacman" ;;
+	zypper) echo "zypper" ;;
+	dnf) echo "dnf" ;;
+	brew) echo "homebrew" ;;
 	*) echo "" ;;
 	esac
 }
@@ -73,8 +73,30 @@ print_platform() {
 	echo ""
 }
 
+# Human install command for one or more package names — the "Run:" line and
+# the hint after a failed install. The manager id comes from pkg_manager()
+# (lib/pkg.sh); this is the rendering side, kept with the other hint helpers.
+get_install_hint() {
+	case "$(pkg_manager)" in
+	apt) echo "sudo apt-get install ${*}" ;;
+	pacman) echo "sudo pacman -S ${*}" ;;
+	zypper) echo "sudo zypper install ${*}" ;;
+	dnf) echo "sudo dnf install ${*}" ;;
+	brew) echo "brew install ${*}" ;;
+	*)
+		case "${OS:-unknown}" in
+		linux-unknown) echo "install ${*} manually or 'brew install ${*}'" ;;
+		*) echo "install ${*} manually" ;;
+		esac
+		;;
+	esac
+}
+
 # ──────────────────────── hints ────────────────────────
 # Human command for one strategy step ("" when unknown).
+# KEEP IN SYNC with lib/pkg.sh install_strategy_step: the two case tables
+# walk the SAME set of kinds — one executes a step, this one renders its
+# human-readable command. A new kind needs a row in BOTH.
 _strategy_hint() {
 	local kind="$1" args="$2" b
 	case "$kind" in
@@ -97,10 +119,13 @@ _strategy_hint() {
 		echo "cargo install $args"
 		;;
 	pip)
-		echo "pip3 install $args"
+		echo "pip3 install --user $args"
 		;;
 	brew)
 		echo "brew install $args"
+		;;
+	zig-zls-pair)
+		echo "brew install zls zig@<zls-version>  # version-locked pair (zls ceiling)"
 		;;
 	rustup)
 		echo "https://rustup.rs/"
@@ -117,9 +142,8 @@ _strategy_hint() {
 # Default hint: join the hints of every strategy step with "# or:".
 # Projects may define their own `optional_hint` after sourcing this file.
 optional_hint() {
-	local bin="$1" spec strategy rest h out=""
-	spec=$(find_spec "$bin") || spec="$bin"
-	parse_spec "$spec"
+	local bin="$1" strategy rest h out=""
+	load_spec_for "$bin"
 	strategy="${SPEC_INSTALL:-pkg}"
 	rest="$strategy"
 	while _strategy_split "$rest"; do

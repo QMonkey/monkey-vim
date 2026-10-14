@@ -1,18 +1,22 @@
-# monkey-scripts/lib/checks.sh — dependency checks for checkhealth.sh.
-#
-# Sourced by scripts/checkhealth.sh only.
+# monkey-scripts/lib/checks.sh — dependency CHECK side: spec model, probes,
+# and the checkhealth display sections. Sourced by scripts/checkhealth.sh
+# (via lib/bootstrap.sh EXTRA_LIBS).
 #
 # A dependency is one spec string:
-#   id|check|desc|install|ver_regex|fallback|token
+#   id|check|desc|install|ver_regex|fallback|token|group
 #     id        binary (or sentinel) name; recorded in MISSING_* and used
 #               for package-name lookups
 #     check     bin (default) | ext | anyof:a b c | anyofext:a b c |
 #               ver:MIN | ver:MIN!bad bad (versions that pass MIN but are
-#               known broken, exact match on the extracted version)
+#               known broken, exact match on the extracted version) |
+#               py:module (Python module probe — pylsp plugins ship no
+#               binary; import the module instead) |
+#               match:bin (companion whose major.minor version must equal
+#               <bin>'s — zls vs zig; master missing ⇒ pass)
 #     desc      printed text (default: id)
 #     install   pkg (default) | pkg:name,name | npm:x | go:x | cargo:x |
 #               pip:x | brew:x | rustup | rustup-component:x |
-#               python-unversioned | none
+#               python-unversioned | zig-zls-pair | none
 #     ver_regex version regex (default: [0-9]+\.[0-9]+)
 #     fallback  binary accepted instead of id (warn, not fail)
 #     token     version output must mention this (warn only)
@@ -24,6 +28,10 @@
 #   @note|text      indented note line under the current title
 #   @clipboard      clipboard check (CHECK_CLIPBOARD=required)
 #   @config         "Config files" section (CONFIG_PHASE=required)
+#
+# The INSTALL machinery over these specs lives elsewhere: install_strategy /
+# install_strategy_step in lib/pkg.sh, the missing-installer passes in
+# lib/missing.sh, the clipboard domain in lib/clipboard.sh.
 
 REQUIRED_FAILURES=0
 MISSING_REQUIRED=()
@@ -84,8 +92,52 @@ probe_spec() {
 		return 0
 		;;
 	ver:*)
-		have_native_cmd "$SPEC_ID"
-		return
+		# Version detectability IS the probe (a rustup shim for an
+		# uninstalled component is present but answers nothing). Mirrors
+		# check_version_spec's one leniency: a declared fallback accepts an
+		# unparsable version (binary there, nothing more to say).
+		have_native_cmd "$SPEC_ID" || return 1
+		local ver
+		ver=$(extract_version "$SPEC_ID" "${SPEC_VER_RE:-$DEFAULT_VER_RE}")
+		if [ -z "$ver" ]; then
+			[ -n "$SPEC_FALLBACK" ] && return 0
+			return 1
+		fi
+		return 0
+		;;
+	py:*)
+		# pylsp plugins (python-lsp-black & friends) ship NO binary — they
+		# are Python modules loaded through pylsp's plugin entry points, so
+		# a `bin` check would fail forever on an otherwise working install.
+		# Probe by importing the module with the same interpreter the
+		# distro's pylsp runs under. Requires python3; absent python3 means
+		# the plugin cannot work either way.
+		if have_native_cmd python3 && python3 -c "import ${SPEC_CHECK#py:}" >/dev/null 2>&1; then
+			PROBE_MATCH="${SPEC_CHECK#py:}"
+			return 0
+		fi
+		return 1
+		;;
+	match:*)
+		# Companion tools whose major.minor MUST track a master tool's
+		# version (observed: zls 0.16 refuses to serve zig 0.17 outright —
+		# presence alone lies, the binary answers --version and then dies).
+		# Probe version AGREEMENT instead. The master itself being missing
+		# is not the companion's failure — pass here; the master's own spec
+		# reports it (avoids double-reporting one root cause).
+		local master="${SPEC_CHECK#match:}" my_ver master_ver
+		have_native_cmd "$SPEC_ID" || return 1
+		if ! have_native_cmd "$master"; then
+			PROBE_MATCH="$SPEC_ID"
+			return 0
+		fi
+		my_ver=$(extract_version "$SPEC_ID" "${SPEC_VER_RE:-$DEFAULT_VER_RE}")
+		master_ver=$(extract_version "$master" "${SPEC_VER_RE:-$DEFAULT_VER_RE}")
+		if [ -n "$my_ver" ] && [ -n "$master_ver" ] && [ "$my_ver" = "$master_ver" ]; then
+			PROBE_MATCH="$SPEC_ID"
+			return 0
+		fi
+		return 1
 		;;
 	*)
 		have_native_cmd "$SPEC_ID"
@@ -93,11 +145,18 @@ probe_spec() {
 	esac
 }
 
+# One required-check failure: count it. print_summary decides the exit
+# status off REQUIRED_FAILURES; shared by record_missing (required mode) and
+# config.sh's link checks (which have no id to install).
+count_required_failure() {
+	REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+}
+
 record_missing() {
 	local mode="$1" id="$2"
 	case "$mode" in
 	required)
-		REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
+		count_required_failure
 		[ "$id" = "-" ] && return 0 # informational: nothing to install
 		MISSING_REQUIRED+=("$id")
 		;;
@@ -127,7 +186,7 @@ check_version_spec() {
 		record_missing "$mode" "$SPEC_INSTALL_ID"
 		return 1
 	fi
-	ver=$(extract_version "$SPEC_ID" "${SPEC_VER_RE:-[0-9]+\.[0-9]+}")
+	ver=$(extract_version "$SPEC_ID" "${SPEC_VER_RE:-$DEFAULT_VER_RE}")
 	if [ -z "$ver" ]; then
 		if [ -n "$SPEC_FALLBACK" ]; then
 			# E.g. Hyprland: binary present, version string unparsable — not fatal.
@@ -217,44 +276,14 @@ find_spec() {
 	return 1
 }
 
-# ──────────────────────── install strategies ────────────────────────
-# Split one comma-separated strategy step off <rest> (e.g. "pkg,pip:x"):
-# sets _STRATEGY_KIND / _STRATEGY_ARGS / _STRATEGY_REST (what remains after
-# the step) and returns 1 when the list is exhausted. Shared by
-# install_strategy (execution) and optional_hint (hint derivation).
-_strategy_split() {
-	[ -n "$1" ] || return 1
-	local step="${1%%,*}"
-	_STRATEGY_KIND="${step%%:*}"
-	_STRATEGY_ARGS=""
-	[ "$step" != "$_STRATEGY_KIND" ] && _STRATEGY_ARGS="${step#*:}"
-	if [ "$1" = "$step" ]; then
-		_STRATEGY_REST=""
-	else
-		_STRATEGY_REST="${1#*,}"
-	fi
-}
-
-# Install everything a spec's strategy asks for, step by step, stopping as
-# soon as the dependency actually probes positive.
-install_strategy() {
-	local spec="$1" strategy rest
+# parse_spec for an id: resolve through find_spec, fall back to the bare id
+# as its own spec. Sets the SPEC_* globals plus SPEC_RAW (the full spec
+# string — install_strategy takes a spec, not an id).
+load_spec_for() {
+	local spec
+	spec=$(find_spec "$1") || spec="$1"
 	parse_spec "$spec"
-	strategy="$SPEC_INSTALL"
-	[ -n "$strategy" ] || strategy="pkg"
-	[ "$strategy" = "none" ] && return 1
-	rest="$strategy"
-	while _strategy_split "$rest"; do
-		rest="$_STRATEGY_REST"
-		install_strategy_step "$_STRATEGY_KIND" "$_STRATEGY_ARGS" || true
-		# The step may have just CREATED a bin dir (go/cargo install into
-		# GOPATH[0]/bin, CARGO_HOME/bin, npm prefix/bin) — re-seed so the
-		# probe below can actually resolve the freshly installed binary.
-		if probe_spec "$spec"; then
-			return 0
-		fi
-	done
-	return 1
+	SPEC_RAW="$spec"
 }
 
 # ──────────────────────── sections ────────────────────────
@@ -380,21 +409,20 @@ check_optional_tools() {
 	return 0
 }
 
+# Any truecolor hint in TERM (unanchored, as in the original scripts).
+_term_truecolor() {
+	[[ "${TERM:-}" =~ (256color|tmux|screen|alacritty|kitty|wezterm|xterm-kitty) ]]
+}
+
 check_terminal_caps() {
 	[ "${CHECK_TERMINAL_CAPS:-0}" = 1 ] || return 0
 	print_bold_header "Terminal capabilities"
 	# Two probes, both present in the original scripts:
 	#   term (default) — "TERM=… (true color capable)", any truecolor hint counts
 	#   colorterm      — report COLORTERM itself when it says truecolor
-	if [ "${TERMCAPS_STYLE:-term}" = colorterm ]; then
-		if [ -n "${COLORTERM:-}" ]; then
-			ok "COLORTERM=${COLORTERM}"
-		elif [[ "${TERM:-}" =~ (256color|tmux|screen|alacritty|kitty|wezterm|xterm-kitty) ]]; then
-			ok "TERM=${TERM} (true color capable)"
-		else
-			warn "TERM=${TERM} — true color may not work"
-		fi
-	elif [ -n "${COLORTERM:-}" ] || [[ "${TERM:-}" =~ (256color|tmux|screen|alacritty|kitty|wezterm|xterm-kitty) ]]; then
+	if [ "${TERMCAPS_STYLE:-term}" = colorterm ] && [ -n "${COLORTERM:-}" ]; then
+		ok "COLORTERM=${COLORTERM}"
+	elif [ -n "${COLORTERM:-}" ] || _term_truecolor; then
 		ok "TERM=${TERM} (true color capable)"
 	else
 		warn "TERM=${TERM} — true color may not work"
@@ -409,332 +437,6 @@ check_terminal_caps() {
 		else
 			warn "LANG=${LANG} (UTF-8 recommended)"
 		fi
-	fi
-	echo ""
-}
-
-# ──────────────────────── clipboard ────────────────────────
-# What the current session needs: pbcopy/pbpaste (built in) on macOS,
-# wl-copy/wl-paste on Wayland, xclip or xsel on X11. Prints "ok",
-# "missing <package>" or "n/a" (no graphical session — SSH, console — where a
-# system clipboard cannot be reached anyway).
-clipboard_state() {
-	if [ "$OS" = "macos" ]; then
-		echo ok
-	elif [ "${XDG_SESSION_TYPE:-}" = wayland ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
-		if have_native_cmd wl-copy; then
-			echo ok
-		else
-			echo "missing wl-clipboard"
-		fi
-	elif [ "${XDG_SESSION_TYPE:-}" = x11 ] || [ -n "${DISPLAY:-}" ]; then
-		if have_native_cmd xclip || have_native_cmd xsel; then
-			echo ok
-		else
-			echo "missing xclip"
-		fi
-	else
-		echo n/a
-	fi
-}
-
-# Required clipboard check (tmux-yank): WSL uses the Windows clip.exe
-# through interop — have_native_cmd must NOT be applied to it.
-check_clipboard_required() {
-	if [ "$OS" = "macos" ]; then
-		check_spec "pbcopy|bin|pbcopy (macOS built-in)|none" || true
-	elif is_wsl; then
-		if command -v clip.exe &>/dev/null; then
-			ok "clip.exe (WSL)"
-			if [ -r /proc/sys/fs/binfmt_misc/WSLInterop ] &&
-				[ "$(head -1 /proc/sys/fs/binfmt_misc/WSLInterop 2>/dev/null)" = "enabled" ]; then
-				ok "WSL interop (binfmt WSLInterop enabled)"
-			else
-				warn "WSL interop broken — .exe calls (yank/extrakto/fzf-url) will fail"
-				echo -e "         See README Troubleshooting: re-register /proc/sys/fs/binfmt_misc/WSLInterop"
-			fi
-		else
-			fail "clip.exe (WSL)"
-			# Upstream hands clip.exe to the package manager anyway: the
-			# install step attempts it and reports what is still missing.
-			record_missing required "clip.exe"
-		fi
-	else
-		# tmux-yank prefers wl-copy on Wayland (its helpers check wl-copy
-		# BEFORE xsel); under XWayland xclip works too, so any one of the
-		# three suffices.
-		local tool="" t hint="xclip"
-		for t in wl-copy xclip xsel; do
-			if have_native_cmd "$t"; then
-				tool="$t"
-				break
-			fi
-		done
-		[ -n "${WAYLAND_DISPLAY:-}" ] && hint="wl-clipboard"
-		if [ -n "$tool" ]; then
-			ok "${tool} (clipboard)"
-		else
-			fail "xclip / xsel / wl-copy (Wayland: install wl-clipboard)"
-			record_missing required "$hint"
-		fi
-	fi
-}
-
-# A display server alone is not enough: the editor needs an actual clipboard
-# provider binary (wl-copy on Wayland, xclip/xsel on X11, pbcopy on macOS).
-check_clipboard_warn() {
-	local cb_state cb_pkg
-	cb_state=$(clipboard_state)
-	case "$cb_state" in
-	ok) ok "Clipboard support available" ;;
-	n/a) warn "No display server — clipboard may be unavailable" ;;
-	missing*)
-		cb_pkg="${cb_state#missing }"
-		warn "Clipboard provider missing (${cb_pkg}) — install with: $(get_install_hint "$cb_pkg")"
-		;;
-	esac
-}
-
-check_clipboard_display() {
-	if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ] || [ "$OS" = "macos" ]; then
-		ok "Clipboard support available"
-	else
-		warn "No display server — clipboard may be unavailable"
-	fi
-}
-
-install_clipboard() {
-	# install_pkg is a no-op returning failure outside --install mode; skip
-	# entirely so check-only runs don't report a bogus install failure.
-	${INSTALL_MODE:-false} || return 0
-	[ "${CHECK_CLIPBOARD:-}" = "warn" ] || return 0
-	local state pkg
-	state=$(clipboard_state)
-	case "$state" in
-	ok | n/a) return 0 ;;
-	missing*)
-		pkg="${state#missing }"
-		echo -e "  ${YELLOW}→ installing clipboard provider ${pkg}...${NC}"
-		if install_pkg "$pkg"; then
-			echo -e "  ${GREEN}✓ ${pkg} installed${NC}"
-		else
-			echo -e "  ${RED}✗ failed to install ${pkg}${NC}"
-			echo -e "    hint: $(get_install_hint "$pkg")"
-			return 1
-		fi
-		;;
-	esac
-}
-
-# ──────────────────────── install missing ────────────────────────
-# Dedupe package names, order kept: two binaries can map to the SAME package
-# and the "Run:" hint would then repeat it.
-dedupe_pkgs() {
-	local -A seen=()
-	local -a out=()
-	local p
-	for p in "$@"; do
-		[ -z "${seen[$p]:-}" ] || continue
-		seen[$p]=1
-		out+=("$p")
-	done
-	echo "${out[*]-}"
-}
-
-# Collect the ids whose spec install strategy is plain "pkg" into
-# _PKG_BATCH_IDS / _PKG_BATCH_NAMES — they batch into ONE package-manager
-# call; strategies with side effects (npm/go/pip/…) stay per-tool. Shared by
-# the required / recommended / optional install passes.
-_collect_pkg_batch() {
-	_PKG_BATCH_IDS=()
-	_PKG_BATCH_NAMES=()
-	local id spec
-	for id in "$@"; do
-		spec=$(find_spec "$id") || spec="$id"
-		parse_spec "$spec"
-		if [ "${SPEC_INSTALL:-pkg}" = "pkg" ]; then
-			_PKG_BATCH_IDS+=("$id")
-			_PKG_BATCH_NAMES+=("$(pkg_name "$id")")
-		fi
-	done
-}
-
-install_missing_required() {
-	${INSTALL_MODE:-false} || return 0
-	[ ${#MISSING_REQUIRED[@]} -gt 0 ] || return 0
-	echo -e "${YELLOW}Installing: ${MISSING_REQUIRED[*]}...${NC}"
-	local id spec
-	_collect_pkg_batch "${MISSING_REQUIRED[@]}"
-	if [ ${#_PKG_BATCH_NAMES[@]} -gt 0 ]; then
-		install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"} || true
-	fi
-	for id in "${MISSING_REQUIRED[@]}"; do
-		spec=$(find_spec "$id") || spec="$id"
-		parse_spec "$spec"
-		[ "${SPEC_INSTALL:-pkg}" = "pkg" ] && continue
-		info "installing ${id}..."
-		install_strategy "$spec" || warn "could not install ${id}"
-	done
-	# Project-level re-probe (sway/hyprland upstream style): one "installed" /
-	# "still missing" line per entry of REQUIRED_REPROBE_LIST, probed via
-	# REQUIRED_REPROBE_FN (default below) and displayed via REQUIRED_NAME_FN.
-	# Projects without the list keep the run_required_checks behaviour below.
-	# [*] in the guard, never [@]: an UNSET array's @+ expansion is zero
-	# words, so `[ -n "${arr[@]+SET}" ]` degenerates to always-true `[ -n ]`.
-	if [ -n "${REQUIRED_REPROBE_LIST[*]+SET}" ] && [ ${#REQUIRED_REPROBE_LIST[*]} -gt 0 ]; then
-		local rb probe_fn name_fn label
-		probe_fn=${REQUIRED_REPROBE_FN:-_reprobe_default}
-		name_fn=${REQUIRED_NAME_FN:-}
-		MISSING_REQUIRED=()
-		REQUIRED_FAILURES=0
-
-		# Default re-probe: installed = resolves on PATH or a known ext path.
-		_reprobe_default() {
-			have_native_cmd "$1" || ext_paths_ok "$1"
-		}
-		for rb in ${REQUIRED_REPROBE_LIST[@]+"${REQUIRED_REPROBE_LIST[@]}"}; do
-			case "$rb" in
-			@*) continue ;;
-			*\|*)
-				# A full spec entry: probe and label through the spec itself —
-				# REQUIRED_REPROBE_LIST=("${REQUIRED_CHECKS[@]}") then needs no
-				# parallel name/availability tables.
-				parse_spec "$rb"
-				if probe_spec "$rb"; then
-					ok "$SPEC_DESC installed"
-				else
-					MISSING_REQUIRED+=("$SPEC_ID")
-					fail "$SPEC_DESC still missing"
-					REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
-				fi
-				;;
-			*)
-				label="$rb"
-				if [ -n "$name_fn" ]; then label=$("$name_fn" "$rb"); fi
-				if "$probe_fn" "$rb"; then
-					ok "$label installed"
-				else
-					MISSING_REQUIRED+=("$rb")
-					fail "$label still missing"
-					REQUIRED_FAILURES=$((REQUIRED_FAILURES + 1))
-				fi
-				;;
-			esac
-		done
-		if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
-			echo -e "${GREEN}All required tools now available.${NC}"
-		elif [ -n "${REQUIRED_MANUAL_HINT:-}" ]; then
-			echo -e "${RED}${REQUIRED_MANUAL_HINT}${NC}"
-		fi
-	else
-		run_required_checks
-		if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
-			echo -e "${GREEN}All required tools now available.${NC}"
-		else
-			local -a hint_pkgs=()
-			for id in "${MISSING_REQUIRED[@]}"; do
-				hint_pkgs+=("$(pkg_name "$id")")
-			done
-			echo -e "${RED}Run: $(get_install_hint "$(dedupe_pkgs ${hint_pkgs[@]+"${hint_pkgs[@]}"})")${NC}"
-		fi
-	fi
-	echo ""
-}
-
-install_missing_recommended() {
-	${INSTALL_MODE:-false} || return 0
-	[ ${#MISSING_RECOMMENDED[@]} -gt 0 ] || return 0
-	echo -e "${YELLOW}Installing: ${MISSING_RECOMMENDED[*]}...${NC}"
-	local id spec
-	_collect_pkg_batch "${MISSING_RECOMMENDED[@]}"
-	if [ ${#_PKG_BATCH_NAMES[@]} -gt 0 ]; then
-		if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
-			echo -e "${GREEN}Done.${NC}"
-		else
-			echo -e "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"})")${NC}"
-		fi
-	fi
-	for id in "${MISSING_RECOMMENDED[@]}"; do
-		spec=$(find_spec "$id") || spec="$id"
-		parse_spec "$spec"
-		[ "${SPEC_INSTALL:-pkg}" = "pkg" ] && continue
-		if install_strategy "$spec"; then
-			echo -e "  ${GREEN}✓ ${id} available${NC}"
-		else
-			echo -e "  ${RED}✗ failed to install ${id}${NC}"
-			echo -e "    hint: $(get_install_hint "$(pkg_name "$id")")"
-		fi
-	done
-	echo ""
-}
-
-# Probes OPTIONAL_CHECKS itself instead of trusting MISSING_OPTIONAL: the
-# step runs BEFORE the listing, so the listing's verdict is not available.
-install_missing_optional() {
-	${INSTALL_MODE:-false} || return 0
-	[ "${INSTALL_OPTIONAL:-0}" = 1 ] || return 0
-	local -a missing=()
-	local e bin spec
-	for e in ${OPTIONAL_CHECKS[@]+"${OPTIONAL_CHECKS[@]}"}; do
-		parse_spec "$e"
-		bin="$SPEC_ID"
-		probe_spec "$e" || missing+=("$bin")
-	done
-	if [ ${#missing[@]} -eq 0 ]; then
-		if [ -n "${OPTIONAL_ALL_PRESENT_MSG:-}" ]; then
-			echo -e "${GREEN}${OPTIONAL_ALL_PRESENT_MSG}${NC}"
-			echo ""
-		fi
-		return 0
-	fi
-	echo -e "${YELLOW}${OPTIONAL_INSTALL_TITLE:-Installing optional tools}: ${missing[*]}...${NC}"
-	# Plain pkg strategies batch into ONE transaction; side-effecting
-	# strategies (npm/go/pip/brew/…) install per tool below.
-	_collect_pkg_batch "${missing[@]}"
-	if [ ${#_PKG_BATCH_IDS[@]} -gt 0 ]; then
-		if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
-			local bin spec
-			for bin in "${_PKG_BATCH_IDS[@]}"; do
-				spec=$(find_spec "$bin") || spec="$bin"
-				if probe_spec "$spec"; then
-					echo -e "  ${GREEN}✓ ${bin} installed${NC}"
-				else
-					echo -e "  ${RED}✗ failed to install ${bin}${NC}"
-					echo -e "    hint: $(get_install_hint "$bin")"
-				fi
-			done
-		else
-			for bin in "${_PKG_BATCH_IDS[@]}"; do
-				echo -e "  ${RED}✗ failed to install ${bin}${NC}"
-				echo -e "    hint: $(get_install_hint "$bin")"
-			done
-		fi
-	fi
-	local installed_ok
-	for bin in "${missing[@]}"; do
-		spec=$(find_spec "$bin") || spec="$bin"
-		parse_spec "$spec"
-		[ "${SPEC_INSTALL:-pkg}" = "pkg" ] && continue # batched above
-		echo -e "  ${YELLOW}→ installing ${bin}...${NC}"
-		installed_ok=true
-		# A project may carry upstream's per-binary install table verbatim
-		# (monkey-nvim / monkey-vim); otherwise run the spec strategy.
-		if declare -F install_optional_bin >/dev/null 2>&1; then
-			install_optional_bin "$bin" || installed_ok=false
-		elif ! install_strategy "$spec"; then
-			installed_ok=false
-		fi
-		if $installed_ok; then
-			echo -e "  ${GREEN}✓ ${bin} installed${NC}"
-		else
-			echo -e "  ${RED}✗ failed to install ${bin}${NC}"
-			echo -e "    hint: $(get_install_hint "$bin")"
-		fi
-	done
-	# Optional trailing summary for projects whose original printed one
-	# after a non-empty install batch (monkey-nvim, monkey-vim).
-	if [ -n "${OPTIONAL_DONE_MSG:-}" ]; then
-		echo -e "${GREEN}${OPTIONAL_DONE_MSG}${NC}"
 	fi
 	echo ""
 }
