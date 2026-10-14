@@ -81,10 +81,22 @@ OPTIONAL_CHECKS=(
 	"python3|bin|python3|pkg||||Python"
 	"pylsp|bin|pylsp|pkg,pip:python-lsp-server||||Python"
 	"black|bin|black|pkg,pip:black||||Python"
+	# pylsp's black plugin — no binary, ships as the pylsp_black module
+	# (checked by import); without it the pylsp `black = { enabled = true }`
+	# setting silently does nothing.
+	"python-lsp-black|py:pylsp_black|pylsp-black (pylsp plugin for black)|pkg,pip:python-lsp-black||||Python"
 	"zig|bin|zig|pkg||||Zig"
-	"zls|bin|zls|pkg||||Zig"
+	# match:zig — zls refuses to serve a zig whose major.minor differs
+	# (zls 0.16 vs zig 0.17 = hard exit). Probe version AGREEMENT; the
+	# install pass re-runs pkg/BREW_FIRST, and the optional_hint points
+	# at zigtools when no matching zls can be installed automatically.
+	"zls|match:zig|zls (must match zig)|pkg,zig-zls-pair||||Zig"
 	"cargo|bin|cargo|rustup||||Rust"
-	"rust-analyzer|bin|rust-analyzer|rustup-component:rust-analyzer||||Rust"
+	# ver:0 (not bin): a rustup shim for an UNINSTALLED component answers
+	# "Unknown binary" on every invocation — presence alone lies. The
+	# version probe fails on the shim, so the install pass runs
+	# `rustup component add rust-analyzer` to heal it.
+	"rust-analyzer|ver:0|rust-analyzer|rustup-component:rust-analyzer||||Rust"
 	"lua-language-server|bin|lua-language-server|pkg,brew:lua-language-server||||Lua"
 	"node|bin|node|pkg||||Shell"
 	"bash-language-server|bin|bash-language-server|npm:bash-language-server||||Shell"
