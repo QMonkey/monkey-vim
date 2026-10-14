@@ -912,25 +912,84 @@ augroup END
 # }
 
 # vim-gutentags {
+# gtags's plugin parser measures lines with strlen(), so a NUL byte in
+# parser output truncates the line and the rest leaks into the next read
+# ("gtags: unexpected type string"). The stock config maps binary gettext
+# .mo files to the Modelica lexer, which produces exactly such bytes.
+# Patch a copy of the config with every langmap mapping of .mo stripped,
+# so the lexer never sees such files.
+def PatchGtagsConf(conf: string): string
+	var has_mo = false  # a langmap maps .mo at all (any line format)
+	var changed = false  # at least one mapping was successfully stripped
+	var out = []
+	for line in readfile(conf)
+		var ml = matchlist(line, '^\([\t ]*\):langmap=\([[:alnum:]-]\+\)\\:\([^:]*\):\(\\\)$')
+		if !empty(ml) && (ml[3] =~ '\.mo\.' || ml[3] =~ '\.mo$')
+			has_mo = true
+			changed = true
+			# strip the first .mo token; a mid-list hit keeps one separator
+			var rest = substitute(ml[3], '\.mo\.', '.', '')
+			rest = substitute(rest, '\.mo$', '', '')
+			if rest != ''
+				add(out, ml[1] .. ':langmap=' .. ml[2] .. '\:' .. rest .. ':' .. ml[4])
+			endif
+		else
+			# .mo mapped in an unrecognized format: token-boundary check
+			# (.mo but not .mod/.moo/.monkey); flags the warn path below
+			if line =~ ':langmap=' && (line =~ '\.mo\W' || line =~ '\.mo$')
+				has_mo = true
+			endif
+			add(out, line)
+		endif
+	endfor
+	if !has_mo
+		return conf
+	endif
+	if !changed
+		EchoMsg('WarningMsg', 'gtags.conf: could not strip the .mo langmap from ' .. conf)
+		return conf
+	endif
+	var patched = expand($HOME .. '/.cache/vim/gtags.conf')
+	mkdir(fnamemodify(patched, ':h'), 'p')
+	writefile(out, patched)
+	return patched
+enddef
+
 if executable('gtags') && has('cscope')
 	$GTAGSLABEL = 'native-pygments'
 	var gtags_conf_candidates = [
-		'/usr/local/etc/gtags.conf',
 		'/etc/gtags.conf',
 		'/etc/gtags/gtags.conf',
 		'/usr/share/gtags/gtags.conf',
+		'/usr/local/etc/gtags.conf',
 		'/usr/local/share/gtags/gtags.conf',
+		'/home/linuxbrew/.linuxbrew/etc/gtags.conf',
+		'/home/linuxbrew/.linuxbrew/share/gtags/gtags.conf',
 		'/usr/local/opt/global/share/gtags/gtags.conf',
 		'/opt/homebrew/etc/gtags.conf',
 		'/opt/homebrew/share/gtags/gtags.conf',
 		'/opt/homebrew/opt/global/share/gtags/gtags.conf',
 	]
-	if !empty($GTAGSCONF)
+	# Derive more candidates from the `global` binary's location so custom
+	# install prefixes (HOMEBREW_PREFIX overrides, user-local builds) are covered as well.
+	var global_path = exepath('global')
+	if global_path != ''
+		var prefix = matchstr(global_path, '\(.*\)/bin/global$')
+		if prefix != ''
+			for suffix in ['/etc/gtags.conf', '/share/gtags/gtags.conf']
+				var conf = prefix .. suffix
+				if index(gtags_conf_candidates, conf) < 0
+					add(gtags_conf_candidates, conf)
+				endif
+			endfor
+		endif
+	endif
+	if !empty($GTAGSCONF) && index(gtags_conf_candidates, $GTAGSCONF) < 0
 		insert(gtags_conf_candidates, $GTAGSCONF)
 	endif
 	for gtags_conf in gtags_conf_candidates
 		if filereadable(gtags_conf) && stridx(join(readfile(gtags_conf), "\n"), 'native-pygments:') >= 0
-			$GTAGSCONF = gtags_conf
+			$GTAGSCONF = PatchGtagsConf(gtags_conf)
 			break
 		endif
 	endfor
@@ -971,9 +1030,14 @@ def TagsBranchIdentity(): dict<string>
 	if root == ''
 		return {}
 	endif
+	# systemlist() captures stdout only; a failing git (non-git root, empty
+	# repo) yields empty output plus a nonzero exit code. Check both.
 	var branch = trim(join(systemlist('git -C ' .. shellescape(root) .. ' branch --show-current'), "\n"))
+	if v:shell_error != 0
+		return {}
+	endif
 	var head = trim(join(systemlist('git -C ' .. shellescape(root) .. ' rev-parse HEAD'), "\n"))
-	if head == ''
+	if v:shell_error != 0 || head == ''
 		return {}
 	endif
 	return {'root': root, 'branch': branch, 'head': head}
@@ -1095,14 +1159,18 @@ def TagsCheckBranch()
 enddef
 
 def TagsRebuild()
-	var info = TagsBranchIdentity()
-	if empty(info)
-		EchoMsg('ErrorMsg', 'TagsRebuild: cannot determine project root')
+	var root = exists('b:gutentags_root') ? b:gutentags_root : ''
+	if root == ''
+		EchoMsg('ErrorMsg', 'TagsRebuild: no project root for the current buffer')
 		return
 	endif
-	TagsDoRebuild(info['root'])
-	TagsSaveHead(info['root'], info['head'])
-	g:tags_branch_baseline[info['root']] = {'branch': info['branch'], 'head': info['head']}
+	TagsDoRebuild(root)
+	# Non-git roots have no (branch, HEAD) identity; rebuild without baseline.
+	var info = TagsBranchIdentity()
+	if !empty(info)
+		TagsSaveHead(info['root'], info['head'])
+		g:tags_branch_baseline[info['root']] = {'branch': info['branch'], 'head': info['head']}
+	endif
 enddef
 
 command! TagsRebuild TagsRebuild()
