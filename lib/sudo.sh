@@ -76,6 +76,22 @@ setup_sudo() {
 	trap 'exit 143' TERM
 }
 
+# SUDO_DROPIN default for a --install run; an explicit value always wins.
+#   chained (INSTALL_CHAIN, set by run_checkhealth) → keep the drop-in: the
+#     installer's own setup_sudo has already granted, and long chained runs
+#     must not trip the timestamp expiry;
+#   manual run → timestamp-only: ONE password up front, no drop-in (an
+#     expired mid-run re-auth fails the attempt fast instead of prompting —
+#     see sudo_cmd).
+resolve_sudo_dropin() {
+	[ -n "${SUDO_DROPIN:-}" ] && return 0
+	if [ -n "${INSTALL_CHAIN:-}" ]; then
+		SUDO_DROPIN=1
+	else
+		SUDO_DROPIN=0
+	fi
+}
+
 sudo_cmd() {
 	# Lazy re-auth: Homebrew resets the sudo timestamp on EVERY invocation
 	# (brew.sh runs `sudo --reset-timestamp` at startup), so a ticket that was

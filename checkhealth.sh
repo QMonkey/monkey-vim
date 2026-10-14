@@ -23,21 +23,8 @@ MONKEY_FAIL_EXITS=false
 INSTALL_MODE=false
 SKIP_CONFIG_CHECKS=false
 
-_MONKEY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ ! -f "$_MONKEY_LIB_DIR/lib/common.sh" ]; then
-	echo "monkey-scripts not found next to this file ($_MONKEY_LIB_DIR/lib)." >&2
-	echo "This checkout's scripts/ is incomplete (outdated or partial clone)." >&2
-	echo "  git -C $(dirname "$_MONKEY_LIB_DIR") pull    # or run the project's install.sh" >&2
-	exit 1
-fi
-# shellcheck source=/dev/null
-. "$_MONKEY_LIB_DIR/lib/common.sh"
-. "$_MONKEY_LIB_DIR/lib/sudo.sh"
-. "$_MONKEY_LIB_DIR/lib/output.sh"
-. "$_MONKEY_LIB_DIR/lib/pkg.sh"
-. "$_MONKEY_LIB_DIR/lib/config.sh"
-. "$_MONKEY_LIB_DIR/lib/env.sh"
-. "$_MONKEY_LIB_DIR/lib/checks.sh"
+EXTRA_LIBS="checks missing clipboard"
+. "$(dirname "${BASH_SOURCE[0]}")/lib/bootstrap.sh"
 
 # Data defaults: every project overwrites the ones it uses right after
 # sourcing this file, so an unused one is simply an empty list.
@@ -73,7 +60,7 @@ ENVIRONMENT
 
 Exit code: 1 if any required dependency is missing, 0 otherwise.
 EOF
-	exit 0
+	exit "${1:-0}"
 }
 
 parse_args() {
@@ -83,8 +70,9 @@ parse_args() {
 		--skip-check-config) SKIP_CONFIG_CHECKS=true ;;
 		-h | --help) usage ;;
 		*)
-			echo "Unknown option: $1"
-			usage
+			echo "Unknown option: $1" >&2
+			# Not 0: an unrecognized flag must not read as a passing check.
+			usage 2
 			;;
 		esac
 		shift
@@ -112,6 +100,14 @@ checkhealth_extra() { :; }
 # status belongs in checkhealth_extra instead — run_required_checks resets
 # REQUIRED_FAILURES after this hook ran.
 print_header_extra() { :; }
+
+# phase_run <var> <default> <wanted> <fn> — run <fn> when <var>'s phase
+# (default <default> when unset) equals <wanted>. The pipeline below stays a
+# flat, linear sequence; the PHASE_* switches only relocate steps.
+phase_run() {
+	[ "${!1:-$2}" = "$3" ] || return 0
+	"$4"
+}
 
 # ──────────────────────── pipeline ────────────────────────
 # One fixed order for every repo:
@@ -171,59 +167,31 @@ checkhealth_main() {
 	# `sudo -v` there is stopped by SIGTTIN the moment it reads the password
 	# (the run hangs; ^C only reaches the foreground group). setup_sudo asks
 	# for the password up front, in the foreground (install.sh relies on the
-	# same invariant). The drop-in default follows the context:
-	#   chained --install (INSTALL_CHAIN, set by run_checkhealth)
-	#     → NOPASSWD drop-in: the installer's setup_sudo has already granted
-	#       and long chained runs must not trip the timestamp expiry;
-	#   manual --install → timestamp-only: ONE password up front, no
-	#     drop-in (an expired mid-run re-auth fails the attempt fast instead
-	#     of prompting — see sudo_cmd).
-	# An explicit SUDO_DROPIN always wins.
+	# same invariant). The drop-in default follows the context — see
+	# resolve_sudo_dropin in lib/sudo.sh.
 	if $INSTALL_MODE; then
-		if [ -z "${SUDO_DROPIN:-}" ]; then
-			if [ -n "${INSTALL_CHAIN:-}" ]; then
-				SUDO_DROPIN=1
-			else
-				SUDO_DROPIN=0
-			fi
-		fi
+		resolve_sudo_dropin
 		setup_sudo
 	fi
 	run_required_checks
-	if [ "${ADVISORY_PHASE:-end}" = "early" ]; then
-		check_advisory_sections
-	fi
+	phase_run ADVISORY_PHASE end early check_advisory_sections
 	# INSTALL_REQUIRED_PHASE / INSTALL_OPTIONAL_PHASE: upstream zsh and
 	# monkey-tmux run their install steps AFTER Terminal capabilities, the
 	# rest before Recommended. Default: early.
-	if [ "${INSTALL_REQUIRED_PHASE:-early}" != "late" ]; then
-		install_missing_required
-	fi
+	phase_run INSTALL_REQUIRED_PHASE early early install_missing_required
 	check_recommended_tools
 	install_missing_recommended
-	if [ "${CONFIG_PHASE:-end}" = "early" ]; then
-		check_config_files
-	fi
+	phase_run CONFIG_PHASE end early check_config_files
 	install_clipboard
 	# Optional tools are installed BEFORE they are listed: the listing then
 	# reflects what the installer just did (the nvim/vim order).
-	if [ "${INSTALL_OPTIONAL_PHASE:-early}" != "late" ]; then
-		install_missing_optional
-	fi
+	phase_run INSTALL_OPTIONAL_PHASE early early install_missing_optional
 	check_optional_tools
 	check_terminal_caps
-	if [ "${ADVISORY_PHASE:-end}" = "end" ]; then
-		check_advisory_sections
-	fi
-	if [ "${CONFIG_PHASE:-end}" = "end" ]; then
-		check_config_files
-	fi
-	if [ "${INSTALL_REQUIRED_PHASE:-early}" = "late" ]; then
-		install_missing_required
-	fi
-	if [ "${INSTALL_OPTIONAL_PHASE:-early}" = "late" ]; then
-		install_missing_optional
-	fi
+	phase_run ADVISORY_PHASE end end check_advisory_sections
+	phase_run CONFIG_PHASE end end check_config_files
+	phase_run INSTALL_REQUIRED_PHASE early late install_missing_required
+	phase_run INSTALL_OPTIONAL_PHASE early late install_missing_optional
 	checkhealth_extra
 	print_summary
 }
