@@ -7,18 +7,36 @@
 #   PROJECT / PROJECT_REPO / INSTALL_DIR
 
 # ────────────────── interrupted-clone repair ──────────────────
-# A clone killed mid-transfer leaves a dir with .git but no HEAD; every
-# later operation fails forever (`git pull` dies, `git clone` refuses with
-# "already exists", nvim's vim.pack repair dies with "ambiguous argument
-# 'HEAD'" — one clone timeout took 34 plugins down with it on openSUSE).
-# Removal is the only repair; healthy checkouts and dirs without .git are
-# untouched.
+# A clone killed mid-transfer poisons a dir in two ways: .git but no HEAD
+# → every later operation fails forever; killed during CHECKOUT → valid HEAD
+# but an empty index/worktree, so every file reads as "deleted" and the plugin
+# silently has no code (observed: lualine.nvim passed the HEAD check, then
+# `module 'lualine' not found`).
+#
+# A missing HEAD is removed. Healthy checkouts and dirs without .git are
+# untouched. --strict (plugin trees only) additionally catches the
+# interrupted checkout and repairs it OFFLINE (reset --hard + clean — git
+# checks out only after the pack lands, so all objects are local, no
+# re-clone), removing only if that fails. Non-strict callers (INSTALL_DIR)
+# never touch repos with user modifications.
 repair_broken_clone() {
-	local dir="$1"
+	local strict=0
+	[ "${1:-}" = "--strict" ] && {
+		strict=1
+		shift
+	}
+	local dir="${1:-}"
 	[ -n "$dir" ] && [ -d "$dir/.git" ] || return 0
 	if ! git -C "$dir" rev-parse HEAD >/dev/null 2>&1; then
 		warn "removing broken git clone (interrupted clone, no HEAD): ${dir#"$HOME"/}"
 		rm -rf -- "$dir"
+	elif [ "$strict" = 1 ] && ! git -C "$dir" diff-index --quiet HEAD -- >/dev/null 2>&1; then
+		if git -C "$dir" reset -q --hard && git -C "$dir" clean -fdq; then
+			info "repaired incomplete checkout in place: ${dir#"$HOME"/}"
+		else
+			warn "removing broken git clone (irreparable incomplete checkout): ${dir#"$HOME"/}"
+			rm -rf -- "$dir"
+		fi
 	fi
 	return 0
 }
