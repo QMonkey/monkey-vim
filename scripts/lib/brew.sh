@@ -49,12 +49,12 @@ probe_brew_name() {
 	brew info "$1" >/dev/null 2>&1
 }
 
-# The brew twin of the pacman orphan: retry's timeout kills the brew WRAPPER
-# but not its ruby worker, which stays alive holding the cache flock — every
-# later brew then refuses with "already locked". Homebrew's locks are flocks
-# (release when the holder dies), so killing the orphan IS the unlock.
-# Scoped to cmdlines mentioning the brew prefix (a bare `pkill brew` misses
-# the ruby worker); only fires after OUR OWN timed-out attempt.
+# The brew twin of the pacman orphan: a killed brew WRAPPER leaves its ruby
+# worker alive holding the cache flock — every later brew then refuses with
+# "already locked". Homebrew's locks are flocks (release when the holder
+# dies), so killing the orphan IS the unlock. Scoped to cmdlines mentioning
+# the brew prefix (a bare `pkill brew` misses the ruby worker); only fires
+# after OUR OWN failed attempt.
 # zig+zls must be version-locked: zls refuses to serve a zig whose
 # major.minor differs, and brew's zls formula lags its zig formula (the
 # naive `brew install zig zls` yields zig 0.17 + zls 0.16 — a broken pair).
@@ -70,13 +70,17 @@ install_zig_zls_pair() {
 	[ -n "$zls_xy" ] || return 1
 	info "installing the zig+zls pair at brew's zls version ($zls_xy)..."
 	if brew info "zig@$zls_xy" >/dev/null 2>&1; then
-		brew_install_retry "$RETRY_T_HUGE" "brew install zls zig@$zls_xy" zls "zig@$zls_xy" || return 1
+		# Not fatal: the keg may already exist from an earlier attempt that
+		# timed out AFTER pouring — the swap below is the whole point.
+		brew_install_retry "$RETRY_T_HUGE" "brew install zls zig@$zls_xy" zls "zig@$zls_xy" || true
 		# keg-only: zig@X.Y never lands in brew's bin — swap the `zig`
-		# symlink from the (newer) plain formula to the pinned one. Nothing
-		# in the installer ecosystem brings plain zig back (no monkey-*
-		# install.sh references it), and the match:zig probe guards the pair on every run.
-		brew uninstall zig >/dev/null 2>&1 || true
-		brew link --force --overwrite "zig@$zls_xy" >/dev/null 2>&1 || true
+		# symlink from plain (newer) to the pinned keg, guarded on the keg
+		# existing: uninstalling plain zig with nothing to link would leave
+		# NO brew zig at all. match:zig re-probes the pair on every run.
+		if brew list --versions "zig@$zls_xy" >/dev/null 2>&1; then
+			brew uninstall zig >/dev/null 2>&1 || true
+			brew link --force --overwrite "zig@$zls_xy" >/dev/null 2>&1 || true
+		fi
 		hash -r
 		# The symlink swap is the whole point of the pair — verify what
 		# `zig` actually resolves to on PATH (not just what brew linked).
@@ -104,9 +108,28 @@ cleanup_timed_out_brew() {
 	return 0 # best-effort — never fail the caller over cleanup
 }
 
-# One brew install with the standard retry; a timed-out attempt (rc 124)
-# triggers the orphan cleanup so the retry ladder does not hit the same
-# lock again. Returns the install's exit code.
+# One brew install ATTEMPT: ANY failure — not just timeouts (rc 124) —
+# triggers the orphan cleanup. Brew's stalled-download lock failures
+# ("already locked") never surface as 124, yet the orphaned worker wedges
+# every later attempt the same way (observed on Ubuntu/openSUSE).
+_brew_install_attempt() {
+	local rc=0
+	# Both flags make brew fail fast instead of prompting: the retry child
+	# sits in a NON-foreground process group, where ANY prompt is frozen by
+	# SIGTTIN (^C unreachable — reaches only the foreground group).
+	#   HOMEBREW_NO_INTERACTIVE — formula hooks reading stdin (Ubuntu:
+	#     `brew install zig` hung at its [y/n], ^C dead).
+	#   HOMEBREW_NO_ASK — brew ≥7's dependency prompt gates on the TTY
+	#     only, so NO_INTERACTIVE does NOT suppress it (CentOS: `brew
+	#     install wget2` froze). Maps to `brew install --no-ask`.
+	# The Homebrew INSTALLER already runs with NONINTERACTIVE=1.
+	HOMEBREW_NO_INTERACTIVE=1 HOMEBREW_NO_ASK=1 brew install "$@" || rc=$?
+	[ "$rc" -eq 0 ] || cleanup_timed_out_brew
+	return "$rc"
+}
+
+# One brew install with the standard retry ladder. Returns the install's
+# exit code.
 #
 # Heavy-formula timeout FLOOR, applied here (not per call site) so every
 # brew lane gets it uniformly: zig pulls LLVM and builds from source where
@@ -133,22 +156,12 @@ brew_install_retry() {
 		done
 	done
 	local brc=0
-	# Brew can stall two different ways under retry→timeout, whose child
-	# sits in a NON-foreground process group — ANY prompt there is frozen
-	# by SIGTTIN with input unreachable (^C only reaches the foreground
-	# group). Both flags make brew fail fast instead of prompting:
-	#   HOMEBREW_NO_INTERACTIVE — stdin-reading formula hooks and the like
-	#     (observed on Ubuntu: checkhealth --install hung at brew install
-	#     zig's [y/n], ^C/D dead).
-	#   HOMEBREW_NO_ASK — brew ≥7 asks "Do you want to proceed with the
-	#     installation? [y/n]" whenever the plan includes dependencies and
-	#     gates that prompt on the TTY ONLY: the INTERACTIVE flag does NOT
-	#     suppress it (observed on CentOS: checkhealth --install froze at
-	#     brew install wget2's dependency prompt). Maps to `brew install
-	#     --no-ask`.
-	# The Homebrew INSTALLER already runs with NONINTERACTIVE=1
-	# (install_linuxbrew) — this covers the runtime side.
-	retry -t "$t" -s "$desc" env HOMEBREW_NO_INTERACTIVE=1 HOMEBREW_NO_ASK=1 brew install "$@" || brc=$?
+	# The attempt runs in a child shell (`timeout bash -c`): retry's
+	# whitelist exports $1 but not cleanup — export it here.
+	export -f cleanup_timed_out_brew
+	retry -t "$t" -s "$desc" _brew_install_attempt "$@" || brc=$?
+	# Backstop: rc 124 = timeout killed the wrapper before the attempt
+	# reached its own cleanup line.
 	[ "$brc" -eq 124 ] && cleanup_timed_out_brew
 	return "$brc"
 }
