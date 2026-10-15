@@ -1017,6 +1017,42 @@ g:gutentags_background_update = 1
 g:gutentags_resolve_symlinks = 1
 g:gutentags_define_advanced_commands = 1
 
+# gutentags adds the gtags-cscope connection without flags, so result paths
+# are relative to the spawned gtags-cscope process' frozen cwd (cs add
+# happens before GotoProjectRoot has run), which breaks jumps after a cd.
+# Re-add the connection with -a: gtags-cscope then reports absolute paths,
+# immune to the process' or vim's cwd.
+var gtags_cscope_fixed: dict<bool> = {}
+
+def GtagsCscopeReAdd()
+	if !g:gutentags_auto_add_gtags_cscope || !has('cscope')
+		return
+	endif
+	var dbfile = get(get(b:, 'gutentags_files', {}), 'gtags_cscope', '')
+	var root = get(b:, 'gutentags_root', '')
+	if dbfile == '' || root == '' || !filereadable(dbfile)
+		return
+	endif
+	if has_key(gtags_cscope_fixed, dbfile)
+		return
+	endif
+	# `:cs kill` takes a connection number or a partial db path name.
+	silent! execute 'cscope kill ' .. fnameescape(dbfile)
+	# ppath must be set (vim stats it and passes -P to the process) and -a
+	# makes gtags-cscope report absolute paths, immune to any cwd.
+	silent execute 'cscope add ' .. fnameescape(dbfile) .. ' ' .. fnameescape(root) .. ' -a'
+	gtags_cscope_fixed[dbfile] = true
+enddef
+
+augroup GtagsCscopeReAdd
+	autocmd!
+	autocmd BufEnter * GtagsCscopeReAdd()
+	# Reconnect right after a (re)build finishes: TagsDoRebuildNow killed the
+	# connection and cleared its marker, and gutentags' own dedup never
+	# re-adds — without this the gap lasts until the next BufEnter.
+	autocmd User GutentagsUpdated GtagsCscopeReAdd()
+augroup END
+
 # Branch-aware tags rebuild. gutentags only updates gtags incrementally
 # (--incremental), which can't handle deleted/renamed files after a branch
 # switch. Compare the joint (branch, HEAD) identity against a session baseline
@@ -1079,6 +1115,10 @@ def TagsDoRebuildNow(root: string)
 	# Kill the DB's cscope connection first: rebuilding changes the inode,
 	# which defeats cs-add dedup and would leak a gtags-cscope process.
 	silent! execute 'cscope kill ' .. fnameescape(gtags_file)
+	# Allow GtagsCscopeReAdd to reconnect (with -a) after the rebuild.
+	if has_key(gtags_cscope_fixed, gtags_file)
+		remove(gtags_cscope_fixed, gtags_file)
+	endif
 	for f in ['GTAGS', 'GRTAGS', 'GPATH']
 		var p = dbpath .. '/' .. f
 		if filereadable(p)
