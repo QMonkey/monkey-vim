@@ -426,7 +426,27 @@ install_plugins() {
 set nocompatible
 source $HOME/.vimrc
 EOF
+	# Same interrupted-clone hazard as monkey-nvim's vim.pack sweep: a
+	# plugin clone killed mid-CHECKOUT leaves a dir with a valid HEAD but
+	# an empty worktree — vim-plug then skips it as "already cloned" and
+	# the plugin is silently missing. Sweep the bundle tree via the shared
+	# repair_broken_clone --strict (clone.sh) before every attempt: no
+	# HEAD → removed (re-clone); incomplete checkout → repaired OFFLINE
+	# (reset --hard; the objects are all local). Bundle dirs are never
+	# user-edited, so strict is safe here.
+	local d
+	for d in "$HOME/.vim/bundle"/*; do
+		repair_broken_clone --strict "$d"
+	done
+	# The retried child re-runs the SAME sweep silently: attempt 1 itself
+	# can leave a fresh broken dir (clone timeout), and later attempts
+	# must not inherit it. repair_broken_clone crosses into the child via
+	# export -f (warn and info come along — the repair reports there too).
+	export -f repair_broken_clone warn info
 	if retry -t 3600 -s "headless PlugInstall" bash -c '
+		for d in "$HOME"/.vim/bundle/*; do
+			repair_broken_clone --strict "$d"
+		done
 		vim -es -u "$1" +"PlugInstall --sync" +qall 2>&1 | tee /tmp/vim-plugins.log
 		rc=${PIPESTATUS[0]}
 		if [ "$rc" -ne 0 ] || grep -qE "^(Error|E[0-9]+)" /tmp/vim-plugins.log; then
