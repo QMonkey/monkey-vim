@@ -87,10 +87,10 @@ OPTIONAL_CHECKS=(
 	"python-lsp-black|py:pylsp_black|pylsp-black (pylsp plugin for black)|pkg,pip:python-lsp-black||||Python"
 	"zig|bin|zig|pkg||||Zig"
 	# match:zig — zls refuses to serve a zig whose major.minor differs
-	# (zls 0.16 vs zig 0.17 = hard exit). Probe version AGREEMENT; the
-	# install pass re-runs pkg/BREW_FIRST, and the optional_hint points
-	# at zigtools when no matching zls can be installed automatically.
-	"zls|match:zig|zls (must match zig)|pkg,zig-zls-pair||||Zig"
+	# (zls 0.16 vs zig 0.17 = hard exit). Probe version AGREEMENT. The
+	# pair strategy leads: a plain `pkg` (brew zls) drags in plain zig@
+	# latest as a dependency and CREATES the broken pair it cannot heal.
+	"zls|match:zig|zls (must match zig)|zig-zls-pair,pkg||||Zig"
 	"cargo|bin|cargo|rustup||||Rust"
 	# ver:0 (not bin): a rustup shim for an UNINSTALLED component answers
 	# "Unknown binary" on every invocation — presence alone lies. The
