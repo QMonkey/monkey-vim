@@ -70,7 +70,9 @@ pkg_name() {
 	debian:notif | ubuntu:notif | centos:notif | fedora:notif) echo "dunst" ;;
 	*:notif) echo "mako" ;;
 	# polkit agents: the GNOME agent is retired upstream on Fedora/EPEL.
-	debian:polkit-gnome-authentication-agent-1) echo "policykit-1-gnome" ;;
+	# Ubuntu carries policykit-1-gnome in universe (incl. resolute) — the
+	# D-Bus agent name must map, or apt gets asked for a name no repo has.
+	debian:polkit-gnome-authentication-agent-1 | ubuntu:polkit-gnome-authentication-agent-1) echo "policykit-1-gnome" ;;
 	arch:polkit-gnome-authentication-agent-1 | fedora:polkit-gnome-authentication-agent-1) echo "polkit-gnome" ;;
 	# tray / network manager
 	debian:nm-applet | ubuntu:nm-applet) echo "network-manager-gnome" ;;
