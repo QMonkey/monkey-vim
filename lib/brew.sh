@@ -65,10 +65,37 @@ probe_brew_name() {
 # the verdict to the match:zig probe (install_strategy re-probes).
 install_zig_zls_pair() {
 	have_native_cmd brew || return 1
-	local zls_xy zpath zver
+	local zls_xy zpath zver resolved brew_prefix managed
 	zls_xy=$(brew info zls 2>/dev/null | head -1 | grep -oE 'stable [0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+$')
 	[ -n "$zls_xy" ] || return 1
 	info "installing the zig+zls pair at brew's zls version ($zls_xy)..."
+
+	# What does `zig` resolve to RIGHT NOW? Three states matter:
+	#   - already at the zls ceiling → only zls is missing (no swap needed);
+	#   - brew-managed and stale → the swap below fixes it;
+	#   - NOT brew-managed (a real file: manual install, Windows shim...) →
+	#     NO relink can change what `zig` resolves to, so the multi-GB
+	#     zig@X.Y install would be pure waste — fail fast with a precise
+	#     message (observed: ~/.local/bin/zig as a plain binary).
+	brew_prefix=$(brew --prefix 2>/dev/null) || brew_prefix=""
+	zpath=$(native_bin_path zig 2>/dev/null) || zpath=""
+	zver=""
+	[ -n "$zpath" ] && zver=$(extract_version "$zpath")
+	if [ -n "$zpath" ] && [ "$zver" = "$zls_xy" ]; then
+		brew_install_retry "$RETRY_T_HUGE" "brew install zls" zls
+		return "$?"
+	fi
+	if [ -n "$zpath" ] && [ -n "$brew_prefix" ]; then
+		resolved=$(readlink -f "$zpath" 2>/dev/null || printf '%s' "$zpath")
+		managed=0
+		case "$zpath" in "$brew_prefix"/*) managed=1 ;; esac
+		case "$resolved" in "$brew_prefix"/*) managed=1 ;; esac
+		if [ "$managed" -ne 1 ]; then
+			warn "zig resolves to $zver ($zpath) — not managed by Homebrew, expected $zls_xy. The pair install cannot swap it: remove or shadow $zpath (or install zig $zls_xy there), then re-run."
+			return 1
+		fi
+	fi
+
 	if brew info "zig@$zls_xy" >/dev/null 2>&1; then
 		# Not fatal: the keg may already exist from an earlier attempt that
 		# timed out AFTER pouring — the swap below is the whole point.
@@ -78,16 +105,21 @@ install_zig_zls_pair() {
 		# existing: uninstalling plain zig with nothing to link would leave
 		# NO brew zig at all. match:zig re-probes the pair on every run.
 		if brew list --versions "zig@$zls_xy" >/dev/null 2>&1; then
-			brew uninstall zig >/dev/null 2>&1 || true
+			# zls DEPENDS on plain zig, so a bare `brew uninstall zig` is
+			# refused ("required by zls"). unlink first (always allowed),
+			# then drop the keg with --ignore-dependencies, then force-link
+			# the pinned keg. If the uninstall is still refused the link
+			# still wins — unlink already removed plain zig's symlinks.
+			brew unlink zig >/dev/null 2>&1 || true
+			brew uninstall --ignore-dependencies zig >/dev/null 2>&1 || true
 			brew link --force --overwrite "zig@$zls_xy" >/dev/null 2>&1 || true
 		fi
 		hash -r
 		# The symlink swap is the whole point of the pair — verify what
 		# `zig` actually resolves to on PATH (not just what brew linked).
 		zpath=$(native_bin_path zig 2>/dev/null) || zpath=""
-		if [ -n "$zpath" ]; then
-			zver=$(extract_version "$zpath")
-		fi
+		zver=""
+		[ -n "$zpath" ] && zver=$(extract_version "$zpath")
 		if [ "${zver:-}" != "$zls_xy" ]; then
 			warn "zig resolves to ${zver:-unknown} (${zpath:-not found}), expected $zls_xy — zls will refuse it; match:zig keeps reporting the pair."
 			return 1
@@ -99,12 +131,27 @@ install_zig_zls_pair() {
 }
 
 cleanup_timed_out_brew() {
-	local prefix
+	local prefix cache i
 	prefix="$(brew --prefix 2>/dev/null)" || return 0
-	pgrep -f "$prefix" >/dev/null 2>&1 || return 0
+	cache="$(brew --cache 2>/dev/null)" || cache=""
 	warn "killing orphaned brew process(es) left by the timed-out brew (they hold the cache flock)..."
+	# TWO cmdline surfaces must be swept: the ruby worker carries the brew
+	# PREFIX in its cmdline, but the download children it spawned (curl
+	# writing a .incomplete file) do NOT — they carry the CACHE dir. An
+	# orphaned downloader keeps the flock on the .incomplete bottle and
+	# wedges every later attempt with "already locked ... Gave up after
+	# waiting 180 seconds" (observed on openSUSE: the next component's
+	# pair install died on the previous component's orphaned curl).
 	pkill -f "$prefix" 2>/dev/null
-	sleep 1
+	if [ -n "$cache" ] && [ "$cache" != "$prefix" ]; then
+		pkill -f "$cache" 2>/dev/null
+	fi
+	# Give dying holders a moment to release their flocks before the
+	# retry ladder re-enters brew (flocks release on process death).
+	for i in 1 2 3; do
+		pgrep -f "$prefix" >/dev/null 2>&1 || break
+		sleep 1
+	done
 	return 0 # best-effort — never fail the caller over cleanup
 }
 
