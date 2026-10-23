@@ -7,14 +7,9 @@
 # (lib/clone.sh) — clone.sh therefore also lives in the bootstrap common set.
 
 # ──────────────────────────── Homebrew ────────────────────────────
-# Heavy brew formulae (name patterns): installs that dwarf a normal
-# bottle — zig pulls LLVM and builds from source where brew ships no
-# bottle for the distro (observed on Tumbleweed); marksman pulls the .NET
-# runtime. Every brew lane installing them runs at no less than
-# RETRY_T_HUGE (enforced in brew_install_retry, the one point all lanes
-# pass through). The BREW_FIRST batch lane keeps a blanket RETRY_T_HUGE
-# on top: a batch can drag heavy formulae in as DEPENDENCIES of innocent
-# names, which a name table cannot see.
+# Heavy brew formulae (name patterns): zig pulls LLVM, marksman pulls
+# .NET — installs that dwarf a normal bottle, so any lane installing
+# them runs at no less than RETRY_T_HUGE (enforced in brew_install_retry).
 BREW_HEAVY_NAMES="zig zig@* zls marksman"
 
 # Names that should prefer Homebrew over the system package manager: system
@@ -22,11 +17,10 @@ BREW_HEAVY_NAMES="zig zig@* zls marksman"
 # current 0.7x). Projects append names here.
 BREW_FIRST=()
 
-# The brew-first whitelist: a BREW_FIRST tool installed via brew gets a
-# symlink in ~/.local/bin, which export_path seeds at the FRONT of PATH.
-# This is what keeps those tools beating the system versions now that brew
-# itself sits at the BACK. Idempotent; never replaces anything that is not a
-# symlink (a user's own script in ~/.local/bin stays untouched).
+# A BREW_FIRST tool installed via brew gets a symlink in ~/.local/bin,
+# which export_path seeds at the FRONT of PATH — that keeps it beating the
+# system version now that brew itself sits at the BACK. Idempotent; never
+# replaces anything that is not a symlink (a user's own script stays).
 _brew_first_link() {
 	local p prefix
 	prefix="$(brew --prefix 2>/dev/null)" || return 0
@@ -43,41 +37,26 @@ _brew_first_link() {
 }
 
 probe_brew_name() {
-	# `brew info` fails on an unknown formula. Without a brew binary there is
-	# nothing to probe against — don't filter.
+	# `brew info` fails on an unknown formula; without brew, don't filter.
 	have_native_cmd brew || return 0
 	brew info "$1" >/dev/null 2>&1
 }
 
-# The brew twin of the pacman orphan: a killed brew WRAPPER leaves its ruby
-# worker alive holding the cache flock — every later brew then refuses with
-# "already locked". Homebrew's locks are flocks (release when the holder
-# dies), so killing the orphan IS the unlock. Scoped to cmdlines mentioning
-# the brew prefix (a bare `pkill brew` misses the ruby worker); only fires
-# after OUR OWN failed attempt.
 # zig+zls must be version-locked: zls refuses to serve a zig whose
 # major.minor differs, and brew's zls formula lags its zig formula (the
-# naive `brew install zig zls` yields zig 0.17 + zls 0.16 — a broken pair).
-# Install the pair at the ZLS CEILING: whatever zls version brew carries,
-# zig comes from the matching versioned formula (zig@X.Y — keg-only, so it
-# is force-linked after the newer plain `zig` is removed). Without a
-# versioned zig@X.Y formula the step falls back to latest-latest and leaves
-# the verdict to the match:zig probe (install_strategy re-probes).
+# naive `brew install zig zls` yields a broken pair). Install the pair at
+# the ZLS CEILING: zig comes from the versioned formula matching brew's
+# zls (zig@X.Y — keg-only, force-linked after plain `zig` is removed).
+# Without a versioned formula, fall back to latest-latest and let the
+# match:zig probe give the verdict.
 install_zig_zls_pair() {
 	have_native_cmd brew || return 1
-	local zls_xy zpath zver resolved brew_prefix managed
+	local zls_xy zpath zver
 	zls_xy=$(brew info zls 2>/dev/null | head -1 | grep -oE 'stable [0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+$')
 	[ -n "$zls_xy" ] || return 1
 	info "installing the zig+zls pair at brew's zls version ($zls_xy)..."
 
-	# What does `zig` resolve to RIGHT NOW? Three states matter:
-	#   - already at the zls ceiling → only zls is missing (no swap needed);
-	#   - brew-managed and stale → the swap below fixes it;
-	#   - NOT brew-managed (a real file: manual install, Windows shim...) →
-	#     NO relink can change what `zig` resolves to, so the multi-GB
-	#     zig@X.Y install would be pure waste — fail fast with a precise
-	#     message (observed: ~/.local/bin/zig as a plain binary).
-	brew_prefix=$(brew --prefix 2>/dev/null) || brew_prefix=""
+	# Already at the zls ceiling → only zls is missing (no swap needed).
 	zpath=$(native_bin_path zig 2>/dev/null) || zpath=""
 	zver=""
 	[ -n "$zpath" ] && zver=$(extract_version "$zpath")
@@ -85,39 +64,39 @@ install_zig_zls_pair() {
 		brew_install_retry "$RETRY_T_HUGE" "brew install zls" zls
 		return "$?"
 	fi
-	if [ -n "$zpath" ] && [ -n "$brew_prefix" ]; then
-		resolved=$(readlink -f "$zpath" 2>/dev/null || printf '%s' "$zpath")
-		managed=0
-		case "$zpath" in "$brew_prefix"/*) managed=1 ;; esac
-		case "$resolved" in "$brew_prefix"/*) managed=1 ;; esac
-		if [ "$managed" -ne 1 ]; then
-			warn "zig resolves to $zver ($zpath) — not managed by Homebrew, expected $zls_xy. The pair install cannot swap it: remove or shadow $zpath (or install zig $zls_xy there), then re-run."
-			return 1
-		fi
-	fi
 
 	if brew info "zig@$zls_xy" >/dev/null 2>&1; then
-		# Not fatal: the keg may already exist from an earlier attempt that
-		# timed out AFTER pouring — the swap below is the whole point.
+		# The pair install is idempotent on poured kegs, so one call covers
+		# both the fresh and the already-poured (timed-out first attempt)
+		# case. Not fatal on failure: the keg may already exist — the swap
+		# below fixes it.
 		brew_install_retry "$RETRY_T_HUGE" "brew install zls zig@$zls_xy" zls "zig@$zls_xy" || true
 		# keg-only: zig@X.Y never lands in brew's bin — swap the `zig`
-		# symlink from plain (newer) to the pinned keg, guarded on the keg
-		# existing: uninstalling plain zig with nothing to link would leave
-		# NO brew zig at all. match:zig re-probes the pair on every run.
+		# symlink from plain (newer) to the pinned keg. Guarded on the keg
+		# existing: uninstalling plain zig with nothing to link would
+		# leave NO brew zig at all. zls DEPENDS on plain zig, so unlink
+		# first (always allowed), drop the keg with --ignore-dependencies,
+		# then force-link the pinned keg. If the uninstall is still
+		# refused the link still wins — unlink already removed plain
+		# zig's symlinks. match:zig re-probes the pair on every run.
 		if brew list --versions "zig@$zls_xy" >/dev/null 2>&1; then
-			# zls DEPENDS on plain zig, so a bare `brew uninstall zig` is
-			# refused ("required by zls"). unlink first (always allowed),
-			# then drop the keg with --ignore-dependencies, then force-link
-			# the pinned keg. If the uninstall is still refused the link
-			# still wins — unlink already removed plain zig's symlinks.
 			brew unlink zig >/dev/null 2>&1 || true
 			brew uninstall --ignore-dependencies zig >/dev/null 2>&1 || true
 			brew link --force --overwrite "zig@$zls_xy" >/dev/null 2>&1 || true
 		fi
+		# Shadow unconditionally (same policy as the batch lane's link):
+		# ~/.local/bin sits at the FRONT of PATH, so a system zig the
+		# swap above cannot touch loses to the brew keg; when zig is
+		# already brew-managed the link points at the same binary.
+		_brew_first_link zig zls
 		hash -r
-		# The symlink swap is the whole point of the pair — verify what
-		# `zig` actually resolves to on PATH (not just what brew linked).
-		zpath=$(native_bin_path zig 2>/dev/null) || zpath=""
+		# Verify what `zig` resolves to for the framework: the shadow
+		# tier (~/.local/bin/zig) first, then raw PATH.
+		zpath=""
+		[ -e "$HOME/.local/bin/zig" ] && zpath="$HOME/.local/bin/zig"
+		if [ -z "$zpath" ]; then
+			zpath=$(native_bin_path zig 2>/dev/null) || zpath=""
+		fi
 		zver=""
 		[ -n "$zpath" ] && zver=$(extract_version "$zpath")
 		if [ "${zver:-}" != "$zls_xy" ]; then
@@ -131,61 +110,55 @@ install_zig_zls_pair() {
 }
 
 cleanup_timed_out_brew() {
-	local prefix cache i
+	local prefix cache i f
 	prefix="$(brew --prefix 2>/dev/null)" || return 0
 	cache="$(brew --cache 2>/dev/null)" || cache=""
 	warn "killing orphaned brew process(es) left by the timed-out brew (they hold the cache flock)..."
-	# TWO cmdline surfaces must be swept: the ruby worker carries the brew
-	# PREFIX in its cmdline, but the download children it spawned (curl
-	# writing a .incomplete file) do NOT — they carry the CACHE dir. An
-	# orphaned downloader keeps the flock on the .incomplete bottle and
-	# wedges every later attempt with "already locked ... Gave up after
-	# waiting 180 seconds" (observed on openSUSE: the next component's
-	# pair install died on the previous component's orphaned curl).
+	# Homebrew's locks are flocks — they release when the holder dies, so
+	# killing the orphan IS the unlock. TWO cmdline surfaces must be swept:
+	# the ruby worker carries the brew PREFIX, but the download children it
+	# spawned (curl writing a .incomplete file) carry only the CACHE dir.
 	pkill -f "$prefix" 2>/dev/null
 	if [ -n "$cache" ] && [ "$cache" != "$prefix" ]; then
 		pkill -f "$cache" 2>/dev/null
 	fi
-	# Give dying holders a moment to release their flocks before the
-	# retry ladder re-enters brew (flocks release on process death).
 	for i in 1 2 3; do
 		pgrep -f "$prefix" >/dev/null 2>&1 || break
 		sleep 1
 	done
+	# pkill-miss survivors (detached curl child, exotic cmdline) keep their
+	# flock and wedge every later brew with "already locked". Unlink those:
+	# the flock rides the inode, so the orphan's writes go to an anonymous
+	# inode and brew's next attempt creates a FRESH file. UNLOCKED
+	# .incomplete files are left in place — brew resumes them (curl -C -).
+	if [ -d "$cache" ]; then
+		for f in "$cache"/*.incomplete; do
+			[ -e "$f" ] || continue
+			if ! flock -n "$f" true 2>/dev/null; then
+				warn "removing locked $(basename "$f") — its holder survived cleanup; brew will re-download it."
+				rm -f "$f"
+			fi
+		done
+	fi
 	return 0 # best-effort — never fail the caller over cleanup
 }
 
 # One brew install ATTEMPT: ANY failure — not just timeouts (rc 124) —
-# triggers the orphan cleanup. Brew's stalled-download lock failures
-# ("already locked") never surface as 124, yet the orphaned worker wedges
-# every later attempt the same way (observed on Ubuntu/openSUSE).
+# triggers the orphan cleanup: brew's stalled-download lock failures
+# ("already locked") never surface as 124, yet wedge later attempts the
+# same way. The NO_INTERACTIVE/NO_ASK flags make brew fail fast instead
+# of prompting: the retry child sits in a NON-foreground process group
+# where ANY prompt freezes on SIGTTIN.
 _brew_install_attempt() {
 	local rc=0
-	# Both flags make brew fail fast instead of prompting: the retry child
-	# sits in a NON-foreground process group, where ANY prompt is frozen by
-	# SIGTTIN (^C unreachable — reaches only the foreground group).
-	#   HOMEBREW_NO_INTERACTIVE — formula hooks reading stdin (Ubuntu:
-	#     `brew install zig` hung at its [y/n], ^C dead).
-	#   HOMEBREW_NO_ASK — brew ≥7's dependency prompt gates on the TTY
-	#     only, so NO_INTERACTIVE does NOT suppress it (CentOS: `brew
-	#     install wget2` froze). Maps to `brew install --no-ask`.
-	# The Homebrew INSTALLER already runs with NONINTERACTIVE=1.
 	HOMEBREW_NO_INTERACTIVE=1 HOMEBREW_NO_ASK=1 brew install "$@" || rc=$?
 	[ "$rc" -eq 0 ] || cleanup_timed_out_brew
 	return "$rc"
 }
 
-# One brew install with the standard retry ladder. Returns the install's
-# exit code.
-#
-# Heavy-formula timeout FLOOR, applied here (not per call site) so every
-# brew lane gets it uniformly: zig pulls LLVM and builds from source where
-# brew ships no bottle for the distro (observed on Tumbleweed); marksman
-# pulls the .NET runtime. Their installs dwarf a normal bottle — no lane
-# may run them at a lower tier than RETRY_T_HUGE, whatever the caller
-# passed. The BREW_FIRST batch lane additionally keeps a blanket
-# RETRY_T_HUGE: a batch can drag heavy formulae in as DEPENDENCIES of
-# innocent names, which a per-name floor cannot see.
+# One brew install with the standard retry ladder; returns the exit code.
+# Heavy-formula timeout FLOOR applied here (not per call site) so every
+# brew lane gets it uniformly.
 brew_install_retry() {
 	local t="$1" desc="$2"
 	shift 2
@@ -238,9 +211,8 @@ install_linuxbrew() {
 	else
 		# brew may exist at a standard prefix without being on PATH — an
 		# earlier monkey-* component installed it and this process did not
-		# inherit the profile. Adopt it instead of re-downloading. The
-		# candidate prefixes come from BREW_PREFIXES (env.sh) — the single
-		# source of truth the brew PATH tier derives from too.
+		# inherit the profile. Adopt it instead of re-downloading; the
+		# candidates come from BREW_PREFIXES (env.sh).
 		for cand in $BREW_PREFIXES; do
 			if [ -x "$cand/bin/brew" ]; then
 				brew_prefix="$cand"
@@ -251,12 +223,9 @@ install_linuxbrew() {
 	fi
 	if [ -z "$brew_prefix" ]; then
 		info "Installing Homebrew/Linuxbrew..."
-		# The temporary NOPASSWD drop-in makes the timestamp irrelevant, so
-		# the official installer runs unmodified. Download fully before
-		# executing: `curl | bash` would run a truncated script.
+		# Download fully before executing: `curl | bash` would run a
+		# truncated script.
 		local installer="/tmp/homebrew_install.$$.sh"
-		# `curl -fsSL -o` is silent: on a slow network the download would
-		# look like a hang.
 		info "Downloading the Homebrew installer..."
 		ensure_brew_unpack_tools
 		if fetch_url_or_clone "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" "https://github.com/Homebrew/install" "$installer" "Homebrew installer"; then
@@ -279,17 +248,16 @@ install_linuxbrew() {
 
 	if [ -n "$brew_prefix" ] && brew_functional "$brew_prefix"; then
 		# Brew goes AFTER system paths but BEFORE the WSL-injected Windows
-		# section (the opposite of `brew shellenv` on both ends): prepending
-		# let brew's python@3.x shadow /usr/bin/python3, plain-appending put
-		# brew behind the /mnt/* shims so `npm` resolved to the Windows one.
-		# export_path_pre_win splits the difference: system > brew > Windows.
+		# shims (the opposite of `brew shellenv` on both ends): prepending
+		# let brew's python@3.x shadow /usr/bin/python3, plain-appending
+		# put `npm` on the Windows one. system > brew > Windows.
 		export_path_pre_win "$brew_prefix/bin" "$brew_prefix/sbin"
 		ok "Homebrew/Linuxbrew ready at $brew_prefix (before Windows shims, after system paths)."
 		# Persist the same insert for future shells. Idempotent.
 		persist_brew_path "$brew_prefix"
 	else
-		# Two flavors of "no usable brew": never installed, or dead (bin/brew
-		# present, vendor ruby missing) — name the difference.
+		# Two flavors of "no usable brew": never installed, or dead
+		# (bin/brew present, vendor ruby missing) — name the difference.
 		if [ -n "$brew_prefix" ]; then
 			warn "brew exists at $brew_prefix but cannot run (incomplete install?) — continuing without Homebrew. Fix: reinstall Homebrew."
 		else
