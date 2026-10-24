@@ -57,12 +57,19 @@ install_zig_zls_pair() {
 	info "installing the zig+zls pair at brew's zls version ($zls_xy)..."
 
 	# Already at the zls ceiling → only zls is missing (no swap needed).
+	# This is the common path (batch lane already installed plain zig), and
+	# it can also run after a batch-lane failure whose pacman fallback
+	# satisfied the probe while brew's zig (poured as a zls dependency)
+	# never got linked — so shadow both here.
 	zpath=$(native_bin_path zig 2>/dev/null) || zpath=""
 	zver=""
 	[ -n "$zpath" ] && zver=$(extract_version "$zpath")
 	if [ -n "$zpath" ] && [ "$zver" = "$zls_xy" ]; then
 		brew_install_retry "$RETRY_T_HUGE" "brew install zls" zls
-		return "$?"
+		local brc=$?
+		_brew_first_link zig zls
+		hash -r
+		return "$brc"
 	fi
 
 	if brew info "zig@$zls_xy" >/dev/null 2>&1; then
