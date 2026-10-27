@@ -59,7 +59,12 @@ setup_sudo() {
 		return 0
 	fi
 	if ! "$SUDO_BIN" -n true 2>/dev/null; then
-		"$SUDO_BIN" -v || die "sudo authorization failed — run this script in an interactive terminal."
+		if ! "$SUDO_BIN" -v 2>/dev/null; then
+			# No tty / no sudo rule: degrade to a warning — user-level
+			# installs still work; privileged steps fail individually via
+			# sudo_cmd and are collected by the caller's reporting.
+			warn "sudo authorization failed — continuing without root; privileged steps (system packages) will be reported as failures."
+		fi
 	fi
 	# SUDO_DROPIN=0: timestamp-only mode — the password above was the only
 	# prompt, no drop-in is installed and there is nothing to clean up.

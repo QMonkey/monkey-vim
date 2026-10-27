@@ -133,9 +133,8 @@ refresh_pkg() {
 	debian | ubuntu) retry -t "$RETRY_T_NET" -s "apt-get update" sudo_cmd apt-get update ;;
 	arch)
 		clear_stale_pacman_lock
-		local rc=0
-		retry -t "$RETRY_T_NET" -s "pacman -Sy" sudo_cmd pacman -Sy || rc=$?
-		[ "$rc" -eq 124 ] && cleanup_timed_out_pacman
+		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
+		retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman -Sy" sudo_cmd pacman -Sy
 		;;
 	opensuse) retry -t "$RETRY_T_NET" -s "zypper refresh" sudo_cmd zypper --non-interactive refresh ;;
 	centos | fedora) retry -t "$RETRY_T_NET" -s "dnf makecache" sudo_cmd dnf makecache -q ;;
@@ -164,9 +163,15 @@ clear_stale_pacman_lock() {
 	sudo_cmd rm -f -- "$PACMAN_DB_LCK"
 }
 
-# A timed-out pacman attempt can leave a live orphan holding db.lck — kill
-# it and clear the now-stale lock so the next attempt is not blocked.
+# A timed-out pacman attempt leaves a live orphan holding db.lck — kill it
+# and clear the lock. Called two ways: bare (caller already verified the
+# timeout — always cleans up) or via retry's -H hook with the attempt's
+# exit code as $1 (only 124 leaves an orphan to reap).
 cleanup_timed_out_pacman() {
+	case "${1-}" in
+	"" | 124) ;;   # bare call or a timeout — clean up
+	*) return 0 ;; # any other explicit exit code — nothing to reap
+	esac
 	sudo_cmd pkill -x pacman 2>/dev/null
 	sleep 1
 	clear_stale_pacman_lock
@@ -278,10 +283,10 @@ install_sys_pkg() {
 		retry -t "$RETRY_T_NET" -s "apt-get install" sudo_cmd env DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold ${PKG_VALID[@]+"${PKG_VALID[@]}"}
 		;;
 	arch)
-		clear_stale_pacman_lock
 		local rc=0
-		retry -t "$RETRY_T_NET" -s "pacman install" sudo_cmd pacman -S --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
-		[ "$rc" -eq 124 ] && cleanup_timed_out_pacman
+		clear_stale_pacman_lock
+		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
+		retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman install" sudo_cmd pacman -S --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
 		# The official batch landed (or not) — the dropped names still get
 		# their AUR pass; its failure does not undo the pacman result.
 		((${#aur_pkgs[@]} > 0)) && install_aur_pkgs ${aur_pkgs[@]+"${aur_pkgs[@]}"}
@@ -440,8 +445,9 @@ _ensure_aur_variant() {
 	# makepkg needs the PKGBUILD in cwd — build in a subshell cd'ed into the
 	# checkout so the caller's cwd survives. Missing this cd made the build
 	# die with "PKGBUILD does not exist" on every run, leaving every
-	# AUR-only package (wlogout) unavailable.
-	(cd "$dir" && retry -t "$RETRY_T_NET" -s "AUR $pkg build" makepkg -si --noconfirm) || rc=$?
+	# AUR-only package (wlogout) unavailable. -H: makepkg's `pacman -U`
+	# child can be orphaned holding db.lck.
+	(cd "$dir" && retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "AUR $pkg build" makepkg -si --noconfirm) || rc=$?
 	rm -rf "$dir"
 	return "$rc"
 }
@@ -477,7 +483,7 @@ ensure_aur_helper() {
 	# cannot vouch for it, so install straight through pacman (--needed
 	# keeps it a no-op when the toolchain exists).
 	refresh_pkg
-	retry -t "$RETRY_T_NET" -s "pacman install base-devel git" sudo_cmd pacman -S --needed --noconfirm base-devel git || return 1
+	retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman install base-devel git" sudo_cmd pacman -S --needed --noconfirm base-devel git || return 1
 	local rc=0
 	_ensure_aur_variant "$AUR_HELPER" || rc=$?
 	hash -r
@@ -511,7 +517,8 @@ install_aur_pkgs() {
 	filter_pkgs_warn probe_aur_name "$@"
 	((${#PKG_VALID[@]} > 0)) || return 1
 	local rc=0
-	retry -t "$RETRY_T_NET" -s "AUR install" "$AUR_HELPER" -S --needed --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
+	# -H: the helper drives pacman internally — same orphan risk.
+	retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "AUR install" "$AUR_HELPER" -S --needed --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
 	hash -r
 	return "$rc"
 }
