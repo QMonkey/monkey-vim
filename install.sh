@@ -153,7 +153,8 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4)
 		fi
-		retry -t 1800 -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
+		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
+		retry -t 1800 -H cleanup_timed_out_pacman -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
 		;;
 	opensuse)
 		retry -t 1800 -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
