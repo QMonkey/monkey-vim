@@ -49,11 +49,12 @@ _retry_run() {
 	fi
 	if declare -F "$1" >/dev/null 2>&1; then
 		local fn
-		# The whitelist must carry the WHOLE dependency closure of the
-		# wrapped command (sudo_cmd -> native_sudo -> have_native_cmd ->
-		# native_bin_path -> is_wsl): one missing link made every exported
-		# call die with "command not found" in the child.
-		for fn in "$1" retry _retry_run native_sudo have_native_cmd native_bin_path is_wsl warn; do
+		# The wrapped function's WHOLE dependency closure must survive into
+		# the child — one missing link made every call die with "command
+		# not found". retry ships its own helpers; infrastructure libs
+		# register theirs in RETRY_EXPORT_FUNCS (common.sh: the sudo_cmd
+		# closure) instead of being hardcoded here.
+		for fn in "$1" retry _retry_run warn ${RETRY_EXPORT_FUNCS:-}; do
 			declare -F "$fn" >/dev/null 2>&1 && export -f "$fn"
 		done
 		"$TIMEOUT_BIN" ${ka[@]+"${ka[@]}"} "$t" bash -c '"$@"' _ "$@"
@@ -68,8 +69,7 @@ _retry_run() {
 # timeout — a black-holed connection would otherwise hang the installer
 # forever. rc 124 is timeout's own exit code.
 #
-# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-t timeout]
-#              [-s desc] cmd...
+# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-t timeout] [-s desc] [-H hook] cmd...
 #   -n  total attempts, NOT retries (default 5)
 #   -d  first sleep in seconds (default 15)
 #   -m  sleep cap in seconds (default 120)
@@ -77,11 +77,25 @@ _retry_run() {
 #       larger value for legitimately long operations (package installs,
 #       big clones)
 #   -s  human description for the warning line (default: the command)
+#   -H  name of a function to run after EVERY attempt — success (rc 0)
+#       included — in the caller's shell, before the backoff sleep, with
+#       the attempt's exit code as $1. Typical use: reaping a package
+#       manager orphaned by timeout(1), which kills only the direct child;
+#       the orphan holds its lock (pacman's db.lck) and every later
+#       attempt dies instantly on "unable to lock database". Runs after
+#       the final attempt and in nested single-shot mode too, so a stuck
+#       lock never outlives the retry.
+#
+# Function-first commands run in a child bash — a lib whose helpers must
+# reach that child appends their names to RETRY_EXPORT_FUNCS (space-
+# separated; common.sh registers the sudo_cmd closure). An explicit
+# `bash -c '...'` command is different: RETRY_EXPORT_FUNCS does not reach
+# it — export what it needs at the call site (nvim/vim headless installs).
 # Returns the command's last exit code (124 = timed out). Safe under set -e;
 # cmd's own flags are untouched — getopts stops at the first non-option
-# word, so only the leading -n/-d/-m/-t/-s belong to retry.
+# word, so only the leading -n/-d/-m/-t/-s/-H belong to retry.
 retry() {
-	local attempts=5 base=15 max=120 timeout_s=600 desc=""
+	local attempts=5 base=15 max=120 timeout_s=600 desc="" hook=""
 	local opt
 	# A leading -- may guard a wrapped command that itself starts with an
 	# option-looking word; strip it BEFORE parsing.
@@ -89,35 +103,50 @@ retry() {
 	# OPTIND=1: getopts resumes at $OPTIND on the next call in the same
 	# shell — without the reset a second retry() call misparses.
 	OPTIND=1
-	while getopts ":n:d:m:t:s:" opt "$@"; do
+	while getopts ":n:d:m:t:s:H:" opt "$@"; do
 		case "$opt" in
 		n) attempts=$OPTARG ;;
 		d) base=$OPTARG ;;
 		m) max=$OPTARG ;;
 		t) timeout_s=$OPTARG ;;
 		s) desc=$OPTARG ;;
+		H) hook=$OPTARG ;;
 		*) return 2 ;;
 		esac
 	done
 	shift $((OPTIND - 1))
 	[ $# -gt 0 ] || return 2
-	# Nested call (see RETRY_ACTIVE_COUNT): run once, no sleeps.
+	local attempt rc=1 wait_s
+	# Nested call (see RETRY_ACTIVE_COUNT): run once, no sleeps, hook still
+	# fires — the single attempt has the same orphan/lock aftermath, and
+	# there is no later attempt to clean up after. (Checked BEFORE the
+	# increment: that marks this call as the active outer retry.)
 	if [ "$RETRY_ACTIVE_COUNT" -gt 0 ]; then
 		if _retry_run "$timeout_s" "$@"; then
-			return 0
+			rc=0
 		else
-			return "$?"
+			rc=$?
 		fi
+		if [ -n "$hook" ] && [ "$(type -t "$hook")" = function ]; then
+			"$hook" "$rc"
+		fi
+		return "$rc"
 	fi
 	RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT + 1))
-	local attempt rc=1 wait_s
 	for ((attempt = 1; attempt <= attempts; attempt++)); do
 		if _retry_run "$timeout_s" "$@"; then
-			RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
-			return 0
+			rc=0
 		else
 			# Inside the else, $? is still the wrapped command's status.
 			rc=$?
+		fi
+		# Attempt hook (see -H): every attempt, success included.
+		if [ -n "$hook" ] && [ "$(type -t "$hook")" = function ]; then
+			"$hook" "$rc"
+		fi
+		if [ "$rc" -eq 0 ]; then
+			RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
+			return 0
 		fi
 		if [ "$attempt" -lt "$attempts" ]; then
 			wait_s=$base

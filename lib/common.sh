@@ -93,6 +93,10 @@ is_wsl() {
 	esac
 }
 
+# retry's function-first child needs the sudo_cmd closure exported — the
+# lib that owns the functions registers them (see retry.sh).
+RETRY_EXPORT_FUNCS="native_sudo have_native_cmd native_bin_path is_wsl"
+
 # Granular OS id: debian | ubuntu | arch | opensuse | centos | fedora |
 # macos | linux-unknown | unknown. Every supported distro is its own id —
 # nothing is folded into a neighbour, so the package tables can give each

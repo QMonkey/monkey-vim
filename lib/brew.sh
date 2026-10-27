@@ -117,6 +117,11 @@ install_zig_zls_pair() {
 }
 
 cleanup_timed_out_brew() {
+	# Called bare (caller already knows the attempt failed — always cleans
+	# up) or via retry's -H hook with the attempt's exit code as $1. An
+	# explicit 0 (healthy attempt) means nothing to reap: pkilling by
+	# brew-prefix cmdline would only risk a concurrent, legitimate brew.
+	[ "${1:-}" = 0 ] && return 0
 	local prefix cache i f
 	prefix="$(brew --prefix 2>/dev/null)" || return 0
 	cache="$(brew --cache 2>/dev/null)" || cache=""
@@ -150,22 +155,12 @@ cleanup_timed_out_brew() {
 	return 0 # best-effort — never fail the caller over cleanup
 }
 
-# One brew install ATTEMPT: ANY failure — not just timeouts (rc 124) —
-# triggers the orphan cleanup: brew's stalled-download lock failures
-# ("already locked") never surface as 124, yet wedge later attempts the
-# same way. The NO_INTERACTIVE/NO_ASK flags make brew fail fast instead
-# of prompting: the retry child sits in a NON-foreground process group
-# where ANY prompt freezes on SIGTTIN.
-_brew_install_attempt() {
-	local rc=0
-	HOMEBREW_NO_INTERACTIVE=1 HOMEBREW_NO_ASK=1 brew install "$@" || rc=$?
-	[ "$rc" -eq 0 ] || cleanup_timed_out_brew
-	return "$rc"
-}
-
 # One brew install with the standard retry ladder; returns the exit code.
 # Heavy-formula timeout FLOOR applied here (not per call site) so every
-# brew lane gets it uniformly.
+# brew lane gets it uniformly. NO_INTERACTIVE/NO_ASK make brew fail fast
+# instead of prompting: the retry child sits in a NON-foreground process
+# group where ANY prompt freezes on SIGTTIN. env(1) carries the flags —
+# a bare VAR=x prefix would be parsed as the command name by retry's getopts.
 brew_install_retry() {
 	local t="$1" desc="$2"
 	shift 2
@@ -183,13 +178,10 @@ brew_install_retry() {
 		done
 	done
 	local brc=0
-	# The attempt runs in a child shell (`timeout bash -c`): retry's
-	# whitelist exports $1 but not cleanup — export it here.
-	export -f cleanup_timed_out_brew
-	retry -t "$t" -s "$desc" _brew_install_attempt "$@" || brc=$?
-	# Backstop: rc 124 = timeout killed the wrapper before the attempt
-	# reached its own cleanup line.
-	[ "$brc" -eq 124 ] && cleanup_timed_out_brew
+	# -H hook: runs in this shell after every attempt, before the backoff
+	# sleep (a post-loop backstop could only clean up after ALL attempts
+	# had already died on the lock).
+	retry -t "$t" -H cleanup_timed_out_brew -s "$desc" env HOMEBREW_NO_INTERACTIVE=1 HOMEBREW_NO_ASK=1 brew install "$@" || brc=$?
 	return "$brc"
 }
 
