@@ -142,7 +142,7 @@ install_vim_build_deps() {
 			# Non-WSL: prefer GTK4 (no X11 dependency)
 			gui=(libgtk-4-dev)
 		fi
-		retry -t 1800 -s "apt-get install" sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
+		retry -t "$RETRY_T_NET" -s "apt-get install" sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
 		;;
 	arch)
 		common=(base-devel git curl
@@ -154,10 +154,10 @@ install_vim_build_deps() {
 			gui=(gtk4)
 		fi
 		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
-		retry -t 1800 -H cleanup_timed_out_pacman -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
+		retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
 		;;
 	opensuse)
-		retry -t 1800 -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
+		retry -t "$RETRY_T_NET" -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
 		# Leap 16 names: python-devel and perl-devel do not exist (python3
 		# needs -devel-suffixed python3-devel only; perl headers ship in the
 		# main perl package), and xorg-x11-devel was removed — use the
@@ -173,7 +173,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		retry -t 1800 -s "zypper install" sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
+		retry -t "$RETRY_T_NET" -s "zypper install" sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
 		;;
 	centos)
 		sudo_cmd dnf install -y epel-release || true
@@ -188,7 +188,7 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		retry -t 1800 -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
 		;;
 	fedora)
 		# No EPEL on Fedora — the same names ship in the base repos.
@@ -203,13 +203,13 @@ install_vim_build_deps() {
 		else
 			gui=(gtk4-devel)
 		fi
-		retry -t 1800 -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
 		;;
 	macos)
 		# Terminal-only build (--enable-gui=no); no gtk/cairo needed. git is
 		# required regardless — build_vim and the clone both pull sources.
 		if have_native_cmd brew; then
-			retry -t 1800 -s "brew install build deps" brew install git python3 ruby lua
+			retry -t "$RETRY_T_NET" -s "brew install build deps" brew install git python3 ruby lua
 		else
 			warn "Homebrew not found — cannot install vim build deps. Install it first: https://brew.sh"
 		fi
@@ -444,7 +444,7 @@ EOF
 	# must not inherit it. repair_broken_clone crosses into the child via
 	# export -f (warn and info come along — the repair reports there too).
 	export -f repair_broken_clone warn info
-	if retry -t 3600 -s "headless PlugInstall" bash -c '
+	if retry -t "$RETRY_T_HEAVY" -s "headless PlugInstall" bash -c '
 		for d in "$HOME"/.vim/bundle/*; do
 			repair_broken_clone --strict "$d"
 		done
