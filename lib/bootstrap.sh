@@ -16,7 +16,7 @@ if [ ! -f "$LIB_DIR/common.sh" ]; then
 	exit 1
 fi
 # shellcheck source=/dev/null
-for _lib in common retry sudo tty output clone pkg distro brew toolchain config env ${EXTRA_LIBS:-}; do
+for _lib in common retry sudo tty output clone pkg distro brew toolchain template config env ${EXTRA_LIBS:-}; do
 	. "$LIB_DIR/$_lib.sh"
 done
 unset _lib EXTRA_LIBS

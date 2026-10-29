@@ -54,31 +54,36 @@ go_install() {
 # the Windows tree; every npm/node lookup here goes through native_bin_path.
 # Debian/Ubuntu: `apt install nodejs` does NOT bring npm (Suggests only), so
 # npm must be installed explicitly and verified afterwards.
-ensure_npm() {
+ensure_node_and_npm() {
 	if have_native_cmd npm && have_native_cmd node; then
 		# Brew's node (often a transitive formula dependency, e.g. mako
 		# dragging node into the Cellar on CentOS) is acceptable here: it
 		# satisfies npm tooling, and if a brew operation on that chain
-		# ever removes it, the NEXT ensure_npm call no longer early-returns
-		# and installs the distro nodejs instead — self-healing.
+		# ever removes it, the NEXT ensure_node_and_npm call no longer
+		# early-returns and installs the distro nodejs instead —
+		# self-healing.
 		return 0
 	fi
-	info "installing npm..."
-	install_pkg "$(pkg_name npm)" || true
-	# openSUSE has no standalone npm on some releases — the unversioned
-	# nodejs package pulls the matching npm, so installing node repairs npm
-	# without dragging brew's node in.
-	if ! have_native_cmd npm && ! have_native_cmd node; then
+	# Node first: it is the root dependency — the distro nodejs package
+	# pulls the matching npm (openSUSE ships no standalone npm on some
+	# releases), and brew's node formula includes it. npm second, for the
+	# distros that split it from nodejs (Debian).
+	if ! have_native_cmd node; then
+		info "installing node..."
 		install_pkg "$(pkg_name node)" || true
+		if ! have_native_cmd node && have_native_cmd brew; then
+			# Last native source on distros whose index has no nodejs.
+			brew_install_retry "$RETRY_T_NET" "brew install node" node || true
+		fi
 	fi
-	if ! have_native_cmd npm && have_native_cmd brew; then
-		# Last native source on distros whose index has no nodejs/npm.
-		brew_install_retry "$RETRY_T_NET" "brew install node" node || true
+	if ! have_native_cmd npm; then
+		info "installing npm..."
+		install_pkg "$(pkg_name npm)" || true
 	fi
-	if have_native_cmd npm && have_native_cmd node; then
+	if have_native_cmd node && have_native_cmd npm; then
 		return 0
 	fi
-	warn "npm is still not available as a native binary — npm-based tools cannot be installed."
+	warn "node/npm are still not available as native binaries — npm-based tools cannot be installed."
 	return 1
 }
 
@@ -92,8 +97,36 @@ ensure_npm() {
 #   - npm >= 11.19 gates install scripts behind an allow-list (comma-
 #     separated). tree-sitter-cli needs its script to fetch the native
 #     binary, so scripts are allowed for exactly the packages handed in.
+# ensure_node_at_least <major.minor> — provision a Node.js meeting a
+# version floor (a bare ensure_node_and_npm only guarantees EXISTENCE:
+# distro indexes ship 18/20 on older releases, and npm merely warns on
+# engines mismatch). Routes, in order: whatever is already installed;
+# the distro npm/node packages (ensure_node_and_npm); Homebrew — which
+# ships a CURRENT node on every platform, covering hosts whose distro
+# index is too old (brew's bin dir is auto-linked; keg-only does not
+# apply to the node formula). rc 0 only when bin_at_least node <min>
+# passes afterwards; otherwise the caller warns and handles.
+ensure_node_at_least() {
+	local min="$1"
+	ensure_node_and_npm || true
+	bin_at_least node "$min" && return 0
+	if have_native_cmd brew; then
+		info "Node.js $min+ required — the distro index is too old; installing via Homebrew..."
+		brew_install_retry "$RETRY_T_NET" "brew install node" node || true
+		# The brew bin sits late on PATH (and a distro node 18/20 may shadow
+		# it): brew_link_bins symlinks the fresh node/npm into
+		# ~/.local/bin — seeded at the FRONT of PATH by export_path — so
+		# node resolves to the current brew install.
+		brew_link_bins node npm
+		hash -r
+		bin_at_least node "$min" && return 0
+	fi
+	warn "Node.js $min+ is still not available (found: $(node -v 2>/dev/null || echo none)) — install it manually: $(get_install_hint node)"
+	return 1
+}
+
 npm_install_g() {
-	ensure_npm || return 1
+	ensure_node_and_npm || return 1
 	local prefix in_brew=false
 	prefix=$(npm config get prefix 2>/dev/null)
 	# npm globals must not live inside Homebrew's tree: they would be wiped

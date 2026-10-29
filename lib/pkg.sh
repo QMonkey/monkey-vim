@@ -149,10 +149,10 @@ install_pkg() {
 			# Link UNCONDITIONALLY, never gated on the batch's rc: a timed-out
 			# brew can still have completed the install, and a batch can pull
 			# an unrelated BREW_FIRST tool as a DEPENDENCY (brew zls installs
-			# zig transitively) with no successful batch rc of its own. _brew_first_link
+			# zig transitively) with no successful batch rc of its own. brew_link_bins
 			# skips any name brew does not provide, so the wide call is
 			# harmless when the batch genuinely failed.
-			_brew_first_link ${BREW_FIRST[@]+"${BREW_FIRST[@]}"}
+			brew_link_bins ${BREW_FIRST[@]+"${BREW_FIRST[@]}"}
 		else
 			_rc=1
 		fi
@@ -230,7 +230,7 @@ install_strategy_step() {
 		fi
 		;;
 	npm)
-		ensure_npm || return 1
+		ensure_node_and_npm || return 1
 		npm_install_g $args
 		;;
 	go)

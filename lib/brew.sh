@@ -21,7 +21,7 @@ BREW_FIRST=()
 # which export_path seeds at the FRONT of PATH — that keeps it beating the
 # system version now that brew itself sits at the BACK. Idempotent; never
 # replaces anything that is not a symlink (a user's own script stays).
-_brew_first_link() {
+brew_link_bins() {
 	local p prefix
 	prefix="$(brew --prefix 2>/dev/null)" || return 0
 	[ -d "$prefix/bin" ] || return 0
@@ -67,7 +67,7 @@ install_zig_zls_pair() {
 	if [ -n "$zpath" ] && [ "$zver" = "$zls_xy" ]; then
 		brew_install_retry "$RETRY_T_HUGE" "brew install zls" zls
 		local brc=$?
-		_brew_first_link zig zls
+		brew_link_bins zig zls
 		hash -r
 		return "$brc"
 	fi
@@ -95,7 +95,7 @@ install_zig_zls_pair() {
 		# ~/.local/bin sits at the FRONT of PATH, so a system zig the
 		# swap above cannot touch loses to the brew keg; when zig is
 		# already brew-managed the link points at the same binary.
-		_brew_first_link zig zls
+		brew_link_bins zig zls
 		hash -r
 		# Verify what `zig` resolves to for the framework: the shadow
 		# tier (~/.local/bin/zig) first, then raw PATH.

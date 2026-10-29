@@ -29,16 +29,41 @@
 #                may not even ship (efm-langserver, .clang-format, configs/<dir>)
 link_config() {
 	local src="$1" dst="$2" mode="${3:-}"
+	# mode ""         foreign target → warn + skip (the conservative default)
+	# mode "keep"     existing target → skip silently; missing source → silent
+	# mode "takeover" this repo OWNS the config: re-point a foreign symlink;
+	#                 back up a foreign REGULAR file to <dst>.link-bak (never
+	#                 over an existing backup) and link; a foreign DIRECTORY
+	#                 is left alone with a warning + rc 1 (the caller's hook
+	#                 wrapper collects it). The other modes stay rc 0 —
+	#                 takeover is the only one that can fail.
 	if [ -e "$dst" ] || [ -L "$dst" ]; then
 		if [ "$mode" = "keep" ]; then
 			info "$(basename "$dst") already exists — skipping."
+			return 0
 		elif [ -L "$dst" ] && [ "$(readlink -f "$dst" 2>/dev/null || readlink "$dst")" = "$(readlink -f "$src" 2>/dev/null || readlink "$src")" ]; then
 			ok "$(basename "$dst") already linked."
+			return 0
+		elif [ "$mode" = "takeover" ]; then
+			if [ -d "$dst" ]; then
+				warn "$dst is a directory — left alone; link manually: ln -sfn $src $dst"
+				return 1
+			fi
+			local bak="${dst}.link-bak"
+			if [ -e "$dst" ]; then
+				if [ -e "$bak" ]; then
+					warn "$bak already exists — replacing $dst without a second backup."
+					rm -f "$dst"
+				else
+					mv "$dst" "$bak"
+					ok "Backed up the previous ${dst#"$HOME"/} to ${bak#"$HOME"/}"
+				fi
+			fi
 		else
 			warn "$dst exists and is not this repo's link — skipping."
 			echo -e "    re-link manually with: ${CYAN}ln -sfn $src $dst${NC}"
+			return 0
 		fi
-		return 0
 	fi
 	# A missing source is always silent: SYMLINKS may list optional files.
 	[ -e "$src" ] || return 0
@@ -47,6 +72,7 @@ link_config() {
 	# Label = dst without the home prefix (".zshrc → <repo>/.zshrc"), which
 	# is how the per-repo installers have always reported their links.
 	ok "${dst#"$HOME"/} → $src"
+	return 0
 }
 
 setup_symlinks() {
