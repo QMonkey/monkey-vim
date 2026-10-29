@@ -60,21 +60,65 @@ shell_env_files() {
 ENV_BLOCK_FILES=""
 
 append_env_block() {
-	# Usage: append_env_block <marker> <block>
-	# Appends <block> guarded by <marker> to every shell env file, once.
-	# The touched files are collected in ENV_BLOCK_FILES (callers that need
-	# bookkeeping — e.g. write_tty_autostart's AUTOSTART_FILES — read it).
+	# append_env_block <marker> <block> [head|normal|tail] — append/guard one
+	# block in every shell env file, then keep the file ordered by block class:
+	#   [head]    env deps other blocks consume (PATH exports, secrets sourcing)
+	#   [normal]  everything else (default; also pre-class content and the user's own lines)
+	#   [tail]    process-replacing exec blocks (tmux / compositor autostart)
+	#             — always last; later appends partition BEFORE them
+	# The class lives in the MARKER LINE's front ("# [tail] marker ..."); dedup
+	# matches on the bare marker text (a substring of annotated lines too), so
+	# pre-class blocks match without duplicating and get annotated on the next
+	# run. Ordering = a stable partition (head, normal, tail; within a class:
+	# appearance order = the install chain's order = the family's dependency
+	# order). Leading content sorts as head. No content matching, no component
+	# coupling: a component declares its own class; the partition is the rule.
 	local marker="$1"
 	local block="$2"
+	local class="${3:-normal}"
 	local f
 	ENV_BLOCK_FILES=""
 	while IFS= read -r f; do
 		[ -n "$f" ] || continue
 		[ -f "$f" ] || touch "$f"
 		if ! grep -qF -- "$marker" "$f" 2>/dev/null; then
-			printf '\n# %s\n%b\n' "$marker" "$block" >>"$f"
+			printf '\n# [%s] %s\n%b\n' "$class" "$marker" "$block" >>"$f"
 			ok "Added '$marker' to $f"
+		else
+			# Present: normalize the marker line's class annotation (the
+			# block content stays untouched) — the class must persist in
+			# the file; the partition pass reads it from here.
+			awk -v m="$marker" -v c="$class" '
+				index($0, m) > 0 && $0 ~ /^[[:space:]]*#/ {
+					print "# [" c "] " m
+					next
+				}
+				{ print }
+			' "$f" >"$f.monkey-tmp" && mv "$f.monkey-tmp" "$f"
 		fi
+		# Stable partition: head / normal / tail; within a class the
+		# appearance order is kept; leading content (no marker) sorts as
+		# head. Idempotent: an already-partitioned file re-emits unchanged.
+		awk '
+			/^[[:space:]]*#[[:space:]]*\[(head|normal|tail)\][[:space:]]/ {
+				nseg++
+				segcls[nseg] = ($0 ~ /\[head\]/) ? 0 : ($0 ~ /\[tail\]/) ? 2 : 1
+				segline[nseg, ++segcnt[nseg]] = $0
+				pending = 1
+				next
+			}
+			{
+				if (!pending) { nseg++; segcls[nseg] = 0; pending = 1 }
+				segline[nseg, ++segcnt[nseg]] = $0
+			}
+			END {
+				for (c = 0; c <= 2; c++)
+					for (sg = 1; sg <= nseg; sg++)
+						if (segcls[sg] == c)
+							for (k = 1; k <= segcnt[sg]; k++)
+								print segline[sg, k]
+			}
+		' "$f" >"$f.monkey-tmp" && mv "$f.monkey-tmp" "$f"
 		ENV_BLOCK_FILES="$ENV_BLOCK_FILES $f"
 	done < <(shell_env_files)
 }
@@ -245,7 +289,7 @@ write_tty_autostart() {
 		return 0
 	fi
 	append_env_block "$PROJECT autostart (remove these lines to disable)" \
-		"$(autostart_block "$exec_cmd" "$pgrep_name")"
+		"$(autostart_block "$exec_cmd" "$pgrep_name")" "tail"
 	AUTOSTART_FILES="$AUTOSTART_FILES $ENV_BLOCK_FILES"
 }
 
@@ -305,7 +349,7 @@ persist_path() {
 	# The SAME lines export_path evals — written to the profiles verbatim;
 	# the case guards re-check at shell startup.
 	# shellcheck disable=SC2016 # $PATH must stay literal in the block
-	append_env_block "user-local bin dirs (framework installer)" "$(bin_dirs)"
+	append_env_block "user-local bin dirs (framework installer)" "$(bin_dirs)" "head"
 	ok "PATH persistence added for the user-local framework bin dirs (~/.local/bin, GOBIN/GOPATH/cargo/npm-global — see bin_dirs)."
 	# Brew dirs are persist_brew_path's business (positional; runs even
 	# when PERSIST_PATH=0).
@@ -320,7 +364,7 @@ persist_brew_path() {
 	# One call, one block: bin and sbin are a unit (guard keyed on bin).
 	local block
 	block=$(_path_pre_win_snippet "$brew_prefix/bin" "$brew_prefix/sbin")
-	append_env_block "Homebrew PATH (before Windows shims)" "$block"
+	append_env_block "Homebrew PATH (before Windows shims)" "$block" "head"
 }
 
 # ────────────────────── compositor autostart (guarded VT login) ──────────────────────
