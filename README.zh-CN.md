@@ -36,7 +36,7 @@ monkey-vim项目，旨在打造一个强大、快速的纯终端原生IDE。
 自动完成 Vim 编译安装、依赖与插件安装：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash 2>&1 | tee monkey-vim-install.log
 ```
 
 > 这条一行命令除了 `curl` 本身还需要 `git`：安装脚本会先把本仓库克隆到 `~/Documents/monkey-vim`，然后才能安装任何东西。如果缺少 `git`，脚本会报错停止——用系统的包管理器安装 git 后，重新运行同一条命令即可。
