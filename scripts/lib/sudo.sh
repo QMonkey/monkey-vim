@@ -3,6 +3,13 @@
 
 SUDOERS_D_DIR="${SUDOERS_D_DIR:-/etc/sudoers.d}"
 SUDO_NOPASSWD=0
+# Set only when THIS process authenticated interactively (`sudo -v`). A
+# chained child whose probe succeeded is riding an ancestor's grant — it
+# must not tear that grant down on exit (the shared drop-in path is reused
+# by every stage of the chain, and the retry wrapper runs children in a
+# non-foreground process group where the next stage's re-auth prompt would
+# stop on SIGTTIN and hang forever).
+SUDO_AUTHED=0
 SUDO_BIN=""
 
 # The drop-in name is derived from the project — lazily, because PROJECT is
@@ -17,7 +24,7 @@ cleanup_sudo() {
 	# once the grant file is gone, `sudo -n rm` can no longer authenticate
 	# (no timestamp is ever recorded because every sudo during the run was
 	# NOPASSWD), and it would warn even though the file was already removed.
-	if [ "$SUDO_NOPASSWD" -eq 1 ] && [ -n "$SUDO_BIN" ]; then
+	if [ "$SUDO_NOPASSWD" -eq 1 ] && [ "$SUDO_AUTHED" -eq 1 ] && [ -n "$SUDO_BIN" ]; then
 		SUDO_NOPASSWD=0
 		"$SUDO_BIN" -n rm -f "$(nopasswd_dropin_path)" 2>/dev/null ||
 			warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $(nopasswd_dropin_path)"
@@ -59,7 +66,12 @@ setup_sudo() {
 		return 0
 	fi
 	if ! "$SUDO_BIN" -n true 2>/dev/null; then
-		if ! "$SUDO_BIN" -v 2>/dev/null; then
+		if "$SUDO_BIN" -v 2>/dev/null; then
+			# This process owns authentication now — its cleanup may tear
+			# the grant down. A probe-success child (ancestor's drop-in)
+			# never sets this and never cleans up.
+			SUDO_AUTHED=1
+		else
 			# No tty / no sudo rule: degrade to a warning — user-level
 			# installs still work; privileged steps fail individually via
 			# sudo_cmd and are collected by the caller's reporting.

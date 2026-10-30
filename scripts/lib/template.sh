@@ -82,18 +82,77 @@ def envval(key):
         )
     return val
 
-seen = set()
+# Keys may repeat (hand-editing styles: `export KEY=...` lines are
+# tolerated by the matcher) — they COLLAPSE to one definition: the last
+# NON-EMPTY file value wins at its own position (an empty line shadowing
+# a real value is fill-era debris, never intent); a key with no file
+# value fills from the environment at its last occurrence; keys absent
+# from the file append at the end.
+key_re = re.compile(r"^(?:export[ \t]+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
+lastval = {}
+key_at = {}
+last_idx = {}
+winner_idx = {}
 for i, line in enumerate(lines):
-    m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", line)
+    m = key_re.match(line)
     if not m or m.group(1) not in keys:
         continue
-    seen.add(m.group(1))
-    if m.group(2).strip() == "":
-        lines[i] = "%s=%s" % (m.group(1), envval(m.group(1)))
+    key = m.group(1)
+    key_at[i] = key
+    last_idx[key] = i
+    if m.group(2).strip():
+        lastval[key] = m.group(2)
+        winner_idx[key] = i
+keepval = {}
 for key in keys:
-    if key not in seen:
-        lines.append("%s=%s" % (key, envval(key)))
-out = "\n".join(lines) + "\n"
+    winner_idx.setdefault(key, last_idx.get(key))
+    keepval[key] = lastval.get(key) or envval(key)
+out_lines = []
+emitted = set()
+for i, line in enumerate(lines):
+    key = key_at.get(i)
+    if key is None:
+        out_lines.append(line)
+        continue
+    if i != winner_idx.get(key) or key in emitted:
+        continue  # a duplicate definition — collapsed into the winner
+    emitted.add(key)
+    # Canonical KEY=value form: the file's winner may carry an `export `
+    # prefix (hand-written style), but consumers of this file include
+    # systemd EnvironmentFile=, which silently IGNORES `export`-prefixed
+    # lines — the value would be lost to resident services. Strip it.
+    out_lines.append("%s=%s" % (key, lastval.get(key) or keepval[key]))
+for key in keys:
+    if key not in emitted:
+        out_lines.append("%s=%s" % (key, keepval[key]))
+out = "\n".join(out_lines) + "\n"
+
+# Data-loss fuse: a fill must never turn a non-empty value (file or env)
+# into an empty one, and must never write a value that cannot round-trip
+# in the KEY= line format: an embedded newline makes source() swallow the
+# FOLLOWING lines into a multi-line string (observed 2026-10-30: one
+# unbalanced quote in a hand-maintained file emptied every later variable
+# and rendered empty ids into the agent configs; openclaw's strict schema
+# then refuses to start). Abort loudly, leave the file untouched.
+_lost = [
+    key for key in keys
+    if (lastval.get(key) or envval(key)).strip() and not keepval.get(key, "").strip()
+]
+_unwritable = [
+    key for key in keys
+    if any(c in keepval.get(key, "") for c in "\n\r")
+]
+if _unwritable:
+    sys.stderr.write(
+        "fill: refusing to write — value(s) contain newlines (a broken "
+        "quote in the source file makes source() swallow lines) for: %s\n"
+        % ", ".join(_unwritable))
+    sys.exit(1)
+if _lost:
+    sys.stderr.write(
+        "fill: refusing to write — value(s) would be lost for: %s\n"
+        % ", ".join(_lost))
+    sys.exit(1)
 
 out_dir = os.path.dirname(os.path.abspath(out_path))
 if not os.path.isdir(out_dir):
@@ -116,13 +175,26 @@ INNER_PY_EOF
 		# SHELL-FORMAT from the same inventory — so envsubst substitutes
 		# exactly the template-declared placeholders and every literal
 		# ${VAR}/$VAR by-name reference in the template survives.
-		local list="" v val
+		local list="" v val unset_vars=""
 		while IFS= read -r v; do
 			[ -n "$v" ] || continue
-			val=$(printenv "$v" 2>/dev/null) || val=""
-			export "__${v}__=${val:-}"
+			# Unset (not merely empty) means the calling hook forgot to
+			# export a structural value — envsubst would silently render
+			# it empty (an observed bug: an empty Environment=PATH=
+			# crashed a service loop). Empty VALUES stay legitimate
+			# (e.g. an optional flag placeholder).
+			if val=$(printenv "$v" 2>/dev/null); then
+				export "__${v}__=${val}"
+			else
+				unset_vars+="$v "
+			fi
 			list+="\$__${v}__ "
 		done < <(grep -o '\$__\([A-Z][A-Z0-9_]*\)__' "$template" | sort -u | sed 's/^\$__//; s/__$//')
+		if [ -n "$unset_vars" ]; then
+			fail "render: template $(basename "$template") references unset variable(s): ${unset_vars% } — export them before rendering (an unset placeholder would silently render empty)."
+			rm -f "$tmp"
+			return 1
+		fi
 		envsubst ${list:+"$list"} <"$template" >"$tmp" || rc=$?
 	fi
 	if [ "$mode" != "fill" ]; then
