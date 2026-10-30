@@ -36,7 +36,7 @@ Pick one of the two ways below: a one-click script, or manual setup.
 Build Vim and install monkey-vim with all dependencies and plugins automatically:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash 2>&1 | tee monkey-vim-install.log
 ```
 
 > The one-liner needs `git` besides `curl` itself: the installer clones this repository into `~/Documents/monkey-vim` before it can install anything. If `git` is missing, the script stops with an error — install it with your system's package manager and re-run the same command.
