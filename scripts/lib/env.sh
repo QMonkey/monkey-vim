@@ -112,11 +112,24 @@ append_env_block() {
 				segline[nseg, ++segcnt[nseg]] = $0
 			}
 			END {
+				# Segment boundaries get exactly one blank line, emitted here;
+				# each segment is trimmed of its leading/trailing blanks first.
+				# Without this, the append-prefix blank carried by a segment travels
+				# with its class on reordering (observed: the head/tail joint
+				# lost its blank while the file end gained a stray one), and
+				# re-runs would not be idempotent.
+				first = 1
 				for (c = 0; c <= 2; c++)
 					for (sg = 1; sg <= nseg; sg++)
-						if (segcls[sg] == c)
-							for (k = 1; k <= segcnt[sg]; k++)
-								print segline[sg, k]
+						if (segcls[sg] == c) {
+							last = segcnt[sg]
+							while (last > 1 && segline[sg, last] == "") last--
+							start = 1
+							while (start < last && segline[sg, start] == "") start++
+							if (!first) print ""
+							for (k = start; k <= last; k++) print segline[sg, k]
+							first = 0
+						}
 			}
 		' "$f" >"$f.monkey-tmp" && mv "$f.monkey-tmp" "$f"
 		ENV_BLOCK_FILES="$ENV_BLOCK_FILES $f"
