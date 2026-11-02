@@ -83,8 +83,24 @@ setup_sudo() {
 	[ "${SUDO_DROPIN:-1}" = "1" ] || return 0
 	if printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$(id -un)" |
 		"$SUDO_BIN" -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$(nopasswd_dropin_path)" >/dev/null 2>&1; then
-		SUDO_NOPASSWD=1
-		ok "Temporary NOPASSWD drop-in installed for this run (auto-removed on exit)."
+		# A written, visudo-clean drop-in is not necessarily PARSED: a sudoers
+		# missing the @includedir line never loads it, and a sudo whose rule
+		# matching disfavors the tag defeats it. Unverified, the run then
+		# silently rides the pre-auth timestamp and collapses when it expires
+		# mid-run. So discard the timestamp FIRST (-k needs no password) and probe — a
+		# success now can only come from the rule itself.
+		"$SUDO_BIN" -k 2>/dev/null
+		if "$SUDO_BIN" -n true 2>/dev/null; then
+			SUDO_NOPASSWD=1
+			ok "Temporary NOPASSWD drop-in installed for this run (auto-removed on exit)."
+		else
+			warn "NOPASSWD drop-in is not effective (sudo ignores $SUDOERS_D_DIR?) — falling back to timestamp-only mode; long runs may still need one re-authentication."
+			# -k above destroyed the ticket the probe/-v may have created —
+			# restore it, or the run is dead on arrival. Foreground here, so
+			# prompting is safe (the SIGTTIN freeze only applies inside retried commands).
+			"$SUDO_BIN" -v -p "[${PROJECT:-monkey}] sudo password (drop-in not effective): " ||
+				warn "could not re-authenticate — privileged steps will fail until you re-run with 'sudo -v' done first."
+		fi
 	else
 		warn "could not install the temporary NOPASSWD drop-in — each privileged step will ask for the password separately."
 	fi
