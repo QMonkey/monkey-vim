@@ -218,11 +218,26 @@ finish_install() {
 		# once at its own end — per-component hints would be redundant there.
 		if [ "${ACQUIRE_TIOCSTI:-$PROJECT}" != "$PROJECT" ]; then
 			: # wrapper holds the injection right
-		elif inject_tty "source ${env_file}"; then
-			echo -e "  ${GREEN}Injected 'source ${env_file}' into the current terminal.${NC}"
 		else
-			echo -e "  ${YELLOW}New PATH takes effect in NEW shells. To use it in this terminal now:${NC}"
-			echo -e "    ${CYAN}source ${env_file}${NC}    ${YELLOW}# or simply: ${CYAN}exec \$SHELL${NC}"
+			# XDG_RUNTIME_DIR last mile (rationale in xdg_runtime_fix_cmd):
+			# only the parent shell can export the fix — queued BEFORE the
+			# source line so tmux started from this shell inherits it.
+			# Empty fix logs nothing: silence is the healthy-path signal.
+			local xdg_fix
+			xdg_fix="$(xdg_runtime_fix_cmd)"
+			if [ -n "$xdg_fix" ]; then
+				if inject_tty "$xdg_fix"; then
+					echo -e "  ${GREEN}Injected XDG_RUNTIME_DIR fix into the current terminal.${NC}"
+				else
+					echo -e "    ${CYAN}${xdg_fix}${NC}"
+				fi
+			fi
+			if inject_tty "source ${env_file}"; then
+				echo -e "  ${GREEN}Injected 'source ${env_file}' into the current terminal.${NC}"
+			else
+				echo -e "  ${YELLOW}New PATH takes effect in NEW shells. To use it in this terminal now:${NC}"
+				echo -e "    ${CYAN}source ${env_file}${NC}    ${YELLOW}# or simply: ${CYAN}exec \$SHELL${NC}"
+			fi
 		fi
 		echo ""
 	fi

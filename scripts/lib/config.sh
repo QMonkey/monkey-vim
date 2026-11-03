@@ -32,8 +32,13 @@ link_config() {
 	# mode ""         foreign target → warn + skip (the conservative default)
 	# mode "keep"     existing target → skip silently; missing source → silent
 	# mode "takeover" this repo OWNS the config: re-point a foreign symlink;
-	#                 back up a foreign REGULAR file to <dst>.link-bak (never
-	#                 over an existing backup) and link; a foreign DIRECTORY
+	#                 move a foreign REGULAR file to <dst>.link-bak and link —
+	#                 the backup is ROLLING: an existing one is refreshed with
+	#                 the file being replaced, never left in place while the
+	#                 current config is deleted (agents such as qwen-code
+	#                 rewrite their own settings at runtime, so the file at
+	#                 $dst is newer than any backup and losing it is real
+	#                 data loss); a foreign DIRECTORY
 	#                 is left alone with a warning + rc 1 (the caller's hook
 	#                 wrapper collects it). The other modes stay rc 0 —
 	#                 takeover is the only one that can fail.
@@ -51,13 +56,11 @@ link_config() {
 			fi
 			local bak="${dst}.link-bak"
 			if [ -e "$dst" ]; then
-				if [ -e "$bak" ]; then
-					warn "$bak already exists — replacing $dst without a second backup."
-					rm -f "$dst"
-				else
-					mv "$dst" "$bak"
-					ok "Backed up the previous ${dst#"$HOME"/} to ${bak#"$HOME"/}"
+				if ! mv "$dst" "$bak"; then
+					warn "Could not move $dst to $bak — leaving $dst alone; not linking."
+					return 1
 				fi
+				ok "Backed up the previous ${dst#"$HOME"/} to ${bak#"$HOME"/}"
 			fi
 		else
 			warn "$dst exists and is not this repo's link — skipping."

@@ -112,24 +112,11 @@ append_env_block() {
 				segline[nseg, ++segcnt[nseg]] = $0
 			}
 			END {
-				# Segment boundaries get exactly one blank line, emitted here;
-				# each segment is trimmed of its leading/trailing blanks first.
-				# Without this, the append-prefix blank carried by a segment travels
-				# with its class on reordering (observed: the head/tail joint
-				# lost its blank while the file end gained a stray one), and
-				# re-runs would not be idempotent.
-				first = 1
 				for (c = 0; c <= 2; c++)
 					for (sg = 1; sg <= nseg; sg++)
-						if (segcls[sg] == c) {
-							last = segcnt[sg]
-							while (last > 1 && segline[sg, last] == "") last--
-							start = 1
-							while (start < last && segline[sg, start] == "") start++
-							if (!first) print ""
-							for (k = start; k <= last; k++) print segline[sg, k]
-							first = 0
-						}
+						if (segcls[sg] == c)
+							for (k = 1; k <= segcnt[sg]; k++)
+								print segline[sg, k]
 			}
 		' "$f" >"$f.monkey-tmp" && mv "$f.monkey-tmp" "$f"
 		ENV_BLOCK_FILES="$ENV_BLOCK_FILES $f"
@@ -244,6 +231,29 @@ ensure_xdg_runtime_dir() {
 	# Both tiers failed (no logind/seatd) — spell out both fixes.
 	warn "Could not create $dir — nvim/vim serverstart() will keep failing (fzf-lua and other RPC users)."
 	warn "  Manual fix:  sudo touch $marker && sudo systemctl start user-runtime-dir@$uid.service"
+}
+
+# xdg_runtime_fix_cmd — print an `export XDG_RUNTIME_DIR=…` statement when
+# the current value is unusable for this uid; empty string when fine.
+# ensure_xdg_runtime_dir repairs SYSTEM state, but a child can never change
+# the parent shell's env — the stale /run/user/0 a WSL root-boot session
+# inherited survives it (observed: repair logged "ready", yet the same
+# shell's `systemctl --user` still failed, skipping service registration).
+# Only the parent shell can export the fix; finish_install delivers it
+# via TIOCSTI. Guard is state-based, not WSL-based: normal logins and `su`
+# already carry pam_systemd's correct value → idempotent no-op.
+xdg_runtime_fix_cmd() {
+	local dir
+	dir=$(runtime_dir_path)
+	case "$XDG_RUNTIME_DIR" in
+	"$dir") return 0 ;; # correct, empty, or deliberate custom — nothing to fix
+	/run/user/*) ;;     # another user's dir (WSL root-boot session) — fix it
+	*) return 0 ;;      # empty — PAM covers normal logins, nothing to repair
+	esac
+	# Only offer the fix when the target dir exists and is ours; otherwise
+	# the export would point systemctl --user at a dead socket anyway.
+	[ -d "$dir" ] && [ -w "$dir" ] || return 0
+	printf 'export XDG_RUNTIME_DIR=%q' "$dir"
 }
 
 # ────────────────────── compositor autostart (guarded VT login) ──────────────────────
