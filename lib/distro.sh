@@ -40,11 +40,11 @@ pkg_name() {
 	debian:go | ubuntu:go) echo "golang-go" ;;
 	centos:go | fedora:go) echo "golang" ;;
 	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) echo "nodejs" ;;
-	# envsubst ships in gettext-base (deb/ubuntu), gettext-runtime
-	# (suse), gettext (arch/fedora/centos); macOS needs brew gettext.
-	debian:envsubst | ubuntu:envsubst) echo "gettext-base" ;;
-	opensuse:envsubst) echo "gettext-runtime" ;;
-	arch:envsubst | fedora:envsubst | centos:envsubst) echo "gettext" ;;
+	# Rendering is gomplate (see scripts/lib/template.sh render) — no
+	# Linux distro packages it, so only macOS resolves through this table;
+	# a Linux host without brew gets the release binary (render's own error
+	# prints the URL). envsubst/gettext is no longer a dependency.
+	macos:gomplate) echo "gomplate" ;;
 	debian:which | ubuntu:which) echo "debianutils" ;;
 	arch:python3 | macos:python3) echo "python" ;;
 	# python3 needs no versioned mapping: Leap 16 ships a literal python3,
