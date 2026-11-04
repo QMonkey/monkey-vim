@@ -1,69 +1,56 @@
 # monkey-scripts/lib/template.sh — the template engine: template + env →
-# config file. Two modes: default = envsubst substitution of $__X__
-# placeholders from the caller-exported environment; "fill KEY..." =
-# fill-empty-only dotenv MERGE (hand-edits win) for credential files.
+# config file. Two modes: default = gomplate (Go text/template) render of
+# {{ .Env.NAME }} references from the caller-exported environment;
+# "fill KEY..." = fill-empty-only dotenv MERGE (hand-edits win) for
+# credential files.
 # No format awareness, no secrets access, atomic 0600 writes; failure
 # contract: warn + non-zero, never aborts the caller.
 
-# render <template> <outfile> — the substitution renderer: pure envsubst
-# over the template's $__X__ placeholders, values from the caller-exported
-# environment. The $__-form keeps placeholders collision-free from literal
-# ${VAR}/$VAR by-name references in the same file (openclaw config and
-# qwen channels embed both — they must survive rendering untouched); the
-# SHELL-FORMAT whitelist is built from the template's own inventory, so
-# the two syntaxes can never be confused and credentials are never baked
-# in. Unset placeholders fail the render loudly (an unset placeholder
-# would silently render empty — an observed crash loop). Atomic 0600
-# write; failure contract: warn + non-zero, never aborts the caller.
-# The fill mode lives in render_fill below.
+# render <template> <outfile> — the substitution renderer: gomplate (Go
+# text/template) over the template's {{ .Env.NAME }} references, values from the
+# caller-exported environment. Structure (model catalogs, channel members,
+# optional keys) lives IN the template as {{ range }}/{{ if }}: shell-built
+# fragments are what used to produce stray commas, literal \n and last-one-wins
+# duplicate keys in rendered configs.
+# A reference to an unset variable is a hard gomplate error, so "unset must
+# fail loudly" needs no inventory pass — and no whitelist either: {{ }} never
+# touches the $VAR / ${VAR} credential-NAME references the agent resolves at
+# runtime. Atomic 0600 write; failure contract: warn + non-zero, never aborts
+# the caller. The fill mode lives in render_fill below.
 render() {
-	local template="$1" outfile="$2" tmp rc=0
+	local template="$1" outfile="$2" tmp err rc=0 missing
 	if [ ! -f "$template" ]; then
 		fail "render: template not found: $template"
 		return 1
 	fi
-	if ! have_native_cmd envsubst; then
-		fail "render: envsubst (gettext) not found — install gettext and re-run."
+	if ! have_native_cmd gomplate; then
+		fail "render: gomplate not found — brew install gomplate, or fetch the release binary https://github.com/hairyhenderson/gomplate/releases/latest/download/gomplate_$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/'), then re-run."
 		return 1
 	fi
 	mkdir -p "$(dirname "$outfile")"
 	tmp=$(mktemp "${outfile%/*}/.render.XXXXXX")
-	local list="" v val unset_vars=""
-	while IFS= read -r v; do
-		[ -n "$v" ] || continue
-		# Unset (not merely empty): envsubst would render it empty.
-		# Empty values stay legitimate (an optional flag placeholder).
-		if val=$(printenv "$v" 2>/dev/null); then
-			export "__${v}__=${val}"
+	err="$tmp.err"
+	gomplate -f "$template" >"$tmp" 2>"$err" || rc=$?
+	if [ "$rc" -ne 0 ]; then
+		# Turn the JSON log line into the variable names the caller must
+		# export — that is the actionable part of a render failure.
+		missing=$(grep -o '\\"[A-Z0-9_]*\\"' "$err" 2>/dev/null | tr -d '\\"' | sort -u | tr '\n' ' ')
+		if [ -n "$missing" ]; then
+			fail "render: template $(basename "$template") references unset variable(s): ${missing% } — export them before rendering (an unset reference would silently render empty)."
 		else
-			unset_vars+="$v "
+			fail "render: $(basename "$template") failed: $(head -c 300 "$err")"
 		fi
-		list+="\$__${v}__ "
-	done < <(grep -o '\$__\([A-Z][A-Z0-9_]*\)__' "$template" | sort -u | sed 's/^\$__//; s/__$//')
-	if [ -n "$unset_vars" ]; then
-		fail "render: template $(basename "$template") references unset variable(s): ${unset_vars% } — export them before rendering (an unset placeholder would silently render empty)."
-		rm -f "$tmp"
+		rm -f "$tmp" "$err"
 		return 1
 	fi
-	if [ -n "$list" ]; then
-		envsubst ${list:+"$list"} <"$template" >"$tmp" || rc=$?
-	else
-		# Identity copy: a bare envsubst would expand EVERY env variable,
-		# baking literal ${VAR} credential refs with render-time values.
-		cat "$template" >"$tmp" || rc=$?
-	fi
-	if [ "$rc" -eq 0 ]; then
-		chmod 600 "$tmp"
-		mv "$tmp" "$outfile"
-	else
-		rm -f "$tmp"
-		warn "render: $outfile failed (error above)."
-	fi
-	return "$rc"
+	chmod 600 "$tmp"
+	mv "$tmp" "$outfile"
+	rm -f "$err"
+	return 0
 }
 
 # render_fill <template> <outfile> [key...] — dotenv merge for credential
-# files (the one mode envsubst cannot express): an existing outfile is the
+# files (a mode the renderer has no part in): an existing outfile is the
 # source of truth (hand-edits win; a missing one is seeded from the
 # template), repeated KEY= lines collapse — the last NON-EMPTY value wins
 # at the last definition line, missing keys fill from the environment or
@@ -73,7 +60,8 @@ render() {
 # to survive both shell sourcing and systemd parsing.
 # Deliberately unguarded: a newline in a value breaks every KEY= line
 # below it in the written file — keep the credential sources clean.
-# Engine: python (merge is string surgery envsubst cannot express), its
+# Engine: python (merge is per-key last-non-empty-wins surgery the
+# renderer has no notion of), its
 # own atomic write; no bash-side temp file participates.
 render_fill() {
 	local template="$1" outfile="$2" rc=0
