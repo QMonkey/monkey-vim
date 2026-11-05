@@ -45,20 +45,18 @@ report_install_fail() {
 	echo -e "    hint: $(get_install_hint "$2")"
 }
 
-# Default required re-probe: installed = resolves on PATH or a known ext path.
+# Required re-probe for bare (non-spec) entries: installed = resolves on PATH
+# or a known ext path.
 _reprobe_default() {
 	have_native_cmd "$1" || ext_paths_ok "$1"
 }
 
 # Project-level re-probe (sway/hyprland upstream style): one "installed" /
-# "still missing" line per entry of REQUIRED_REPROBE_LIST, probed via
-# REQUIRED_REPROBE_FN (default _reprobe_default) and displayed via
-# REQUIRED_NAME_FN. Projects without the list keep the run_required_checks
-# behaviour (_required_tail_checks) instead.
+# "still missing" line per entry of REQUIRED_REPROBE_LIST. Projects without
+# the list keep the run_required_checks behaviour (_required_tail_checks)
+# instead.
 _required_reprobe() {
-	local rb probe_fn name_fn label
-	probe_fn=${REQUIRED_REPROBE_FN:-_reprobe_default}
-	name_fn=${REQUIRED_NAME_FN:-}
+	local rb label
 	MISSING_REQUIRED=()
 	REQUIRED_FAILURES=0
 	for rb in ${REQUIRED_REPROBE_LIST[@]+"${REQUIRED_REPROBE_LIST[@]}"}; do
@@ -79,8 +77,7 @@ _required_reprobe() {
 			;;
 		*)
 			label="$rb"
-			if [ -n "$name_fn" ]; then label=$("$name_fn" "$rb"); fi
-			if "$probe_fn" "$rb"; then
+			if _reprobe_default "$rb"; then
 				ok "$label installed"
 			else
 				MISSING_REQUIRED+=("$rb")
@@ -128,34 +125,33 @@ _install_missing_pass() {
 	[ ${#missing[@]} -gt 0 ] || return 0
 	echo -e "${YELLOW}${title}: ${missing[*]}...${NC}"
 	_collect_pkg_batch "${missing[@]}"
-	local id
+	local id batch_ok=0
 	if [ ${#_PKG_BATCH_NAMES[@]} -gt 0 ]; then
+		# One package-manager transaction for every plain "pkg" strategy.
+		if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
+			batch_ok=1
+		fi
 		case "$mode" in
-		required)
-			install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"} || true
-			;;
+		required) ;; # batch failure tolerated — the reprobe/tail step reports it
 		recommended)
-			if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
+			if [ "$batch_ok" = 1 ]; then
 				echo -e "${GREEN}Done.${NC}"
 			else
 				echo -e "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"})")${NC}"
 			fi
 			;;
 		optional)
-			if install_pkg ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"}; then
-				for id in "${_PKG_BATCH_IDS[@]}"; do
+			for id in "${_PKG_BATCH_IDS[@]}"; do
+				# A landed batch is only "installed" once the binary probes.
+				if [ "$batch_ok" = 1 ]; then
 					load_spec_for "$id"
 					if probe_spec "$SPEC_RAW"; then
 						report_install_ok "$id"
-					else
-						report_install_fail "$id" "$id"
+						continue
 					fi
-				done
-			else
-				for id in "${_PKG_BATCH_IDS[@]}"; do
-					report_install_fail "$id" "$id"
-				done
-			fi
+				fi
+				report_install_fail "$id" "$id"
+			done
 			;;
 		esac
 	fi

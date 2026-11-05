@@ -1,7 +1,8 @@
 # monkey-scripts/lib/clipboard.sh — clipboard provider detection and install,
 # keyed on CHECK_CLIPBOARD (required | warn | display). Sourced by
 # scripts/checkhealth.sh (via lib/bootstrap.sh EXTRA_LIBS), AFTER lib/checks.sh
-# (check_spec / record_missing) and lib/pkg.sh (install_pkg).
+# (check_spec / record_missing), lib/pkg.sh (install_pkg) and lib/missing.sh
+# (report_install_ok / report_install_fail).
 
 # ──────────────────────── clipboard ────────────────────────
 # First available clipboard provider, in tmux-yank's preference order
@@ -112,10 +113,9 @@ install_clipboard() {
 		pkg="${state#missing }"
 		echo -e "  ${YELLOW}→ installing clipboard provider ${pkg}...${NC}"
 		if install_pkg "$pkg"; then
-			echo -e "  ${GREEN}✓ ${pkg} installed${NC}"
+			report_install_ok "$pkg"
 		else
-			echo -e "  ${RED}✗ failed to install ${pkg}${NC}"
-			echo -e "    hint: $(get_install_hint "$pkg")"
+			report_install_fail "$pkg" "$pkg"
 			return 1
 		fi
 		;;

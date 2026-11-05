@@ -3,7 +3,8 @@
 # everything "what does THIS distro's repository carry and how do I install
 # it": the pkg_name mapping, index refresh, index probing, the batch
 # installer, build-dep groups. Sourced by lib/bootstrap.sh; install_pkg
-# (lib/pkg.sh) drives it as the primary lane, with brew.sh as fallback.
+# (lib/pkg.sh) drives it as the primary lane wherever pkg_manager names a
+# system manager — on macOS pkg_manager names brew.sh instead.
 #
 # Distro-specific quirks are deliberate here, not folded away: apt runs
 # fully non-interactive (three env layers), pacman needs stale-lock repair,
@@ -40,10 +41,14 @@ pkg_name() {
 	debian:go | ubuntu:go) echo "golang-go" ;;
 	centos:go | fedora:go) echo "golang" ;;
 	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) echo "nodejs" ;;
-	# Rendering is gomplate (see scripts/lib/template.sh render) — no
-	# Linux distro packages it, so only macOS resolves through this table;
-	# a Linux host without brew gets the release binary (render's own error
-	# prints the URL). envsubst/gettext is no longer a dependency.
+	# Rendering is gomplate (see scripts/lib/template.sh render); no Linux
+	# DISTRO repository packages it, so macOS is the only OS whose index name
+	# needs a row here. The provisioning order lives in the spec
+	# (pkg,brew:gomplate): the distro lane still runs first because it is the
+	# one that can reach a repository that does carry it (arch's AUR pass),
+	# and the brew lane is the declared fallback for every index that lacks
+	# it — self-healing through ensure_homebrew where brew is absent.
+	# envsubst/gettext is no longer a dependency.
 	macos:gomplate) echo "gomplate" ;;
 	debian:which | ubuntu:which) echo "debianutils" ;;
 	arch:python3 | macos:python3) echo "python" ;;
@@ -298,17 +303,14 @@ install_sys_pkg() {
 		return "$rc"
 		;;
 	opensuse) retry -t "$RETRY_T_NET" -s "zypper install" sudo_cmd zypper --non-interactive install -y ${PKG_VALID[@]+"${PKG_VALID[@]}"} ;;
-	centos)
-		# Some tools (universal-ctags, global, fzf, bat, pygments) come from EPEL.
-		sudo_cmd dnf install -y epel-release || true
-		local -a _args=(${PKG_VALID[@]+"${PKG_VALID[@]}"})
-		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
-		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
-		;;
-	fedora)
-		# No EPEL on Fedora — the names below ship in the base repos.
-		# gtags needs the global-ctags subpackage (ctags back-end config),
-		# same as CentOS; without it gtags is unusable.
+	centos | fedora)
+		# Some tools (universal-ctags, global, fzf, bat, pygments) live in EPEL,
+		# which only CentOS needs — Fedora ships them in the base repos.
+		if [ "$OS" = centos ]; then
+			sudo_cmd dnf install -y epel-release || true
+		fi
+		# gtags needs the global-ctags subpackage (ctags back-end config);
+		# without it gtags is unusable.
 		local -a _args=(${PKG_VALID[@]+"${PKG_VALID[@]}"})
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
 		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"

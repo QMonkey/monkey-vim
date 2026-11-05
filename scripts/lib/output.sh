@@ -48,16 +48,13 @@ print_header() {
 }
 
 # ────────────────────── platform ──────────────────────
-# Human-readable package manager for the Platform block.
+# Human-readable package manager for the Platform block: pkg_manager's id,
+# with Homebrew spelled out.
 pkg_manager_name() {
-	case "$(pkg_manager)" in
-	apt) echo "apt" ;;
-	pacman) echo "pacman" ;;
-	zypper) echo "zypper" ;;
-	dnf) echo "dnf" ;;
-	brew) echo "homebrew" ;;
-	*) echo "" ;;
-	esac
+	local pm
+	pm=$(pkg_manager)
+	[ "$pm" = brew ] && pm=homebrew
+	echo "$pm"
 }
 
 print_platform() {
@@ -114,9 +111,6 @@ _strategy_hint() {
 		;;
 	go)
 		echo "go install $args"
-		;;
-	cargo)
-		echo "cargo install $args"
 		;;
 	pip)
 		echo "pip3 install --user $args"

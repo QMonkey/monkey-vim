@@ -14,20 +14,33 @@
 #               match:bin (companion whose major.minor version must equal
 #               <bin>'s — zls vs zig; master missing ⇒ pass)
 #     desc      printed text (default: id)
-#     install   pkg (default) | pkg:name,name | npm:x | go:x | cargo:x |
+#     install   pkg (default) | pkg:name,name | npm:x | go:x |
 #               pip:x | brew:x | rustup | rustup-component:x |
 #               python-unversioned | zig-zls-pair | none
+#               The kind token is the manager's own id, not a label: `brew`
+#               is what pkg_manager() returns for macOS and what lib/brew.sh
+#               is named after (npm/go/pip likewise → lib/toolchain.sh). The
+#               three are one contract — specs in consumer repos carry these
+#               tokens as DATA, so a rename must ship with the scripts/
+#               propagation, never ahead of it (an unknown kind falls through
+#               install_strategy_step's *) arm to install_pkg and is dropped
+#               as an index miss, i.e. a near-silent no-op).
 #     ver_regex version regex (default: [0-9]+\.[0-9]+)
 #     fallback  binary accepted instead of id (warn, not fail)
 #     token     version output must mention this (warn only)
 #     group     optional-checks display group (empty = ungrouped)
 #
-# Sections of REQUIRED_CHECKS:
+# Sections of REQUIRED_CHECKS (the ordered, sectioned list run_required_checks
+# walks; a blank line closes every section):
 #   @header|Title   bold section title (a blank line precedes every title
-#                   after the first section; the section is closed by a blank)
+#                   after the first section)
 #   @note|text      indented note line under the current title
 #   @clipboard      clipboard check (CHECK_CLIPBOARD=required)
 #   @config         "Config files" section (CONFIG_PHASE=required)
+#   @call|fn        hands the line to a project-defined check function (it
+#                   prints its own ok/warn/fail line and records with
+#                   "record_missing required <id>")
+#   anything else   one dependency spec
 #
 # The INSTALL machinery over these specs lives elsewhere: install_strategy /
 # install_strategy_step in lib/pkg.sh, the missing-installer passes in
@@ -39,8 +52,7 @@ MISSING_RECOMMENDED=()
 MISSING_OPTIONAL=()
 
 parse_spec() {
-	# Plain heredoc, NOT a herestring (`<<<`): legacy sh.vim misparses `<<<`
-	# and breaks highlighting for the rest of the file.
+	# Plain heredoc, NOT a herestring — see the note in tty.sh's _is_interactive_shell.
 	IFS='|' read -r SPEC_ID SPEC_CHECK SPEC_DESC SPEC_INSTALL SPEC_VER_RE SPEC_FALLBACK SPEC_TOKEN SPEC_GROUP <<EOF
 $1
 EOF
@@ -295,16 +307,7 @@ check_main_version() {
 	echo ""
 }
 
-# REQUIRED_CHECKS is an ordered, sectioned list:
-#   @header|Title   bold section title (a blank line precedes every title
-#                   after the first section)
-#   @note|text      indented note under the current title
-#   @config         the "Config files" section (CONFIG_PHASE=required)
-#   @clipboard      clipboard check (CHECK_CLIPBOARD=required)
-#   @call|fn        project-defined check function (print your own line with
-#                   ok/warn/fail and record with "record_missing required id")
-#   anything else    one dependency spec
-# A blank line closes each section.
+# REQUIRED_CHECKS markers: see the list at the top of this file.
 run_required_checks() {
 	REQUIRED_FAILURES=0
 	MISSING_REQUIRED=()

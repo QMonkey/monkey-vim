@@ -24,7 +24,7 @@ render() {
 		return 1
 	fi
 	if ! have_native_cmd gomplate; then
-		fail "render: gomplate not found — brew install gomplate, or fetch the release binary https://github.com/hairyhenderson/gomplate/releases/latest/download/gomplate_$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/'), then re-run."
+		fail "render: gomplate not found — run the dependency pass (checkhealth.sh --install; the spec declares pkg,brew:gomplate, so Homebrew provisions it and bootstraps Homebrew itself when the host has none), or fetch the release binary https://github.com/hairyhenderson/gomplate/releases/latest/download/gomplate_$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/'), then re-run."
 		return 1
 	fi
 	mkdir -p "$(dirname "$outfile")"
