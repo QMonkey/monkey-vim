@@ -478,7 +478,7 @@ install_step_prepare() {
 	ensure_xdg_runtime_dir
 	install_vim_build_deps
 	echo ""
-	install_linuxbrew
+	ensure_homebrew
 	echo ""
 }
 install_step_tool() {
