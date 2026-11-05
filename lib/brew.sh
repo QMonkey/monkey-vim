@@ -1,9 +1,10 @@
-# monkey-scripts/lib/brew.sh — Homebrew: install_pkg's fallback manager and
-# the BREW_FIRST lane, plus the installer itself. Sourced by
-# lib/bootstrap.sh (both entry points — install_pkg needs the runtime side
-# under checkhealth --install too).
+# monkey-scripts/lib/brew.sh — Homebrew: the package manager pkg_manager
+# assigns to macOS, install_pkg's index-miss fallback on Linux, the BREW_FIRST
+# lane, and the bootstrap (ensure_homebrew). Sourced by lib/bootstrap.sh (both
+# entry points — install_pkg needs the runtime side under checkhealth --install
+# too).
 #
-# NOTE: install_linuxbrew fetches the installer through fetch_url_or_clone
+# NOTE: ensure_homebrew fetches the installer through fetch_url_or_clone
 # (lib/clone.sh) — clone.sh therefore also lives in the bootstrap common set.
 
 # ──────────────────────────── Homebrew ────────────────────────────
@@ -157,10 +158,14 @@ cleanup_timed_out_brew() {
 
 # One brew install with the standard retry ladder; returns the exit code.
 # Heavy-formula timeout FLOOR applied here (not per call site) so every
-# brew lane gets it uniformly. NO_INTERACTIVE/NO_ASK make brew fail fast
-# instead of prompting: the retry child sits in a NON-foreground process
-# group where ANY prompt freezes on SIGTTIN. env(1) carries the flags —
-# a bare VAR=x prefix would be parsed as the command name by retry's getopts.
+# brew lane gets it uniformly. HOMEBREW_NO_ASK makes brew fail fast instead
+# of prompting: it is brew's --no-ask switch (the ask gate also skips itself
+# without a TTY), and the retry child sits in a NON-foreground process group
+# where ANY prompt freezes on SIGTTIN. The installer's silent flag is a
+# different knob and a different call site — NONINTERACTIVE=1 belongs to
+# Homebrew/install and is set there (ensure_homebrew), not on `brew install`.
+# env(1) carries the flags — a bare VAR=x prefix would be parsed as the
+# command name by retry's getopts.
 brew_install_retry() {
 	local t="$1" desc="$2"
 	shift 2
@@ -181,7 +186,7 @@ brew_install_retry() {
 	# -H hook: runs in this shell after every attempt, before the backoff
 	# sleep (a post-loop backstop could only clean up after ALL attempts
 	# had already died on the lock).
-	retry -t "$t" -H cleanup_timed_out_brew -s "$desc" env HOMEBREW_NO_INTERACTIVE=1 HOMEBREW_NO_ASK=1 brew install "$@" || brc=$?
+	retry -t "$t" -H cleanup_timed_out_brew -s "$desc" env HOMEBREW_NO_ASK=1 brew install "$@" || brc=$?
 	return "$brc"
 }
 
@@ -202,7 +207,13 @@ ensure_brew_unpack_tools() {
 	done
 }
 
-install_linuxbrew() {
+# ensure_homebrew — idempotent Homebrew/Linuxbrew bootstrap: reuse a brew on
+# PATH, adopt one at a known prefix, else install it. Named ensure_* rather
+# than install_linuxbrew because it serves macOS too (BREW_PREFIXES carries
+# /opt/homebrew) and installs nothing when brew is already present. Callers in
+# the brew lanes probe `have_native_cmd brew` first so the redundant call —
+# and its report line — only happens on a host that truly needs the bootstrap.
+ensure_homebrew() {
 	local brew_prefix="" cand
 	if have_native_cmd brew; then
 		brew_prefix="$(dirname "$(dirname "$(command -v brew)")")"
@@ -233,7 +244,12 @@ install_linuxbrew() {
 			warn "Homebrew installer download failed — continuing without Homebrew."
 			return 0
 		fi
-		NONINTERACTIVE=1 /bin/bash "$installer" ||
+		# stdin from /dev/null: on macOS the installer takes its GUI route to
+		# the Xcode Command Line Tools only when `test -t 0` holds (after the
+		# headless softwareupdate route), and then blocks on `getc` — a prompt
+		# in a retry/timeout child freezes on SIGTTIN. With no TTY the popup
+		# branch is unreachable and NONINTERACTIVE is self-imposed anyway.
+		NONINTERACTIVE=1 /bin/bash "$installer" < /dev/null ||
 			warn "Homebrew installer failed — continuing without Homebrew."
 		rm -f "$installer"
 

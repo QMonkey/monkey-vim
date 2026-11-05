@@ -12,7 +12,7 @@
 #   shell_env_files / append_env_block — which profile files exist and how
 #       blocks land in them
 
-# Homebrew prefixes: the single source of truth. install_linuxbrew probes
+# Homebrew prefixes: the single source of truth. ensure_homebrew probes
 # these to adopt an existing install; export_path seeds each real prefix's
 # bin dir as the brew PATH tier. /usr/local/bin stays out of the tier: a
 # system path the default PATH already carries (see bin_dirs).
@@ -379,7 +379,7 @@ persist_path() {
 }
 
 # persist_brew_path <brew_prefix> — Homebrew's profile block, called by
-# install_linuxbrew at install/adopt time. Separate from persist_path:
+# ensure_homebrew at install/adopt time. Separate from persist_path:
 # POSITIONAL insertion that a prepend case-line cannot express, and it
 # runs even when PERSIST_PATH=0.
 persist_brew_path() {
@@ -390,7 +390,6 @@ persist_brew_path() {
 	append_env_block "Homebrew PATH (before Windows shims)" "$block" "head"
 }
 
-# ────────────────────── compositor autostart (guarded VT login) ──────────────────────
 # _path_pre_win_snippet <dir>... — the ONE rendering of the positioning
 # algorithm for a GROUP of dirs installed as a unit (brew's bin+sbin):
 # no-op when ANY group dir is already in PATH; insert before the FIRST

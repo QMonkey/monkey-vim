@@ -7,8 +7,11 @@
 #
 # Sibling domains (sourced alongside, called at runtime):
 #   lib/distro.sh     the distro package-manager family (apt / pacman /
-#                     zypper / dnf + AUR) — install_pkg's PRIMARY lane
-#   lib/brew.sh       Homebrew — install_pkg's fallback and BREW_FIRST lane
+#                     zypper / dnf + AUR) — the manager pkg_manager names on
+#                     Linux, where install_pkg drives it as the primary lane
+#   lib/brew.sh       Homebrew — the manager pkg_manager names on macOS,
+#                     install_pkg's index-miss fallback on Linux, the
+#                     BREW_FIRST lane, and ensure_homebrew (its bootstrap)
 #   lib/toolchain.sh  language-ecosystem installers (rustup / go / npm / pip)
 #     — install_strategy_step dispatches into all three domain files.
 #
@@ -55,8 +58,14 @@ warn_unknown_pkgs() {
 	done
 }
 
-# System package install with Homebrew fallback. Gated on INSTALL_MODE
-# (checkhealth installs only under --install); recycles bash's command hash.
+# Install a batch of package names through this OS's package manager, as
+# decided by pkg_manager: Homebrew IS the manager on macOS; on Linux the
+# system manager is primary and Homebrew is the second lane. That ordering is
+# a coverage judgement — Homebrew carries a broader set at current versions,
+# so it takes the names the distro index lacks, plus the names a project
+# declares it wants from bottles (BREW_FIRST, the brew: strategy step). Gated
+# on INSTALL_MODE (checkhealth installs only under --install); recycles bash's
+# command hash.
 #
 # Both managers get a probe pass before their batch: one unknown name aborts
 # the WHOLE transaction, so probe_pkg_name / probe_brew_name drop such names
@@ -77,12 +86,21 @@ install_pkg() {
 			rest+=("$p")
 		fi
 	done
-	# System-manager batch FIRST, Homebrew LAST: every `brew` invocation
-	# resets the sudo timestamp (brew.sh runs `sudo --reset-timestamp` at
-	# startup), so any sudo work after a brew call would re-prompt. Doing all
-	# sudo work before brew keeps the run at one password entry.
+	# Within ONE call the system batch goes FIRST and the Homebrew batch
+	# LAST: every `brew` invocation resets the sudo timestamp (brew.sh runs
+	# `sudo --reset-timestamp` at startup), so sudo work after a brew call
+	# needs a fresh ticket. The NOPASSWD drop-in removes that cost (see
+	# sudo_cmd), which makes this a scheduling detail — one password entry
+	# either way — and NOT the reason Homebrew sits below the system manager
+	# on Linux; that is the coverage judgement in the header above.
 	if ((${#rest[@]} > 0)); then
 		install_sys_pkg "${rest[@]}" || {
+			local pmgr; pmgr="$(pkg_manager)"
+			# No system manager on this OS (macOS) means brew IS the manager,
+			# so a host without brew yet gets it installed here rather than
+			# losing the request. Where a system manager exists, brew stays
+			# the index-miss fallback and is never bootstrapped from here.
+			if [ "$pmgr" = brew ] && ! have_native_cmd brew; then ensure_homebrew; fi
 			if have_native_cmd brew; then
 				# Brew is the fallback for names the system index LACKS —
 				# never for system-packaged tools whose install failed (a
@@ -90,10 +108,10 @@ install_pkg() {
 				# and mako from bottles on arch while pacman was down). An
 				# unreachable index makes every probe reject, so the canary
 				# below skips the fallback during outages (the outer retry
-				# heals later). macOS: no system manager — brew is primary.
+				# heals later).
 				local -a bpkg=()
-				local b canary fallback_allowed=1
-				if [ "${OS:-}" != macos ]; then
+				local b canary fallback_allowed=1 bdesc="brew install (fallback)"
+				if [ "$pmgr" != brew ]; then
 					canary=$(_pkg_index_canary)
 					if [ -n "$canary" ] && ! probe_pkg_name "$canary"; then
 						warn "system package index unreachable — skipping the brew fallback; the retry loop heals later."
@@ -105,6 +123,7 @@ install_pkg() {
 						done
 					fi
 				else
+					bdesc="brew install"
 					for b in "${rest[@]}"; do bpkg+=("$(pkg_name "$b" brew)"); done
 				fi
 				if [ "$fallback_allowed" -eq 1 ]; then
@@ -112,7 +131,7 @@ install_pkg() {
 					# All names filtered: the arithmetic test fails and _rc
 					# records it — same as an actual failed brew call.
 					if ((${#PKG_VALID[@]} > 0)); then
-						brew_install_retry "$RETRY_T_NET" "brew install (fallback)" ${PKG_VALID[@]+"${PKG_VALID[@]}"}
+						brew_install_retry "$RETRY_T_NET" "$bdesc" ${PKG_VALID[@]+"${PKG_VALID[@]}"}
 					else
 						false
 					fi
@@ -205,7 +224,7 @@ install_strategy() {
 }
 
 # ──────────────────────── install strategies ────────────────────────
-# Runs one install step: <kind> picks the installer (pkg | npm | go | cargo
+# Runs one install step: <kind> picks the installer (pkg | npm | go
 # | pip | brew | rustup | rustup-component | python-unversioned | none) and
 # <args> is its package argument. Returns non-zero when the step failed.
 # The integration point over every package manager's installer in this
@@ -235,10 +254,6 @@ install_strategy_step() {
 		;;
 	go)
 		go_install $args
-		;;
-	cargo)
-		ensure_rust || return 1
-		retry -t "$RETRY_T_NET" -s "cargo install $args" cargo install $args
 		;;
 	pip)
 		# ensure_pip first: the fallback dies with command-not-found when
@@ -272,6 +287,11 @@ install_strategy_step() {
 			retry -t "$RETRY_T_NET" -s "pip3 install $args" sudo_cmd pip3 install $sys_flags $args
 		;;
 	brew)
+		# Self-heal the manager like the rustup/npm/pip arms do — a spec
+		# declaring brew:x must not dead-end on a host that has no brew yet.
+		# Guarded on the cheap probe so a present brew costs one command -v
+		# and no report line.
+		if ! have_native_cmd brew; then ensure_homebrew; fi
 		have_native_cmd brew || return 1
 		# Heavy-formula timeout floors (zig / zls / marksman) live inside
 		# brew_install_retry — uniform across every brew lane.

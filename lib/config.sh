@@ -16,6 +16,9 @@
 #   "keep"       — an existing target is skipped with an info line and a
 #                  missing source is skipped silently (efm-langserver,
 #                  .clang-format — the repo may not even ship the source),
+#   "takeover"   — this repo owns the config: re-point a foreign symlink,
+#                  back up a foreign file and link (details below); a foreign
+#                  directory is left alone with rc 1,
 #   "strict"     — checkhealth only: the link must resolve to THIS repo.
 
 # ──────────────────────── install side ────────────────────────
@@ -150,7 +153,7 @@ probe_advisory() {
 		cmd)
 			have_native_cmd "$tok" && found="$tok" && break
 			;;
-		path | exec | marker)
+		path | exec)
 			case "$tok" in
 			*/)
 				if [ -d "${tok%/}" ] && [ -n "$(ls -A "${tok%/}" 2>/dev/null)" ]; then

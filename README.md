@@ -22,8 +22,8 @@ Nothing generic is duplicated per project.
 | `lib/sudo.sh`      | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                                                |
 | `lib/pkg.sh`       | Dispatch core: `install_pkg` orchestrator, install-strategy dispatcher, shared batch classifier                               |
 | `lib/distro.sh`    | Distro package managers (apt/pacman/zypper/dnf + AUR): `pkg_name` mapping, index refresh/probe, `install_sys_pkg`, build deps |
-| `lib/brew.sh`      | Homebrew: `install_pkg`'s fallback manager, `BREW_FIRST` lane, the installer itself                                           |
-| `lib/toolchain.sh` | Language-ecosystem toolchains: rustup, go, npm, pip (`ensure_rust`, `ensure_npm`, …)                                          |
+| `lib/brew.sh`      | Homebrew: macOS's manager, `install_pkg`'s index-miss fallback on Linux, `BREW_FIRST` lane, `ensure_homebrew`                 |
+| `lib/toolchain.sh` | Language-ecosystem toolchains: rustup, go, npm, pip (`ensure_rust`, `ensure_node_and_npm`, …)                                 |
 | `lib/config.sh`    | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`)                                 |
 | `lib/env.sh`       | PATH seeding / persistence (`bin_dirs`, `export_path`), shell env files, autostart block, XDG_RUNTIME_DIR repair              |
 | `lib/checks.sh`    | Spec model, probes, checkhealth display sections (run_required_checks & friends)                                              |
@@ -102,11 +102,13 @@ id|check|desc|install|ver_regex|fallback|token|group
 - `id` — binary (or sentinel) name; recorded in `MISSING_*`, used for
   package-name lookups
 - `check` — `bin` (default) | `ext` | `anyof:a b c` | `anyofext:a b c` |
-  `ver:MIN`
+  `ver:MIN` | `ver:MIN!bad bad` (clears MIN but is known broken, exact
+  match) | `py:module` (Python module probe) | `match:bin` (companion whose
+  version must equal `bin`'s)
 - `desc` — printed text (default: `id`)
 - `install` — `pkg` (default) | `pkg:name,name` | `npm:x` | `go:x` |
-  `cargo:x` | `pip:x` | `brew:x` | `rustup` | `rustup-component:x` |
-  `python-unversioned` | `none`
+  `pip:x` | `brew:x` | `rustup` | `rustup-component:x` |
+  `zig-zls-pair` | `python-unversioned` | `none`
 - `ver_regex` — version regex (default: `[0-9]+\.[0-9]+`)
 - `fallback` — binary accepted instead of `id` (warn, not fail)
 - `token` — version output must mention this (warn only)
@@ -150,7 +152,8 @@ around (all optional):
 Config data:
 
 - `CONFIG_LINKS=( "src|dst|desc|mode|name|hint" )` — symlink checks.
-  `mode` = `link` (default) or `strict` (link must resolve into this repo);
+  `mode` = empty (default) or `strict` (the link must resolve into this
+  repo);
   `hint` is the verbatim missing-fail message when a project's upstream text
   differs from the generic one (`ln -sf` vs `ln -sfn`, literal placeholders,
   `mkdir` prefixes, …).
@@ -269,19 +272,29 @@ it directly.
 
 Data switches:
 
-| Switch                                   | Meaning                                                                                                                                                  |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step — `link_config <src> <dst> <mode>`; `keep` = skip an existing target with an info line, silently skip a missing source |
-| `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                                                                                         |
-| `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                                                                                              |
-| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                                                                                                 |
-| `PERSIST_PATH=1`                         | write go/bin & cargo/bin PATH exports to the detected shell profile (zsh → `~/.zprofile`, bash → `~/.profile`)                                           |
-| `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                                                                                              |
-| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                                                                                               |
-| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                                                                                      |
-| `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                                                                                            |
-| `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                                                                                          |
-| `BREW_FIRST=(pkg…)`                      | package names installed via Homebrew when available                                                                                                      |
+| Switch                                   | Meaning                                                                            |
+| ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step — `link_config <src> <dst> <mode>` (modes below) |
+| `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                   |
+| `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                        |
+| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                           |
+| `PERSIST_PATH=1`                         | write the `bin_dirs` PATH exports to the detected shell profile (below)            |
+| `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                        |
+| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                         |
+| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                |
+| `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                      |
+| `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                    |
+| `BREW_FIRST=(pkg…)`                      | package names installed via Homebrew when available                                |
+
+`SYMLINKS` modes: `keep` = an existing target is skipped with an info line and a
+missing source silently; `takeover` = this repo owns the config — a foreign symlink
+is re-pointed and a foreign file is moved to `<dst>.link-bak` first (a foreign
+directory is left alone, rc 1).
+
+`PERSIST_PATH=1` writes exactly what `bin_dirs` (`lib/env.sh`) emits: `~/.local/bin`,
+`GOBIN` or every `GOPATH` entry's bin, `${CARGO_HOME:-~/.cargo}/bin`,
+`~/.npm-global/bin`; the profile set comes from `shell_env_files` (zsh →
+`~/.zprofile`, bash → `~/.bash_profile` or `~/.profile`, plus `~/.bashrc`).
 
 Unlike `checkhealth.sh`, `fail()` aborts the installer at the first fatal
 step (`MONKEY_FAIL_EXITS=true`).
@@ -291,18 +304,18 @@ step (`MONKEY_FAIL_EXITS=true`).
 `os_detect` normalises `/etc/os-release` to one id per distro. Derivative
 distros are mapped to their base id; nothing else is shared:
 
-| id         | `/etc/os-release` ids mapped here               | manager  |
-| ---------- | ----------------------------------------------- | -------- |
-| `debian`   | debian                                          | apt      |
-| `ubuntu`   | ubuntu, linuxmint, pop, elementary, zorin       | apt      |
-| `arch`     | arch, manjaro, endeavouros                      | pacman   |
-| `opensuse` | opensuse, leap, tumbleweed, microos, suse, sles | zypper   |
-| `centos`   | centos, rhel, rocky, almalinux, ol              | dnf      |
-| `fedora`   | fedora                                          | dnf      |
-| `macos`    | darwin (uname)                                  | homebrew |
+| id         | `/etc/os-release` ids mapped here                                          | manager  |
+| ---------- | -------------------------------------------------------------------------- | -------- |
+| `debian`   | debian                                                                     | apt      |
+| `ubuntu`   | ubuntu, linuxmint, pop, elementary, zorin                                  | apt      |
+| `arch`     | arch, manjaro, endeavouros                                                 | pacman   |
+| `opensuse` | opensuse, opensuse-leap, opensuse-tumbleweed, opensuse-microos, suse, sles | zypper   |
+| `centos`   | centos, rhel, rocky, almalinux, ol                                         | dnf      |
+| `fedora`   | fedora                                                                     | dnf      |
+| `macos`    | darwin (uname)                                                             | homebrew |
 
 `OS` holds the id, and it is what every package table keys on
-(`pkg_name` in `lib/pkg.sh`) — so Ubuntu and Fedora carry their own
+(`pkg_name` in `lib/distro.sh`) — so Ubuntu and Fedora carry their own
 package names while only the _commands_ are shared, e.g. `debian | ubuntu)`
 for `apt-get install` and `centos | fedora)` for a plain `dnf install`. EPEL
 stays a CentOS-only step, since Fedora has no EPEL. `os_detect` is the only

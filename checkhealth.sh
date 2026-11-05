@@ -141,10 +141,8 @@ phase_run() {
 #   OPTIONAL_DONE_MSG="…"             printed after a non-empty optional
 #                                     install batch
 #
-# REQUIRED_CHECKS markers (see lib/checks.sh): "@header|Title" is printed
-# bold — embed ${NC} inside the title to end the bold span early, e.g.
-# "@header|python3${NC} (TIOCSTI injection)"; "@call|fn" hands the line to a
-# project-defined check function.
+# REQUIRED_CHECKS markers and their semantics: see the list at the top of
+# lib/checks.sh.
 # Project hooks that override the generic behaviour: print_header_extra,
 # checkhealth_extra, install_missing_required, install_missing_optional,
 # install_optional_bin (per-binary install table, used by the optional
