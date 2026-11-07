@@ -128,7 +128,7 @@ SUMMARY_LINES=(
 
 install_vim_build_deps() {
 	info "Installing Vim build dependencies..."
-	refresh_pkg
+	distro_refresh
 	case "$OS" in
 	debian | ubuntu)
 		common=(git curl build-essential
@@ -154,7 +154,7 @@ install_vim_build_deps() {
 			gui=(gtk4)
 		fi
 		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
-		retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
+		retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
 		;;
 	opensuse)
 		retry -t "$RETRY_T_NET" -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
@@ -478,7 +478,7 @@ install_step_prepare() {
 	ensure_xdg_runtime_dir
 	install_vim_build_deps
 	echo ""
-	ensure_homebrew
+	brew_ensure
 	echo ""
 }
 install_step_tool() {
