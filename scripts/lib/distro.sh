@@ -1,57 +1,36 @@
 # monkey-scripts/lib/distro.sh — the DISTRO package-manager family:
 # apt / pacman / zypper / dnf plus the AUR (arch's second repo set). Owns
 # everything "what does THIS distro's repository carry and how do I install
-# it": the pkg_name mapping, index refresh, index probing, the batch
-# installer, build-dep groups. Sourced by lib/bootstrap.sh; install_pkg
-# (lib/pkg.sh) drives it as the primary lane wherever pkg_manager names a
-# system manager — on macOS pkg_manager names brew.sh instead.
+# it": the name mapping, index refresh, index probing, the per-name
+# "installed" query, the batch installers, build-dep groups. Sourced by
+# lib/bootstrap.sh; the install chain (lib/pkg.sh) reaches it only through
+# the lane dispatchers there, as the "pkg" lane and the "aur" lane.
 #
 # Distro-specific quirks are deliberate here, not folded away: apt runs
 # fully non-interactive (three env layers), pacman needs stale-lock repair,
 # zypper resolves capabilities via a privileged dry-run, dnf pulls EPEL.
+# That is also why the chain dispatches to whole functions instead of
+# passing a manager id down and expecting a generic body.
 
-# ────────────────── system package managers ──────────────────
-# The ONE OS → package-manager mapping (apt | pacman | zypper | dnf | brew,
-# "" when nothing applies). Simple mappers (install hints, canary, display
-# name) dispatch through this; the install/probe/refresh paths keep their
-# explicit per-OS cases — their branches carry distro-specific behaviour
-# (apt env vars, the pacman lock, EPEL, zypper capabilities) that a flat id
-# cannot express.
-pkg_manager() {
-	case "${OS:-unknown}" in
-	debian | ubuntu) echo "apt" ;;
-	arch) echo "pacman" ;;
-	opensuse) echo "zypper" ;;
-	centos | fedora) echo "dnf" ;;
-	macos) echo "brew" ;;
-	*) echo "" ;;
-	esac
-}
-
-# Names that differ from the binary name for SOME package manager. The arms
+# ────────────────── package-name mapping ──────────────────
+# The tables below map a binary to a package name. The DOOR that selects
+# which table answers — pkg_name <bin> [lane], lib/pkg.sh — lives with the
+# other lane verbs, so a caller never has to know which file owns a namespace.
+# Names that differ from the binary name for SOME distro manager. The arms
 # below cover ONLY those (go→golang-go, node→nodejs, black→python3-black,
 # ...). A tool whose package name equals its command name (git, tmux,
 # ripgrep, fzf, ...) needs no row here — it falls through to `*) echo "$1"`
 # at the bottom. Editor/LSP/tooling names shared by monkey-nvim and
-# monkey-vim live here; a repo with a one-off mapping (monkey-sway's
-# swaymsg, monkey-hyprland's notif, ...) overrides pkg_name() after sourcing.
-pkg_name() {
+# monkey-vim live here; Homebrew's own mapping is brew_name (lib/brew.sh),
+# which pkg_name selects on macOS and for any brew-lane request.
+distro_name() {
 	case "${OS:-unknown}:$1" in
 	# Go / Node / shell utilities
 	debian:go | ubuntu:go) echo "golang-go" ;;
 	centos:go | fedora:go) echo "golang" ;;
 	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) echo "nodejs" ;;
-	# Rendering is gomplate (see scripts/lib/template.sh render); no Linux
-	# DISTRO repository packages it, so macOS is the only OS whose index name
-	# needs a row here. The provisioning order lives in the spec
-	# (pkg,brew:gomplate): the distro lane still runs first because it is the
-	# one that can reach a repository that does carry it (arch's AUR pass),
-	# and the brew lane is the declared fallback for every index that lacks
-	# it — self-healing through ensure_homebrew where brew is absent.
-	# envsubst/gettext is no longer a dependency.
-	macos:gomplate) echo "gomplate" ;;
 	debian:which | ubuntu:which) echo "debianutils" ;;
-	arch:python3 | macos:python3) echo "python" ;;
+	arch:python3) echo "python" ;;
 	# python3 needs no versioned mapping: Leap 16 ships a literal python3,
 	# Tumbleweed resolves it through the python313 capability. Same for
 	# `node` — `nodejs` resolves through the nodejs22/26 capability, which
@@ -95,12 +74,11 @@ pkg_name() {
 	# notification daemons: Debian/Ubuntu call mako "mako-notifier"
 	debian:mako | ubuntu:mako) echo "mako-notifier" ;;
 	# Editors / language servers / gtags tooling (monkey-nvim, monkey-vim)
-	debian:rg | ubuntu:rg | arch:rg | macos:rg | opensuse:rg | centos:rg | fedora:rg) echo "ripgrep" ;;
-	debian:ctags | ubuntu:ctags | macos:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
+	debian:rg | ubuntu:rg | arch:rg | opensuse:rg | centos:rg | fedora:rg) echo "ripgrep" ;;
+	debian:ctags | ubuntu:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
 	arch:ctags | fedora:ctags) echo "ctags" ;; # Arch & Fedora ship universal-ctags as "ctags"
 	debian:pygmentize | ubuntu:pygmentize) echo "python3-pygments" ;;
 	arch:pygmentize) echo "python-pygments" ;;
-	macos:pygmentize) echo "pygments" ;;
 	opensuse:pygmentize) echo "python3-Pygments" ;; # capability: python313-Pygments provides it
 	centos:pygmentize | fedora:pygmentize) echo "python3-pygments" ;;
 	debian:pylsp | ubuntu:pylsp) echo "python3-pylsp" ;;
@@ -110,7 +88,7 @@ pkg_name() {
 	# drops it → the spec's pip fallback installs).
 	debian:python-lsp-black | ubuntu:python-lsp-black) echo "python3-pylsp-black" ;;
 	opensuse:python-lsp-black) echo "python3-python-lsp-black" ;;
-	arch:pylsp | macos:pylsp) echo "python-lsp-server" ;;
+	arch:pylsp) echo "python-lsp-server" ;;
 	opensuse:pylsp) echo "python3-python-lsp-server" ;; # Leap has NO provider — probe fails → pip fallback (correct)
 	centos:pylsp | fedora:pylsp) echo "python3-lsp-server" ;;
 	# Debian/Ubuntu split clangd & clang-tidy into unversioned metapackages
@@ -119,9 +97,8 @@ pkg_name() {
 	arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
 	debian:clangd | ubuntu:clangd) echo "clangd" ;;
 	debian:clang-tidy | ubuntu:clang-tidy) echo "clang-tidy" ;;
-	macos:clangd | macos:clang-tidy) echo "llvm" ;;
 	centos:clangd | centos:clang-tidy | fedora:clangd | fedora:clang-tidy) echo "clang-tools-extra" ;;
-	arch:g++ | macos:g++) echo "gcc" ;;
+	arch:g++) echo "gcc" ;;
 	opensuse:g++ | centos:g++ | fedora:g++) echo "gcc-c++" ;;
 	arch:black) echo "python-black" ;;
 	opensuse:black) echo "python3-black" ;;
@@ -136,7 +113,7 @@ pkg_name() {
 # demand, brew auto-updates). Guarded to one refresh per run — call freely.
 PKG_DB_REFRESHED=0
 
-refresh_pkg() {
+distro_refresh() {
 	[ "$PKG_DB_REFRESHED" -eq 1 ] && return 0
 	PKG_DB_REFRESHED=1
 	case "$OS" in
@@ -144,7 +121,7 @@ refresh_pkg() {
 	arch)
 		clear_stale_pacman_lock
 		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
-		retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman -Sy" sudo_cmd pacman -Sy
+		retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman -Sy" sudo_cmd pacman -Sy
 		;;
 	opensuse) retry -t "$RETRY_T_NET" -s "zypper refresh" sudo_cmd zypper --non-interactive refresh ;;
 	centos | fedora) retry -t "$RETRY_T_NET" -s "dnf makecache" sudo_cmd dnf makecache -q ;;
@@ -177,7 +154,7 @@ clear_stale_pacman_lock() {
 # and clear the lock. Called two ways: bare (caller already verified the
 # timeout — always cleans up) or via retry's -H hook with the attempt's
 # exit code as $1 (only 124 leaves an orphan to reap).
-cleanup_timed_out_pacman() {
+distro_cleanup_timed_out() {
 	case "${1-}" in
 	"" | 124) ;;   # bare call or a timeout — clean up
 	*) return 0 ;; # any other explicit exit code — nothing to reap
@@ -192,8 +169,12 @@ cleanup_timed_out_pacman() {
 # Read-only existence checks against the package index; a name the probe
 # cannot vouch for is dropped from its install batch. The apt probe greps
 # `apt-cache show` — purely virtual packages carry no "Package:" record.
+# None of them refreshes the metadata (--no-refresh on zypper): the run
+# refreshes once through distro_refresh, and a probe that refreshed again
+# would pay the network for every name it is asked about. The contract the
+# probes must satisfy lives in lib/pkg.sh (the lane verbs).
 
-probe_pkg_name() {
+distro_probe() {
 	case "$OS" in
 	debian | ubuntu)
 		command -v apt-cache >/dev/null 2>&1 || return 0
@@ -219,11 +200,11 @@ probe_pkg_name() {
 		# name on Tumbleweed while literal names passed `zypper info`.
 		# rc 104 (INF_CAP_NOT_FOUND) is the ONLY "not found" verdict; any
 		# other failure must NOT filter the name.
-		if zypper --non-interactive info "$1" >/dev/null 2>&1; then
+		if zypper --non-interactive --no-refresh info "$1" >/dev/null 2>&1; then
 			return 0
 		fi
 		local rc=0
-		sudo_cmd zypper --non-interactive install --dry-run "$1" >/dev/null 2>&1 || rc=$?
+		sudo_cmd zypper --non-interactive --no-refresh install --dry-run "$1" >/dev/null 2>&1 || rc=$?
 		[ "$rc" -ne 104 ]
 		;;
 	centos | fedora)
@@ -234,15 +215,79 @@ probe_pkg_name() {
 	esac
 }
 
+# distro_installed <pkgname> — does the LOCAL database own this package?
+# The per-name truth after a transaction returned non-zero: a timed-out
+# install can have finished (the timeout kills the wrapper after the files
+# land), and the chain must not hand such a name to another lane — a second
+# copy on PATH is worse than a retry. Batch rc is not a per-name verdict, and
+# a command-name probe cannot substitute (package names are not binary names:
+# NetworkManager-applet, python3-lsp-server, debianutils). Read-only, and the
+# managers' own query verbs — no solver, no network.
+distro_installed() {
+	case "$OS" in
+	debian | ubuntu)
+		command -v dpkg-query >/dev/null 2>&1 || return 1
+		# "ii" = installed OK; rc alone is 0 for a known-but-removed package,
+		# so the status field is the verdict. Glob, not equality: command
+		# substitution strips the field's trailing space ("ii " → "ii"), and
+		# a `[ x = "ii " ]` test would then never match anything.
+		local st
+		st=$(dpkg-query -W -f='${db:Status-Abbrev}' "$1" 2>/dev/null) || return 1
+		case "$st" in ii*) return 0 ;; esac
+		return 1
+		;;
+	arch)
+		command -v pacman >/dev/null 2>&1 || return 1
+		pacman -Qi "$1" >/dev/null 2>&1
+		;;
+	opensuse | centos | fedora)
+		command -v rpm >/dev/null 2>&1 || return 1
+		# --whatprovides, not a bare -q: the names these lanes install are
+		# OFTEN capabilities (measured on Tumbleweed — `rpm -q python3-pip`
+		# says "no" while python313-pip is installed and provides it, and
+		# nodejs resolves through nodejs26/28). A plain -q would call those
+		# deliveries failures and hand the name to the next lane — the exact
+		# double copy this verb exists to prevent. An available-but-not-
+		# installed name still answers "no": rpm's database is local only.
+		rpm -q --whatprovides "$1" >/dev/null 2>&1
+		;;
+	*) return 1 ;; # Homebrew owns macOS (brew_installed, lib/brew.sh)
+	esac
+}
+
+# ────────────────── index reachability ──────────────────
+# A package present in every repo set of its distro — the canary that says
+# whether distro_probe's "not carried" answers mean anything. Probing
+# against a dead mirror rejects EVERY name, and treating those rejections as
+# coverage gaps is how wl-clipboard, wireplumber and mako once got installed
+# from bottles while pacman was down. The chain asks before letting a later
+# lane act on an index miss; macOS has no system index and no canary.
+_pkg_index_canary() {
+	case "$(pkg_manager)" in
+	apt) echo "dpkg" ;;
+	pacman | zypper | dnf) echo "filesystem" ;;
+	*) return 1 ;;
+	esac
+}
+
+distro_index_ok() {
+	local canary
+	# No canary (unsupported / absent manager) means nothing to distrust:
+	# the lane's own probes and transactions are the only verdict left.
+	canary="$(_pkg_index_canary)" || return 0
+	[ -n "$canary" ] || return 0
+	distro_probe "$canary"
+}
+
 # The version the DISTRO REPO offers for a package (not the installed one):
 # normalized to X.Y, empty when no repo carries it. Sibling of
-# probe_pkg_name — answers "repo install or source build?".
-repo_pkg_version() {
+# distro_probe — answers "repo install or source build?".
+distro_version() {
 	local ver=""
 	case "$OS" in
 	debian | ubuntu) ver=$(apt-cache policy "$1" 2>/dev/null | awk '/Candidate:/{print $2}') ;;
 	arch) ver=$(LC_ALL=C pacman -Si "$1" 2>/dev/null | awk '/^Version[[:space:]]*:/ {print $3; exit}') ;;
-	opensuse) ver=$(LC_ALL=C zypper --non-interactive info "$1" 2>/dev/null | awk -F': *' '/^Version/{print $2; exit}') ;;
+	opensuse) ver=$(LC_ALL=C zypper --non-interactive --no-refresh info "$1" 2>/dev/null | awk -F': *' '/^Version/{print $2; exit}') ;;
 	# repoquery reads the REPO metadata only (installed state irrelevant,
 	# which is why `dnf list available` was wrong: it omits installed
 	# packages), and %{VERSION} carries no epoch prefix (`dnf list` shows
@@ -253,26 +298,23 @@ repo_pkg_version() {
 }
 
 # ────────────────── installs ──────────────────
-# Low-level system install, used inside install_pkg and as the brew-failure
-# fallback — returns non-zero when the OS is unknown, every name fails its
-# probe, or the manager fails.
-install_sys_pkg() {
-	refresh_pkg
-	# Names the official index does not know may still live in the AUR
-	# (wlogout was dropped from [extra]) — set them aside for the AUR pass
-	# below instead of losing them to the unknown-name warning.
-	filter_pkgs_warn probe_pkg_name "$@"
-	local -a aur_pkgs=()
-	if [ "$OS" = arch ] && ((${#UNKNOWN_PKGS[@]} > 0)); then
-		aur_pkgs=(${UNKNOWN_PKGS[@]+"${UNKNOWN_PKGS[@]}"})
-	fi
+# The "pkg" lane's batch installer: refresh, filter, ONE transaction for
+# every name this index carries. The chain calls it through pkg_install;
+# install_build_deps calls it directly because its argument space is GROUPS
+# (base-devel, build-essential) that no index probe can vouch for. That is
+# also why the filter here stays silent: WHO reports the dropped names is the
+# caller's decision — chain_install reports once at the end of the walk (a
+# lane must not call a name "skipped" while a later lane is about to install
+# it), install_build_deps calls warn_unknown_pkgs itself.
+#
+# PKG_VALID / UNKNOWN_PKGS after the call ARE the lane's verdicts (carried /
+# not carried). The return status is the TRANSACTION result, never a per-name
+# answer — the chain asks distro_installed for that.
+distro_install() {
+	distro_refresh
+	filter_pkgs distro_probe "$@"
 	if [ ${#PKG_VALID[@]} -eq 0 ]; then
-		# arch-only: an all-unknown batch still gets its AUR chance.
-		if [ "$OS" = arch ]; then
-			install_aur_pkgs ${aur_pkgs[@]+"${aur_pkgs[@]}"}
-			return "$?"
-		fi
-		return 1
+		return 1 # an all-unknown batch is a NOT_INDEXED verdict, not a failure
 	fi
 	case "$OS" in
 	debian | ubuntu)
@@ -296,10 +338,7 @@ install_sys_pkg() {
 		local rc=0
 		clear_stale_pacman_lock
 		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
-		retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman install" sudo_cmd pacman -S --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
-		# The official batch landed (or not) — the dropped names still get
-		# their AUR pass; its failure does not undo the pacman result.
-		((${#aur_pkgs[@]} > 0)) && install_aur_pkgs ${aur_pkgs[@]+"${aur_pkgs[@]}"}
+		retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman install" sudo_cmd pacman -S --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
 		return "$rc"
 		;;
 	opensuse) retry -t "$RETRY_T_NET" -s "zypper install" sudo_cmd zypper --non-interactive install -y ${PKG_VALID[@]+"${PKG_VALID[@]}"} ;;
@@ -315,19 +354,7 @@ install_sys_pkg() {
 		[[ " ${_args[*]} " =~ " global " ]] && _args+=(global-ctags)
 		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${_args[@]}"
 		;;
-	macos) return 1 ;; # Homebrew owns macOS — install_pkg routes there
-	*) return 1 ;;
-	esac
-}
-
-# A package present in every repo set of its distro — the probe canary for
-# install_pkg's brew fallback: when the canary itself probes negative, the
-# index is unreachable (network outage) and every "unknown" verdict is a
-# false negative. macOS: no system manager, no canary.
-_pkg_index_canary() {
-	case "$(pkg_manager)" in
-	apt) echo "dpkg" ;;
-	pacman | zypper | dnf) echo "filesystem" ;;
+	macos) return 1 ;; # Homebrew owns macOS — the chain routes those names to brew
 	*) return 1 ;;
 	esac
 }
@@ -350,7 +377,7 @@ install_build_deps() {
 		return 0
 		;;
 	esac
-	refresh_pkg
+	distro_refresh
 	local -a names=()
 	local group
 	for group in "$@"; do
@@ -413,11 +440,18 @@ install_build_deps() {
 	done
 	names=("${unique[@]}")
 	((${#names[@]} > 0)) || return 0
+	# Deliberately NOT the chain: build dependencies are package GROUPS
+	# (base-devel on arch is a group, not a package, so no index probe can
+	# vouch for it) and an unmatched group name must never become a reason to
+	# go looking in the AUR or in bottles. One lane, chosen by OS, and this
+	# caller reports what that lane refused — distro_install filters silently
+	# because the chain reports at the end of its walk instead.
 	if [ "$OS" = macos ]; then
-		brew_install_retry "$RETRY_T_NET" "brew install build deps" ${names[@]+"${names[@]}"}
+		brew_install ${names[@]+"${names[@]}"}
 	else
-		install_sys_pkg ${names[@]+"${names[@]}"}
+		distro_install ${names[@]+"${names[@]}"}
 	fi
+	warn_unknown_pkgs
 	hash -r
 }
 
@@ -430,7 +464,7 @@ install_build_deps() {
 # build would not pull a full Rust toolchain onto every machine.
 AUR_HELPER=paru
 
-have_aur_helper() {
+aur_have_helper() {
 	[ "$OS" = arch ] || return 1
 	have_native_cmd "$AUR_HELPER"
 }
@@ -454,7 +488,7 @@ _ensure_aur_variant() {
 	# die with "PKGBUILD does not exist" on every run, leaving every
 	# AUR-only package (wlogout) unavailable. -H: makepkg's `pacman -U`
 	# child can be orphaned holding db.lck.
-	(cd "$dir" && retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "AUR $pkg build" makepkg -si --noconfirm) || rc=$?
+	(cd "$dir" && retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "AUR $pkg build" makepkg -si --noconfirm) || rc=$?
 	rm -rf "$dir"
 	return "$rc"
 }
@@ -475,12 +509,12 @@ _remove_dead_aur_helper_pkg() {
 	return 0
 }
 
-ensure_aur_helper() {
-	if have_aur_helper && "$AUR_HELPER" --version >/dev/null 2>&1; then
+aur_ensure() {
+	if aur_have_helper && "$AUR_HELPER" --version >/dev/null 2>&1; then
 		return 0
 	fi
 	[ "$OS" = arch ] || return 1
-	if have_aur_helper; then
+	if aur_have_helper; then
 		warn "$AUR_HELPER exists but cannot run (system libalpm moved past its build?) — removing it and building from source..."
 		_remove_dead_aur_helper_pkg "$AUR_HELPER"
 	else
@@ -489,12 +523,12 @@ ensure_aur_helper() {
 	# base-devel is a package GROUP, not a package — a pacman -Si probe
 	# cannot vouch for it, so install straight through pacman (--needed
 	# keeps it a no-op when the toolchain exists).
-	refresh_pkg
-	retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "pacman install base-devel git" sudo_cmd pacman -S --needed --noconfirm base-devel git || return 1
+	distro_refresh
+	retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman install base-devel git" sudo_cmd pacman -S --needed --noconfirm base-devel git || return 1
 	local rc=0
 	_ensure_aur_variant "$AUR_HELPER" || rc=$?
 	hash -r
-	if [ "$rc" -eq 0 ] && have_aur_helper && "$AUR_HELPER" --version >/dev/null 2>&1; then
+	if [ "$rc" -eq 0 ] && aur_have_helper && "$AUR_HELPER" --version >/dev/null 2>&1; then
 		ok "$AUR_HELPER ready."
 	else
 		rc=1
@@ -503,29 +537,40 @@ ensure_aur_helper() {
 	return "$rc"
 }
 
-probe_aur_name() {
+aur_probe() {
 	# `paru -Si` is an AUR-RPC query and fails on an unknown name. Probes are
 	# single-shot by policy — a transient failure drops the name and the
 	# outer retry heals. Without a helper: don't filter.
-	have_aur_helper || return 0
+	aur_have_helper || return 0
 	"$AUR_HELPER" -Si "$1" >/dev/null 2>&1
 }
 
-# AUR batch install for names the official index does not carry. Filtered
-# first (one bad name fails the whole paru transaction, same policy as the
-# pacman/brew probes); retried like every other network operation.
-install_aur_pkgs() {
+# The AUR lane's per-name install query. paru builds into the local pacman
+# database like any other package, so the distro query answers for it —
+# keeping this a separate verb is what lets the chain ask "did THIS lane
+# deliver it" without assuming the two repo sets share a verdict.
+aur_installed() {
+	distro_installed "$@"
+}
+
+# AUR batch install for names the official index does not carry — the "aur"
+# lane of the chain (and the arch lane pair's whole reason for existing:
+# tools move out of [extra] and would otherwise be dropped forever).
+# Filtered first (one bad name fails the whole paru transaction, same policy
+# as the pacman/brew probes), retried like every other network operation,
+# silent like every other lane installer: the chain reports.
+aur_install() {
 	[ "$OS" = arch ] || return 0
 	(($# > 0)) || return 0
-	ensure_aur_helper || {
+	aur_ensure || {
 		warn "AUR helper unavailable — not installed: $*"
 		return 1
 	}
-	filter_pkgs_warn probe_aur_name "$@"
+	filter_pkgs aur_probe "$@"
 	((${#PKG_VALID[@]} > 0)) || return 1
 	local rc=0
 	# -H: the helper drives pacman internally — same orphan risk.
-	retry -t "$RETRY_T_NET" -H cleanup_timed_out_pacman -s "AUR install" "$AUR_HELPER" -S --needed --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
+	retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "AUR install" "$AUR_HELPER" -S --needed --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
 	hash -r
 	return "$rc"
 }

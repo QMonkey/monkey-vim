@@ -4,10 +4,18 @@
 # lag far behind). Sourced by lib/bootstrap.sh (both entry points); called
 # from install_strategy_step (lib/pkg.sh) and by project install steps.
 #
+# These are NOT lanes of the install chain (lib/pkg.sh): their target is a
+# coordinate a package name cannot imply — a module path, a PyPI
+# distribution, an npm package — so they only ever run as explicit spec
+# steps, and the chain never routes a bare name into them.
+#
 # Shared conventions:
 #   - every network step goes through retry (lib/retry.sh);
 #   - installs land in user-space bin dirs that export_path (lib/env.sh)
 #     seeds — cargo/bin, GOPATH/bin, ~/.npm-global/bin;
+#   - ensure_* returns "usable", never "fatal": callers decide what a
+#     missing toolchain costs, and a strategy step that fails only means the
+#     next step runs;
 #   - WSL: npm/node lookups MUST go through have_native_cmd — a /mnt/*
 #     Windows shim would install into the Windows tree.
 
@@ -41,6 +49,31 @@ ensure_rust() {
 }
 
 # ──────────────────────────── go ────────────────────────────
+# ensure_go — the Go toolchain, idempotent. Self-heals the step that used to
+# dead-end on a host without go: `go install` there died with
+# command-not-found and the spec's next step inherited the wreckage.
+# Provisioned through the CHAIN, not an upstream tarball: the distro golang
+# package and the brew formula are current on every supported OS, so a
+# second bootstrap path would mean version detection and archive extraction
+# (plus a checksum policy) that no spec asks for yet. rc = "go is usable";
+# install_strategy runs every step with `|| true`, so a failure here costs
+# this lane and never the run.
+ensure_go() {
+	have_native_cmd go && return 0
+	info "installing the go toolchain..."
+	install_pkg "$(pkg_name go)" || true
+	if ! have_native_cmd go && have_native_cmd brew; then
+		# Last native source on distros whose index has no golang.
+		brew_install go || true
+	fi
+	if have_native_cmd go; then
+		ok "go ready ($(go version 2>/dev/null))."
+		return 0
+	fi
+	warn "go is still not available — install it manually: $(get_install_hint go)"
+	return 1
+}
+
 # 'go install' is silent for its entire module download + compile (minutes
 # on the first run) — announce it. Retried; go caches modules, so a retry
 # resumes instead of restarting.
@@ -70,11 +103,12 @@ ensure_node_and_npm() {
 	# distros that split it from nodejs (Debian).
 	if ! have_native_cmd node; then
 		info "installing node..."
+		# One call, one chain: the bottle route for a distro index that has
+		# no nodejs is the chain's own brew lane, so this needs no second,
+		# hand-written `brew install node` behind it. (ensure_node_at_least
+		# below DOES keep its own bottle call — that one is about the
+		# VERSION the index offers, which no chain can infer.)
 		install_pkg "$(pkg_name node)" || true
-		if ! have_native_cmd node && have_native_cmd brew; then
-			# Last native source on distros whose index has no nodejs.
-			brew_install_retry "$RETRY_T_NET" "brew install node" node || true
-		fi
 	fi
 	if ! have_native_cmd npm; then
 		info "installing npm..."
@@ -112,11 +146,16 @@ ensure_node_at_least() {
 	bin_at_least node "$min" && return 0
 	if have_native_cmd brew; then
 		info "Node.js $min+ required — the distro index is too old; installing via Homebrew..."
-		brew_install_retry "$RETRY_T_NET" "brew install node" node || true
-		# The brew bin sits late on PATH (and a distro node 18/20 may shadow
-		# it): brew_link_bins symlinks the fresh node/npm into
-		# ~/.local/bin — seeded at the FRONT of PATH by export_path — so
-		# node resolves to the current brew install.
+		brew_install node || true
+		# On Linux the brew bin dir sits late on PATH (and a distro node 18/20
+		# may shadow it): this link is the point of the step, not a fallback
+		# side effect — the spec asked for a node the distro index does not
+		# offer, so the fresh node/npm go into ~/.local/bin (seeded at the
+		# FRONT of PATH by export_path) and node resolves to the brew install.
+		# That is why this calls brew_link_bins directly instead of relying on
+		# brew_install. On macOS the step needs no link at all — the prefix is
+		# prepended there (lib/env.sh), so the brew node already wins; the call
+		# is kept for the Linux side and declines itself on the mac one.
 		brew_link_bins node npm
 		hash -r
 		bin_at_least node "$min" && return 0
@@ -164,9 +203,45 @@ npm_install_g() {
 }
 
 # ──────────────────────────── pip / python ────────────────────────────
-# pip3 must exist (and RUN) before any `pip:` install strategy — it is a
-# separate package on every distro, and Leap 16's repos do not package
-# python-lsp-server at all, so pylsp depends on the pip fallback.
+# install_pip_pkgs <pypi-dist>... — the pip step's installer, moved out of
+# the strategy dispatcher so pkg.sh stays free of Python-domain knowledge
+# (its header says the core routes and reports; this is the "how").
+#
+# USER-SPACE install (~/.local/lib/python3.X) first: pip installs here are
+# editor-grade user tools, and a sudo prompt inside this retried command
+# would die of SIGTTIN (sudo_cmd fails the attempt). User site stays on this
+# interpreter's sys.path (distro pylsp loads the plugin), is
+# user-owned/removable, and matches the npm/cargo/go convention; console
+# scripts land in ~/.local/bin (bin_dirs seeds it at the front of PATH). The
+# sudo route is the fallback.
+#
+# PEP 668: Fedora 38+ / Debian 12+ / Ubuntu 23.04+ / Tumbleweed mark the
+# system python EXTERNALLY-MANAGED — pip refuses ALL installs into it,
+# --user included. Old pips reject the flag itself, so add it only when this
+# pip knows it AND the marker is present. venv/pipx are NOT options: pylsp
+# loads plugins via entry points from ITS OWN interpreter, so isolation
+# hides them; pipx-ing the whole pylsp stack would overturn the
+# distro-package-first policy for one plugin gap.
+#
+# stderr stays visible on purpose — a silently swallowed pip error is what
+# made the Leap 16 pylsp failure undiagnosable.
+install_pip_pkgs() {
+	# ensure_pip first: the fallback dies with command-not-found when pip3 is
+	# missing (Leap 16).
+	ensure_pip || return 1
+	local user_flags="--user" sys_flags=""
+	if pip3 install --help 2>/dev/null | grep -q -- --break-system-packages &&
+		[ -f "$(python3 -c 'import sysconfig; print(sysconfig.get_path("stdlib"))' 2>/dev/null)/EXTERNALLY-MANAGED" ]; then
+		user_flags="$user_flags --break-system-packages"
+		sys_flags="--break-system-packages"
+	fi
+	retry -t "$RETRY_T_NET" -s "pip3 install $*" pip3 install $user_flags "$@" ||
+		retry -t "$RETRY_T_NET" -s "pip3 install $*" sudo_cmd pip3 install $sys_flags "$@"
+}
+
+# ensure_pip — pip3 must exist (and RUN) before any `pip:` install strategy:
+# it is a separate package on every distro, and Leap 16's repos do not
+# package python-lsp-server at all, so pylsp depends on the pip fallback.
 ensure_pip() {
 	if ! have_native_cmd pip3; then
 		info "Installing pip3 via the system package manager..."

@@ -6,17 +6,45 @@
 #
 #   bin_dirs / export_path / persist_path — the framework bin-dir set: one
 #       source of truth emitting idempotent PATH-update lines
-#   export_path_pre_win / persist_brew_path — Homebrew's POSITIONAL insert
-#       (not part of persist_path; runs even when PERSIST_PATH=0)
+#   _path_prepend_snippet — the ONE rendering of such a line
+#   path_dirs_snippet — the ONE ordered rendering: Homebrew's insert FIRST,
+#       then bin_dirs. export_path evals it; persist_path writes it as a
+#       single head block, so the priority cannot depend on which writer
+#       touched the profiles last. brew_ensure calls persist_path too
+#       (past install.sh's gate), keeping Homebrew's carve-out: its PATH
+#       lands in the profiles even when PERSIST_PATH=0.
+#   export_brew_path — Homebrew's insert for THIS host, applied to the live
+#       session: PREPENDED like any other bin dir on macOS (there brew IS
+#       the host's package manager), POSITIONAL on Linux/WSL (a coverage
+#       lane that must not outrank system paths) — see _brew_path_snippet
 #   write_tty_autostart / autostart_block — guarded compositor exec block
 #   shell_env_files / append_env_block — which profile files exist and how
 #       blocks land in them
 
-# Homebrew prefixes: the single source of truth. ensure_homebrew probes
-# these to adopt an existing install; export_path seeds each real prefix's
-# bin dir as the brew PATH tier. /usr/local/bin stays out of the tier: a
-# system path the default PATH already carries (see bin_dirs).
-BREW_PREFIXES="/home/linuxbrew/.linuxbrew /opt/homebrew /usr/local"
+# Homebrew prefixes: the single source of truth, split by host OS, one prefix
+# per line. A brew already on PATH leads the list — its REAL prefix comes
+# from command -v resolved by parameter expansion (no forks), so a custom
+# install location gets seeded like the standard ones instead of only after
+# brew_ensure ran. The OS candidates follow: a mac never has /home/linuxbrew
+# and a Linux host never has /opt/homebrew, so a union list only ever put the
+# OTHER system's prefix on PATH. /usr/local is a candidate on both: the
+# Intel-mac prefix and the legacy Linuxbrew one. Reads the framework's $OS
+# (set by install_main / checkhealth before any of this runs); unset or
+# unknown takes the Linux arm.
+brew_prefixes() {
+	local discovered cand list="/opt/homebrew /usr/local"
+	[ "${OS:-unknown}" = macos ] || list="/home/linuxbrew/.linuxbrew /usr/local"
+	# A shell function or alias named brew would answer "brew", not a path —
+	# require the resolved binary before turning it into a prefix.
+	if discovered=$(command -v brew) && [ -x "$discovered" ]; then
+		discovered=${discovered%/*}
+		discovered=${discovered%/*}
+		printf '%s\n' "$discovered"
+	fi
+	for cand in $list; do
+		[ "$cand" = "${discovered:-}" ] || printf '%s\n' "$cand"
+	done
+}
 
 # ────────────────────── shell env files ──────────────────────
 shell_env_files() {
@@ -317,7 +345,23 @@ write_tty_autostart() {
 }
 
 # ────────────────────── bin dirs / PATH ──────────────────────
-# bin_dirs — the ONE source of truth for the framework's bin-dir set;
+# _path_prepend_snippet <dir>... — the ONE rendering of a bin_dirs-style
+# idempotent PATH line. ARGUMENT ORDER IS THE RESULTING PATH ORDER ($1 ends up
+# ahead of $2), so callers name dirs high → low like the positional arm of
+# _path_pre_win_snippet already does. Each dir gets its own guard, so a dir the
+# host already carries is left where it is. POSIX text, $PATH literal.
+_path_prepend_snippet() {
+	local -a _dirs=("$@")
+	local _d _i
+	# Each line prepends, so the last-named dir has to run first.
+	for ((_i = ${#_dirs[@]} - 1; _i >= 0; _i--)); do
+		_d=${_dirs[_i]}
+		# shellcheck disable=SC2016 # $PATH must stay literal in the line
+		printf 'case ":$PATH:" in *":%s:"*) ;; *) export PATH="%s:$PATH" ;; esac\n' "$_d" "$_d"
+	done
+}
+
+# bin_dirs — the ONE source of truth for the framework's user-local bin dirs;
 # emits idempotent PATH-update lines, LOW → HIGH priority order (consumers
 # prepend in yield order, so the LAST emitted dir ends up first on PATH).
 # Resolution mirrors the tools (pure parameter expansion, no `go env`):
@@ -326,9 +370,8 @@ write_tty_autostart() {
 # (/usr/local/bin is deliberately absent: a system path the default PATH
 # already carries.)
 # Priority (high → low): ~/.local/bin, cargo, go, npm.
-#   export_path  — eval: export every dir, existing or not
-#   persist_path — append_env_block: one case-line per dir (unconditional:
-#                  a not-yet-existing dir is future-proofing)
+# Consumed only by path_dirs_snippet, which decides what a not-yet-existing
+# dir means for this rendering (it is seeded anyway — future-proofing).
 bin_dirs() {
 	local -a go_dirs=()
 	if [ -n "${GOBIN:-}" ]; then
@@ -343,59 +386,82 @@ bin_dirs() {
 		done
 		IFS=$old_ifs
 	fi
-	printf '%s\n' 'case ":$PATH:" in *":$HOME/.npm-global/bin:"*) ;; *) export PATH="$HOME/.npm-global/bin:$PATH" ;; esac'
-	local d i
-	for ((i = ${#go_dirs[@]} - 1; i >= 0; i--)); do
-		d=${go_dirs[i]}
-		printf 'case ":$PATH:" in *":%s:"*) ;; *) export PATH="%s:$PATH" ;; esac\n' "$d" "$d"
+	# Named high → low; the helper emits the lines in the order that yields
+	# exactly this PATH (npm deepest, ~/.local/bin first).
+	_path_prepend_snippet '$HOME/.local/bin' '${CARGO_HOME:-$HOME/.cargo}/bin' \
+		${go_dirs[@]+"${go_dirs[@]}"} '$HOME/.npm-global/bin'
+}
+
+# path_dirs_snippet — the ONE ordered PATH rendering: Homebrew's insert
+# FIRST, then the framework bin dirs. One list, one block, so the priority is
+# fixed by construction instead of by which writer touched the profile last
+# (prepend lines execute top-to-bottom, so the tier rendered last is the tier
+# that ends up ahead — two blocks only agreed with the live PATH as long as
+# brew happened to be persisted before the toolchain block; a
+# PERSIST_POS=before_links run whose brew came later flipped it).
+# The brew tier still goes through _brew_path_snippet, which is where the
+# host decides HOW brew is placed, not whether it comes first:
+#   macOS — a prepend like every other dir, so running it first is what
+#     drops it right below the user dirs and above /usr/local/bin.
+#   Linux/WSL — a positional insert (append, or before the first /mnt),
+#     whose landing spot is independent of the user dirs above it.
+# /usr/local is skipped: a system path the default PATH already carries
+# (path_helper on macOS), and seeding it as a "brew bin dir" would only
+# shadow the real prefix.
+path_dirs_snippet() {
+	local p
+	for p in $(brew_prefixes); do
+		[ "$p" = /usr/local ] && continue
+		_brew_path_snippet "$p/bin" "$p/sbin"
 	done
-	printf '%s\n' 'case ":$PATH:" in *":${CARGO_HOME:-$HOME/.cargo}/bin:"*) ;; *) export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH" ;; esac'
-	printf '%s\n' 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac'
+	bin_dirs
 }
 
 export_path() {
-	# No [ -d ] filter: not-yet-existing dirs (rustup's ~/.cargo/bin at
-	# startup, GOPATH/bin before the first install) are seeded anyway and
-	# resolve the moment a binary lands in them — no re-seeds mid-run.
-	eval "$(bin_dirs)"
-	# Brew tier: AFTER system paths, BEFORE the WSL shims (see header).
-	# Derived from BREW_PREFIXES; /usr/local/bin stays out — a system path
-	# the default PATH already carries (see bin_dirs).
-	local p
-	for p in $BREW_PREFIXES; do
-		[ "$p" = /usr/local ] && continue
-		export_path_pre_win "$p/bin"
-	done
+	# No [ -d ] filter anywhere in the snippet: not-yet-existing dirs
+	# (rustup's ~/.cargo/bin at startup, GOPATH/bin before the first install)
+	# are seeded anyway and resolve the moment a binary lands in them — no
+	# re-seeds mid-run.
+	eval "$(path_dirs_snippet)"
 }
 
 persist_path() {
 	# The SAME lines export_path evals — written to the profiles verbatim;
-	# the case guards re-check at shell startup.
-	# shellcheck disable=SC2016 # $PATH must stay literal in the block
-	append_env_block "user-local bin dirs (framework installer)" "$(bin_dirs)" "head"
-	ok "PATH persistence added for the user-local framework bin dirs (~/.local/bin, GOBIN/GOPATH/cargo/npm-global — see bin_dirs)."
-	# Brew dirs are persist_brew_path's business (positional; runs even
-	# when PERSIST_PATH=0).
+	# the case guards re-check at shell startup. brew_ensure calls this too
+	# (not through install.sh's persist_path_step gate), so a host that
+	# bootstraps Homebrew gets its PATH persisted even with PERSIST_PATH=0 —
+	# the carve-out Homebrew always had, now for the whole block.
+	# No summary line of its own: append_env_block reports each file it
+	# actually wrote, and this runs twice in a brew-carrying install
+	# (brew_ensure, then the gate) — a "persistence added" on the second,
+	# fully deduped call would be a lie.
+	append_env_block "bin dirs + Homebrew PATH (framework installer)" \
+		"$(path_dirs_snippet)" "head"
 }
 
-# persist_brew_path <brew_prefix> — Homebrew's profile block, called by
-# ensure_homebrew at install/adopt time. Separate from persist_path:
-# POSITIONAL insertion that a prepend case-line cannot express, and it
-# runs even when PERSIST_PATH=0.
-persist_brew_path() {
-	local brew_prefix="$1"
-	# One call, one block: bin and sbin are a unit (guard keyed on bin).
-	local block
-	block=$(_path_pre_win_snippet "$brew_prefix/bin" "$brew_prefix/sbin")
-	append_env_block "Homebrew PATH (before Windows shims)" "$block" "head"
+# _brew_path_snippet <dir>... — Homebrew's PATH insert for THIS host, asking
+# the host which place brew deserves rather than guessing from the chain:
+#   macOS — brew is the host's package manager (the only lane of its chain),
+#     so the prefix is seeded exactly like a framework bin dir: prepended,
+#     which is what `brew shellenv` does. Appending it leaves Apple's stubs in
+#     /usr/bin (an old git, a CLT python3) ahead of every keg.
+#   Linux/WSL — a coverage lane behind the distro index, so the prefix must
+#     NOT outrank system paths; positional insert, ahead of the WSL shims only.
+# Callers name dirs high → low (bin sbin); both arms honour that order.
+_brew_path_snippet() {
+	if [ "${OS:-unknown}" = macos ]; then
+		_path_prepend_snippet "$@"
+		return 0
+	fi
+	_path_pre_win_snippet "$@"
 }
 
-# _path_pre_win_snippet <dir>... — the ONE rendering of the positioning
-# algorithm for a GROUP of dirs installed as a unit (brew's bin+sbin):
-# no-op when ANY group dir is already in PATH; insert before the FIRST
-# /mnt entry; front when /mnt is first; plain append otherwise. POSIX text
-# with $PATH left LIVE — export_path_pre_win evals it, persist_brew_path
-# bakes it into the profile.
+# _path_pre_win_snippet <dir>... — the Linux/WSL arm: ONE rendering of the
+# positioning algorithm for a GROUP of dirs installed as a unit (brew's
+# bin+sbin): no-op when ANY group dir is already in PATH; insert before the
+# FIRST /mnt entry; front when /mnt is first; plain append otherwise. POSIX
+# text with $PATH left LIVE — path_dirs_snippet yields it to export_path
+# (which evals it) and to persist_path (which bakes it into the profiles).
 _path_pre_win_snippet() {
 	[ $# -gt 0 ] || return 0
 	local gtext="" group="" d
@@ -416,8 +482,8 @@ esac
 EOF
 }
 
-export_path_pre_win() {
+export_brew_path() {
 	# The snippet assigns PATH (already exported — the assignment keeps the
-	# export attribute); its `unset p` cleans up after the /mnt arm.
-	eval "$(_path_pre_win_snippet "$@")"
+	# export attribute); the Linux arm's `unset p` cleans up after its /mnt case.
+	eval "$(_brew_path_snippet "$@")"
 }

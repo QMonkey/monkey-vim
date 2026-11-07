@@ -6,7 +6,7 @@
 # bespoke number.
 RETRY_T_NET=1800   # ordinary network operations (downloads, git, installs)
 RETRY_T_HEAVY=3600 # long-but-finite operations (full system upgrade, rustup toolchain)
-RETRY_T_HUGE=7200  # installs that pull LLVM/.NET as formula dependencies (zig, zls, marksman)
+RETRY_T_HUGE=7200  # installs whose bottles pour another tier (LLVM, .NET): lane batches inherit it from BREW_HEAVY_NAMES in lib/brew.sh, the zig+zls pair asks for it directly
 
 # ────────────────────── nested-retry guard ──────────────────────
 # Exported: the nesting crosses a PROCESS boundary (run_checkhealth retries

@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # monkey-scripts/lib/clone.sh — network fetching: git clone / download
 # helpers. Sourced by lib/bootstrap.sh (both entry points — brew.sh's
-# ensure_homebrew fetches through fetch_url_or_clone too).
+# brew_ensure fetches through fetch_url_or_clone too).
 #
 # Data contract (project side):
 #   PROJECT / PROJECT_REPO / INSTALL_DIR

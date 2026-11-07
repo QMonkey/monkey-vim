@@ -11,27 +11,27 @@ Nothing generic is duplicated per project.
 
 ## Layout
 
-| Path               | Contents                                                                                                                      |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `install.sh`       | Installer entry point — sourced by a project's `install.sh`, then `install_main`                                              |
-| `checkhealth.sh`   | Dependency-check entry point — sourced, then `checkhealth_main`                                                               |
-| `lib/bootstrap.sh` | Shared sourcing head of both entry points: lib-dir resolution, fail-fast check, framework sourcing                            |
-| `lib/common.sh`    | Colors, indented log lines (`[INFO]` / `[ OK ]`), `$HOME` guard, WSL/native-binary probes, version comparison                 |
-| `lib/retry.sh`     | Retry with exponential backoff + per-attempt timeout (`retry`, timeout tiers)                                                 |
-| `lib/tty.sh`       | TIOCSTI injection into the controlling terminal (`inject_tty`, interactive-reader guard)                                      |
-| `lib/sudo.sh`      | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                                                |
-| `lib/pkg.sh`       | Dispatch core: `install_pkg` orchestrator, install-strategy dispatcher, shared batch classifier                               |
-| `lib/distro.sh`    | Distro package managers (apt/pacman/zypper/dnf + AUR): `pkg_name` mapping, index refresh/probe, `install_sys_pkg`, build deps |
-| `lib/brew.sh`      | Homebrew: macOS's manager, `install_pkg`'s index-miss fallback on Linux, `BREW_FIRST` lane, `ensure_homebrew`                 |
-| `lib/toolchain.sh` | Language-ecosystem toolchains: rustup, go, npm, pip (`ensure_rust`, `ensure_node_and_npm`, …)                                 |
-| `lib/config.sh`    | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`)                                 |
-| `lib/env.sh`       | PATH seeding / persistence (`bin_dirs`, `export_path`), shell env files, autostart block, XDG_RUNTIME_DIR repair              |
-| `lib/checks.sh`    | Spec model, probes, checkhealth display sections (run_required_checks & friends)                                              |
-| `lib/missing.sh`   | Missing-dependency installer passes (`install_missing_*`, batch collection, re-probe)                                         |
-| `lib/clipboard.sh` | Clipboard provider detection + install (`CHECK_CLIPBOARD=required\|warn\|display`)                                            |
-| `lib/clone.sh`     | Network fetching: git clone / download helpers (`clone_repo`, `fetch_url_or_clone`)                                           |
-| `lib/kmscon.sh`    | kmscon install & VT takeover (`ensure_kmscon tty2`, getty masking, launch-gui presence check)                                 |
-| `lib/output.sh`    | Terminal output helpers: banner, section headers, platform block, install hints                                               |
+| Path               | Contents                                                                                                                                                       |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `install.sh`       | Installer entry point — sourced by a project's `install.sh`, then `install_main`                                                                               |
+| `checkhealth.sh`   | Dependency-check entry point — sourced, then `checkhealth_main`                                                                                                |
+| `lib/bootstrap.sh` | Shared sourcing head of both entry points: lib-dir resolution, fail-fast check, framework sourcing                                                             |
+| `lib/common.sh`    | Colors, indented log lines (`[INFO]` / `[ OK ]`), `$HOME` guard, WSL/native-binary probes, version comparison                                                  |
+| `lib/retry.sh`     | Retry with exponential backoff + per-attempt timeout (`retry`, timeout tiers)                                                                                  |
+| `lib/tty.sh`       | TIOCSTI injection into the controlling terminal (`inject_tty`, interactive-reader guard)                                                                       |
+| `lib/sudo.sh`      | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                                                                                 |
+| `lib/pkg.sh`       | Dispatch core: the lane contract, the install chain (`chain_default` / `chain_walk` / `install_pkg`), the install-strategy dispatcher, shared batch classifier |
+| `lib/distro.sh`    | Distro package managers (apt/pacman/zypper/dnf + AUR): name mapping, index refresh/probe/reachability, `distro_install`, `aur_install`, build deps             |
+| `lib/brew.sh`      | Homebrew as the chain's `brew` lane: name table, probe/installed/refresh/install verbs, heavy-bottle timeout table, `brew_ensure`                              |
+| `lib/toolchain.sh` | Language-ecosystem toolchains (not chain lanes): rustup, go, npm, pip (`ensure_rust`, `ensure_go`, `ensure_node_and_npm`, `install_pip_pkgs`, …)               |
+| `lib/config.sh`    | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`)                                                                  |
+| `lib/env.sh`       | PATH seeding / persistence (`path_dirs_snippet`, `export_path`, `persist_path`), shell env files (`append_env_block`), autostart block, XDG_RUNTIME_DIR repair |
+| `lib/checks.sh`    | Spec model, probes, checkhealth display sections (run_required_checks & friends)                                                                               |
+| `lib/missing.sh`   | Missing-dependency installer passes (`install_missing_*`, batch collection, re-probe)                                                                          |
+| `lib/clipboard.sh` | Clipboard provider detection + install (`CHECK_CLIPBOARD=required\|warn\|display`)                                                                             |
+| `lib/clone.sh`     | Network fetching: git clone / download helpers (`clone_repo`, `fetch_url_or_clone`)                                                                            |
+| `lib/kmscon.sh`    | kmscon install & VT takeover (`ensure_kmscon tty2`, getty masking, launch-gui presence check)                                                                  |
+| `lib/output.sh`    | Terminal output helpers: banner, section headers, platform block, install hints                                                                                |
 
 Neither entry point is meant to be executed on its own.
 
@@ -106,9 +106,27 @@ id|check|desc|install|ver_regex|fallback|token|group
   match) | `py:module` (Python module probe) | `match:bin` (companion whose
   version must equal `bin`'s)
 - `desc` — printed text (default: `id`)
-- `install` — `pkg` (default) | `pkg:name,name` | `npm:x` | `go:x` |
-  `pip:x` | `brew:x` | `rustup` | `rustup-component:x` |
+- `install` — `pkg` (default) | `pkg:name,name` | `aur:x` | `brew:x` |
+  `npm:x` | `go:x` | `pip:x` |
+  `rustup` | `rustup-component:x` |
   `zig-zls-pair` | `python-unversioned` | `none`
+  `pkg` runs this host's install CHAIN (Linux: distro → AUR on arch →
+  Homebrew; macOS: Homebrew), so a plain `pkg` spec already reaches the
+  bottle lane for a name no distro index carries.
+  What those words mean here: a **lane** is one package index that can be
+  asked, per name, "do you carry it?" — `pkg` (the distro manager's
+  repositories), `aur` (arch's second repo set), `brew` (Homebrew); a
+  **chain** is the ordered list of lanes consulted for a name, and the walk
+  stops at the first lane that delivers it. Every verb a lane answers goes
+  through one `case` table of `pkg_*` dispatchers in `lib/pkg.sh`, so no
+  call site outside that file names a manager. The language ecosystems
+  (rustup / go / npm / pip) are deliberately NOT lanes: their step needs a
+  spec-supplied coordinate — a module path, a PyPI distribution, an npm
+  package — that no package name implies. The wording above is a summary;
+  `lib/pkg.sh`, "the lane contract", is the authority. The later steps of a
+  strategy are what no chain can synthesize: an ecosystem coordinate (a PyPI
+  distribution, an npm package, a Go module) or a version floor. The walker
+  stops at the first step after which the spec's probe passes.
 - `ver_regex` — version regex (default: `[0-9]+\.[0-9]+`)
 - `fallback` — binary accepted instead of `id` (warn, not fail)
 - `token` — version output must mention this (warn only)
@@ -272,29 +290,35 @@ it directly.
 
 Data switches:
 
-| Switch                                   | Meaning                                                                            |
-| ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step — `link_config <src> <dst> <mode>` (modes below) |
-| `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                   |
-| `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                        |
-| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                           |
-| `PERSIST_PATH=1`                         | write the `bin_dirs` PATH exports to the detected shell profile (below)            |
-| `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                        |
-| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                         |
-| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                |
-| `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                      |
-| `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                    |
-| `BREW_FIRST=(pkg…)`                      | package names installed via Homebrew when available                                |
+| Switch                                   | Meaning                                                                                                                                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step — `link_config <src> <dst> <mode>` (modes below)                                                                                                        |
+| `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                                                                                                                          |
+| `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                                                                                                                               |
+| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                                                                                                                                  |
+| `PERSIST_PATH=1`                         | write the `path_dirs_snippet` PATH block (framework bin dirs + Homebrew) to the detected shell profile (below)                                                                            |
+| `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                                                                                                                               |
+| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                                                                                                                                |
+| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                                                                                                                       |
+| `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                                                                                                                             |
+| `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                                                                                                                           |
+| spec strategy `brew,pkg:x`               | per-name lane order, stated by the requirement itself: Homebrew first, the distro manager behind it as the safety net. Bottle timeouts come from `BREW_HEAVY_NAMES`, never from the order |
 
 `SYMLINKS` modes: `keep` = an existing target is skipped with an info line and a
 missing source silently; `takeover` = this repo owns the config — a foreign symlink
 is re-pointed and a foreign file is moved to `<dst>.link-bak` first (a foreign
 directory is left alone, rc 1).
 
-`PERSIST_PATH=1` writes exactly what `bin_dirs` (`lib/env.sh`) emits: `~/.local/bin`,
-`GOBIN` or every `GOPATH` entry's bin, `${CARGO_HOME:-~/.cargo}/bin`,
-`~/.npm-global/bin`; the profile set comes from `shell_env_files` (zsh →
-`~/.zprofile`, bash → `~/.bash_profile` or `~/.profile`, plus `~/.bashrc`).
+`PERSIST_PATH=1` writes one `head` block with exactly what `path_dirs_snippet`
+(`lib/env.sh`) emits: the Homebrew prefixes' `bin`/`sbin` first (placement per
+`_brew_path_snippet` — prepended on macOS, positional on Linux/WSL), then the
+`bin_dirs` exports — `~/.local/bin`, `GOBIN` or every `GOPATH` entry's bin,
+`${CARGO_HOME:-~/.cargo}/bin`, `~/.npm-global/bin`; the profile set comes from
+`shell_env_files` (zsh → `~/.zprofile`, bash → `~/.bash_profile` or
+`~/.profile`, plus `~/.bashrc`). `brew_ensure` calls `persist_path` directly,
+past this gate: a run that bootstraps Homebrew persists its PATH even with
+`PERSIST_PATH=0`, as it always did. One function writes that one block, so the
+priority inside the profile cannot depend on which step ran last.
 
 Unlike `checkhealth.sh`, `fail()` aborts the installer at the first fatal
 step (`MONKEY_FAIL_EXITS=true`).
