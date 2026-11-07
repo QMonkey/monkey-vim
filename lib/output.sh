@@ -90,12 +90,13 @@ get_install_hint() {
 }
 
 # ──────────────────────── hints ────────────────────────
-# Human command for one strategy step ("" when unknown).
+# Human command for one strategy step ("" = nothing to run, which is what
+# `none` means and what an unknown kind answers).
 # KEEP IN SYNC with lib/pkg.sh install_strategy_step: the two case tables
 # walk the SAME set of kinds — one executes a step, this one renders its
 # human-readable command. A new kind needs a row in BOTH.
 _strategy_hint() {
-	local kind="$1" args="$2" b
+	local kind="$1" args="${2:-}" b
 	case "$kind" in
 	pkg)
 		if [ -n "$args" ]; then
@@ -115,6 +116,10 @@ _strategy_hint() {
 	pip)
 		echo "pip3 install --user $args"
 		;;
+	aur)
+		# The arch AUR lane: the helper is what a human would run.
+		echo "${AUR_HELPER:-paru} -S $args"
+		;;
 	brew)
 		echo "brew install $args"
 		;;
@@ -129,6 +134,10 @@ _strategy_hint() {
 		;;
 	python-unversioned)
 		echo "ln -s \$(command -v python3) /usr/local/bin/python"
+		;;
+	none)
+		# The exec arm's whole job is to return 1 (no step). No command here
+		# either — the row exists so the two tables stay diffable.
 		;;
 	esac
 }

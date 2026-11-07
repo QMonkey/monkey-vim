@@ -14,14 +14,25 @@
 #               match:bin (companion whose major.minor version must equal
 #               <bin>'s — zls vs zig; master missing ⇒ pass)
 #     desc      printed text (default: id)
-#     install   pkg (default) | pkg:name,name | npm:x | go:x |
-#               pip:x | brew:x | rustup | rustup-component:x |
+#     install   pkg (default) | pkg:name,name | aur:x | pip:x | npm:x | go:x |
+#               brew:x | rustup | rustup-component:x |
 #               python-unversioned | zig-zls-pair | none
+#               A LANE kind (pkg / aur / brew) runs the install chain for its
+#               names — pkg means "this host's chain", which on Linux is
+#               distro → [AUR] → brew and on macOS just brew — so a plain
+#               `pkg` spec already reaches the bottle lane for a name no
+#               distro index carries. The later steps of a strategy are what
+#               the chain cannot synthesize: an ecosystem coordinate (a PyPI
+#               distribution, an npm package, a Go module) or a version floor.
+#               install_strategy stops at the first step after which
+#               probe_spec passes, so "pkg,brew:gomplate" runs the brew step
+#               only if the chain did not already deliver.
 #               The kind token is the manager's own id, not a label: `brew`
 #               is what pkg_manager() returns for macOS and what lib/brew.sh
 #               is named after (npm/go/pip likewise → lib/toolchain.sh). The
-#               three are one contract — specs in consumer repos carry these
-#               tokens as DATA, so a rename must ship with the scripts/
+#               tokens are one contract with lib/pkg.sh install_strategy_step
+#               and lib/output.sh _strategy_hint — specs in consumer repos
+#               carry them as DATA, so a rename must ship with the scripts/
 #               propagation, never ahead of it (an unknown kind falls through
 #               install_strategy_step's *) arm to install_pkg and is dropped
 #               as an index miss, i.e. a near-silent no-op).
