@@ -34,8 +34,8 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
 		# Outdated checkout: update it in place and keep running from it.
 		git -C "$_monkey_dir" pull --ff-only || true
 		if [ ! -f "$_monkey_dir/scripts/install.sh" ]; then
-			echo "monkey-scripts missing from $_monkey_dir (no scripts/ subtree)." >&2
-			echo "  git -C $_monkey_dir pull    # outdated checkout — or the repo never added the subtree" >&2
+			printf '%s\n' "monkey-scripts missing from $_monkey_dir (no scripts/ subtree)." >&2
+			printf '%s\n' "  git -C $_monkey_dir pull    # outdated checkout — or the repo never added the subtree" >&2
 			exit 1
 		fi
 		_monkey_scripts="$_monkey_dir/scripts"
@@ -50,15 +50,15 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
 			git -C "$INSTALL_DIR" pull --ff-only || true
 		elif [ -d "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR")" ]; then
 			# git clone would refuse too, so say why in our own words.
-			echo "$INSTALL_DIR is not empty and is not a git clone." >&2
-			echo "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
+			printf '%s\n' "$INSTALL_DIR is not empty and is not a git clone." >&2
+			printf '%s\n' "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
 			exit 1
 		else
 			# Fresh clone — the ONLY sub-branch where git is hard-required:
 			# the pull sub-branch above degrades gracefully without it, and
 			# a zip/tarball must not fail here just for a missing git.
 			if ! command -v git >/dev/null 2>&1; then
-				echo "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
+				printf '%s\n' "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
 				exit 1
 			fi
 			# No retry() available yet — the framework loads only after this
@@ -89,11 +89,11 @@ fi
 . "$_monkey_scripts/install.sh"
 
 # ──────────────────────── layout & data ────────────────────────
-VIM_SRC_DIR="${VIM_SRC_DIR:-$HOME/Documents/vim}" # kept for future updates
-JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
+VIM_SRC_DIR="${VIM_SRC_DIR:-$HOME/Documents/vim}" # the clone build_vim compiles
+JOBS="${JOBS:-$(nproc 2>/dev/null || printf '%s\n' 4)}"
 ACQUIRE_TIOCSTI="${ACQUIRE_TIOCSTI:-monkey-vim}"
 INSTALL_INFO=(
-	"vim source: ${CYAN}${VIM_SRC_DIR}${NC} (kept for future updates)"
+	"vim source: ${CYAN}${VIM_SRC_DIR}${NC} (cloned here; built when the installed vim is below 9.1 or lacks features)"
 )
 
 # src|dst — the swap/sessions/viminfo dirs under .cache are auto-created on
@@ -112,7 +112,7 @@ ENSURE_DIRS=(
 )
 
 # PATH exports land in the profile but only apply to shells started later —
-# the original installer persists them BEFORE linking (same output block).
+# this installer persists them BEFORE linking (same output block).
 PERSIST_PATH=1
 PERSIST_POS=before_links
 SUMMARY_LINES=(
@@ -213,9 +213,6 @@ install_vim_build_deps() {
 		else
 			warn "Homebrew not found — cannot install vim build deps. Install it first: https://brew.sh"
 		fi
-		;;
-	*)
-		warn "Unknown OS ($OS). Attempting to continue with whatever is available."
 		;;
 	esac
 	hash -r # re-scan PATH: fresh binaries must not be shadowed by cached shim paths
@@ -403,21 +400,17 @@ install_plugins() {
 	# (already-cloned repos are skipped by vim-plug).
 	#
 	# stderr goes to a log, not /dev/null: a hidden failure (a GitHub clone
-	# error — every plugin download crosses the network) used to fall
-	# through to the success line below and the plugins were simply missing
-	# (observed on Ubuntu 2026-10: 4 failed attempts, cause invisible).
+	# error — every plugin download crosses the network) would otherwise
+	# fall through to the success line below and leave the plugins missing.
 	# The success gate lives INSIDE the retried command: vim's exit code
 	# AND an error line in the log both turn into a non-zero exit, so retry
-	# treats it as a failed attempt and re-runs. vim-plug is idempotent
-	# (clones only what is missing), so a re-attempt continues where the
-	# last one died.
+	# treats it as a failed attempt and re-runs.
 	# Headless mode needs a wrapper rc. The .vimrc is vim9script, and a
 	# vim9 script restores 'cpoptions' to its PRE-script value when it ends.
 	# Under `vim -es` that pre-value is the vi-compatible default (flag C —
 	# line continuations off), so every legacy plugin sourced after the
 	# vimrc fails its `\` continuations (fugitive E10, gutentags E116, ...)
-	# and vim exits 1 although PlugInstall itself succeeded (observed on
-	# Ubuntu 2026-10: 5 failed attempts, all plugins actually installed).
+	# and vim exits 1 although PlugInstall itself succeeded.
 	# A legacy wrapper that runs `set nocompatible` BEFORE sourcing the
 	# vimrc makes the pre-value the Vim default, so the restore is a no-op.
 	local pluglog=/tmp/vim-plugins.log
@@ -477,17 +470,17 @@ install_step_prepare() {
 	# sessionless WSL (root default user). See README 'Precautions' → WSL2.
 	ensure_xdg_runtime_dir
 	install_vim_build_deps
-	echo ""
+	printf '\n'
 	brew_ensure
-	echo ""
+	printf '\n'
 }
 install_step_tool() {
 	build_vim
-	echo ""
+	printf '\n'
 }
 install_step_after() {
 	install_plugins
-	echo ""
+	printf '\n'
 }
 
 install_main "$@"
