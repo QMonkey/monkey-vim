@@ -1648,7 +1648,6 @@ enddef
 
 # vim-markdown {
 # tpope/vim-markdown
-# Don't need to install these if you are running a recent version of Vim
 g:markdown_syntax_conceal = 0
 g:markdown_minlines = 100
 g:markdown_fenced_languages = ['c', 'cpp', 'zig', 'rust', 'go', 'javascript', 'typescript', 'python', 'lua', 'bash=sh', 'zsh', 'vim', 'sql', 'yaml', 'json', 'jsonc']
@@ -1864,7 +1863,7 @@ augroup END
 # outside tmux the text goes to the F5 global terminal instead. SEND_PANE_ID is
 # all-uppercase so viminfo's '!' section persists it per project, surviving restarts.
 # Attachment is verified against a uuid stored as a pane option: generated
-# once per pane, shared by all nvims attaching it, and dying with the pane —
+# once per pane, shared by all Vims attaching it, and dying with the pane —
 # so a reused %N id after tmux restart/restore can't be mistaken for the old pane.
 # Viminfo restore runs after vimrc, so this default is safe to set unconditionally.
 g:SEND_PANE_ID = ''
@@ -2121,8 +2120,10 @@ g:VM_silent_exit = 1
 # VM's replace_chars() (mapped to `r`) only cancels on a raw <Esc>, so a
 # special key like <A-;> would be replaced with (see ReplaceOneChar() above).
 # Override the plug to cancel on <Esc>/special keys, feeding the char back so
-# replace_chars() reads it unchanged. The plug is (re)defined in Maps.start()
-# right before it fires the User event, so hooking that event always lands after VM has (re)defined it.
+# replace_chars() reads it unchanged. The plug is defined by vm#plugs#buffer()
+# (autoload/vm/plugs.vim) when the plugin's autoload script first runs, and
+# Maps.start() fires User visual_multi_mappings only after that, so hooking
+# the event always lands after VM has defined the plug.
 def VMReplaceChar()
 	var n = getchar()
 	if n == 27 || type(n) == v:t_string || index([187, 232, 234, 235, 236], n) >= 0
@@ -2519,7 +2520,7 @@ set nofoldenable
 set foldmethod=syntax
 set foldlevel=99
 
-# Only update fold after type zx or zX
+# Only update fold after type zx/zX/za/zA
 g:fastfold_fold_command_suffixes = ['x', 'X', 'a', 'A']
 g:fastfold_fold_movement_commands = []
 
