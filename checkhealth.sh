@@ -9,8 +9,8 @@ set -euo pipefail
 # ──────────────────────────────────────────────────────────────
 
 . "$(dirname "${BASH_SOURCE[0]:-$0}")/scripts/checkhealth.sh" || {
-	echo "monkey-scripts not found — update this checkout (git pull / re-clone)," >&2
-	echo "or run install.sh, which bootstraps monkey-scripts itself." >&2
+	printf '%s\n' "monkey-scripts not found — update this checkout (git pull / re-clone)," >&2
+	printf '%s\n' "or run install.sh, which bootstraps monkey-scripts itself." >&2
 	exit 1
 }
 
@@ -29,7 +29,7 @@ REQUIRED_CHECKS=(
 	"rg|bin|ripgrep"
 	"ctags|bin|universal-ctags"
 	# Homebrew first: most distro repos ship fzf far older. The order lives
-	# in this row's strategy now, not in a global list.
+	# in this row's strategy field.
 	"fzf|bin|fzf|brew,pkg"
 	"@header|python3${NC} (TIOCSTI injection)"
 	"python3|bin|python3 (required by TIOCSTI injection)"
