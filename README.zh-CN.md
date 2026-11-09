@@ -43,21 +43,23 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 
 脚本按顺序执行：
 
-1. 安装 Vim 编译依赖（按显示服务器选 GTK3/4 + Wayland 或 X11；Python3/Perl/Ruby/Lua）
-2. 预授权一次 `sudo`——整个流程唯一一次密码输入——并为当前用户安装**临时** NOPASSWD sudoers drop-in，脚本退出时自动删除。Homebrew 每次运行都会重置 sudo 时间戳，WSL2 时钟跳变会使票据失效，而 NOPASSWD 让整个流程对两者完全免疫、与命令顺序无关。若 drop-in 安装失败，脚本回退为后台保活 + 惰性重认证
+1. 预授权一次 `sudo`——整个流程唯一一次密码输入——并为当前用户安装**临时** NOPASSWD sudoers drop-in，脚本退出时自动删除。Homebrew 每次运行都会重置 sudo 时间戳，WSL2 时钟跳变会使票据失效，而 NOPASSWD 让整个流程对两者完全免疫、与命令顺序无关。若 drop-in 装不上，或写入后并未被 sudoers 解析生效，脚本退回依赖 sudo 时间戳：长流程可能还需要一次重新认证，而无法弹出提示的特权步骤会失败并被逐条报告
+2. 安装 Vim 编译依赖（Python3/Perl/Ruby/Lua 再加 GUI 栈）：WSL 上用 GTK3 + X11；`pkg-config` 能找到 gtk4 就用 GTK4；否则用 GTK3；完全没有 GTK 时改为纯终端构建，并用 `--with-osc52` 顶上
 3. 安装 Homebrew（Linuxbrew）作为兜底包管理器——即使 brew 已存在，也会把 shellenv 持久化到 shell rc 文件（带 PATH 去重保护）
 4. 克隆并编译 Vim 源码，然后 `make install`
 5. 克隆 monkey-vim 到 `~/Documents/monkey-vim`（已存在则更新）
-6. 通过 `checkhealth.sh --install` 安装必需工具与可选 LSP 服务端（apt/zypper/dnf/pacman/brew、npm、pip、go install、rustup）。npm 缺失时会显式安装（Debian/Ubuntu 的 `nodejs` 包不含 npm）；npm prefix 可写时全局包免 `sudo` 安装；fzf 优先用 Homebrew 以获得新版本而非发行版旧包
-7. 在 shell rc 文件中持久化 `~/go/bin`、`~/.cargo/bin`（以及 `/usr/local/bin`）
+6. 通过 `checkhealth.sh --install` 安装必需工具与可选 LSP 服务端（apt/zypper/dnf/pacman/brew、npm、pip、go install、rustup）。npm 缺失时会显式安装（Debian/Ubuntu 的 `nodejs` 包不含 npm）；全局 npm 包安装完全不需要 `sudo`——prefix 不属于当前用户（或落在 Homebrew 前缀里）时，`npm_install_g` 会把 prefix 改指到 `~/.npm-global`；fzf 优先用 Homebrew 以获得新版本而非发行版旧包
+7. 在 profile 文件里持久化一个 PATH 块（位置在配置软链之前）：框架 bin 目录（`~/.local/bin`、`${CARGO_HOME:-~/.cargo}/bin`、`GOBIN` 或每个 `GOPATH` 条目的 bin、`~/.npm-global/bin`）加 Homebrew 的 `bin`/`sbin`——macOS 上 brew 前置，Linux/WSL 上按位序插入（只排在 WSL `/mnt` shim 之前）
 8. 软链 `.vimrc`、`.clang-format`、efm-langserver 配置，并创建运行时目录
 9. 自动安装全部 vim 插件（`:PlugInstall`）
 
+> 运行前可在环境变量里覆盖这些取值（先 `export`，或在已下载的脚本上用 `INSTALL_DIR=… bash install.sh` 这样的前缀）：`INSTALL_DIR`——本仓库的克隆位置（默认 `~/Documents/monkey-vim`）；`VIM_SRC_DIR`——Vim 源码树（默认 `~/Documents/vim`）；`JOBS`——`make -j`（默认 `nproc`）；`CHECKHEALTH_MODE`——`run`（默认）缺什么装什么，`verify` 只检查不安装，`none` 完全跳过依赖这一步。
+>
 > 脚本会保留 Vim 源码树在 `~/Documents/vim`（不做清理），日后可用 `git pull` + `make` 重新编译。
 >
 > 脚本只有当已装 vim 低于 9.1 **或** `vim --version` 功能不完整时才会重新编译——仅看版本不够。必需功能与下面的构建一一对应：`+clipboard` 和 `+clipboard_provider`（剪贴板 provider 是 osc52/tmux 回退的基础，该功能在 9.1.1857 才加入，因此 9.1.0–9.1.1846 的发行版构建会被重编译）加上（按平台）`+xterm_clipboard`（WSL）、`+wayland_clipboard` 或 `+xterm_clipboard`（Linux 桌面）；核心集为 `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`。
 >
-> PATH 修改只对安装之后新启动的 shell 生效。脚本结束时会打印如何在当前终端立即生效（`source <rc 文件>` 或 `exec $SHELL`）。
+> PATH 修改只对安装之后新启动的 shell 生效。收尾时脚本会用 TIOCSTI 注入，直接把 `source <rc 文件>` 敲进你当前的 shell（用 `python3`，`perl` 兜底；Linux 上经 `sudo` 执行）；若终端后面没有可接收输入的交互式 shell，就改为打印这一行提示——`source <rc 文件>` 或 `exec $SHELL`。
 
 ### 方式二：手动安装
 
@@ -79,6 +81,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | git                                                           | 插件管理器、vim-fugitive                                              | 是       |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | fzf.vim 代码搜索（F1/Leader+a）                                       | 是       |
 | universal-ctags                                               | gutentags 标签生成                                                    | 是       |
+| python3                                                       | 把收尾的 `source <rc 文件>` 注入你当前的 shell（TIOCSTI 注入）        | 是       |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags（GTAGS）生成与导航                                    | 推荐     |
 | [Pygments](https://pygments.org/) (`pygmentize`)              | gtags 解析器，用于非 C/C++ 语言（Python、Go、Rust、JS 等）            | 推荐     |
 | [fzf](https://github.com/junegunn/fzf)                        | 模糊搜索器（fzf.vim 依赖）                                            | 是       |
@@ -136,7 +139,7 @@ Language Server Protocol 支持由 [yegappan/lsp](https://github.com/yegappan/ls
 | C/C++    | clang-tidy        | linter（经 `clangd --clang-tidy`）     | `sudo apt-get install clang-tidy`、`sudo zypper install clang`、`sudo dnf install clang-tools-extra`、`sudo pacman -S clang` 或 `brew install llvm` |
 | Go       | staticcheck       | linter（经 `gopls` 的 `staticcheck`）  | `go install honnef.co/go/tools/cmd/staticcheck@latest`                                                                                              |
 | Shell    | shfmt             | formatter（经 `bash-language-server`） | `go install mvdan.cc/sh/v3/cmd/shfmt@latest`                                                                                                        |
-| Python   | black             | formatter（经 `pylsp` 的 black 插件）  | `pip3 install black`                                                                                                                                |
+| Python   | black             | formatter（经 `pylsp` 的 black 插件）  | `pip3 install black python-lsp-black`                                                                                                               |
 | Markdown | prettier          | formatter（经 `efm-langserver`）       | `npm install -g prettier`                                                                                                                           |
 | Markdown | markdownlint-cli2 | linter（经 `efm-langserver`）          | `npm install -g markdownlint-cli2`                                                                                                                  |
 
@@ -173,8 +176,9 @@ go install honnef.co/go/tools/cmd/staticcheck@latest
 ```bash
 # 需要 Python 3（如未安装请先通过系统包管理器安装）
 pip3 install python-lsp-server
-# 可选：代码格式化与检查工具（black 由 pylsp 的 black 插件使用）
-pip3 install black autopep8 flake8 pylint
+# 可选：代码格式化与检查工具（pylsp 通过 pylsp-black 插件调用 black，
+# 所以插件要和 black 一起装）
+pip3 install black python-lsp-black autopep8 flake8 pylint
 ```
 
 #### 2.6 JavaScript / TypeScript
@@ -265,6 +269,8 @@ Vim 使用的 Unicode 字符（│, ▸, ·, ¬）无需额外字体即可正常
 ```bash
 ./checkhealth.sh --install
 ```
+
+`-i` 是 `--install` 的短形式。`--skip-check-config` 会跳过配置软链/目录那一节检查——一键安装脚本传这个参数，因为 `install.sh` 是在本脚本跑完之后才创建那些链接的。`-h` 打印同样的选项列表。退出码：有任一必需依赖缺失时为 `1`，否则为 `0`（推荐项与可选项缺失永远不会让检查失败）。
 
 ### 4. 安装
 
@@ -507,10 +513,12 @@ git subtree pull -P scripts --squash https://github.com/QMonkey/monkey-scripts.g
 | [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git 提交浏览器                        |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list 增强           |
 
+除了 vim-plug，vimrc 还启用了 Vim 自带的两个可选 runtime 包：`comment`（`gc`/`gcc`/`gC` 操作符与 `ic`/`ac` 文本对象，见 §1.22/§1.23）和 `hlyank`（短暂高亮刚刚 yank 的文字；设 `g:hlput_enable = 1` 时 paste 也高亮）。
+
 ## 快捷键
 
 ```text
-以下所有"Leader"键，都代表","键
+以下所有"Leader"键，都代表","键（mapleader 与 maplocalleader 都设为 ','）
 ```
 
 ### 1. 正常模式
@@ -533,7 +541,9 @@ j       移至下一显示行（gj），在折行中正常移动
 k       移至上一显示行（gk），在折行中正常移动
 f       搜索 1 个字符跳转（stargate 带提示）
 F       搜索 2 个连续字符跳转（stargate 带提示）
-gs      选择单词/区域进行多光标编辑（vim-visual-multi）
+gs      仅在多光标模式内：把单词/区域选成编辑区域（vim-visual-multi 的
+        "Select Operator"，已从默认的 `s` 改到 `gs`）。
+        普通正常模式下的 gs 仍是 cscope 查找符号——见 §1.9
 ```
 
 以下按键在插入模式和命令行模式下均适用：
@@ -629,12 +639,6 @@ gt                  跳转到类型定义
 gi                  跳转到实现
 gr                  查看引用
 
-Leader+gd           预览定义
-Leader+gc           预览声明
-Leader+gt           预览类型定义
-Leader+gi           预览实现
-Leader+gr           预览引用
-
 Leader+rn           重命名符号
 [d                  上一个诊断
 ]d                  下一个诊断
@@ -643,6 +647,11 @@ Leader+rn           重命名符号
 Leader+gh           显示当前行诊断（弹窗）
 Leader+d            显示/隐藏当前缓冲区所有诊断（位置列表）
 ```
+
+上面这些键是 buffer 局部的，只有服务端接到该文件类型后才存在；peek（就地预览）
+系列没有默认按键，直接用命令：`:LspPeekDefinition`、`:LspPeekDeclaration`、
+`:LspPeekTypeDef`、`:LspPeekImpl`、`:LspPeekReferences`。（`Leader+gd` 与
+`Leader+gD` 已被 fugitive 的差异键占用，见「在vim中使用git」。）
 
 文件在保存时自动通过 LSP 格式化。自动补全默认开启 — LSP 建议会自动弹出。
 `K` 查找光标下的词：默认使用 `:Man`，LSP 文件类型使用 `:LspHover`，Vim/help 文件使用 `:help`。
@@ -656,7 +665,7 @@ gR                  查找调用者（cscope）
 g]                  跳转到光标处的 tag，并在 quickfix 列出所有同名定义
 ```
 
-Cscope 支持 `c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型，结果放入 quickfix。
+Cscope 支持 `a`、`c`、`d`、`e`、`f`、`g`、`i`、`s`、`t` 查询类型（`cscopequickfix` 把这些全部列上了），结果放入 quickfix。
 需要安装 `cscope` 并配合 `gtags-cscope` 生成数据库（gutentags 会自动生成）。
 
 #### 1.10 文件/缓冲/Tag 导航（fzf.vim）
@@ -667,7 +676,8 @@ Ctrl+p      搜索文件
 Leader+b    搜索缓冲（C-d 删除，Enter 打开）
 Leader+t    搜索当前文件Tag
 Leader+p    搜索项目Tag
-Leader+f    搜索当前文件函数
+Leader+f    搜索当前文件的函数/方法（走 LSP document symbols，
+            需要已接入的 server，不读 tag 文件）
 Leader+e    搜索当前文件行
 ```
 
@@ -704,7 +714,7 @@ m/          在Location List里，查看当前buffer的所有标记
 自定义标记（!@#$%^&*()）已禁用：`m[0-9]` 回退为 Vim 原生 mark，相关映射
 （`m<BS>`、`m?`、`]-`、`[-`、`]=`、`[=`）均已解除。
 
-`:SignatureToggle` 显示/隐藏标记（不删除）
+`:SignatureToggleSigns` 显示/隐藏标记（不删除）
 `:SignatureRefresh` 标记与 sign 不同步时重新同步
 
 #### 1.13 vim-dir（文件管理器/目录浏览器，替代netrw）
@@ -720,7 +730,7 @@ s           在水平分屏打开
 S           在垂直分屏打开
 t           在新标签页打开
 -/<BS>/u    返回上一级目录
-i           预览文件（前 100 行）
+i           在弹出窗口预览文件（前 1000 行；图片则显示图片信息）
 x/X         切换选中 / 全选
 D 或 dd     删除文件/目录
 R 或 rr     重命名文件/目录
@@ -728,6 +738,7 @@ C/cc        新建目录 / 新建文件
 p/P         复制/移动选中项到当前目录
 .           切换隐藏文件显示
 :DirFilter  按正则过滤条目（! 为隐藏匹配项）
+gq          离开目录列表（切回真实文件的 buffer，标签页/窗口保持不变）
 ```
 
 #### 1.14 代码搜索（fzf ripgrep）
@@ -783,7 +794,7 @@ Leader+ws       保存session
 Leader+rs       删除session（需确认；无 session 时不做任何事）
 ```
 
-Session 保存到 `~/.cache/vim/sessions/`。Vim 启动时自动从此目录恢复 session。
+Session 保存到 `~/.cache/vim/sessions/`。Vim 启动时（未带文件参数启动）会自动从此目录恢复 session。
 
 Viminfo 按工程隔离：命令/搜索历史、寄存器、跳转列表和 file marks 保存到 `~/.cache/vim/viminfo/<工程根目录扁平化>.viminfo`（从启动目录向上查找 `.git`/`.root`/`.hg`/... 标记定位工程根，找不到时回退到 `~`），各工程的历史互不干扰。
 
@@ -794,11 +805,10 @@ Ctrl+o          跳回，可用于多种类型跳转（符号跳转，定义跳�
 Ctrl+i          继续上次跳转（与Ctrl+o操作相反），可用于多种类型跳转（符号跳转，定义跳转，屏幕跳转等）
 Ctrl+^          打开上次编辑的文件
 cod             切换diff模式
-cop             切换paste模式
+cop             切换paste模式（退出插入模式时自动关闭）
 col             切换list模式
 con             清除搜索高亮
 Leader+cr       切换到当前文件所在项目根路径（手动触发，不会自动切换）
-cop             切换粘贴模式（退出插入模式时自动关闭）
 Leader+space        去除行尾空白字符（:substitute）
 Leader+Leader+space  去除行尾空白字符 + \\r（DOS 换行符）
 Leader+q            打开/关闭quickfix
@@ -807,13 +817,14 @@ Leader+l            打开/关闭location list
 
 在 quickfix/location 窗口中（ack 风格映射）：
 
-- `o`/`Enter` — 打开条目（文件+行号）
-- `go` — 在水平分屏中打开
-- `gO` — 打开并聚焦新窗口
-- `t` — 在新标签页中打开
-- `T` — 在新标签页中打开（保持 quickfix 聚焦）
+- `Enter` — 打开条目（文件+行号）
+- `o` — 打开条目并跳回列表（vim-qf）
+- `s` — 在水平分屏中打开（vim-qf）
+- `v` — 在垂直分屏中打开（vim-qf）
+- `t` — 在新标签页中打开（vim-qf）
+- `O` — 打开条目并关闭 quickfix/location 窗口（vim-qf）
 - `p` — 在预览窗口中预览光标所在条目（vim-qf）
-- `q` — 关闭 quickfix 窗口
+- `q` — 关闭 quickfix 窗口（Vim 原生）
 
 Quickfix 窗口自动调整大小（最多 10 行），为空时自动关闭，始终置于底部。
 
@@ -841,7 +852,7 @@ a%      任意块的范围（文本对象）
 
 #### 1.21 Lexima（自动配对括号）
 
-Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''` 和反引号对。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中 `"` 不自动配对（因为 `"` 是注释引导符）。
+Lexima 自动配对：`()`、`[]`、`{}`、`""`、`''` 和反引号对。在空括号内按退格会同时删除两个字符。在 `{}` 中按回车会自动缩进并生成闭括号。在 vim 文件中，`"` 处于行首或行尾（即本该开启注释的位置）时不自动配对，因为 `"` 是注释引导符；行中的 `"` 仍会配对。
 
 #### 1.22 操作符（Operators）
 
@@ -855,6 +866,10 @@ gu gU g~        转小写 / 转大写 / 大小写互换
 =               按缩进规则重排
 !               通过外部命令过滤行
 gn gN           操作下一个 / 上一个搜索匹配
+
+# Vim 自带的 comment 包（pack/dist/opt/comment）
+gc{motion}      对该 motion 范围切换注释
+gcc / gC        切换当前行注释 / 注释到行尾
 
 # vim-subversive（见 §1.7）
 x               用寄存器内容替换文本对象 / motion
@@ -881,6 +896,7 @@ i( a( i[ a[ i{ a{ i< a<   括号（b 是括号的别名，此处被覆盖）
 i" a" i' a' i` a`   引号
 it / at         HTML/XML 标签
 gn / gN         上次搜索匹配
+ic / ac         注释块（Vim 自带的 comment 包）
 
 # targets.vim（增强搜索：seek 定位、增长、转义感知、跨行）
 ib / ab         任意括号块（自动检测 () [] {}）—— 被 vim-sandwich 覆盖，见下
@@ -944,11 +960,14 @@ Ctrl+x Ctrl+]   标签补全（LSP 慢或不可用时的备选方案）
 #### 3.1 按键修改
 
 ```text
-s       用剪贴板的内容替换选中文本
+x       用剪贴板的内容替换选中文本
 ;       进入命令行模式，相当于":"键
 <       减少缩进，保持选中
 >       增加缩进，保持选中
 ```
+
+`x` 来自 vim-subversive；sandwich 风格的 `s` 在正常模式和可视模式下都被映射成了
+`<Nop>`——裸 `s` 本身没有对应的围绕字符操作，放任回退到原生行为会删掉光标下的字符。
 
 #### 3.2 查找
 
@@ -963,9 +982,10 @@ s       用剪贴板的内容替换选中文本
 # '\r'代表换行
 
 x{文本对象}  用剪贴板内容替换文本对象（如 xiw）
-xx          用剪贴板内容替换当前整行
-X           用剪贴板内容替换光标到行尾
+x           用剪贴板内容替换选中文本
 ```
+
+`xx` 与 `X` 只在正常模式下有映射（见 §1.7）；可视模式下直接按 `x` 就已作用于选区。
 
 #### 3.4 快速跳转（vim9-stargate）
 
@@ -1127,6 +1147,7 @@ Leader+hr       撤销当前修改块
 Leader+hS       暂存整个文件
 Leader+hR       放弃文件所有修改
 Leader+hq       将当前文件的修改块加载到 quickfix
+Leader+hl       与 Leader+hq 相同（同一命令的第二个按键）
 Leader+hQ       将所有文件的修改块加载到 quickfix
 ```
 
@@ -1147,11 +1168,20 @@ Leader+hQ       将所有文件的修改块加载到 quickfix
 
 " 为整个工程生成tag
 :GutentagsUpdate!
+
+" 强制全量重建当前工程的 tag 数据库
+:TagsRebuild
 ```
 
-如果已安装 GNU Global（`gtags`/`global`），gutentags 还会在
+如果同时安装了 GNU Global（`gtags`/`global`）和 Pygments（`pygmentize`），gutentags 还会在
 `~/.cache/vim/tags/<project>/` 下生成 `GTAGS`/`GRTAGS`/`GPATH` 数据库。
-gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
+GNU Global 对 C/C++/Java 用原生解析器，其余语言（Python、Go、Rust、JavaScript 等）
+回退到 Pygments。gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
+
+gutentags 对 gtags 只做增量更新，处理不了切分支时被删除或改名的文件。monkey-vim 会把工程的
+`(分支, HEAD)` 与缓存在数据库旁的基线（同一目录里的 `.tags-head`）比对，两者都变化时强制全量重建；
+检查在缓冲区进入、窗口重新获得焦点以及 fugitive 状态变化后触发。设 `g:tags_branch_aware = 0`
+可关掉，`:TagsRebuild` 可手动执行。
 
 ### 3. fzf.vim
 
@@ -1237,7 +1267,8 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 " 搜索文件类型
 :Filetypes
 
-" 搜索 Snippets（UltiSnips）
+" 搜索 Snippets — 只支持 UltiSnips；monkey-vim 用 vim-vsnip、不装 UltiSnips，
+" 所以这里执行 :Snippets 会直接报错
 :Snippets
 
 " 搜索配色方案
@@ -1248,6 +1279,9 @@ gtags 数据库可通过 `:cs` 命令或 `global` 命令行查询。
 ```
 
 ### 4. vim-qf（Quickfix 增强）
+
+这些命令以 `-buffer` 定义，只在 quickfix / location **窗口内部**可用
+（`:Filter`、`:Restore`、`:ListLists`、`:RemoveList`、`:SaveListAdd`、`:LoadListAdd` 同理）：
 
 ```vim
 " 只保留匹配的条目
@@ -1280,7 +1314,7 @@ Leader+rs
 ```
 
 退出 Vim 时会自动重写已追踪的 session（v:this_session 已设置），启动时从
-`~/.cache/vim/sessions/` 自动恢复。
+`~/.cache/vim/sessions/` 自动恢复——前提是启动 Vim 时没有带文件参数。
 
 ### 6. LSP 命令（yegappan/lsp）
 
@@ -1347,17 +1381,17 @@ wsl.exe --shutdown # 或：wsl.exe --terminate <发行版名>
 
 - **缩进规则** — monkey-vim 按文件类型应用缩进设置：
 
-| 文件类型                                          | 风格                     | 宽度 |
-| ------------------------------------------------- | ------------------------ | ---- |
-| `c`, `cpp`, `go`, `sh`, `vim`, `sql`              | 硬制表符 (`noexpandtab`) | 4    |
-| `zig`, `rust`, `python`, `markdown`               | 空格 (`expandtab`)       | 4    |
-| `javascript`, `typescript`, `lua`, `yaml`, `json` | 空格 (`expandtab`)       | 2    |
+| 文件类型                                                   | 风格                     | 宽度 |
+| ---------------------------------------------------------- | ------------------------ | ---- |
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql`                       | 硬制表符 (`noexpandtab`) | 4    |
+| `zig`, `rust`, `python`, `markdown`                        | 空格 (`expandtab`)       | 4    |
+| `javascript`, `typescript`, `lua`, `yaml`, `json`, `jsonc` | 空格 (`expandtab`)       | 2    |
 
 全局默认使用 4 宽度硬制表符。如需自定义，可在引入 monkey-vim 配置后通过 `FileType` 自动命令覆盖。
 
 - Vim 剪贴板集成
 
-monkey-vim 设置了 `clipboard=unnamed,unnamedplus`，vim 的复制/删除操作会自动同步到系统剪贴板。退出 vim 后，复制的内容仍然保留在系统剪贴板中（系统剪贴板由显示服务器/Wayland 合成器/终端管理，不受 vim 退出影响）。
+monkey-vim 设置了 `clipboard=unnamed,unnamedplus`（当前 Vim 没有 `+unnamedplus` 时只设 `unnamed`，即不带 `+clipboard` 的 X11 或 Mac），vim 的复制/删除操作会自动同步到系统剪贴板；物理控制台（无显示服务器且不在 tmux 内）则完全不改动 `clipboard`。退出 vim 后，复制的内容仍然保留在系统剪贴板中（系统剪贴板由显示服务器/Wayland 合成器/终端管理，不受 vim 退出影响）。
 
 启动时会按以下顺序判定 yank 到系统剪贴板的通路：
 
@@ -1467,6 +1501,8 @@ sudo zypper install gtk3-devel \
 ##### CentOS
 
 > 需要先启用 EPEL：`sudo dnf install epel-release`。`gtk3-devel` 需要 CentOS 8+ / EPEL 8+，CentOS 7 不可用。`lua-devel` 需要启用 CRB（CodeReady Builder）仓库：`sudo dnf config-manager --set-enabled crb`（CentOS 9）或 `sudo dnf config-manager --set-enabled powertools`（CentOS 8）。
+>
+> Fedora：这些包同名且都在基础仓库里，无需 EPEL——照抄上面的 `sudo dnf install ...` 即可。安装脚本为此单独有一条 Fedora 分支。
 
 Wayland：
 
