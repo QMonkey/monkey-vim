@@ -43,21 +43,23 @@ curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.s
 
 What the script does, step by step:
 
-1. Install Vim build dependencies (GTK3/4 + Wayland or X11 per display server; Python3/Perl/Ruby/Lua)
-2. Pre-authorize `sudo` once — the only password entry of the whole run — and install a **temporary** NOPASSWD sudoers drop-in for the invoking user, removed automatically on exit. Homebrew resets the sudo timestamp on every `brew` invocation and WSL2 clock jumps invalidate tickets; NOPASSWD makes the run immune to both in any command order. If the drop-in cannot be installed, the script falls back to a background keepalive plus lazy re-authentication
+1. Pre-authorize `sudo` once — the only password entry of the whole run — and install a **temporary** NOPASSWD sudoers drop-in for the invoking user, removed automatically on exit. Homebrew resets the sudo timestamp on every `brew` invocation and WSL2 clock jumps invalidate tickets; NOPASSWD makes the run immune to both in any command order. If the drop-in cannot be installed, or is written but not parsed, the run falls back to the sudo timestamp: one re-authentication on a long run, and a privileged step that cannot prompt fails and is reported instead
+2. Install Vim build dependencies (Python3/Perl/Ruby/Lua plus the GUI stack): GTK3 + X11 on WSL, GTK4 wherever `pkg-config` finds it, otherwise GTK3, and — with no GTK at all — a terminal-only build with `--with-osc52` instead
 3. Install Homebrew (Linuxbrew) as the fallback package manager — its shellenv is persisted to your shell rc files (with PATH dedup guards) even when Homebrew already existed
 4. Clone and compile Vim from source, then `make install`
 5. Clone monkey-vim to `~/Documents/monkey-vim` (or update it if already cloned)
-6. Install required tools + optional LSP servers via `checkhealth.sh --install` (apt/zypper/dnf/pacman/brew, npm, pip, go install, rustup). npm is installed explicitly when missing (Debian/Ubuntu `nodejs` alone doesn't provide it); global npm packages skip `sudo` whenever the npm prefix is user-writable; fzf prefers Homebrew so you get a current version instead of the distro's
-7. Persist `~/go/bin`, `~/.cargo/bin` (and `/usr/local/bin`) in your shell rc files
+6. Install required tools + optional LSP servers via `checkhealth.sh --install` (apt/zypper/dnf/pacman/brew, npm, pip, go install, rustup). npm is installed explicitly when missing (Debian/Ubuntu `nodejs` alone doesn't provide it); global npm packages never need `sudo` — `npm_install_g` re-points the prefix to `~/.npm-global` when the current one is not user-owned (or is Homebrew's); fzf prefers Homebrew so you get a current version instead of the distro's
+7. Persist one PATH block in your profile files, before the config links: the framework bin dirs (`~/.local/bin`, `${CARGO_HOME:-~/.cargo}/bin`, `GOBIN`/every `GOPATH` entry's bin, `~/.npm-global/bin`) plus the Homebrew `bin`/`sbin` — Homebrew goes first on macOS and is inserted positionally (above the WSL `/mnt` shims only) on Linux/WSL
 8. Symlink `.vimrc`, `.clang-format`, and the efm-langserver config; create runtime directories
 9. Install all Vim plugins (`:PlugInstall`) automatically
 
+> Set these in the environment before the run (export them first, or prefix a downloaded `bash install.sh`): `INSTALL_DIR` — where this repo is cloned (default `~/Documents/monkey-vim`); `VIM_SRC_DIR` — the Vim source tree (default `~/Documents/vim`); `JOBS` — `make -j` (default `nproc`); `CHECKHEALTH_MODE` — `run` (default) installs what is missing, `verify` only checks, `none` skips the dependency pass entirely.
+>
 > The script keeps the Vim source tree at `~/Documents/vim` (no cleanup), so you can rebuild later with `git pull` + `make`.
 >
 > The script only rebuilds Vim when the installed one is below 9.1 **or** its `vim --version` features are incomplete — version alone isn't enough. The required features mirror the builds below: `+clipboard` and `+clipboard_provider` (clipboard providers power the osc52/tmux fallbacks; the feature landed in 9.1.1857, so distro builds of 9.1.0–9.1.1846 are rebuilt) plus, per platform, `+xterm_clipboard` (WSL), `+wayland_clipboard` or `+xterm_clipboard` (Linux desktop); the core set is `+python3 +lua +perl +ruby +terminal +cscope +multi_byte`.
 >
-> PATH changes only apply to shells started after the install. When it finishes, the script prints how to apply them to the current terminal (`source <rc file>` or `exec $SHELL`).
+> PATH changes only apply to shells started after the install. At the end the script types `source <rc file>` into your current shell for you (TIOCSTI injection, `python3` with `perl` as fallback, run through `sudo` on Linux); when no interactive shell is attached to the terminal it prints that line instead — `source <rc file>` or `exec $SHELL`.
 
 ### Option 2: Manual installation
 
@@ -79,6 +81,7 @@ git clone https://github.com/QMonkey/monkey-vim.git
 | git                                                           | Plugin manager, vim-fugitive                                                                | Yes         |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) (rg)         | fzf.vim code search (F1/Leader+a)                                                           | Yes         |
 | universal-ctags                                               | gutentags tag generation                                                                    | Yes         |
+| python3                                                       | Types the final `source <rc file>` into your shell (TIOCSTI injection)                      | Yes         |
 | [GNU Global](https://www.gnu.org/software/global/) (`global`) | gutentags gtags (GTAGS) generation & navigation                                             | Recommended |
 | [Pygments](https://pygments.org/) (`pygmentize`)              | gtags parser for non-C/C++ languages (Python, Go, Rust, JS, etc.)                           | Recommended |
 | [fzf](https://github.com/junegunn/fzf)                        | Fuzzy finder (fzf.vim)                                                                      | Yes         |
@@ -131,14 +134,14 @@ Language Server Protocol support is provided by [yegappan/lsp](https://github.co
 
 Some LSP servers offload formatting/linting to **external tools** that must be installed separately. Without them the feature silently degrades (falls back to built-in diagnostics or skips the tool):
 
-| Language | Tool              | Role                                   | Install                                                                                                                                              |
-| -------- | ----------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C/C++    | clang-tidy        | linter (via `clangd --clang-tidy`)     | `sudo apt-get install clang-tidy`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
-| Go       | staticcheck       | linter (via `gopls` `staticcheck`)     | `go install honnef.co/go/tools/cmd/staticcheck@latest`                                                                                               |
-| Shell    | shfmt             | formatter (via `bash-language-server`) | `go install mvdan.cc/sh/v3/cmd/shfmt@latest`                                                                                                         |
-| Python   | black             | formatter (via `pylsp` black plugin)   | `pip3 install black`                                                                                                                                 |
-| Markdown | prettier          | formatter (via `efm-langserver`)       | `npm install -g prettier`                                                                                                                            |
-| Markdown | markdownlint-cli2 | linter (via `efm-langserver`)          | `npm install -g markdownlint-cli2`                                                                                                                   |
+| Language | Tool              | Role                                     | Install                                                                                                                                              |
+| -------- | ----------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C/C++    | clang-tidy        | linter (via `clangd --clang-tidy`)       | `sudo apt-get install clang-tidy`, `sudo zypper install clang`, `sudo dnf install clang-tools-extra`, `sudo pacman -S clang`, or `brew install llvm` |
+| Go       | staticcheck       | linter (via `gopls` `staticcheck`)       | `go install honnef.co/go/tools/cmd/staticcheck@latest`                                                                                               |
+| Shell    | shfmt             | formatter (via `bash-language-server`)   | `go install mvdan.cc/sh/v3/cmd/shfmt@latest`                                                                                                         |
+| Python   | black             | formatter (via the `pylsp` black plugin) | `pip3 install black python-lsp-black`                                                                                                                |
+| Markdown | prettier          | formatter (via `efm-langserver`)         | `npm install -g prettier`                                                                                                                            |
+| Markdown | markdownlint-cli2 | linter (via `efm-langserver`)            | `npm install -g markdownlint-cli2`                                                                                                                   |
 
 #### 2.3 C/C++
 
@@ -173,8 +176,9 @@ go install honnef.co/go/tools/cmd/staticcheck@latest
 ```bash
 # Python 3 is required (install via system package manager if not present)
 pip3 install python-lsp-server
-# Optional: formatters/linters (black is used by the pylsp black plugin)
-pip3 install black autopep8 flake8 pylint
+# Optional: formatters/linters (pylsp runs black through the pylsp-black
+# plugin, so install that plugin alongside black)
+pip3 install black python-lsp-black autopep8 flake8 pylint
 ```
 
 #### 2.6 JavaScript / TypeScript
@@ -265,6 +269,8 @@ Pass `--install` to automatically install missing dependencies (required tools +
 ```bash
 ./checkhealth.sh --install
 ```
+
+`-i` is the short form of `--install`. `--skip-check-config` drops the config-link/directory section — the one-click installer passes it because `install.sh` creates those symlinks only after this script runs. `-h` prints the same list. Exit code: `1` when any required dependency is missing, `0` otherwise (a missing recommended or optional entry never fails the run).
 
 ### 4. Install monkey-vim
 
@@ -512,10 +518,12 @@ fixes it.
 | [junegunn/gv.vim](https://github.com/junegunn/gv.vim)                                 | Git commit browser                               |
 | [romainl/vim-qf](https://github.com/romainl/vim-qf)                                   | Quickfix/Location list helpers                   |
 
+Besides vim-plug, the vimrc enables two of Vim's own optional runtime packages: `comment` (the `gc`/`gcc`/`gC` operator and the `ic`/`ac` text objects, see §1.22/§1.23) and `hlyank` (briefly highlights the text you just yanked; `g:hlput_enable = 1` adds the same for a put).
+
 ## Keyboard shortcut
 
 ```text
-The "Leader" key below means comma key.
+The "Leader" key below means comma key (both mapleader and maplocalleader are ',').
 ```
 
 ### 1. Normal mode
@@ -538,7 +546,9 @@ j       Move down one display line (gj), works on wrapped lines
 k       Move up one display line (gk), works on wrapped lines
 f       Search 1 char to jump with hints (stargate)
 F       Search 2 consecutive chars to jump with hints (stargate)
-gs      Select words/regions for multi-cursor editing (vim-visual-multi)
+gs      Inside multi-cursor mode only: select words/regions as editing regions
+        (vim-visual-multi's "Select Operator", moved off its default `s`).
+        In plain normal mode gs stays cscope's find-symbol — see §1.9
 ```
 
 The following remaps work in both Insert mode and Command-line mode:
@@ -640,12 +650,6 @@ gt                  Go to type definition
 gi                  Go to implementation
 gr                  Show references
 
-Leader+gd           Peek definition
-Leader+gc           Peek declaration
-Leader+gt           Peek type definition
-Leader+gi           Peek implementation
-Leader+gr           Peek references
-
 Leader+rn           Rename symbol
 [d                  Previous diagnostic
 ]d                  Next diagnostic
@@ -654,6 +658,12 @@ Leader+rn           Rename symbol
 Leader+gh           Show current line diagnostics (popup)
 Leader+d            Show/hide current buffer diagnostics (location list)
 ```
+
+The keys above are buffer-local and only appear once a server is attached to
+the filetype; there is no keymap for the peek variants — use the commands
+`:LspPeekDefinition`, `:LspPeekDeclaration`, `:LspPeekTypeDef`,
+`:LspPeekImpl`, `:LspPeekReferences`. (`Leader+gd` and `Leader+gD` are taken by
+fugitive's diff keys, see "Use git in vim".)
 
 Files are auto-formatted on save via LSP. Completion is enabled by default — LSP-powered suggestions appear automatically as you type. `K` looks up the word under the cursor: `:Man` by default, `:LspHover` in LSP-enabled filetypes, and `:help` in Vim/help files.
 
@@ -666,7 +676,7 @@ gR                  Find callers (cscope)
 g]                  Jump to the tag under cursor, listing all matches in quickfix
 ```
 
-Cscope supports `c`, `d`, `e`, `f`, `g`, `i`, `s`, `t` query types, with results in quickfix.
+Cscope supports `a`, `c`, `d`, `e`, `f`, `g`, `i`, `s`, `t` query types (`cscopequickfix` lists all of them), with results in quickfix.
 Requires `cscope` and `gtags-cscope` database (auto-generated by gutentags).
 
 #### 1.10 File/Buffer/Tag navigation (fzf.vim)
@@ -677,7 +687,8 @@ Ctrl+p      Search files
 Leader+b    Search buffers (C-d to delete, Enter to open)
 Leader+t    Search buffer tags
 Leader+p    Search project tags
-Leader+f    Search function in buffer
+Leader+f    Search functions/methods in buffer (LSP document symbols,
+            needs an attached server — not the tag file)
 Leader+e    Search line in buffer
 ```
 
@@ -715,7 +726,7 @@ Markers (!@#$%^&*()) are disabled: `m[0-9]` falls through to Vim's native
 marks, and the marker mappings (`m<BS>`, `m?`, `]-`, `[-`, `]=`, `[=`) are
 left unmapped.
 
-`:SignatureToggle` Show/hide marks without deleting them
+`:SignatureToggleSigns` Show/hide marks without deleting them
 `:SignatureRefresh` Re-sync marks and signs if they go out of sync
 
 #### 1.13 vim-dir (File manager / directory viewer, replaces netrw)
@@ -731,7 +742,7 @@ s           Open in horizontal split
 S           Open in vertical split
 t           Open in new tab
 -/<BS>/u    Go up one directory
-i           Preview file (first 100 lines)
+i           Preview file in a popup (first 1000 lines; image info for images)
 x/X         Toggle selection / select all
 D or dd     Delete files/directories
 R or rr     Rename files/directories
@@ -739,6 +750,7 @@ C/cc        Create directory / create file
 p/P         Copy/move selected into current directory
 .           Toggle hidden files
 :DirFilter  Filter entries by regex (! to hide matches)
+gq          Leave the listing (switch back to a real buffer, keep the tab/window)
 ```
 
 #### 1.14 Code search (fzf ripgrep)
@@ -810,7 +822,7 @@ Leader+ws       Save session
 Leader+rs       Remove session (asks for confirmation; no-op when no session exists)
 ```
 
-Sessions are saved to `~/.cache/vim/sessions/`. On Vim startup, a session is automatically restored from this directory.
+Sessions are saved to `~/.cache/vim/sessions/`. On Vim startup — when Vim is launched with no file arguments — a session is automatically restored from this directory.
 
 Viminfo is per-project: command/search history, registers, the jumplist and file marks are stored in `~/.cache/vim/viminfo/<project-root-flattened>.viminfo` (project root detected by walking up from the startup directory for `.git`/`.root`/`.hg`/... markers, falling back to `~`), so histories do not leak between projects.
 
@@ -833,13 +845,14 @@ Leader+l            Toggle location list
 
 In quickfix/location windows (ack-style mappings):
 
-- `o`/`Enter` — Open entry (file + line)
-- `go` — Open in horizontal split
-- `gO` — Open and focus new window
-- `t` — Open in new tab
-- `T` — Open in new tab (keep quickfix focused)
+- `Enter` — Open entry (file + line)
+- `o` — Open entry and jump back to the list (vim-qf)
+- `s` — Open in a horizontal split (vim-qf)
+- `v` — Open in a vertical split (vim-qf)
+- `t` — Open in a new tab (vim-qf)
+- `O` — Open entry and close the quickfix/location window (vim-qf)
 - `p` — Preview the item under the cursor in the preview window (vim-qf)
-- `q` — Close quickfix window
+- `q` — Close quickfix window (built-in)
 
 Quickfix windows auto-resize to fit content (max 10 lines), auto-close when empty, and are placed at the bottom.
 
@@ -866,7 +879,7 @@ a%      Around any block (text object)
 
 #### 1.21 Lexima (auto-close pairs)
 
-Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''` and backtick pairs. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired (since `"` is the comment leader).
+Lexima automatically closes pairs: `()`, `[]`, `{}`, `""`, `''` and backtick pairs. Backspace inside an empty pair deletes both characters. Enter inside `{}` auto-indents and creates a closing brace. In vim files, `"` is not auto-paired where it would open a comment — at the line start or line end — because `"` is the comment leader; mid-line it still pairs.
 
 #### 1.22 Operators
 
@@ -880,6 +893,10 @@ gu gU g~        Lowercase / uppercase / toggle case
 =               Reindent
 !               Filter lines through external command
 gn gN           Operate on the next / previous search match
+
+# Vim's built-in comment package (pack/dist/opt/comment)
+gc{motion}      Toggle comments on the motion
+gcc / gC        Toggle comments on the line / to end of line
 
 # vim-subversive (see §1.7)
 x               Replace text object / motion with register content
@@ -906,6 +923,7 @@ i( a( i[ a[ i{ a{ i< a<   Brackets (b = alias of parenthesis, overridden here)
 i" a" i' a' i` a`   Quotes
 it / at         HTML/XML tag
 gn / gN         Last search pattern match
+ic / ac         Comment block (Vim's built-in comment package)
 
 # targets.vim (enhanced search: seeking, growing, escaping, multi-line)
 ib / ab         Any block (auto-detects () [] {}) — overridden by vim-sandwich, see below
@@ -969,11 +987,15 @@ Ctrl+x Ctrl+]   Tag completion (fallback when LSP is slow/unavailable)
 #### 3.1 Remap
 
 ```text
-s       Replace selected text with clipboard content
+x       Replace selected text with clipboard content
 ;       Enter command line mode, same as :
 <       Decrease indent, keep selection
 >       Increase indent, keep selection
 ```
+
+`x` is vim-subversive; the sandwich-style `s` is mapped to `<Nop>` in both
+Normal and Visual mode on purpose — it has no surround action of its own, and
+the native fallback would delete the character under the cursor.
 
 #### 3.2 Search
 
@@ -988,9 +1010,11 @@ s       Replace selected text with clipboard content
 # '\r' standard for newline
 
 x{textobj}  Replace a text object with clipboard content (e.g. xiw)
-xx          Replace entire current line with clipboard content
-X           Replace from cursor to end of line with clipboard content
+x           Replace the selection with clipboard content
 ```
+
+`xx` and `X` are mapped in Normal mode only (§1.7); in Visual mode a bare `x`
+already takes the selection.
 
 #### 3.4 Easy motion (vim9-stargate)
 
@@ -1152,6 +1176,7 @@ Leader+hr       Undo current hunk
 Leader+hS       Stage entire file
 Leader+hR       Discard all changes in file
 Leader+hq       Load hunks into quickfix (current file)
+Leader+hl       Same as Leader+hq (second binding on the same command)
 Leader+hQ       Load hunks into quickfix (all files)
 ```
 
@@ -1172,6 +1197,9 @@ Leader+hQ       Load hunks into quickfix (all files)
 
 " Generate tags for current project
 :GutentagsUpdate!
+
+" Force a full rebuild of the current project's databases
+:TagsRebuild
 ```
 
 If GNU Global (`gtags`/`global`) and Pygments (`pygmentize`) are installed,
@@ -1180,6 +1208,13 @@ gutentags also generates the `GTAGS`/`GRTAGS`/`GPATH` databases in
 and falls back to Pygments for all other languages (Python, Go, Rust,
 JavaScript, etc.). The gtags database is queried with the `:cs` commands, or
 directly with the `global` CLI.
+
+gutentags updates gtags incrementally, which cannot cope with files deleted or
+renamed by a branch switch. monkey-vim compares the project's `(branch, HEAD)`
+pair against a baseline kept next to the databases (`.tags-head` in the same
+cache directory) and forces a full rebuild when both change; the check runs on
+buffer enter, on focus gain and after a fugitive change. Set
+`g:tags_branch_aware = 0` to turn it off.
 
 ### 3. fzf.vim
 
@@ -1265,7 +1300,8 @@ directly with the `global` CLI.
 " Search filetypes
 :Filetypes
 
-" Search snippets (UltiSnips)
+" Search snippets (UltiSnips only — monkey-vim uses vim-vsnip and installs
+" no UltiSnips, so :Snippets errors out here)
 :Snippets
 
 " Search colorschemes
@@ -1276,6 +1312,10 @@ directly with the `global` CLI.
 ```
 
 ### 4. vim-qf (Quickfix helpers)
+
+Defined with `-buffer`, so they are available **inside** a quickfix or location
+window (same for `:Filter`, `:Restore`, `:ListLists`, `:RemoveList`,
+`:SaveListAdd`, `:LoadListAdd`):
 
 ```vim
 " Keep only matching entries in qf/loc list
@@ -1308,7 +1348,8 @@ Leader+rs
 ```
 
 The session is automatically re-written when Vim exits (while a session is
-tracked) and restored on startup from `~/.cache/vim/sessions/`.
+tracked) and restored on startup from `~/.cache/vim/sessions/`, provided Vim
+was launched without file arguments.
 
 ### 6. LSP commands (yegappan/lsp)
 
@@ -1375,17 +1416,17 @@ Notes: `su - <USERNAME>` from a root session does **not** fix this — `su` open
 
 - **Indentation convention** — monkey-vim applies indent settings per filetype:
 
-| Filetype                                          | Style                    | Width |
-| ------------------------------------------------- | ------------------------ | ----- |
-| `c`, `cpp`, `go`, `sh`, `vim`, `sql`              | Hard tab (`noexpandtab`) | 4     |
-| `zig`, `rust`, `python`, `markdown`               | Spaces (`expandtab`)     | 4     |
-| `javascript`, `typescript`, `lua`, `yaml`, `json` | Spaces (`expandtab`)     | 2     |
+| Filetype                                                   | Style                    | Width |
+| ---------------------------------------------------------- | ------------------------ | ----- |
+| `c`, `cpp`, `go`, `sh`, `vim`, `sql`                       | Hard tab (`noexpandtab`) | 4     |
+| `zig`, `rust`, `python`, `markdown`                        | Spaces (`expandtab`)     | 4     |
+| `javascript`, `typescript`, `lua`, `yaml`, `json`, `jsonc` | Spaces (`expandtab`)     | 2     |
 
 The global default is 4-width hard tabs. To customize, override the `FileType` autocmds in your own vimrc after sourcing monkey-vim's.
 
 - Vim clipboard integration
 
-monkey-vim sets `clipboard=unnamed,unnamedplus` so vim's yank/delete automatically syncs to the system clipboard. Copied text persists in the system clipboard after vim exits (the system clipboard is owned by the display server / Wayland compositor / terminal, not by vim).
+monkey-vim sets `clipboard=unnamed,unnamedplus` — or plain `unnamed` when this Vim has no `+unnamedplus` (X11 without `+clipboard`, or Mac) — so vim's yank/delete automatically syncs to the system clipboard; a physical console with no display server and no tmux leaves `clipboard` untouched. Copied text persists in the system clipboard after vim exits (the system clipboard is owned by the display server / Wayland compositor / terminal, not by vim).
 
 Depending on the environment, yanks reach the system clipboard through different routes (evaluated in this order at startup):
 
@@ -1495,6 +1536,8 @@ sudo zypper install gtk3-devel \
 ##### CentOS
 
 > Enable EPEL first: `sudo dnf install epel-release`. The `gtk3-devel` package requires CentOS 8+ / EPEL 8+; it is not available on CentOS 7. `lua-devel` requires CRB (CodeReady Builder) repository: `sudo dnf config-manager --set-enabled crb` (CentOS 9) or `sudo dnf config-manager --set-enabled powertools` (CentOS 8).
+>
+> Fedora: the same names ship in the base repos and no EPEL is needed — run the CentOS commands as they are (`sudo dnf install ...`). The installer has a separate Fedora branch for exactly this reason.
 
 Wayland:
 
