@@ -9,15 +9,17 @@
 #   . "$(dirname "$0")/scripts/install.sh"      # or the curl|bash bootstrap
 #   PROJECT=monkey-zsh
 #   PROJECT_REPO=https://github.com/QMonkey/monkey-zsh.git
-#   install_step_tool() { install_zsh; echo ""; }
+#   install_step_tool() { install_zsh; printf '\n'; }
 #   SUMMARY_LINES=(...)
 #   install_main "$@"
 #
 # Hook order inside install_main (a hook prints its own trailing blank):
-#   banner → OS info → setup_sudo → prepare → tool → post → clone
-#   → checkhealth → refresh PATH → autostart → symlinks (+step_symlinks)
-#   → persist PATH (PERSIST_POS=before_links runs it earlier) → after
-#   → completion summary
+#   require_home → os_init → banner → OS info (+install_print_info)
+#   → setup_sudo → export_path (seed the framework bin dirs)
+#   → prepare → tool → post_tool → clone → checkhealth (tool)
+#   → autostart → persist PATH (before_links) → symlinks (+step_symlinks)
+#   → checkhealth (after_links) → persist PATH (after_links)
+#   → after → completion summary
 
 # fail() aborts: an installer must stop at the first fatal step.
 MONKEY_FAIL_EXITS=true
@@ -99,7 +101,7 @@ run_checkhealth_step() {
 # --install checks first and installs after; transient failures (network
 # blips, apt locks, aborted downloads) heal on retry. After the first pass
 # everything installed is skipped, so retries are cheap verifications.
-# Three attempts, exit code 0 wins.
+# retry()'s default attempt count, no -n here; exit code 0 wins.
 run_checkhealth() {
 	info "Running checkhealth.sh --install to install remaining dependencies..."
 	# Chain marker: a chained --install keeps the NOPASSWD drop-in default —
@@ -130,26 +132,26 @@ checkhealth_step() { # <pos: tool | after_links>
 	[ "${CHECKHEALTH_MODE:-run}" = none ] && return 0
 	[ "${CHECKHEALTH_POS:-tool}" = "$1" ] || return 0
 	run_checkhealth_step
-	echo ""
+	printf '\n'
 }
 persist_path_step() { # <pos: before_links | after_links>
 	[ "$PERSIST_PATH" = 1 ] || return 0
 	[ "${PERSIST_POS:-after_links}" = "$1" ] || return 0
 	persist_path
-	echo ""
+	printf '\n'
 }
 
 install_main() {
 	require_home
-	OS=$(os_detect)
+	os_init
 
 	print_banner "${PROJECT} installer"
-	if [ "$LINUX_ONLY" = 1 ] && { [ "$OS" = "macos" ] || [ "$OS" = "unknown" ]; }; then
-		warn "Current system is not Linux — ${PROJECT} is Wayland/Linux-only, skipping."
+	if [ "$LINUX_ONLY" = 1 ] && [ "$OS" = "macos" ]; then
+		warn "Current system is macOS — ${PROJECT} is Wayland/Linux-only, skipping."
 		exit 0
 	fi
-	# One id per distro (Ubuntu is no longer folded into Debian, and neither
-	# is Fedora into CentOS), so the line reports exactly what was detected.
+	# One id per distro (Ubuntu, Debian, Fedora and CentOS each keep their
+	# own), so the line reports exactly what was detected.
 	info "Detected OS: ${CYAN}${OS}${NC}"
 	# Build-flavor notes (monkey-vim's WSL GTK3 line) belong right after the
 	# OS announcement, before the layout lines.
@@ -159,11 +161,11 @@ install_main() {
 	for line in ${INSTALL_INFO[@]+"${INSTALL_INFO[@]}"}; do
 		info "$line"
 	done
-	echo ""
+	printf '\n'
 
-	# No blank line here: the original installers let the first hook's
-	# output follow setup_sudo directly (a project that wants separation
-	# opens its prepare hook with `echo ""`).
+	# No blank line here: the first hook's output follows setup_sudo
+	# directly (a project that wants separation opens its prepare hook
+	# with `printf '\n'`).
 	setup_sudo
 
 	# Seed the framework bin dirs BEFORE anything runs: with no [ -d ]
@@ -176,7 +178,7 @@ install_main() {
 	install_step_post_tool
 
 	clone_project
-	echo ""
+	printf '\n'
 
 	checkhealth_step tool
 
@@ -186,7 +188,7 @@ install_main() {
 
 	setup_symlinks
 	install_step_symlinks
-	echo ""
+	printf '\n'
 
 	checkhealth_step after_links
 

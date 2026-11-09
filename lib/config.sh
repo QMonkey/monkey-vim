@@ -22,14 +22,10 @@
 #   "strict"     — checkhealth only: the link must resolve to THIS repo.
 
 # ──────────────────────── install side ────────────────────────
-# Usage: link_config <src> <dst> [mode]. Never overwrites an existing target
+# Usage: link_config <src> <dst> [mode] (the modes are listed above and
+# dispatched in the function). Never overwrites an existing target
 # that is not this repo's link (ln -sfn into a real directory would create the
 # link INSIDE it).
-#
-# mode ""     — a foreign target is reported with a warning + the re-link line
-#        keep  — an existing target is skipped with an info line, and a missing
-#                source is skipped silently: the entry guards something the repo
-#                may not even ship (efm-langserver, .clang-format, configs/<dir>)
 link_config() {
 	local src="$1" dst="$2" mode="${3:-}"
 	# mode ""         foreign target → warn + skip (the conservative default)
@@ -67,7 +63,7 @@ link_config() {
 			fi
 		else
 			warn "$dst exists and is not this repo's link — skipping."
-			echo -e "    re-link manually with: ${CYAN}ln -sfn $src $dst${NC}"
+			printf '%s\n' "    re-link manually with: ${CYAN}ln -sfn $src $dst${NC}"
 			return 0
 		fi
 	fi
@@ -135,7 +131,9 @@ probe_advisory() {
 			ok "${ok_msg:-Nerd Font found}"
 			return 0
 		fi
-		[ -n "$missing" ] && warn "$missing"
+		# %b for the same reason as the printers below: ADVISORY_NERDFONT
+		# carries its second line as \n inside the |-delimited field.
+		[ -n "$missing" ] && warn "$(printf '%b' "$missing")"
 		return 1
 		;;
 	esac
@@ -216,15 +214,19 @@ probe_advisory() {
 	fi
 	# Nothing relevant around: stay silent unless a message was provided.
 	[ -n "$missing" ] || return 1
-	warn "$missing"
+	# Same mini-format as the incomplete branch above: advisory data writes
+	# its line breaks as \n inside a |-delimited field (a real newline there
+	# would truncate the field at the `IFS='|' read` that splits it), so this
+	# column gets the one %b pass too.
+	warn "$(printf '%b' "$missing")"
 	return 1
 }
 
 # The "Config files" section: required links first, then advisory entries.
 # --skip-check-config (passed by install.sh): the config symlinks are linked
 # AFTER this script runs in most repos, so judging them here would fail every
-# chained run and burn all three retries. Standalone runs (the manual
-# diagnosis entry point) still get the full check.
+# chained run and burn the whole checkhealth retry ladder. Standalone runs
+# (the manual diagnosis entry point) still get the full check.
 check_config_files() {
 	if ${SKIP_CONFIG_CHECKS:-false}; then
 		warn "config checks skipped (handled by the installer)"
@@ -239,7 +241,7 @@ $entry
 EOF
 		probe_advisory "$type" "$params" "$ok_msg" "$incomplete" "$missing" || true
 	done
-	echo ""
+	printf '\n'
 }
 
 check_config_links() {
@@ -297,8 +299,8 @@ check_advisory_sections() {
 $entry
 EOF
 		print_bold_header "$title"
-		[ -n "$note" ] && echo "  $note"
+		[ -n "$note" ] && printf '%s\n' "  $note"
 		probe_advisory "$type" "$params" "$ok_msg" "$incomplete" "$missing" || true
-		echo ""
+		printf '\n'
 	done
 }

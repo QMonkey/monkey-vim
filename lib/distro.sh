@@ -19,91 +19,91 @@
 # Names that differ from the binary name for SOME distro manager. The arms
 # below cover ONLY those (go→golang-go, node→nodejs, black→python3-black,
 # ...). A tool whose package name equals its command name (git, tmux,
-# ripgrep, fzf, ...) needs no row here — it falls through to `*) echo "$1"`
+# ripgrep, fzf, ...) needs no row here — it falls through to `*) printf '%s\n' "$1"`
 # at the bottom. Editor/LSP/tooling names shared by monkey-nvim and
 # monkey-vim live here; Homebrew's own mapping is brew_name (lib/brew.sh),
 # which pkg_name selects on macOS and for any brew-lane request.
 distro_name() {
-	case "${OS:-unknown}:$1" in
+	case "$OS:$1" in
 	# Go / Node / shell utilities
-	debian:go | ubuntu:go) echo "golang-go" ;;
-	centos:go | fedora:go) echo "golang" ;;
-	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) echo "nodejs" ;;
-	debian:which | ubuntu:which) echo "debianutils" ;;
-	arch:python3) echo "python" ;;
-	# python3 needs no versioned mapping: Leap 16 ships a literal python3,
-	# Tumbleweed resolves it through the python313 capability. Same for
-	# `node` — `nodejs` resolves through the nodejs22/26 capability, which
+	debian:go | ubuntu:go) printf '%s\n' "golang-go" ;;
+	centos:go | fedora:go) printf '%s\n' "golang" ;;
+	debian:node | ubuntu:node | arch:node | centos:node | fedora:node) printf '%s\n' "nodejs" ;;
+	debian:which | ubuntu:which) printf '%s\n' "debianutils" ;;
+	arch:python3) printf '%s\n' "python" ;;
+	# python3 needs no versioned mapping: Leap ships a literal python3 and
+	# Tumbleweed resolves it through its versioned python3 capability. Same
+	# for `node` — `nodejs` resolves through its versioned capability, which
 	# drags the matching npm in as a recommended package.
-	opensuse:node) echo "nodejs" ;;
+	opensuse:node) printf '%s\n' "nodejs" ;;
 	# pip3 is standalone on every distro (openSUSE's python3-pip is NOT
 	# pulled in by python3). The python3- names resolve on openSUSE through
-	# capabilities — no interpreter-flavor versioning: a hard python313-
+	# capabilities — no interpreter-flavor versioning: a hard versioned
 	# name dies the day the default python rolls.
-	debian:pip3 | ubuntu:pip3 | centos:pip3 | fedora:pip3) echo "python3-pip" ;;
-	arch:pip3) echo "python-pip" ;;
-	opensuse:pip3) echo "python3-pip" ;;
+	debian:pip3 | ubuntu:pip3 | centos:pip3 | fedora:pip3) printf '%s\n' "python3-pip" ;;
+	arch:pip3) printf '%s\n' "python-pip" ;;
+	opensuse:pip3) printf '%s\n' "python3-pip" ;;
 	# CentOS Stream 10 splits npm into nodejs-npm; the bare name matches
-	# nothing (dnf ≥4.20 "info npm" → no match, rc 0).
-	centos:npm) echo "nodejs-npm" ;;
+	# nothing there ("dnf info npm" → no match, rc 0).
+	centos:npm) printf '%s\n' "nodejs-npm" ;;
 	# ── compositor tooling (monkey-sway / monkey-hyprland) ──
-	*:swaymsg | *:swaynag) echo "sway" ;;
-	*:wl-copy) echo "wl-clipboard" ;;
-	*:wpctl) echo "wireplumber" ;;
-	*:hyprctl) echo "hyprland" ;;
+	*:swaymsg | *:swaynag) printf '%s\n' "sway" ;;
+	*:wl-copy) printf '%s\n' "wl-clipboard" ;;
+	*:wpctl) printf '%s\n' "wireplumber" ;;
+	*:hyprctl) printf '%s\n' "hyprland" ;;
 	# hyprland-dialog: the hyprland-qtutils helpers; coverage varies per
 	# release — the availability probe degrades gracefully when missing.
-	ubuntu:hyprland-dialog) echo "hyprland-qtutils" ;;
-	debian:hyprland-dialog | arch:hyprland-dialog | opensuse:hyprland-dialog) echo "hyprland-guiutils" ;;
+	ubuntu:hyprland-dialog) printf '%s\n' "hyprland-qtutils" ;;
+	debian:hyprland-dialog | arch:hyprland-dialog | opensuse:hyprland-dialog) printf '%s\n' "hyprland-guiutils" ;;
 	# notification-daemon sentinel: dunst where packaged (EPEL), mako elsewhere.
-	debian:notif | ubuntu:notif | centos:notif | fedora:notif) echo "dunst" ;;
-	*:notif) echo "mako" ;;
+	debian:notif | ubuntu:notif | centos:notif | fedora:notif) printf '%s\n' "dunst" ;;
+	*:notif) printf '%s\n' "mako" ;;
 	# polkit agents: the GNOME agent is retired upstream on Fedora/EPEL.
 	# Ubuntu carries policykit-1-gnome in universe (incl. resolute) — the
 	# D-Bus agent name must map, or apt gets asked for a name no repo has.
-	debian:polkit-gnome-authentication-agent-1 | ubuntu:polkit-gnome-authentication-agent-1) echo "policykit-1-gnome" ;;
-	arch:polkit-gnome-authentication-agent-1 | fedora:polkit-gnome-authentication-agent-1) echo "polkit-gnome" ;;
+	debian:polkit-gnome-authentication-agent-1 | ubuntu:polkit-gnome-authentication-agent-1) printf '%s\n' "policykit-1-gnome" ;;
+	arch:polkit-gnome-authentication-agent-1 | fedora:polkit-gnome-authentication-agent-1) printf '%s\n' "polkit-gnome" ;;
 	# tray / network manager
-	debian:nm-applet | ubuntu:nm-applet) echo "network-manager-gnome" ;;
-	opensuse:nm-applet) echo "NetworkManager-applet" ;;
-	arch:nm-applet) echo "network-manager-applet" ;;
-	centos:nm-applet | fedora:nm-applet) echo "nm-connection-editor" ;;
+	debian:nm-applet | ubuntu:nm-applet) printf '%s\n' "network-manager-gnome" ;;
+	opensuse:nm-applet) printf '%s\n' "NetworkManager-applet" ;;
+	arch:nm-applet) printf '%s\n' "network-manager-applet" ;;
+	centos:nm-applet | fedora:nm-applet) printf '%s\n' "nm-connection-editor" ;;
 	# nm-connection-editor is a binary of network-manager-gnome on Debian/Ubuntu.
-	debian:nm-connection-editor | ubuntu:nm-connection-editor) echo "network-manager-gnome" ;;
-	opensuse:nm-connection-editor) echo "NetworkManager-connection-editor" ;;
+	debian:nm-connection-editor | ubuntu:nm-connection-editor) printf '%s\n' "network-manager-gnome" ;;
+	opensuse:nm-connection-editor) printf '%s\n' "NetworkManager-connection-editor" ;;
 	# notification daemons: Debian/Ubuntu call mako "mako-notifier"
-	debian:mako | ubuntu:mako) echo "mako-notifier" ;;
+	debian:mako | ubuntu:mako) printf '%s\n' "mako-notifier" ;;
 	# Editors / language servers / gtags tooling (monkey-nvim, monkey-vim)
-	debian:rg | ubuntu:rg | arch:rg | opensuse:rg | centos:rg | fedora:rg) echo "ripgrep" ;;
-	debian:ctags | ubuntu:ctags | opensuse:ctags | centos:ctags) echo "universal-ctags" ;;
-	arch:ctags | fedora:ctags) echo "ctags" ;; # Arch & Fedora ship universal-ctags as "ctags"
-	debian:pygmentize | ubuntu:pygmentize) echo "python3-pygments" ;;
-	arch:pygmentize) echo "python-pygments" ;;
-	opensuse:pygmentize) echo "python3-Pygments" ;; # capability: python313-Pygments provides it
-	centos:pygmentize | fedora:pygmentize) echo "python3-pygments" ;;
-	debian:pylsp | ubuntu:pylsp) echo "python3-pylsp" ;;
+	debian:rg | ubuntu:rg | arch:rg | opensuse:rg | centos:rg | fedora:rg) printf '%s\n' "ripgrep" ;;
+	debian:ctags | ubuntu:ctags | opensuse:ctags | centos:ctags) printf '%s\n' "universal-ctags" ;;
+	arch:ctags | fedora:ctags) printf '%s\n' "ctags" ;; # Arch & Fedora ship universal-ctags as "ctags"
+	debian:pygmentize | ubuntu:pygmentize) printf '%s\n' "python3-pygments" ;;
+	arch:pygmentize) printf '%s\n' "python-pygments" ;;
+	opensuse:pygmentize) printf '%s\n' "python3-Pygments" ;; # capability: python313-Pygments provides it
+	centos:pygmentize | fedora:pygmentize) printf '%s\n' "python3-pygments" ;;
+	debian:pylsp | ubuntu:pylsp) printf '%s\n' "python3-pylsp" ;;
 	# python-lsp-black: pylsp's black plugin (no binary — py:module probe).
 	# Arch ships python-lsp-black under its own name; openSUSE prefixes the
 	# PyPI name verbatim (python3-<pypi>); Fedora: not packaged (probe
 	# drops it → the spec's pip fallback installs).
-	debian:python-lsp-black | ubuntu:python-lsp-black) echo "python3-pylsp-black" ;;
-	opensuse:python-lsp-black) echo "python3-python-lsp-black" ;;
-	arch:pylsp) echo "python-lsp-server" ;;
-	opensuse:pylsp) echo "python3-python-lsp-server" ;; # Leap has NO provider — probe fails → pip fallback (correct)
-	centos:pylsp | fedora:pylsp) echo "python3-lsp-server" ;;
+	debian:python-lsp-black | ubuntu:python-lsp-black) printf '%s\n' "python3-pylsp-black" ;;
+	opensuse:python-lsp-black) printf '%s\n' "python3-python-lsp-black" ;;
+	arch:pylsp) printf '%s\n' "python-lsp-server" ;;
+	opensuse:pylsp) printf '%s\n' "python3-python-lsp-server" ;; # Leap has NO provider — probe fails → pip fallback (correct)
+	centos:pylsp | fedora:pylsp) printf '%s\n' "python3-lsp-server" ;;
 	# Debian/Ubuntu split clangd & clang-tidy into unversioned metapackages
 	# (`clang` there ships only clang/clang++); Arch and openSUSE's `clang`
 	# carry both binaries.
-	arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) echo "clang" ;;
-	debian:clangd | ubuntu:clangd) echo "clangd" ;;
-	debian:clang-tidy | ubuntu:clang-tidy) echo "clang-tidy" ;;
-	centos:clangd | centos:clang-tidy | fedora:clangd | fedora:clang-tidy) echo "clang-tools-extra" ;;
-	arch:g++) echo "gcc" ;;
-	opensuse:g++ | centos:g++ | fedora:g++) echo "gcc-c++" ;;
-	arch:black) echo "python-black" ;;
-	opensuse:black) echo "python3-black" ;;
-	centos:black | fedora:black) echo "python3-black" ;;
-	*) echo "$1" ;;
+	arch:clangd | arch:clang-tidy | opensuse:clangd | opensuse:clang-tidy) printf '%s\n' "clang" ;;
+	debian:clangd | ubuntu:clangd) printf '%s\n' "clangd" ;;
+	debian:clang-tidy | ubuntu:clang-tidy) printf '%s\n' "clang-tidy" ;;
+	centos:clangd | centos:clang-tidy | fedora:clangd | fedora:clang-tidy) printf '%s\n' "clang-tools-extra" ;;
+	arch:g++) printf '%s\n' "gcc" ;;
+	opensuse:g++ | centos:g++ | fedora:g++) printf '%s\n' "gcc-c++" ;;
+	arch:black) printf '%s\n' "python-black" ;;
+	opensuse:black) printf '%s\n' "python3-black" ;;
+	centos:black | fedora:black) printf '%s\n' "python3-black" ;;
+	*) printf '%s\n' "$1" ;;
 	esac
 }
 
@@ -211,7 +211,7 @@ distro_probe() {
 		command -v dnf >/dev/null 2>&1 || return 0
 		dnf info -q "$1" >/dev/null 2>&1
 		;;
-	*) return 0 ;; # Homebrew owns macOS; an unknown OS cannot be probed
+	*) return 0 ;; # Homebrew owns macOS; os_init rejected anything else
 	esac
 }
 
@@ -243,12 +243,12 @@ distro_installed() {
 	opensuse | centos | fedora)
 		command -v rpm >/dev/null 2>&1 || return 1
 		# --whatprovides, not a bare -q: the names these lanes install are
-		# OFTEN capabilities (measured on Tumbleweed — `rpm -q python3-pip`
-		# says "no" while python313-pip is installed and provides it, and
-		# nodejs resolves through nodejs26/28). A plain -q would call those
-		# deliveries failures and hand the name to the next lane — the exact
-		# double copy this verb exists to prevent. An available-but-not-
-		# installed name still answers "no": rpm's database is local only.
+		# OFTEN capabilities — an installed provider answers the versioned
+		# name (`python3NN-pip`, a versioned `nodejs`), not the plain one.
+		# A plain -q would call those deliveries failures and hand the name
+		# to the next lane — the exact double copy this verb exists to
+		# prevent. An available-but-not-installed name still answers "no":
+		# rpm's database is local only.
 		rpm -q --whatprovides "$1" >/dev/null 2>&1
 		;;
 	*) return 1 ;; # Homebrew owns macOS (brew_installed, lib/brew.sh)
@@ -264,8 +264,8 @@ distro_installed() {
 # lane act on an index miss; macOS has no system index and no canary.
 _pkg_index_canary() {
 	case "$(pkg_manager)" in
-	apt) echo "dpkg" ;;
-	pacman | zypper | dnf) echo "filesystem" ;;
+	apt) printf '%s\n' "dpkg" ;;
+	pacman | zypper | dnf) printf '%s\n' "filesystem" ;;
 	*) return 1 ;;
 	esac
 }
@@ -329,9 +329,9 @@ distro_install() {
 		# All three matter because the call runs under retry→timeout, whose
 		# child sits in a NON-foreground process group: ANY prompt there is
 		# frozen by SIGTTIN the moment it reads the terminal — the run hangs
-		# with input unreachable (observed on Ubuntu, same class as the old
-		# in-retry sudo -v password freeze). `sudo_cmd env` keeps the
-		# variables intact through sudo's env_reset.
+		# with input unreachable (the same freeze class as a `sudo -v` inside
+		# a retried command). `sudo_cmd env` keeps the variables intact
+		# through sudo's env_reset.
 		retry -t "$RETRY_T_NET" -s "apt-get install" sudo_cmd env DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold ${PKG_VALID[@]+"${PKG_VALID[@]}"}
 		;;
 	arch)
@@ -370,13 +370,9 @@ distro_install() {
 #
 # Usage: install_build_deps toolchain vcs autotools libevent ncurses bison
 install_build_deps() {
-	case "$OS" in
-	debian | ubuntu | arch | opensuse | centos | fedora | macos) ;;
-	*)
-		warn "install_build_deps: unsupported OS '$OS' — skipped."
-		return 0
-		;;
-	esac
+	# No OS validity check here: $OS is one of OS_SUPPORTED by the time any
+	# entry point got this far (os_init), so every group below resolves
+	# against a table that has a row for it.
 	distro_refresh
 	local -a names=()
 	local group

@@ -202,7 +202,7 @@ session  required   pam_unix.so
 EOF
 }
 
-# Post-landing assertion (spec §5.1): the replacement set must be EXACTLY the
+# Post-landing assertion: the replacement set must be EXACTLY the
 # requested list — every listed unit enabled (and masked for tty1-6), and
 # nothing else touched. On mismatch: report + revert hint, rc 1.
 _kmscon_verify() {

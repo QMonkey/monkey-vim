@@ -2,7 +2,7 @@
 
 Shared install / checkhealth framework for the monkey-\* family (monkey-zsh,
 monkey-tmux, monkey-nvim, monkey-vim, monkey-sway, monkey-hyprland,
-monkey-wezterm, monkey-env).
+monkey-wezterm, monkey-agent, monkey-env).
 
 Each consuming repo carries this repository under `scripts/` as a
 [`git subtree`](https://git-scm.com/docs/git-subtree) and keeps only its own
@@ -11,29 +11,42 @@ Nothing generic is duplicated per project.
 
 ## Layout
 
-| Path               | Contents                                                                                                                                                       |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `install.sh`       | Installer entry point — sourced by a project's `install.sh`, then `install_main`                                                                               |
-| `checkhealth.sh`   | Dependency-check entry point — sourced, then `checkhealth_main`                                                                                                |
-| `lib/bootstrap.sh` | Shared sourcing head of both entry points: lib-dir resolution, fail-fast check, framework sourcing                                                             |
-| `lib/common.sh`    | Colors, indented log lines (`[INFO]` / `[ OK ]`), `$HOME` guard, WSL/native-binary probes, version comparison                                                  |
-| `lib/retry.sh`     | Retry with exponential backoff + per-attempt timeout (`retry`, timeout tiers)                                                                                  |
-| `lib/tty.sh`       | TIOCSTI injection into the controlling terminal (`inject_tty`, interactive-reader guard)                                                                       |
-| `lib/sudo.sh`      | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                                                                                 |
-| `lib/pkg.sh`       | Dispatch core: the lane contract, the install chain (`chain_default` / `chain_walk` / `install_pkg`), the install-strategy dispatcher, shared batch classifier |
-| `lib/distro.sh`    | Distro package managers (apt/pacman/zypper/dnf + AUR): name mapping, index refresh/probe/reachability, `distro_install`, `aur_install`, build deps             |
-| `lib/brew.sh`      | Homebrew as the chain's `brew` lane: name table, probe/installed/refresh/install verbs, heavy-bottle timeout table, `brew_ensure`                              |
-| `lib/toolchain.sh` | Language-ecosystem toolchains (not chain lanes): rustup, go, npm, pip (`ensure_rust`, `ensure_go`, `ensure_node_and_npm`, `install_pip_pkgs`, …)               |
-| `lib/config.sh`    | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`)                                                                  |
-| `lib/env.sh`       | PATH seeding / persistence (`path_dirs_snippet`, `export_path`, `persist_path`), shell env files (`append_env_block`), autostart block, XDG_RUNTIME_DIR repair |
-| `lib/checks.sh`    | Spec model, probes, checkhealth display sections (run_required_checks & friends)                                                                               |
-| `lib/missing.sh`   | Missing-dependency installer passes (`install_missing_*`, batch collection, re-probe)                                                                          |
-| `lib/clipboard.sh` | Clipboard provider detection + install (`CHECK_CLIPBOARD=required\|warn\|display`)                                                                             |
-| `lib/clone.sh`     | Network fetching: git clone / download helpers (`clone_repo`, `fetch_url_or_clone`)                                                                            |
-| `lib/kmscon.sh`    | kmscon install & VT takeover (`ensure_kmscon tty2`, getty masking, launch-gui presence check)                                                                  |
-| `lib/output.sh`    | Terminal output helpers: banner, section headers, platform block, install hints                                                                                |
+| Path               | Contents                                                                                                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `install.sh`       | Installer entry point — sourced by a project's `install.sh`, then `install_main`                                                                                                          |
+| `checkhealth.sh`   | Dependency-check entry point — sourced, then `checkhealth_main`                                                                                                                           |
+| `lib/bootstrap.sh` | Shared sourcing head of both entry points: lib-dir resolution, fail-fast check, framework sourcing                                                                                        |
+| `lib/common.sh`    | Colors, indented log lines (`[INFO]` / `[ OK ]` / `[WARN]`), `$HOME` guard, WSL/native-binary probes, version comparison, the OS id (`os_detect`) and the `OS_SUPPORTED` gate (`os_init`) |
+| `lib/retry.sh`     | Retry with exponential backoff + per-attempt timeout (`retry`, timeout tiers)                                                                                                             |
+| `lib/tty.sh`       | TIOCSTI injection into the controlling terminal (`inject_tty`, interactive-reader guard)                                                                                                  |
+| `lib/sudo.sh`      | Native-sudo detection, per-run NOPASSWD drop-in (no keepalive)                                                                                                                            |
+| `lib/pkg.sh`       | Dispatch core: the lane contract, the install chain (`chain_default` / `chain_install` / `chain_walk` / `install_pkg`), the install-strategy dispatcher, shared batch classifier          |
+| `lib/distro.sh`    | Distro package managers (apt/pacman/zypper/dnf + AUR): name mapping, index refresh/probe/reachability, `distro_install`, `aur_install`, build deps                                        |
+| `lib/brew.sh`      | Homebrew as the chain's `brew` lane: name table, probe/installed/refresh/install verbs, heavy-bottle timeout table, `brew_ensure`, `brew_link_bins`, `install_zig_zls_pair`               |
+| `lib/toolchain.sh` | Language-ecosystem toolchains (not chain lanes): rustup, go, npm, pip (`ensure_rust`, `ensure_go`, `ensure_node_and_npm`, `ensure_node_at_least`, `ensure_pip`, `install_pip_pkgs`, …)    |
+| `lib/template.sh`  | Template engine: `render` (gomplate → config file) and `render_fill` (fill-empty-only dotenv merge for credential files)                                                                  |
+| `lib/config.sh`    | Symlink / dir / file checks (`SYMLINKS`, `CONFIG_LINKS`, `CONFIG_HINTS`, `ADVISORY_SECTIONS`)                                                                                             |
+| `lib/env.sh`       | PATH seeding / persistence (`path_dirs_snippet`, `export_path`, `persist_path`), shell env files (`append_env_block`), autostart block, XDG_RUNTIME_DIR repair                            |
+| `lib/checks.sh`    | Spec model, probes, checkhealth display sections (run_required_checks & friends)                                                                                                          |
+| `lib/missing.sh`   | Missing-dependency installer passes (`install_missing_*`, batch collection, re-probe)                                                                                                     |
+| `lib/clipboard.sh` | Clipboard provider detection + install (`CHECK_CLIPBOARD=required\|warn\|display`)                                                                                                        |
+| `lib/clone.sh`     | Network fetching: git clone / download helpers (`clone_repo`, `fetch_url_or_clone`)                                                                                                       |
+| `lib/kmscon.sh`    | kmscon install & VT takeover (`ensure_kmscon tty2`, `run_kmscon_setup`, getty masking, launch-gui presence check)                                                                         |
+| `lib/output.sh`    | Terminal output helpers: banner, section headers, platform block, install hints, completion summary (`finish_install`, `summary_insert_at`)                                               |
 
 Neither entry point is meant to be executed on its own.
+
+`lib/bootstrap.sh` sources the common set (`common retry sudo tty output clone
+pkg distro brew toolchain template config env`) and then whatever the entry
+point declared in `EXTRA_LIBS`: `install.sh` adds `kmscon`, `checkhealth.sh`
+adds `checks missing clipboard`. So `checks.sh` / `missing.sh` /
+`clipboard.sh` do not exist in an installer process and `kmscon.sh` does not
+exist under `checkhealth.sh`: a step reachable from `install_main` must not
+call them — `install_build_deps` dedupes inline because `dedupe_pkgs`
+(`lib/missing.sh`) is not loaded on that path. The common-set helpers that do
+name check-side functions — `install_strategy` → `parse_spec`/`probe_spec`,
+`optional_hint` → `load_spec_for`, `check_config_links` →
+`count_required_failure` — are reached only from the checkhealth path today.
 
 ## Getting it into a project
 
@@ -89,7 +102,17 @@ OPTIONAL_CHECKS=(...)
 checkhealth_main "$@"
 ```
 
-Exit code: 1 if any **required** dependency is missing, 0 otherwise.
+Options: `-i` / `--install` (check, then install what is missing),
+`--skip-check-config` (skip the "Config files" section — `install.sh` passes
+it, the config symlinks are linked after this script runs), `-h` / `--help`.
+Exit code: 1 if any **required** dependency is missing, 0 otherwise, 2 for an
+unrecognized option.
+
+With `--install`, `SUDO_DROPIN=0|1` decides whether the run installs the
+temporary NOPASSWD drop-in (`lib/sudo.sh`): the default is `0` for a manual
+run (one password up front, the run rides the sudo timestamp) and `1` when an
+installer chains the run (`INSTALL_CHAIN`, exported by `run_checkhealth`); an
+explicit value always wins.
 
 ### Dependency spec
 
@@ -106,10 +129,15 @@ id|check|desc|install|ver_regex|fallback|token|group
   match) | `py:module` (Python module probe) | `match:bin` (companion whose
   version must equal `bin`'s)
 - `desc` — printed text (default: `id`)
-- `install` — `pkg` (default) | `pkg:name,name` | `aur:x` | `brew:x` |
+- `install` — `pkg` (default) | `pkg:name name` | `aur:x` | `brew:x` |
   `npm:x` | `go:x` | `pip:x` |
   `rustup` | `rustup-component:x` |
   `zig-zls-pair` | `python-unversioned` | `none`
+  A comma separates STRATEGY STEPS (`pkg,brew:glow`); the names inside one
+  step are separated by spaces (`npm:typescript-language-server typescript`),
+  and a `pkg:` step names BINARIES — each is mapped through `pkg_name`, never
+  written as a literal package name. A second comma-separated token would be
+  read as a step kind, not as a second name.
   `pkg` runs this host's install CHAIN (Linux: distro → AUR on arch →
   Homebrew; macOS: Homebrew), so a plain `pkg` spec already reaches the
   bottle lane for a name no distro index carries.
@@ -118,8 +146,10 @@ id|check|desc|install|ver_regex|fallback|token|group
   repositories), `aur` (arch's second repo set), `brew` (Homebrew); a
   **chain** is the ordered list of lanes consulted for a name, and the walk
   stops at the first lane that delivers it. Every verb a lane answers goes
-  through one `case` table of `pkg_*` dispatchers in `lib/pkg.sh`, so no
-  call site outside that file names a manager. The language ecosystems
+  through one `case` table of `pkg_*` dispatchers in `lib/pkg.sh`, so no call
+  site outside that file picks a manager for a name (the hint renderer
+  `get_install_hint` maps the id `pkg_manager` returns to a human command —
+  it decides nothing). The language ecosystems
   (rustup / go / npm / pip) are deliberately NOT lanes: their step needs a
   spec-supplied coordinate — a module path, a PyPI distribution, an npm
   package — that no package name implies. The wording above is a summary;
@@ -142,7 +172,8 @@ Spec lists: `REQUIRED_CHECKS`, `EXTRA_SPECS` (installed, never listed),
 - `@note|text` — indented note under the current title
 - `@clipboard` — clipboard provider check (`CHECK_CLIPBOARD=required`)
 - `@config` — inline "Config files" section (`CONFIG_PHASE=required`)
-- `@call|fn` — hand the line to a project-defined check function
+- `@call|fn` — hand the line to a project-defined check function; also
+  honored inside `RECOMMENDED_CHECKS`
 
 ### Pipeline and data switches
 
@@ -165,7 +196,10 @@ around (all optional):
 | `OPTIONAL_ALL_PRESENT_MSG="…"`            | printed under `--install` when nothing optional is missing                                                                      |
 | `OPTIONAL_DONE_MSG="…"`                   | printed after a non-empty optional install batch                                                                                |
 | `OPTIONAL_SECTION_TITLE/NOTE`             | title / note of the optional listing section                                                                                    |
-| `ADVISORY_SECTIONS=(…)`                   | standalone advisory sections (fonts, plugins, …)                                                                                |
+| `ADVISORY_SECTIONS=(…)`                   | standalone advisory sections; `$ADVISORY_NERDFONT` is the ready-made fonts entry                                                |
+| `MAIN_VERSION="spec"`                     | the project's own version gate — the first section inside the required pass (`MAIN_VERSION_TITLE` overrides its header)         |
+| `RECOMMENDED_NOTE="…"`                    | note line under the "Recommended tools" header                                                                                  |
+| `REQUIRED_REPROBE_LIST=(…)`               | re-probe list that replaces the required tail re-check after the install pass; `REQUIRED_MANUAL_HINT` is its manual-fix line    |
 
 Config data:
 
@@ -216,31 +250,36 @@ if [ ! -f "$_monkey_scripts/install.sh" ]; then
         git -C "$_monkey_dir" pull --ff-only || true   # pull the subtree in
         _monkey_scripts="$_monkey_dir/scripts"
         [ -f "$_monkey_scripts/install.sh" ] || {
-            echo "monkey-scripts missing from $_monkey_dir (no scripts/ subtree)." >&2
+            printf '%s\n' "monkey-scripts missing from $_monkey_dir (no scripts/ subtree)." >&2
             exit 1
         }
     else                                        # curl|bash: no checkout at all
         # Clone THIS project into INSTALL_DIR — where clone_project
         # would have put it anyway — and run the installer from that checkout,
         # so install.sh and scripts/ cannot drift apart.
-        if ! command -v git >/dev/null 2>&1; then
-            echo "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
-            exit 1
-        fi
         if [ -d "$INSTALL_DIR/.git" ]; then
             git -C "$INSTALL_DIR" pull --ff-only || true
         elif [ -d "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR")" ]; then
-            echo "$INSTALL_DIR is not empty and is not a git clone." >&2
-            echo "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
+            printf '%s\n' "$INSTALL_DIR is not empty and is not a git clone." >&2
+            printf '%s\n' "  move it aside, delete it, or set INSTALL_DIR elsewhere." >&2
             exit 1
         else
+            # Fresh clone: the only sub-branch that hard-requires git — the
+            # pull branch above degrades without it, and a .git-less directory
+            # must not fail here just because git is missing.
+            if ! command -v git >/dev/null 2>&1; then
+                printf '%s\n' "git is required to clone $PROJECT — install it first (e.g. sudo apt-get install git), then re-run." >&2
+                exit 1
+            fi
+            # retry() is not loaded on this path — the real bootstrap retries
+            # this clone inline and removes a partial directory between attempts.
             git clone "$PROJECT_REPO" "$INSTALL_DIR" || exit 1
         fi
         exec bash "$INSTALL_DIR/install.sh" "$@" </dev/null
     fi
 fi
 . "$_monkey_scripts/install.sh"
-install_step_tool() { install_zsh; echo ""; }
+install_step_tool() { install_zsh; printf '\n'; }
 SUMMARY_LINES=(...)
 install_main "$@"
 ```
@@ -255,10 +294,12 @@ for `monkey-env`, whose component installers run as child processes.
 Hook order inside `install_main` (each hook prints its own trailing blank):
 
 ```text
-banner → OS info → setup_sudo → prepare → tool → post → clone
-→ checkhealth → refresh PATH → autostart → symlinks (+step_symlinks)
-→ persist PATH (PERSIST_POS=before_links runs it earlier) → after
-→ completion summary
+require_home → os_init → banner → OS info (+install_print_info)
+→ setup_sudo → export_path (seed the framework bin dirs) → prepare → tool
+→ post → clone → checkhealth (CHECKHEALTH_POS=tool) → autostart
+→ persist PATH (PERSIST_POS=before_links) → symlinks (+step_symlinks)
+→ checkhealth (CHECKHEALTH_POS=after_links) → persist PATH (after_links)
+→ after → completion summary
 ```
 
 Step hooks (override after sourcing): `install_step_prepare`,
@@ -276,14 +317,18 @@ requested list. The bare getty is deliberately kept on every VT NOT listed —
 callers opt into a "full" replacement by listing tty1..tty6 themselves.
 `ensure_kmscon` warns and skips (rc 0) when the environment cannot host kmscon
 (no systemd, no `/dev/dri`, failed install) and returns non-zero only for
-invalid arguments or a self-check mismatch — callers are expected to
-`|| warn "... continuing"` and never abort the install. It warns on advisory
-conditions too (an enabled display manager owning tty1). Call it
-from `install_step_autostart`, before `write_tty_autostart` (sudo is
-guaranteed there); guard it with `is_wsl` the same way. The flag parsing
-(`--with-kmscon [tty[,tty...]]`, default `tty2`) belongs to the calling
-project's installer; an orchestrating meta-installer calls it once itself
-instead of forwarding the flag to components. The generated autostart block
+invalid arguments or a self-check mismatch — `run_kmscon_setup` turns that into
+`warn "kmscon setup failed — continuing without it."` and records the success
+in `KMSCON_DONE`, so a caller never aborts the install. It warns on advisory
+conditions too (an enabled display manager owning tty1). Call
+`run_kmscon_setup` from `install_step_autostart`, before `write_tty_autostart`
+(sudo is guaranteed there); both functions carry their own WSL guard. The flag
+`--with-kmscon [tty[,tty...]]` (default `tty2`) is consumed by the shared
+`parse_install_args` pre-parser in `install.sh`, which fills `KMSCON_TTYS`,
+`KMSCON_DONE` and `_INSTALL_ARGS` so the flag never reaches `install_main`; a
+project with extra flags overrides it and delegates the leftovers. An
+orchestrating meta-installer calls `ensure_kmscon` once itself instead of
+forwarding the flag to components. The generated autostart block
 is kmscon-aware: inside a kmscon session it wraps the compositor in
 `kmscon-launch-gui` (shipped by distro kmscon packages) instead of exec'ing
 it directly.
@@ -292,36 +337,83 @@ Data switches:
 
 | Switch                                   | Meaning                                                                                                                                                                                   |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SYMLINKS=("src\|dst" "src\|dst\|keep")` | links created by the symlink step — `link_config <src> <dst> <mode>` (modes below)                                                                                                        |
+| `SYMLINKS=("src\|dst" "src\|dst\|mode")` | links created by the symlink step — `link_config <src> <dst> <mode>` (modes below)                                                                                                        |
 | `ENSURE_DIRS` / `ENSURE_FILES`           | directories (`mkdir -p`) / touch-files to create                                                                                                                                          |
 | `INSTALL_INFO=(…)`                       | extra lines right after the OS announcement                                                                                                                                               |
-| `SUMMARY_LINES=(…)`                      | completion-summary lines                                                                                                                                                                  |
+| `SUMMARY_LINES=(…)`                      | completion-summary lines; a `?VAR\|text` entry prints only when `$VAR` is set                                                                                                             |
 | `PERSIST_PATH=1`                         | write the `path_dirs_snippet` PATH block (framework bin dirs + Homebrew) to the detected shell profile (below)                                                                            |
 | `PERSIST_POS=before_links\|after_links`  | where the persist step runs                                                                                                                                                               |
-| `FINISH_INJECT=1`                        | inject into the current terminal on finish                                                                                                                                                |
-| `LINUX_ONLY=1`                           | refuse to run on macOS / unknown OS                                                                                                                                                       |
+| `FINISH_INJECT=1`                        | inject into the current terminal on finish; `ACQUIRE_TIOCSTI` claims that right for the chain                                                                                             |
+| `LINUX_ONLY=1`                           | on macOS: warn and exit 0 (a host outside `OS_SUPPORTED` is already refused fatally by `os_init`)                                                                                         |
 | `CHECKHEALTH_MODE=run\|verify\|none`     | how the checkhealth step runs                                                                                                                                                             |
 | `CHECKHEALTH_POS=tool\|after_links`      | where the checkhealth step runs                                                                                                                                                           |
 | spec strategy `brew,pkg:x`               | per-name lane order, stated by the requirement itself: Homebrew first, the distro manager behind it as the safety net. Bottle timeouts come from `BREW_HEAVY_NAMES`, never from the order |
 
-`SYMLINKS` modes: `keep` = an existing target is skipped with an info line and a
-missing source silently; `takeover` = this repo owns the config — a foreign symlink
-is re-pointed and a foreign file is moved to `<dst>.link-bak` first (a foreign
-directory is left alone, rc 1).
+`SYMLINKS` modes: `""` (default) = a foreign target is left alone with a warning
+and the `ln -sfn` re-link line; `keep` = an existing target is skipped with an
+info line and a missing source silently; `takeover` = this repo owns the config
+— a foreign symlink is re-pointed and a foreign file is moved to
+`<dst>.link-bak` first (the backup is rolling: an existing one is refreshed
+with the file being replaced), a foreign directory is left alone, rc 1. Only
+`takeover` can fail.
 
 `PERSIST_PATH=1` writes one `head` block with exactly what `path_dirs_snippet`
 (`lib/env.sh`) emits: the Homebrew prefixes' `bin`/`sbin` first (placement per
 `_brew_path_snippet` — prepended on macOS, positional on Linux/WSL), then the
-`bin_dirs` exports — `~/.local/bin`, `GOBIN` or every `GOPATH` entry's bin,
-`${CARGO_HOME:-~/.cargo}/bin`, `~/.npm-global/bin`; the profile set comes from
+`bin_dirs` exports in PATH order — `~/.local/bin`,
+`${CARGO_HOME:-~/.cargo}/bin`, `GOBIN` or every `GOPATH` entry's bin,
+`~/.npm-global/bin` deepest; the profile set comes from
 `shell_env_files` (zsh → `~/.zprofile`, bash → `~/.bash_profile` or
 `~/.profile`, plus `~/.bashrc`). `brew_ensure` calls `persist_path` directly,
 past this gate: a run that bootstraps Homebrew persists its PATH even with
-`PERSIST_PATH=0`, as it always did. One function writes that one block, so the
-priority inside the profile cannot depend on which step ran last.
+`PERSIST_PATH=0`. One function writes that one block, so the
+priority inside the profile cannot depend on which step ran last. Its marker
+line is `# [head] bin dirs + Homebrew PATH (framework installer)`; the
+compositor autostart block is the `tail` class, marked
+`$PROJECT autostart (remove these lines to disable)` — the class annotation, the
+dedup on the bare marker text and the rewrite that keeps the file partitioned
+(head → normal → tail, one blank line between blocks, none at EOF) are all
+`append_env_block`'s (`lib/env.sh`).
 
 Unlike `checkhealth.sh`, `fail()` aborts the installer at the first fatal
 step (`MONKEY_FAIL_EXITS=true`).
+
+## Template engine
+
+`lib/template.sh` is in the base lib set every entry point sources (the set
+`lib/bootstrap.sh` walks before appending `EXTRA_LIBS`), so both
+contract sides can turn a template plus the environment into a file. Two entry
+points, no format awareness, no secrets access, atomic `0600` writes, and both
+return non-zero on failure — the logging differs: `render` logs with `fail()`
+(status-neutral under `checkhealth.sh`, fatal under `install.sh`),
+`render_fill`'s engine failure warns.
+
+- `render <template> <outfile>` — gomplate (`Go text/template`) over the
+  template's `{{ .Env.NAME }}` references, values taken from the
+  caller-exported environment. Structure (model catalogs, channel members,
+  optional keys) lives IN the template as `{{ range }}` / `{{ if }}`, because
+  shell-built config fragments produce stray commas, literal
+  `\n` and last-one-wins duplicate keys. An unset reference is a hard gomplate
+  error, and `render` turns that log line into the variable names the caller
+  must export; `{{ }}` never touches the `$VAR` / `${VAR}` credential-NAME
+  references a service resolves at runtime. gomplate is not installed here —
+  the project that renders declares it (`monkey-agent`: a
+  `pkg,brew:gomplate` spec), and without it `render` fails with the release
+  download URL in the message.
+- `render_fill <template> <outfile> [key...]` — dotenv merge for credential
+  files, a mode the renderer has no part in: an existing outfile is the source
+  of truth (hand-edits win; a missing one is seeded from the template),
+  repeated `KEY=` lines collapse — the last non-empty value wins at the last
+  definition line — and keys that are absent or empty in the file (or in the
+  template it was just seeded from) fill from the environment, appending at
+  the end; a non-empty value on either side therefore beats the exported one,
+  which is why template defaults stay commented out. Winners are written in
+  canonical `KEY=value` form (no `export` prefix:
+  systemd `EnvironmentFile=` ignores it); values with whitespace or quotes are
+  double-quoted with inner quotes and backslashes escaped, so they survive both
+  shell sourcing and systemd parsing. Engine: `python3`, with its own atomic
+  write. Values must stay newline-free — a newline breaks every `KEY=` line
+  below it in the written file.
 
 ## OS ids
 
@@ -338,23 +430,62 @@ distros are mapped to their base id; nothing else is shared:
 | `fedora`   | fedora                                                                     | dnf      |
 | `macos`    | darwin (uname)                                                             | homebrew |
 
-`OS` holds the id, and it is what every package table keys on
-(`pkg_name` in `lib/distro.sh`) — so Ubuntu and Fedora carry their own
-package names while only the _commands_ are shared, e.g. `debian | ubuntu)`
-for `apt-get install` and `centos | fedora)` for a plain `dnf install`. EPEL
-stays a CentOS-only step, since Fedora has no EPEL. `os_detect` is the only
+`OS` holds the id, and it is what every package table keys on (the
+`distro_name` table in `lib/distro.sh`, reached through the `pkg_name` gate in
+`lib/pkg.sh`) — so Ubuntu and Fedora carry their own package names while only
+the _commands_ are shared, e.g. `debian | ubuntu)` for `apt-get install` and
+`centos | fedora)` for a plain `dnf install`. EPEL stays a CentOS-only step,
+because Fedora ships those tools in its base repos. `os_detect` is the only
 place that reads `/etc/os-release`: to give one id another's package names, add
 it to that id's line above and every table follows.
+
+Anything outside that table is **refused, not guessed**. `os_detect` returns 1
+with the reason on stderr (kernel name, or `PRETTY_NAME`/`ID` for an unmapped
+Linux) and prints nothing, and `os_init` — called once by each entry point
+(`install_main`, `checkhealth_main`, monkey-env's own chain) — turns that into a
+fatal stop and exports `OS` for `retry`'s function-first children. Nothing
+falls through: an id with no package tables would run the whole chain while
+every lane declined every name, which reads as a green install and is not one.
+`OS_SUPPORTED` is the single list `os_init` accepts; adding a distro means
+adding it there and giving the tables a row.
 
 ## Conventions
 
 - **bash 3.2 compatible** (macOS ships 3.2): no associative arrays, no
   `${x^^}`, no `mapfile`, no `[[ -v ]]`; guard empty arrays with
   `${arr[@]+"${arr[@]}"}`.
-- Log lines are indented two spaces — `[INFO]`, `[ OK ]`, `[FAIL]`.
-- No sudo keepalive: a per-run NOPASSWD drop-in (`SUDOERS_D_DIR`) covers the
-  whole batch and is removed on exit.
+- **Output is `printf`, never `echo`**: `printf '%s\n'` for text and values,
+  `printf '\n'` for a blank line, `%b` only where the data carries its own
+  escapes (the `|-`delimited advisory fields keep their line breaks as
+  `\n`, which a real newline would truncate at the `IFS='|' read`) — there
+  `append_env_block` embeds `%b` in its block format and the advisory printers
+  run `printf '%b'` inside `$( )` so `warn` still adds the newline. The color
+  variables are `$'\033[…]'` — real bytes — so no printer has to expand
+  escapes, and a value containing a backslash (`C:\new\users`, a regex
+  fragment) reaches the terminal unchanged instead of being rewritten.
+- Log lines are indented two spaces — `[INFO]`, `[ OK ]`, `[WARN]`, `[FAIL]`.
+- No sudo keepalive: one password per run. `install.sh` (and a `--install` run
+  it chains) installs a per-run NOPASSWD drop-in in `SUDOERS_D_DIR` named
+  `zz-<PROJECT>-nopasswd`, verified by discarding the timestamp and re-probing,
+  and the process that wrote it removes it on exit — a chained stage of the
+  same project rides the existing grant instead of writing its own, detecting
+  it from root's side (`sudo -n test -e`) because `SUDOERS_D_DIR` is not
+  readable by the invoking user; a manual
+  `checkhealth.sh --install` defaults to `SUDO_DROPIN=0` — one `sudo -v` up
+  front and the run rides the timestamp (an expired re-auth inside a retried
+  command fails that attempt rather than prompting, see `sudo_cmd`).
 - Output of the converted project scripts must stay byte-identical to each
   project's upstream script; anything the generic pipeline cannot reproduce
   is carried as verbatim project data or a hook (for example the `hint`
   field of `CONFIG_LINKS`).
+- **Read from the environment**: `INSTALL_DIR` (the project bootstrap and the
+  `clone` step), `JOBS` (`lib/common.sh`, the source-build parallelism
+  default), `RETRY_KILL_AFTER` (`lib/retry.sh`, the SIGTERM→SIGKILL grace;
+  set it empty to disable the escalation), `SUDOERS_D_DIR` / `SUDO_DROPIN` /
+  `INSTALL_CHAIN` (`lib/sudo.sh`, `install.sh`), `ACQUIRE_TIOCSTI`
+  (`lib/output.sh`, which script in a chained run owns the finish-time
+  injection). The checkhealth switches above are read as `${VAR:-default}`,
+  so an exported value reaches them; the install ones are assigned in
+  `install.sh`'s defaults block, so a project must set them in its own
+  script — an exported `PERSIST_PATH` or `CHECKHEALTH_MODE` is overwritten
+  before `install_main` runs.

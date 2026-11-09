@@ -21,29 +21,24 @@
 # take. The one caller that does not rely on the table is install_zig_zls_pair:
 # installing zig and zls IS an LLVM-scale pour by definition, so it asks for the
 # huge tier directly. A ceiling that matters that much must not hang on a table
-# entry staying present — measured: with the table emptied, a lane batch of zls
-# drops to the network tier while the pair install keeps the huge one.
+# entry staying present.
 BREW_HEAVY_NAMES="zig zls marksman"
 
-# No pin array survives here or anywhere: lane order is a spec strategy
-# (lib/pkg.sh), and bottle weight is BREW_HEAVY_NAMES above — except inside
-# install_zig_zls_pair, which states its own tier.
-
 # ────────────────── lane verbs ──────────────────
-# Homebrew's own binary→formula mapping. pkg_name (lib/distro.sh) selects
+# Homebrew's own binary→formula mapping. pkg_name (lib/pkg.sh) selects
 # this table on macOS and for any brew-lane request, so the chain can name a
 # formula without the caller knowing which OS it is on. Only names that
 # DIFFER from the command are listed; a formula named after its binary (git,
-# tmux, fzf, wireplumber) needs no row and falls through to `*) echo "$1"`.
+# tmux, fzf, wireplumber) needs no row and falls through to `*) printf '%s\n' "$1"`.
 brew_name() {
 	case "$1" in
-	python3) echo "python" ;;
-	rg) echo "ripgrep" ;;
-	ctags) echo "universal-ctags" ;;
-	pygmentize) echo "pygments" ;;
-	clangd | clang-tidy) echo "llvm" ;; # one formula ships both binaries
-	g++) echo "gcc" ;;
-	pylsp) echo "python-lsp-server" ;;
+	python3) printf '%s\n' "python" ;;
+	rg) printf '%s\n' "ripgrep" ;;
+	ctags) printf '%s\n' "universal-ctags" ;;
+	pygmentize) printf '%s\n' "pygments" ;;
+	clangd | clang-tidy) printf '%s\n' "llvm" ;; # one formula ships both binaries
+	g++) printf '%s\n' "gcc" ;;
+	pylsp) printf '%s\n' "python-lsp-server" ;;
 	# Rendering is gomplate (see scripts/lib/template.sh render). No Linux
 	# DISTRO repository packages it — zypper has no provider, and arch's AUR
 	# does (gomplate-bin) — while the formula is current on every macOS. The
@@ -53,7 +48,7 @@ brew_name() {
 	# that lacks it, self-healing through brew_ensure where brew is
 	# absent. envsubst/gettext is no longer a dependency. The formula name
 	# equals the binary, so there is no row here to write.
-	*) echo "$1" ;;
+	*) printf '%s\n' "$1" ;;
 	esac
 }
 
@@ -106,11 +101,10 @@ brew_refresh() {
 #
 # The names arrive in whatever namespace the caller mapped them to (the
 # distro name on Linux, brew's own on macOS). That is not sloppiness:
-# Homebrew keeps aliases for the cross-ecosystem names — measured on brew
-# 7.0.12, nodejs→node, golang→go, python-lsp-server and universal-ctags all
-# resolve — so a distro name that reaches this lane still lands, and the
-# probe drops the handful that do not (python3-pip, base-devel) instead of
-# failing the batch.
+# Homebrew keeps aliases for the cross-ecosystem names — nodejs→node,
+# golang→go, python-lsp-server and universal-ctags all resolve — so a distro
+# name that reaches this lane still lands, and the probe drops the handful
+# that do not (python3-pip, base-devel) instead of failing the batch.
 brew_install() {
 	have_native_cmd brew || return 1
 	filter_pkgs brew_probe "$@"
@@ -148,7 +142,7 @@ brew_install() {
 # on purpose, so ~/.local/bin remains the only way a bottle can outrank the
 # distro copy.
 brew_link_bins() {
-	if [ "${OS:-unknown}" = macos ]; then
+	if [ "$OS" = macos ]; then
 		return 0
 	fi
 	local p prefix
@@ -172,8 +166,8 @@ brew_link_bins() {
 # zls (zig@X.Y — keg-only, force-linked after plain `zig` is removed).
 # Without a versioned formula, fall back to latest-latest and let the
 # match:zig probe give the verdict.
-# Every batch below carries zig or zls, which pour an LLVM/.NET tier, so all
-# three calls ask for RETRY_T_HUGE explicitly rather than inheriting it from
+# Every batch below carries zig or zls, which pour an LLVM/.NET tier, so the
+# calls ask for RETRY_T_HUGE explicitly rather than inheriting it from
 # BREW_HEAVY_NAMES: this function exists precisely because the pair install is
 # the expensive case, so a dropped table entry must not be able to cost a whole
 # timeout-and-retry cycle. The ceiling is a max(), so declaring it here is free
@@ -426,7 +420,7 @@ _ensure_homebrew_once() {
 		# inserts it AFTER system paths but BEFORE the WSL-injected Windows
 		# shims: prepending let brew's python@3.x shadow /usr/bin/python3,
 		# plain-appending put `npm` on the Windows one.
-		if [ "${OS:-unknown}" = macos ]; then
+		if [ "$OS" = macos ]; then
 			placement="ahead of the system paths"
 			# Reaching here mid-run puts the prefix ahead of the framework
 			# user dirs for the REST of this shell (the idempotent prepend

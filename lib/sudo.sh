@@ -2,15 +2,17 @@
 # Sourced by scripts/install.sh and scripts/checkhealth.sh.
 
 SUDOERS_D_DIR="${SUDOERS_D_DIR:-/etc/sudoers.d}"
-SUDO_NOPASSWD=0
-# Set only when THIS process authenticated interactively (`sudo -v`). A
-# chained child whose probe succeeded is riding an ancestor's grant — it
-# must not tear that grant down on exit (the shared drop-in path is reused
-# by every stage of the chain, and the retry wrapper runs children in a
-# non-foreground process group where the next stage's re-auth prompt would
-# stop on SIGTTIN and hang forever).
-SUDO_AUTHED=0
 SUDO_BIN=""
+# The only sudo state: the grant this process created, empty if it created
+# none. Riding and owning are decided once, when setup_sudo asks root about
+# the path — the file is named per project (zz-<PROJECT>-nopasswd), so a
+# chained child of the same project inherits its parent's file and must not
+# delete it mid-run, while a stage that finds nothing usable creates one and
+# then owes its removal.
+# "Did I authenticate?" and "is NOPASSWD in force?" need no flags: the first is
+# invisible to anything downstream and the second is answered by probing sudo
+# itself, so both used to be write-only variables that gated cleanup wrongly.
+SUDO_DROPIN_FILE=""
 
 # The drop-in name is derived from the project — lazily, because PROJECT is
 # set by the project script AFTER it sources this entry point.
@@ -19,16 +21,17 @@ nopasswd_dropin_path() {
 }
 
 cleanup_sudo() {
-	# Flag cleared BEFORE acting: main() calls this explicitly and the EXIT
-	# trap calls it again on the way out. The second pass must be a no-op —
-	# once the grant file is gone, `sudo -n rm` can no longer authenticate
-	# (no timestamp is ever recorded because every sudo during the run was
-	# NOPASSWD), and it would warn even though the file was already removed.
-	if [ "$SUDO_NOPASSWD" -eq 1 ] && [ "$SUDO_AUTHED" -eq 1 ] && [ -n "$SUDO_BIN" ]; then
-		SUDO_NOPASSWD=0
-		"$SUDO_BIN" -n rm -f "$(nopasswd_dropin_path)" 2>/dev/null ||
-			warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $(nopasswd_dropin_path)"
+	# Removes only what THIS process wrote, and clears the marker before
+	# acting: main() may call this explicitly and the EXIT trap calls it
+	# again, so the second pass has to be a no-op rather than a warning
+	# about an already-deleted grant.
+	[ -n "$SUDO_DROPIN_FILE" ] || return 0
+	local _dropin="$SUDO_DROPIN_FILE"
+	SUDO_DROPIN_FILE=""
+	if [ -n "$SUDO_BIN" ] && "$SUDO_BIN" -n rm -f "$_dropin" 2>/dev/null; then
+		return 0
 	fi
+	warn "could not remove the NOPASSWD drop-in — remove it manually: sudo rm $_dropin"
 }
 
 # Pre-authenticate once, then grant NOPASSWD for the rest of the run.
@@ -56,22 +59,36 @@ cleanup_sudo() {
 # implementations.
 #
 # No sudo keepalive: with the drop-in in place the timestamp is never read,
-# so there is nothing to keep alive. The old background refresh loop also
-# leaked a process per run and never worked inside WSL/containers where no
-# helper can re-authenticate for us. The failure mode of a missing drop-in
-# is covered by sudo_cmd's lazy re-auth below — do not reintroduce it.
+# so there is nothing to keep alive — and no helper could re-authenticate for
+# us inside WSL/containers anyway. The failure mode of a missing drop-in is
+# covered by sudo_cmd's lazy re-auth below — do not reintroduce it.
 setup_sudo() {
 	SUDO_BIN=$(native_sudo) || return 0
 	if [ "$(id -u)" -eq 0 ]; then
 		return 0
 	fi
+	# Ride or create. A grant that already exists AND parses covers every sudo
+	# this process will run — it came from an outer stage of the same project
+	# (chained stages share the path) or from an earlier run — so nothing is
+	# created here and cleanup stays out of what someone else is using. A file
+	# sudo will not parse, or none at all, is taken over below: written again,
+	# owned, removed on exit.
+	# Both halves are answered from root's side of the wall: /etc/sudoers.d is
+	# 0750 root:root, so a userland [ -e ] cannot resolve any name inside it
+	# (EACCES reads as "missing") — under that test every chained stage
+	# "created" the shared project file, took ownership of it and deleted it at
+	# exit while its parent still needed it. `sudo -n test -e` stats as root;
+	# the timestamp is then dropped and re-probed because only a rule that
+	# parses can answer without credentials — a cached ticket must not
+	# masquerade as a durable grant.
+	if "$SUDO_BIN" -n test -e "$(nopasswd_dropin_path)" 2>/dev/null; then
+		"$SUDO_BIN" -k 2>/dev/null
+		if "$SUDO_BIN" -n true 2>/dev/null; then
+			return 0
+		fi
+	fi
 	if ! "$SUDO_BIN" -n true 2>/dev/null; then
-		if "$SUDO_BIN" -v 2>/dev/null; then
-			# This process owns authentication now — its cleanup may tear
-			# the grant down. A probe-success child (ancestor's drop-in)
-			# never sets this and never cleans up.
-			SUDO_AUTHED=1
-		else
+		if ! "$SUDO_BIN" -v 2>/dev/null; then
 			# No tty / no sudo rule: degrade to a warning — user-level
 			# installs still work; privileged steps fail individually via
 			# sudo_cmd and are collected by the caller's reporting.
@@ -81,8 +98,15 @@ setup_sudo() {
 	# SUDO_DROPIN=0: timestamp-only mode — the password above was the only
 	# prompt, no drop-in is installed and there is nothing to clean up.
 	[ "${SUDO_DROPIN:-1}" = "1" ] || return 0
+	# Armed before the file exists: every path from here that can leave a
+	# grant on disk must also be able to take it away, including a failure
+	# between the write and the verification below.
+	trap cleanup_sudo EXIT
+	trap 'exit 130' INT
+	trap 'exit 143' TERM
 	if printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$(id -un)" |
 		"$SUDO_BIN" -n sh -c 'umask 077; cat >"$1" && chmod 0440 "$1" && visudo -c -f "$1" >/dev/null 2>&1 || { rm -f "$1"; exit 1; }' sh "$(nopasswd_dropin_path)" >/dev/null 2>&1; then
+		SUDO_DROPIN_FILE="$(nopasswd_dropin_path)"
 		# A written, visudo-clean drop-in is not necessarily PARSED: a sudoers
 		# missing the @includedir line never loads it, and a sudo whose rule
 		# matching disfavors the tag defeats it. Unverified, the run then
@@ -91,10 +115,12 @@ setup_sudo() {
 		# success now can only come from the rule itself.
 		"$SUDO_BIN" -k 2>/dev/null
 		if "$SUDO_BIN" -n true 2>/dev/null; then
-			SUDO_NOPASSWD=1
 			ok "Temporary NOPASSWD drop-in installed for this run (auto-removed on exit)."
 		else
-			warn "NOPASSWD drop-in is not effective (sudo ignores $SUDOERS_D_DIR?) — falling back to timestamp-only mode; long runs may still need one re-authentication."
+			# Inert right now, but it becomes a live NOPASSWD grant the moment
+			# sudoers grows an @includedir line — withdraw it immediately.
+			cleanup_sudo
+			warn "NOPASSWD drop-in is not effective (sudo ignores $SUDOERS_D_DIR?) — removed the file and fell back to timestamp-only mode; long runs may still need one re-authentication."
 			# -k above destroyed the ticket the probe/-v may have created —
 			# restore it, or the run is dead on arrival. Foreground here, so
 			# prompting is safe (the SIGTTIN freeze only applies inside retried commands).
@@ -102,11 +128,13 @@ setup_sudo() {
 				warn "could not re-authenticate — privileged steps will fail until you re-run with 'sudo -v' done first."
 		fi
 	else
+		# The pipeline deletes the file itself when visudo -c rejects it, but
+		# that cleanup runs as root inside sudo — confirm from here that no
+		# grant survived a failed write.
+		SUDO_DROPIN_FILE="$(nopasswd_dropin_path)"
+		cleanup_sudo
 		warn "could not install the temporary NOPASSWD drop-in — each privileged step will ask for the password separately."
 	fi
-	trap cleanup_sudo EXIT
-	trap 'exit 130' INT
-	trap 'exit 143' TERM
 }
 
 # SUDO_DROPIN default for a --install run; an explicit value always wins.

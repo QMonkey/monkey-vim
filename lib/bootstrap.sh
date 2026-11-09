@@ -10,9 +10,9 @@
 
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ ! -f "$LIB_DIR/common.sh" ]; then
-	echo "monkey-scripts not found next to this file ($LIB_DIR)." >&2
-	echo "This checkout's scripts/ is incomplete (outdated or partial clone)." >&2
-	echo "  git -C $(dirname "$LIB_DIR") pull    # or re-clone, or run the project's install.sh" >&2
+	printf '%s\n' "monkey-scripts not found next to this file ($LIB_DIR)." >&2
+	printf '%s\n' "This checkout's scripts/ is incomplete (outdated or partial clone)." >&2
+	printf '%s\n' "  git -C $(dirname "$LIB_DIR") pull    # or re-clone, or run the project's install.sh" >&2
 	exit 1
 fi
 # shellcheck source=/dev/null

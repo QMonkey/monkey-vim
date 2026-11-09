@@ -4,24 +4,28 @@
 # Sourced by scripts/install.sh and scripts/checkhealth.sh (see README.md).
 
 # ──────────────────────────── colors ────────────────────────────
+# $'…' so the variables hold the REAL escape bytes: message lines then print
+# them with plain output, and no printer has to expand backslashes again —
+# which is also what keeps a value containing a backslash (a path, a regex
+# fragment) from being rewritten on its way to the terminal.
 # Plain assignments, not `readonly`: entry points may be sourced more than
 # once (tests, chained runs) and re-assigning a readonly aborts.
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+CYAN=$'\033[0;36m'
+BOLD=$'\033[1m'
+NC=$'\033[0m'
 
 # ──────────────────────────── logging ────────────────────────────
 # 2-space indent, tag centered in 4 columns ([INFO] / [ OK ] / [WARN] /
 # [FAIL]). fail() aborts under install.sh (MONKEY_FAIL_EXITS=true) and stays
 # status-neutral under checkhealth.sh (it collects failures instead).
-info() { echo -e "  [${CYAN}INFO${NC}] $*"; }
-ok() { echo -e "  [${GREEN} OK ${NC}] $*"; }
-warn() { echo -e "  [${YELLOW}WARN${NC}] $*"; }
+info() { printf '%s\n' "  [${CYAN}INFO${NC}] $*"; }
+ok() { printf '%s\n' "  [${GREEN} OK ${NC}] $*"; }
+warn() { printf '%s\n' "  [${YELLOW}WARN${NC}] $*"; }
 fail() {
-	echo -e "  [${RED}FAIL${NC}] $*"
+	printf '%s\n' "  [${RED}FAIL${NC}] $*"
 	if ${MONKEY_FAIL_EXITS:-false}; then
 		exit 1
 	fi
@@ -30,7 +34,7 @@ fail() {
 
 # Fatal for both entry points (bad argument, unusable environment).
 die() {
-	echo -e "  [${RED}FAIL${NC}] $*"
+	printf '%s\n' "  [${RED}FAIL${NC}] $*"
 	exit 1
 }
 
@@ -41,7 +45,7 @@ require_home() {
 }
 
 # Parallel-jobs default for source builds. An exported JOBS always wins.
-JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
+JOBS=${JOBS:-$(nproc 2>/dev/null || printf '%s\n' 4)}
 
 # WSL interop injects the WINDOWS PATH into ours: tools on the Windows side
 # appear as /mnt/* shims that are NOT Linux binaries (sudo's secure_path
@@ -97,34 +101,65 @@ is_wsl() {
 # lib that owns the functions registers them (see retry.sh).
 RETRY_EXPORT_FUNCS="native_sudo have_native_cmd native_bin_path is_wsl"
 
+# The ONE supported-OS list: the ids os_detect can emit, the ids every name
+# table (lib/distro.sh, lib/brew.sh) has a row for, and the ids os_init
+# accepts. A new distro is added HERE and to those tables — nothing else
+# gates on it, and no id outside this list ever reaches a table.
+OS_SUPPORTED="debian ubuntu arch opensuse centos fedora macos"
+
 # Granular OS id: debian | ubuntu | arch | opensuse | centos | fedora |
-# macos | linux-unknown | unknown. Every supported distro is its own id —
-# nothing is folded into a neighbour, so the package tables can give each
-# one the names its own repositories use. Derivatives are normalised here,
-# at the only place that reads /etc/os-release; to fold a new id into a
-# sibling, add it to that sibling's line and every table follows.
+# macos (= OS_SUPPORTED). Every supported distro is its own id — nothing is
+# folded into a neighbour, so the package tables can give each one the names
+# its own repositories use. Derivatives are normalised here, at the only
+# place that reads /etc/os-release; to fold a new id into a sibling, add it
+# to that sibling's line and every table follows.
+#
+# Refuses anything outside OS_SUPPORTED: return 1, the reason on stderr,
+# NOTHING on stdout. An id with no package tables must not reach the chain —
+# every lane would decline every name (and the retry loop would keep asking),
+# which reads as success and is not one.
 os_detect() {
-	case "$(uname -s)" in
+	local ID='' PRETTY_NAME='' id='' kernel
+	kernel=$(uname -s)
+	case "$kernel" in
 	Linux)
 		if [ -f /etc/os-release ]; then
 			# shellcheck disable=SC1091
 			. /etc/os-release
 			case "$ID" in
-			ubuntu | linuxmint | pop | elementary | zorin) echo "ubuntu" ;;
-			debian) echo "debian" ;;
-			arch | manjaro | endeavouros) echo "arch" ;;
-			opensuse | opensuse-leap | opensuse-tumbleweed | opensuse-microos | suse | sles) echo "opensuse" ;;
-			centos | rhel | rocky | almalinux | ol) echo "centos" ;;
-			fedora) echo "fedora" ;;
-			*) echo "linux-unknown" ;;
+			ubuntu | linuxmint | pop | elementary | zorin) id="ubuntu" ;;
+			debian) id="debian" ;;
+			arch | manjaro | endeavouros) id="arch" ;;
+			opensuse | opensuse-leap | opensuse-tumbleweed | opensuse-microos | suse | sles) id="opensuse" ;;
+			centos | rhel | rocky | almalinux | ol) id="centos" ;;
+			fedora) id="fedora" ;;
 			esac
-		else
-			echo "linux-unknown"
 		fi
+		[ -n "$id" ] || {
+			printf 'os_detect: Linux %s (ID=%s) has no package tables here — supported: %s\n' \
+				"${PRETTY_NAME:-/etc/os-release did not say}" "${ID:-unset}" "$OS_SUPPORTED" >&2
+			return 1
+		}
 		;;
-	Darwin) echo "macos" ;;
-	*) echo "unknown" ;;
+	Darwin) id="macos" ;;
+	*)
+		printf 'os_detect: kernel "%s" is not supported — supported: %s\n' "$kernel" "$OS_SUPPORTED" >&2
+		return 1
+		;;
 	esac
+	printf '%s\n' "$id"
+}
+
+# os_init — establish $OS for this process, once, from the only entry points
+# (install_main, checkhealth_main, monkey-env's custom chain). Fatal: an
+# unsupported host must stop before the first package question, not degrade
+# every later answer. Exported because retry's function-first children run
+# the same OS-dependent helpers and must see the id the parent validated,
+# not an empty one.
+os_init() {
+	OS=$(os_detect) ||
+		die "unsupported system — ${PROJECT:-this installer} runs on: $OS_SUPPORTED"
+	export OS
 }
 
 # Version comparison: GNU sort -V -C when available (BSD sort on macOS has

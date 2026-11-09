@@ -1,22 +1,23 @@
 # monkey-scripts/lib/template.sh — the template engine: template + env →
-# config file. Two modes: default = gomplate (Go text/template) render of
+# config file. Two entry points: render = gomplate (Go text/template) render of
 # {{ .Env.NAME }} references from the caller-exported environment;
-# "fill KEY..." = fill-empty-only dotenv MERGE (hand-edits win) for
+# render_fill = fill-empty-only dotenv MERGE (hand-edits win) for
 # credential files.
 # No format awareness, no secrets access, atomic 0600 writes; failure
-# contract: warn + non-zero, never aborts the caller.
+# contract: log + non-zero return. render logs with fail() — status-neutral
+# under checkhealth.sh, fatal under install.sh (MONKEY_FAIL_EXITS=true) —
+# render_fill's engine failure warns.
 
 # render <template> <outfile> — the substitution renderer: gomplate (Go
 # text/template) over the template's {{ .Env.NAME }} references, values from the
 # caller-exported environment. Structure (model catalogs, channel members,
 # optional keys) lives IN the template as {{ range }}/{{ if }}: shell-built
-# fragments are what used to produce stray commas, literal \n and last-one-wins
+# fragments are what produce stray commas, literal \n and last-one-wins
 # duplicate keys in rendered configs.
-# A reference to an unset variable is a hard gomplate error, so "unset must
-# fail loudly" needs no inventory pass — and no whitelist either: {{ }} never
-# touches the $VAR / ${VAR} credential-NAME references the agent resolves at
-# runtime. Atomic 0600 write; failure contract: warn + non-zero, never aborts
-# the caller. The fill mode lives in render_fill below.
+# A reference to an unset variable is a hard gomplate error, and there is no
+# whitelist to keep: {{ }} never touches the $VAR / ${VAR} credential-NAME
+# references the agent resolves at runtime. Atomic 0600 write; a failure logs
+# with fail() and returns 1. The fill mode lives in render_fill below.
 render() {
 	local template="$1" outfile="$2" tmp err rc=0 missing
 	if [ ! -f "$template" ]; then

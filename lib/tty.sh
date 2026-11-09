@@ -13,8 +13,7 @@
 #     the command in its own pty, and bytes injected into /dev/tty there
 #     die with sudo — rc 0 regardless, which is how the silent no-op
 #     slipped past every check (the bug the TIOCSTI_TTY plumbing fixes).
-#   macOS: TIOCSTI exists and no kernel gate applies — verified injection
-#     succeeding on an unsandboxed PTY (codex#45119); sandboxed/Seatbelt
+#   macOS: TIOCSTI exists and no kernel gate applies; sandboxed/Seatbelt
 #     contexts deny it with EPERM (surfaced as a failure). Plain run —
 #     sudo would only add a password prompt.
 # python3 first, perl as fallback, plain error when both are missing.
@@ -23,11 +22,10 @@
 # A succeeding ioctl only proves the bytes entered the tty input queue —
 # someone must READ it afterwards. Without an interactive shell behind the
 # terminal (SSH one-shots, piped harness runs) the pty dies and the queued
-# command evaporates while the log says OK (observed on an openSUSE
-# Tumbleweed VM run, 2026-10). The guard walks the ancestor chain for an
-# interactive shell whose fd 0 is our controlling tty, and refuses to
-# inject without one. `ps` is the single source of truth on every platform
-# (`args=` / `ppid=`; -ww disables width truncation).
+# command evaporates while the log says OK. The guard walks the ancestor
+# chain for an interactive shell whose fd 0 is our controlling tty, and
+# refuses to inject without one. `ps` is the single source of truth on every
+# platform (`args=` / `ppid=`; -ww disables width truncation).
 
 _is_interactive_shell() {
 	# Interactive = argv0 is a shell and every remaining argument is a pure
@@ -39,8 +37,7 @@ _is_interactive_shell() {
 	# Plain heredoc, NOT a herestring (`<<<`): legacy sh.vim (nvim/vim
 	# without tree-sitter for sh) parses `<<<` as a heredoc BEGIN whose
 	# delimiter never matches, rendering EVERY following line as one
-	# unterminated heredoc (observed: the rest of this file highlighted as
-	# shHereDoc, 2026-10). `read -a` splits on IFS whitespace identically.
+	# unterminated heredoc. `read -a` splits on IFS whitespace identically.
 	local ps_out
 	ps_out=$(ps -ww -o args= -p "$1" 2>/dev/null)
 	read -r -a words <<EOF

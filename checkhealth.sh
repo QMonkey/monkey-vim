@@ -70,7 +70,7 @@ parse_args() {
 		--skip-check-config) SKIP_CONFIG_CHECKS=true ;;
 		-h | --help) usage ;;
 		*)
-			echo "Unknown option: $1" >&2
+			printf '%s\n' "Unknown option: $1" >&2
 			# Not 0: an unrecognized flag must not read as a passing check.
 			usage 2
 			;;
@@ -81,12 +81,12 @@ parse_args() {
 
 print_summary() {
 	if [ "$REQUIRED_FAILURES" -eq 0 ]; then
-		echo -e "${GREEN}${BOLD}All required dependencies satisfied.${NC}"
+		printf '%s\n' "${GREEN}${BOLD}All required dependencies satisfied.${NC}"
 		exit 0
 	fi
-	echo -e "${RED}${BOLD}Some required dependencies are missing.${NC}"
+	printf '%s\n' "${RED}${BOLD}Some required dependencies are missing.${NC}"
 	if ! $INSTALL_MODE; then
-		echo -e "Run ${CYAN}$0 --install${NC} to install them automatically."
+		printf '%s\n' "Run ${CYAN}$0 --install${NC} to install them automatically."
 	fi
 	exit 1
 }
@@ -114,9 +114,10 @@ phase_run() {
 #   required (+config when CONFIG_PHASE=required)
 #   → install required → recommended → install recommended
 #   → config when CONFIG_PHASE=early
-#   → clipboard provider → optional listing → install optional
+#   → clipboard provider → install optional → optional listing
 #   → terminal capabilities → advisory sections
 #   → config when CONFIG_PHASE=end (default)
+#   → the install steps moved to `late` run here
 #   → project hook → summary
 #
 # Data switches understood by the pipeline (all optional):
@@ -150,7 +151,7 @@ phase_run() {
 checkhealth_main() {
 	parse_args "$@"
 	require_home
-	OS=$(os_detect)
+	os_init
 	# Seed the framework bin dirs for THIS process: a standalone --install
 	# run creates dirs (cargo, npm-global, GOPATH) whose binaries must
 	# resolve in-session; install.sh's chain preseeds its own process the
