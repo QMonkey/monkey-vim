@@ -121,13 +121,13 @@ warn_unknown_pkgs() {
 # not in lib/distro.sh. Simple mappers (install hints, display name) dispatch
 # through it; the install/probe paths keep their explicit per-OS cases.
 pkg_manager() {
-	case "${OS:-unknown}" in
-	debian | ubuntu) echo "apt" ;;
-	arch) echo "pacman" ;;
-	opensuse) echo "zypper" ;;
-	centos | fedora) echo "dnf" ;;
-	macos) echo "brew" ;;
-	*) echo "" ;;
+	case "$OS" in
+	debian | ubuntu) printf '%s\n' "apt" ;;
+	arch) printf '%s\n' "pacman" ;;
+	opensuse) printf '%s\n' "zypper" ;;
+	centos | fedora) printf '%s\n' "dnf" ;;
+	macos) printf '%s\n' "brew" ;;
+	*) printf '%s\n' "" ;;
 	esac
 }
 
@@ -139,10 +139,16 @@ pkg_manager() {
 # so brew IS the whole chain there.
 chain_default() {
 	case "$(pkg_manager)" in
-	brew) echo "brew" ;;
-	"") echo "pkg" ;; # unknown OS: distro_install declines every name and the caller retries
-	pacman) echo "pkg aur brew" ;;
-	*) echo "pkg brew" ;;
+	brew) printf '%s\n' "brew" ;;
+	pacman) printf '%s\n' "pkg aur brew" ;;
+	"")
+		# Unreachable since os_init gates $OS: an OS with no manager would
+		# otherwise run the whole chain as "pkg", where distro_install
+		# declines every name and the retry loop keeps asking.
+		printf 'chain_default: no package lane for OS "%s" — supported: %s\n' "$OS" "$OS_SUPPORTED" >&2
+		exit 1
+		;;
+	*) printf '%s\n' "pkg brew" ;;
 	esac
 }
 
@@ -151,7 +157,7 @@ chain_default() {
 pkg_default_lane() {
 	local chain
 	chain="$(chain_default)"
-	echo "${chain%% *}"
+	printf '%s\n' "${chain%% *}"
 }
 
 # WHICH LANES, IN WHAT ORDER — one answer per host: chain_default above. A
@@ -288,7 +294,7 @@ CHAIN_FAILED=()
 # chain can name the same lane for the same package — without this record the
 # second visit repeats a transaction that already answered. Keyed by package
 # NAME, not by bin, because two steps can resolve one bin to two packages
-# (tsc names `typescript` on brew and `nodejs-typescript` on a distro). Scoped
+# (`node` names nodejs on the distro lane and node on the brew lane). Scoped
 # to one strategy run: install_pkg reached from the plain required-bins path
 # clears it, so no verdict leaks from a previous spec.
 STRATEGY_VISITED=""
@@ -549,7 +555,9 @@ install_strategy_step() {
 	pkg)
 		if [ -n "$args" ]; then
 			# args are binaries, not package names: the package is whatever
-			# pkg_name maps them to (cc → gcc, then clang).
+			# pkg_name maps them to (`node` → nodejs, `rg` → ripgrep), and
+			# names separated by spaces in one step batch into a single
+			# transaction.
 			local -a names=() b
 			for b in $args; do
 				names+=("$(pkg_name "$b")")

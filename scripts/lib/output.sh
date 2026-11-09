@@ -5,7 +5,7 @@
 # Sourced by scripts/install.sh and scripts/checkhealth.sh.
 #
 # Data contract (project side, completion summary):
-#   SUMMARY_LINES      completion text, one echo -e per entry; an entry
+#   SUMMARY_LINES      completion text, one printf per entry; an entry
 #                      starting with "?VAR|" prints only when $VAR is set
 #   FINISH_INJECT      1 (default) → print/perform the TIOCSTI injection hint
 #
@@ -16,7 +16,7 @@
 # ────────────────────── banner ──────────────────────
 # 80-column box (the smallest standard terminal width); the title is
 # centered inside it. The border is generated from WIDTH so the character
-# count can never drift from the padding math again.
+# count cannot drift from the padding math.
 print_banner() {
 	local title="$1" width=80 pad border right
 	printf -v border '═%.0s' {1..80}
@@ -24,11 +24,11 @@ print_banner() {
 	[ "$pad" -gt 0 ] || pad=0
 	right=$((width - pad - ${#title}))
 	[ "$right" -gt 0 ] || right=0
-	echo ""
-	echo -e "${BOLD}╔${border}╗${NC}"
-	echo -e "${BOLD}║$(printf '%*s' "$pad" '')${title}$(printf '%*s' "$right" '')║${NC}"
-	echo -e "${BOLD}╚${border}╝${NC}"
-	echo ""
+	printf '\n'
+	printf '%s\n' "${BOLD}╔${border}╗${NC}"
+	printf '%s\n' "${BOLD}║$(printf '%*s' "$pad" '')${title}$(printf '%*s' "$right" '')║${NC}"
+	printf '%s\n' "${BOLD}╚${border}╝${NC}"
+	printf '\n'
 }
 
 # Bold section title. A data-provided title may already carry ${NC} to end
@@ -36,15 +36,15 @@ print_banner() {
 # second time, so the byte stream matches a hand-written header exactly.
 print_bold_header() {
 	case "$1" in
-	*"${NC}"*) echo -e "${BOLD}$1" ;;
-	*) echo -e "${BOLD}$1${NC}" ;;
+	*"${NC}"*) printf '%s\n' "${BOLD}$1" ;;
+	*) printf '%s\n' "${BOLD}$1${NC}" ;;
 	esac
 }
 
 # ────────────────────── checkhealth header ──────────────────────
 print_header() {
-	echo -e "${BOLD}${PROJECT} dependency check${NC}"
-	echo ""
+	printf '%s\n' "${BOLD}${PROJECT} dependency check${NC}"
+	printf '\n'
 }
 
 # ────────────────────── platform ──────────────────────
@@ -54,20 +54,20 @@ pkg_manager_name() {
 	local pm
 	pm=$(pkg_manager)
 	[ "$pm" = brew ] && pm=homebrew
-	echo "$pm"
+	printf '%s\n' "$pm"
 }
 
 print_platform() {
-	echo -e "${BOLD}Platform${NC}"
-	echo -e "  OS: ${CYAN}$(uname -s)${NC}"
+	printf '%s\n' "${BOLD}Platform${NC}"
+	printf '%s\n' "  OS: ${CYAN}$(uname -s)${NC}"
 	local pm
 	pm=$(pkg_manager_name)
 	if [ -n "$pm" ]; then
-		echo -e "  Package manager: ${CYAN}${pm}${NC}"
+		printf '%s\n' "  Package manager: ${CYAN}${pm}${NC}"
 	else
 		warn "Unsupported OS — install dependencies manually"
 	fi
-	echo ""
+	printf '\n'
 }
 
 # Human install command for one or more package names — the "Run:" line and
@@ -75,17 +75,12 @@ print_platform() {
 # (lib/pkg.sh); this is the rendering side, kept with the other hint helpers.
 get_install_hint() {
 	case "$(pkg_manager)" in
-	apt) echo "sudo apt-get install ${*}" ;;
-	pacman) echo "sudo pacman -S ${*}" ;;
-	zypper) echo "sudo zypper install ${*}" ;;
-	dnf) echo "sudo dnf install ${*}" ;;
-	brew) echo "brew install ${*}" ;;
-	*)
-		case "${OS:-unknown}" in
-		linux-unknown) echo "install ${*} manually or 'brew install ${*}'" ;;
-		*) echo "install ${*} manually" ;;
-		esac
-		;;
+	apt) printf '%s\n' "sudo apt-get install ${*}" ;;
+	pacman) printf '%s\n' "sudo pacman -S ${*}" ;;
+	zypper) printf '%s\n' "sudo zypper install ${*}" ;;
+	dnf) printf '%s\n' "sudo dnf install ${*}" ;;
+	brew) printf '%s\n' "brew install ${*}" ;;
+	*) printf '%s\n' "install ${*} manually" ;;
 	esac
 }
 
@@ -108,32 +103,32 @@ _strategy_hint() {
 		fi
 		;;
 	npm)
-		echo "npm install -g $args"
+		printf '%s\n' "npm install -g $args"
 		;;
 	go)
-		echo "go install $args"
+		printf '%s\n' "go install $args"
 		;;
 	pip)
-		echo "pip3 install --user $args"
+		printf '%s\n' "pip3 install --user $args"
 		;;
 	aur)
 		# The arch AUR lane: the helper is what a human would run.
-		echo "${AUR_HELPER:-paru} -S $args"
+		printf '%s\n' "${AUR_HELPER:-paru} -S $args"
 		;;
 	brew)
-		echo "brew install $args"
+		printf '%s\n' "brew install $args"
 		;;
 	zig-zls-pair)
-		echo "brew install zls zig@<zls-version>  # version-locked pair (zls ceiling)"
+		printf '%s\n' "brew install zls zig@<zls-version>  # version-locked pair (zls ceiling)"
 		;;
 	rustup)
-		echo "https://rustup.rs/"
+		printf '%s\n' "https://rustup.rs/"
 		;;
 	rustup-component)
-		echo "rustup component add $args"
+		printf '%s\n' "rustup component add $args"
 		;;
 	python-unversioned)
-		echo "ln -s \$(command -v python3) /usr/local/bin/python"
+		printf '%s\n' "ln -s \$(command -v python3) /usr/local/bin/python"
 		;;
 	none)
 		# The exec arm's whole job is to return 1 (no step). No command here
@@ -191,8 +186,8 @@ summary_insert_at() {
 }
 
 finish_install() {
-	echo -e "${GREEN}${BOLD}${PROJECT} installation complete!${NC}"
-	echo ""
+	printf '%s\n' "${GREEN}${BOLD}${PROJECT} installation complete!${NC}"
+	printf '\n'
 	local line cond var text
 	for line in ${SUMMARY_LINES[@]+"${SUMMARY_LINES[@]}"}; do
 		cond=""
@@ -207,9 +202,9 @@ finish_install() {
 			text="$line"
 			;;
 		esac
-		echo -e "$text"
+		printf '%s\n' "$text"
 	done
-	echo ""
+	printf '\n'
 	if [ "${FINISH_INJECT:-1}" = 1 ]; then
 		# PATH exports were written to shell rc files, but they only apply to
 		# shells started AFTER this point. A child process can never change
@@ -230,18 +225,18 @@ finish_install() {
 			xdg_fix="$(xdg_runtime_fix_cmd)"
 			if [ -n "$xdg_fix" ]; then
 				if inject_tty "$xdg_fix"; then
-					echo -e "  ${GREEN}Injected XDG_RUNTIME_DIR fix into the current terminal.${NC}"
+					printf '%s\n' "  ${GREEN}Injected XDG_RUNTIME_DIR fix into the current terminal.${NC}"
 				else
-					echo -e "    ${CYAN}${xdg_fix}${NC}"
+					printf '%s\n' "    ${CYAN}${xdg_fix}${NC}"
 				fi
 			fi
 			if inject_tty "source ${env_file}"; then
-				echo -e "  ${GREEN}Injected 'source ${env_file}' into the current terminal.${NC}"
+				printf '%s\n' "  ${GREEN}Injected 'source ${env_file}' into the current terminal.${NC}"
 			else
-				echo -e "  ${YELLOW}New PATH takes effect in NEW shells. To use it in this terminal now:${NC}"
-				echo -e "    ${CYAN}source ${env_file}${NC}    ${YELLOW}# or simply: ${CYAN}exec \$SHELL${NC}"
+				printf '%s\n' "  ${YELLOW}New PATH takes effect in NEW shells. To use it in this terminal now:${NC}"
+				printf '%s\n' "    ${CYAN}source ${env_file}${NC}    ${YELLOW}# or simply: ${CYAN}exec \$SHELL${NC}"
 			fi
 		fi
-		echo ""
+		printf '\n'
 	fi
 }

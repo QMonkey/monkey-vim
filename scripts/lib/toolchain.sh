@@ -49,9 +49,9 @@ ensure_rust() {
 }
 
 # ──────────────────────────── go ────────────────────────────
-# ensure_go — the Go toolchain, idempotent. Self-heals the step that used to
-# dead-end on a host without go: `go install` there died with
-# command-not-found and the spec's next step inherited the wreckage.
+# ensure_go — the Go toolchain, idempotent: a spec declaring go:x must not
+# dead-end on a host with no go (`go install` there would die with
+# command-not-found and leave the wreckage to the spec's next step).
 # Provisioned through the CHAIN, not an upstream tarball: the distro golang
 # package and the brew formula are current on every supported OS, so a
 # second bootstrap path would mean version detection and archive extraction
@@ -160,7 +160,7 @@ ensure_node_at_least() {
 		hash -r
 		bin_at_least node "$min" && return 0
 	fi
-	warn "Node.js $min+ is still not available (found: $(node -v 2>/dev/null || echo none)) — install it manually: $(get_install_hint node)"
+	warn "Node.js $min+ is still not available (found: $(node -v 2>/dev/null || printf '%s\n' none)) — install it manually: $(get_install_hint node)"
 	return 1
 }
 
@@ -249,18 +249,18 @@ ensure_pip() {
 		have_native_cmd pip3 || return 1
 	fi
 	# A pip3 that exists but crashes on import must not short-circuit the
-	# repair (observed on Leap 16: python3.13 built against a newer libexpat
-	# than the installed runtime — pip dies at startup, or --version is
-	# green but the first install crashes importing pyexpat). Both heal by
-	# updating libexpat1. The pyexpat probe is openSUSE-gated.
+	# repair (observed on Leap 16: the interpreter is built against a newer
+	# libexpat than the installed runtime — pip dies at startup, or
+	# --version is green but the first install crashes importing pyexpat).
+	# Both heal by updating libexpat1. The pyexpat probe is openSUSE-gated.
 	pip_ok() {
 		pip3 --version >/dev/null 2>&1 || return 1
-		[ "${OS:-}" = opensuse ] || return 0
+		[ "$OS" = opensuse ] || return 0
 		python3 -c 'import pyexpat' >/dev/null 2>&1
 	}
 	if ! pip_ok; then
 		warn "pip3 is installed but fails to run — runtime library mismatch on a not-fully-updated system?"
-		if [ "${OS:-}" = opensuse ] && have_native_cmd zypper; then
+		if [ "$OS" = opensuse ] && have_native_cmd zypper; then
 			info "updating libexpat1 (the known Leap 16 victim)..."
 			sudo_cmd zypper update -y libexpat1 >/dev/null 2>&1 || true
 			# The targeted update may not be enough when python3 came from a

@@ -14,9 +14,11 @@
 #               match:bin (companion whose major.minor version must equal
 #               <bin>'s — zls vs zig; master missing ⇒ pass)
 #     desc      printed text (default: id)
-#     install   pkg (default) | pkg:name,name | aur:x | pip:x | npm:x | go:x |
+#     install   pkg (default) | pkg:name name | aur:x | pip:x | npm:x | go:x |
 #               brew:x | rustup | rustup-component:x |
 #               python-unversioned | zig-zls-pair | none
+#               (a comma separates STEPS; names inside one step are separated
+#               by spaces — a second comma-token is read as a step kind)
 #               A LANE kind (pkg / aur / brew) runs the install chain for its
 #               names — pkg means "this host's chain", which on Linux is
 #               distro → [AUR] → brew and on macOS just brew — so a plain
@@ -315,7 +317,7 @@ check_main_version() {
 	parse_spec "$MAIN_VERSION"
 	print_bold_header "${MAIN_VERSION_TITLE:-$SPEC_DESC}"
 	check_spec "$MAIN_VERSION" required || true
-	echo ""
+	printf '\n'
 }
 
 # REQUIRED_CHECKS markers: see the list at the top of this file.
@@ -327,12 +329,12 @@ run_required_checks() {
 	for entry in ${REQUIRED_CHECKS[@]+"${REQUIRED_CHECKS[@]}"}; do
 		case "$entry" in
 		@header\|*)
-			[ "$group_open" = 1 ] && echo ""
+			[ "$group_open" = 1 ] && printf '\n'
 			print_bold_header "${entry#@header|}"
 			group_open=1
 			;;
 		@note\|*)
-			echo "  ${entry#@note|}"
+			printf '%s\n' "  ${entry#@note|}"
 			;;
 		@call\|*)
 			_run_call_hook "${entry#@call|}"
@@ -343,7 +345,7 @@ run_required_checks() {
 			fi
 			;;
 		@config)
-			[ "$group_open" = 1 ] && echo ""
+			[ "$group_open" = 1 ] && printf '\n'
 			check_config_files
 			group_open=0
 			config_placed=1
@@ -354,7 +356,7 @@ run_required_checks() {
 			;;
 		esac
 	done
-	[ "$group_open" = 1 ] && echo ""
+	[ "$group_open" = 1 ] && printf '\n'
 	if [ "${CONFIG_PHASE:-end}" = "required" ] && [ "$config_placed" = 0 ]; then
 		# No "@config" marker in the list: place the section here.
 		# check_config_files prints its own trailing blank.
@@ -366,7 +368,7 @@ run_required_checks() {
 check_recommended_tools() {
 	[ ${#RECOMMENDED_CHECKS[@]} -gt 0 ] || return 0
 	print_bold_header "Recommended tools"
-	[ -n "${RECOMMENDED_NOTE:-}" ] && echo "  $RECOMMENDED_NOTE"
+	[ -n "${RECOMMENDED_NOTE:-}" ] && printf '%s\n' "  $RECOMMENDED_NOTE"
 	local entry
 	for entry in "${RECOMMENDED_CHECKS[@]}"; do
 		# "@call|fn" — same project hook as in REQUIRED_CHECKS (monkey-vim's
@@ -380,7 +382,7 @@ check_recommended_tools() {
 			;;
 		esac
 	done
-	echo ""
+	printf '\n'
 }
 
 # Optional tools are OPTIONAL_CHECKS specs like any other; the optional 8th
@@ -390,16 +392,16 @@ check_recommended_tools() {
 check_optional_tools() {
 	[ ${#OPTIONAL_CHECKS[@]} -gt 0 ] || return 0
 	print_bold_header "${OPTIONAL_SECTION_TITLE:-Optional tools}"
-	[ -n "${OPTIONAL_SECTION_NOTE:-}" ] && echo "  $OPTIONAL_SECTION_NOTE"
+	[ -n "${OPTIONAL_SECTION_NOTE:-}" ] && printf '%s\n' "  $OPTIONAL_SECTION_NOTE"
 	local entry group="" prev="" bin
 	for entry in "${OPTIONAL_CHECKS[@]}"; do
 		parse_spec "$entry"
 		group="$SPEC_GROUP"
 		if [ "$group" != "$prev" ]; then
-			[ -n "$prev" ] && echo "" # close the previous group
+			[ -n "$prev" ] && printf '%s\n' "" # close the previous group
 			if [ -n "$group" ]; then
-				[ -z "$prev" ] && echo "" # header/note → first group
-				echo -e "  ${BOLD}${group}${NC}"
+				[ -z "$prev" ] && printf '%s\n' "" # header/note → first group
+				printf '%s\n' "  ${BOLD}${group}${NC}"
 			fi
 			prev="$group"
 		fi
@@ -418,7 +420,7 @@ check_optional_tools() {
 	# Section spacer; tmux's original prints none (its optional list is
 	# immediately followed by Terminal capabilities).
 	if [ "${OPTIONAL_TRAILING_BLANK:-1}" = 1 ]; then
-		echo ""
+		printf '\n'
 	fi
 	return 0
 }
@@ -452,5 +454,5 @@ check_terminal_caps() {
 			warn "LANG=${LANG} (UTF-8 recommended)"
 		fi
 	fi
-	echo ""
+	printf '\n'
 }

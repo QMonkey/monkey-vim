@@ -54,12 +54,10 @@ repair_broken_clone() {
 # The flag and git-clone options may appear anywhere relative to the two
 # bare positionals — the parser classifies by shape, so
 # `clone_repo --branch=main <url> <dir>` and `clone_repo <url> <dir>
-# --branch=main` are the same call. (The first draft parsed positionally
-# and the wezterm call site passed options FIRST — it only ever "worked"
-# because git re-parses stray tokens as trailing options while $dir
-# silently held a garbage value and the pull path was unreachable.) A
-# killed clone attempt leaves a .git-only partial dir behind — repaired
-# before returning.
+# --branch=main` are the same call. A positional parse cannot work here: git
+# re-parses stray tokens as trailing options, so an option passed first would
+# silently land a garbage value in $dir and make the pull path unreachable.
+# A killed clone attempt leaves a .git-only partial dir behind — repaired before returning.
 _clone_submodules() {
 	retry -t "$RETRY_T_NET" -s "git submodule update" git -C "$1" submodule update --init --recursive
 }

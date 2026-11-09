@@ -26,18 +26,18 @@ _clipboard_tool() {
 # reached anyway). Shared by the warn-level check and the installer pass.
 clipboard_state() {
 	if [ "$OS" = "macos" ]; then
-		echo ok
+		printf '%s\n' ok
 	elif [ "${XDG_SESSION_TYPE:-}" = wayland ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
 		if have_native_cmd wl-copy; then
-			echo "ok wl-copy"
+			printf '%s\n' "ok wl-copy"
 		else
-			echo "missing wl-clipboard"
+			printf '%s\n' "missing wl-clipboard"
 		fi
 	elif [ "${XDG_SESSION_TYPE:-}" = x11 ] || [ -n "${DISPLAY:-}" ]; then
 		local tool
-		tool=$(_clipboard_tool) && echo "ok ${tool}" || echo "missing xclip"
+		tool=$(_clipboard_tool) && printf '%s\n' "ok ${tool}" || printf '%s\n' "missing xclip"
 	else
-		echo n/a
+		printf '%s\n' n/a
 	fi
 }
 
@@ -54,7 +54,7 @@ check_clipboard_required() {
 				ok "WSL interop (binfmt WSLInterop enabled)"
 			else
 				warn "WSL interop broken — .exe calls (yank/extrakto/fzf-url) will fail"
-				echo -e "         See README Troubleshooting: re-register /proc/sys/fs/binfmt_misc/WSLInterop"
+				printf '%s\n' "         See README Troubleshooting: re-register /proc/sys/fs/binfmt_misc/WSLInterop"
 			fi
 		else
 			fail "clip.exe (WSL)"
@@ -111,7 +111,7 @@ install_clipboard() {
 	ok* | n/a) return 0 ;;
 	missing*)
 		pkg="${state#missing }"
-		echo -e "  ${YELLOW}→ installing clipboard provider ${pkg}...${NC}"
+		printf '%s\n' "  ${YELLOW}→ installing clipboard provider ${pkg}...${NC}"
 		if install_pkg "$pkg"; then
 			report_install_ok "$pkg"
 		else

@@ -1,8 +1,8 @@
 # monkey-scripts/lib/missing.sh — the missing-dependency INSTALLER: turn the
 # MISSING_* lists of lib/checks.sh into package-manager transactions.
 # Sourced by scripts/checkhealth.sh (via lib/bootstrap.sh EXTRA_LIBS), AFTER
-# lib/checks.sh (spec model / probes) and lib/pkg.sh (install_pkg, install
-# strategies, get_install_hint).
+# lib/checks.sh (spec model / probes), lib/pkg.sh (install_pkg, install
+# strategies) and lib/output.sh (get_install_hint).
 
 # ──────────────────────── install missing ────────────────────────
 # Dedupe package names, order kept: two binaries can map to the SAME package
@@ -16,7 +16,7 @@ dedupe_pkgs() {
 		case " ${out[*]-} " in *" $p "*) continue ;; esac
 		out+=("$p")
 	done
-	echo "${out[*]-}"
+	printf '%s\n' "${out[*]-}"
 }
 
 # Collect the ids whose spec install strategy is plain "pkg" into
@@ -39,10 +39,10 @@ _collect_pkg_batch() {
 # ✓/✗ line for one install outcome; the hint names the human command
 # (usually a package name, sometimes a URL). Shared by every reporting site
 # of the installer passes below.
-report_install_ok() { echo -e "  ${GREEN}✓ $1 installed${NC}"; }
+report_install_ok() { printf '%s\n' "  ${GREEN}✓ $1 installed${NC}"; }
 report_install_fail() {
-	echo -e "  ${RED}✗ failed to install $1${NC}"
-	echo -e "    hint: $(get_install_hint "$2")"
+	printf '%s\n' "  ${RED}✗ failed to install $1${NC}"
+	printf '%s\n' "    hint: $(get_install_hint "$2")"
 }
 
 # Required re-probe for bare (non-spec) entries: installed = resolves on PATH
@@ -88,9 +88,9 @@ _required_reprobe() {
 		esac
 	done
 	if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
-		echo -e "${GREEN}All required tools now available.${NC}"
+		printf '%s\n' "${GREEN}All required tools now available.${NC}"
 	elif [ -n "${REQUIRED_MANUAL_HINT:-}" ]; then
-		echo -e "${RED}${REQUIRED_MANUAL_HINT}${NC}"
+		printf '%s\n' "${RED}${REQUIRED_MANUAL_HINT}${NC}"
 	fi
 }
 
@@ -99,14 +99,14 @@ _required_reprobe() {
 _required_tail_checks() {
 	run_required_checks
 	if [ ${#MISSING_REQUIRED[@]} -eq 0 ]; then
-		echo -e "${GREEN}All required tools now available.${NC}"
+		printf '%s\n' "${GREEN}All required tools now available.${NC}"
 	else
 		local -a hint_pkgs=()
 		local id
 		for id in "${MISSING_REQUIRED[@]}"; do
 			hint_pkgs+=("$(pkg_name "$id")")
 		done
-		echo -e "${RED}Run: $(get_install_hint "$(dedupe_pkgs ${hint_pkgs[@]+"${hint_pkgs[@]}"})")${NC}"
+		printf '%s\n' "${RED}Run: $(get_install_hint "$(dedupe_pkgs ${hint_pkgs[@]+"${hint_pkgs[@]}"})")${NC}"
 	fi
 }
 
@@ -123,7 +123,7 @@ _install_missing_pass() {
 	shift 2
 	local -a missing=("$@")
 	[ ${#missing[@]} -gt 0 ] || return 0
-	echo -e "${YELLOW}${title}: ${missing[*]}...${NC}"
+	printf '%s\n' "${YELLOW}${title}: ${missing[*]}...${NC}"
 	_collect_pkg_batch "${missing[@]}"
 	local id batch_ok=0
 	if [ ${#_PKG_BATCH_NAMES[@]} -gt 0 ]; then
@@ -135,9 +135,9 @@ _install_missing_pass() {
 		required) ;; # batch failure tolerated — the reprobe/tail step reports it
 		recommended)
 			if [ "$batch_ok" = 1 ]; then
-				echo -e "${GREEN}Done.${NC}"
+				printf '%s\n' "${GREEN}Done.${NC}"
 			else
-				echo -e "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"})")${NC}"
+				printf '%s\n' "${RED}Failed. Run: $(get_install_hint "$(dedupe_pkgs ${_PKG_BATCH_NAMES[@]+"${_PKG_BATCH_NAMES[@]}"})")${NC}"
 			fi
 			;;
 		optional)
@@ -165,13 +165,13 @@ _install_missing_pass() {
 			;;
 		recommended)
 			if install_strategy "$SPEC_RAW"; then
-				echo -e "  ${GREEN}✓ ${id} available${NC}"
+				printf '%s\n' "  ${GREEN}✓ ${id} available${NC}"
 			else
 				report_install_fail "$id" "$(pkg_name "$id")"
 			fi
 			;;
 		optional)
-			echo -e "  ${YELLOW}→ installing ${id}...${NC}"
+			printf '%s\n' "  ${YELLOW}→ installing ${id}...${NC}"
 			local installed_ok=true
 			# A project may carry upstream's per-binary install table verbatim
 			# (monkey-nvim / monkey-vim); otherwise run the spec strategy.
@@ -201,14 +201,14 @@ install_missing_required() {
 	else
 		_required_tail_checks
 	fi
-	echo ""
+	printf '\n'
 }
 
 install_missing_recommended() {
 	${INSTALL_MODE:-false} || return 0
 	[ ${#MISSING_RECOMMENDED[@]} -gt 0 ] || return 0
 	_install_missing_pass recommended "Installing" ${MISSING_RECOMMENDED[@]+"${MISSING_RECOMMENDED[@]}"}
-	echo ""
+	printf '\n'
 }
 
 # Probes OPTIONAL_CHECKS itself instead of trusting MISSING_OPTIONAL: the
@@ -224,14 +224,14 @@ install_missing_optional() {
 	done
 	if [ ${#missing[@]} -eq 0 ]; then
 		if [ -n "${OPTIONAL_ALL_PRESENT_MSG:-}" ]; then
-			echo -e "${GREEN}${OPTIONAL_ALL_PRESENT_MSG}${NC}"
-			echo ""
+			printf '%s\n' "${GREEN}${OPTIONAL_ALL_PRESENT_MSG}${NC}"
+			printf '\n'
 		fi
 		return 0
 	fi
 	_install_missing_pass optional "${OPTIONAL_INSTALL_TITLE:-Installing optional tools}" ${missing[@]+"${missing[@]}"}
 	# Optional trailing summary for projects whose original printed one
 	# after a non-empty install batch (monkey-nvim, monkey-vim).
-	[ -n "${OPTIONAL_DONE_MSG:-}" ] && echo -e "${GREEN}${OPTIONAL_DONE_MSG}${NC}"
-	echo ""
+	[ -n "${OPTIONAL_DONE_MSG:-}" ] && printf '%s\n' "${GREEN}${OPTIONAL_DONE_MSG}${NC}"
+	printf '\n'
 }

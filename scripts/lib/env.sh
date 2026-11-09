@@ -1,8 +1,8 @@
 # shellcheck shell=bash
 # monkey-scripts/lib/env.sh — PATH seeding / persistence, shell env-file
 # infrastructure, compositor autostart. Sourced by scripts/install.sh and
-# scripts/checkhealth.sh (BEFORE clone.sh and checks.sh, which rely on
-# export_path mid-run).
+# scripts/checkhealth.sh (each entry point calls export_path for its own
+# process right after os_init).
 #
 #   bin_dirs / export_path / persist_path — the framework bin-dir set: one
 #       source of truth emitting idempotent PATH-update lines
@@ -28,12 +28,12 @@
 # brew_ensure ran. The OS candidates follow: a mac never has /home/linuxbrew
 # and a Linux host never has /opt/homebrew, so a union list only ever put the
 # OTHER system's prefix on PATH. /usr/local is a candidate on both: the
-# Intel-mac prefix and the legacy Linuxbrew one. Reads the framework's $OS
-# (set by install_main / checkhealth before any of this runs); unset or
-# unknown takes the Linux arm.
+# Intel-mac prefix and the legacy Linuxbrew one. Reads the framework's $OS,
+# which os_init has already validated (and exported) by the time any of this
+# runs, so there is no unset/unknown arm left to take.
 brew_prefixes() {
 	local discovered cand list="/opt/homebrew /usr/local"
-	[ "${OS:-unknown}" = macos ] || list="/home/linuxbrew/.linuxbrew /usr/local"
+	[ "$OS" = macos ] || list="/home/linuxbrew/.linuxbrew /usr/local"
 	# A shell function or alias named brew would answer "brew", not a path —
 	# require the resolved binary before turning it into a prefix.
 	if discovered=$(command -v brew) && [ -x "$discovered" ]; then
@@ -87,20 +87,66 @@ shell_env_files() {
 # (write_tty_autostart does) — any later call overwrites it.
 ENV_BLOCK_FILES=""
 
+# env_source_line <path> — the ONE rendering of a profile line that sources an
+# env file: `[[ -f X ]] && { set -a; source X; set +a; }`.
+#
+# X is spelled ~-relative while the file sits under $HOME, which is the default
+# for every ${XDG_CONFIG_HOME:-$HOME/.config}-derived path, and absolute
+# otherwise so an override never ends up naming a different file. `~` is the
+# form a profile normally reads as, and it survives a $HOME containing spaces;
+# with HOME unset bash still resolves ~ through the passwd entry where "$HOME"
+# would expand to nothing and the guard would silently no-op. Measured in both
+# shells: ~ still expands when $HOME itself contains spaces, so the ~-form needs
+# no quoting; the absolute form is quoted because a path outside $HOME may.
+#
+# PATH lines are the opposite case and keep a literal $HOME (see bin_dirs):
+# a ~ inside double quotes or a case pattern does NOT expand, so `PATH="~/.x"`
+# would put the two characters ~ into PATH and the idempotency guard would
+# never match the expanded value PATH actually holds.
+env_source_line() {
+	# Declaring and deriving in one `local` would leave _shown empty: bash
+	# expands every word of a local command before assigning any of them.
+	local _p="$1"
+	local _shown
+	# Readable ~ form whenever nothing in the tail would need escaping; anything
+	# else (space, quote, $ , backtick, glob) goes through printf %q on the
+	# absolute path, because double quotes alone would still expand $ and
+	# backticks, and ~ cannot be quoted without losing its own expansion.
+	local _tail _shown
+	case "$_p" in
+	"$HOME"/*)
+		_tail=${_p#"$HOME/"}
+		case $_tail in
+		*[!A-Za-z0-9._/-]*) _shown=$(printf '%q' "$_p") ;;
+		*) _shown="~/$_tail" ;;
+		esac
+		;;
+	*) _shown=$(printf '%q' "$_p") ;;
+	esac
+	printf '[[ -f %s ]] && { set -a; source %s; set +a; }\n' "$_shown" "$_shown"
+}
+
 append_env_block() {
-	# append_env_block <marker> <block> [head|normal|tail] — append/guard one
-	# block in every shell env file, then keep the file ordered by block class:
+	# append_env_block <marker> <block> [head|normal|tail] — write one block into
+	# every shell env file, then order that file by block class:
 	#   [head]    env deps other blocks consume (PATH exports, secrets sourcing)
-	#   [normal]  everything else (default; also pre-class content and the user's own lines)
+	#   [normal]  everything else, the user's own lines included (default)
 	#   [tail]    process-replacing exec blocks (tmux / compositor autostart)
-	#             — always last; later appends partition BEFORE them
-	# The class lives in the MARKER LINE's front ("# [tail] marker ..."); dedup
-	# matches on the bare marker text (a substring of annotated lines too), so
-	# pre-class blocks match without duplicating and get annotated on the next
-	# run. Ordering = a stable partition (head, normal, tail; within a class:
-	# appearance order = the install chain's order = the family's dependency
-	# order). Leading content sorts as head. No content matching, no component
-	# coupling: a component declares its own class; the partition is the rule.
+	# The class rides on the marker line ("# [tail] <marker>"), so every
+	# component declares its own placement and none inspects another's text.
+	# Dedup is a substring test on the bare marker: an existing block is never
+	# written twice, and is then left exactly as it is — relabelling an
+	# annotation this installer did not write is not its job.
+	#
+	# The rewrite is a stable partition: head, normal, tail, and within a class
+	# the append order (= the chain's dependency order); anything whose line
+	# carries no class — a block from a pre-class installer, or the user's own
+	# preamble — counts as unmarked and sorts first. It SETS the layout
+	# instead of inheriting it: blank
+	# lines are separators, not content, so exactly one remains between blocks,
+	# none at the top and none after the last line, while blanks inside a block
+	# survive as its text. An already-correct file re-emits byte for byte, which
+	# is what makes the pass idempotent.
 	local marker="$1"
 	local block="$2"
 	local class="${3:-normal}"
@@ -112,21 +158,8 @@ append_env_block() {
 		if ! grep -qF -- "$marker" "$f" 2>/dev/null; then
 			printf '\n# [%s] %s\n%b\n' "$class" "$marker" "$block" >>"$f"
 			ok "Added '$marker' to $f"
-		else
-			# Present: normalize the marker line's class annotation (the
-			# block content stays untouched) — the class must persist in
-			# the file; the partition pass reads it from here.
-			awk -v m="$marker" -v c="$class" '
-				index($0, m) > 0 && $0 ~ /^[[:space:]]*#/ {
-					print "# [" c "] " m
-					next
-				}
-				{ print }
-			' "$f" >"$f.monkey-tmp" && mv "$f.monkey-tmp" "$f"
 		fi
-		# Stable partition: head / normal / tail; within a class the
-		# appearance order is kept; leading content (no marker) sorts as
-		# head. Idempotent: an already-partitioned file re-emits unchanged.
+		# Order the file and normalize its separators (see the rules above).
 		awk '
 			/^[[:space:]]*#[[:space:]]*\[(head|normal|tail)\][[:space:]]/ {
 				nseg++
@@ -140,11 +173,19 @@ append_env_block() {
 				segline[nseg, ++segcnt[nseg]] = $0
 			}
 			END {
+				first = 1
 				for (c = 0; c <= 2; c++)
-					for (sg = 1; sg <= nseg; sg++)
-						if (segcls[sg] == c)
-							for (k = 1; k <= segcnt[sg]; k++)
-								print segline[sg, k]
+					for (sg = 1; sg <= nseg; sg++) {
+						if (segcls[sg] != c) continue
+						lo = 1
+						while (lo <= segcnt[sg] && segline[sg, lo] ~ /^[[:space:]]*$/) lo++
+						hi = segcnt[sg]
+						while (hi >= lo && segline[sg, hi] ~ /^[[:space:]]*$/) hi--
+						if (lo > hi) continue
+						if (!first) print ""
+						first = 0
+						for (k = lo; k <= hi; k++) print segline[sg, k]
+					}
 			}
 		' "$f" >"$f.monkey-tmp" && mv "$f.monkey-tmp" "$f"
 		ENV_BLOCK_FILES="$ENV_BLOCK_FILES $f"
@@ -156,7 +197,7 @@ append_env_block() {
 # /run/user/$UID 0700). Sessionless shells — WSL2 (it registers a logind
 # session only for the distro's DEFAULT user, falling back to root without
 # a /etc/wsl.conf [user] default), containers, CI, `su` — have none, and
-# tools that write runtime files there fail (nvim/vim serverstart,
+# tools that write runtime files there fail (nvim serverstart(),
 # fzf-lua, ...). Keyed on the SYMPTOM, not is_wsl(); the real fix is a
 # proper default user (see consuming repos' README, "Precautions" → WSL2).
 # runtime_dir_path resolves the dir for the REAL current user: under
@@ -167,11 +208,11 @@ runtime_dir_path() {
 	local uid
 	uid=$(id -u)
 	case "$XDG_RUNTIME_DIR" in
-	"" | "/run/user/$uid") echo "${XDG_RUNTIME_DIR:-/run/user/$uid}" ;;
+	"" | "/run/user/$uid") printf '%s\n' "${XDG_RUNTIME_DIR:-/run/user/$uid}" ;;
 	# Another user's /run/user/N: unownable for this uid — ignore it.
-	/run/user/*) echo "/run/user/$uid" ;;
+	/run/user/*) printf '%s\n' "/run/user/$uid" ;;
 	# A deliberate custom path (containers, custom setups): respect it.
-	*) echo "$XDG_RUNTIME_DIR" ;;
+	*) printf '%s\n' "$XDG_RUNTIME_DIR" ;;
 	esac
 }
 
@@ -257,7 +298,7 @@ ensure_xdg_runtime_dir() {
 	fi
 
 	# Both tiers failed (no logind/seatd) — spell out both fixes.
-	warn "Could not create $dir — nvim/vim serverstart() will keep failing (fzf-lua and other RPC users)."
+	warn "Could not create $dir — nvim serverstart() will keep failing (fzf-lua and other RPC users)."
 	warn "  Manual fix:  sudo touch $marker && sudo systemctl start user-runtime-dir@$uid.service"
 }
 
@@ -265,8 +306,8 @@ ensure_xdg_runtime_dir() {
 # the current value is unusable for this uid; empty string when fine.
 # ensure_xdg_runtime_dir repairs SYSTEM state, but a child can never change
 # the parent shell's env — the stale /run/user/0 a WSL root-boot session
-# inherited survives it (observed: repair logged "ready", yet the same
-# shell's `systemctl --user` still failed, skipping service registration).
+# inherited survives it (the repair can log "ready" while the same shell's
+# `systemctl --user` still fails, skipping service registration).
 # Only the parent shell can export the fix; finish_install delivers it
 # via TIOCSTI. Guard is state-based, not WSL-based: normal logins and `su`
 # already carry pam_systemd's correct value → idempotent no-op.
@@ -317,7 +358,7 @@ if [ -z "\${WAYLAND_DISPLAY:-}" ] && [ -z "\${DISPLAY:-}" ]; then
             if command -v kmscon-launch-gui >/dev/null 2>&1; then
                 exec kmscon-launch-gui $exec_cmd
             else
-                echo "kmscon session: kmscon-launch-gui not found — start $exec_cmd manually." >&2
+                printf '%s\n' "kmscon session: kmscon-launch-gui not found — start $exec_cmd manually." >&2
             fi
         else
             exec $exec_cmd
@@ -396,9 +437,7 @@ bin_dirs() {
 # FIRST, then the framework bin dirs. One list, one block, so the priority is
 # fixed by construction instead of by which writer touched the profile last
 # (prepend lines execute top-to-bottom, so the tier rendered last is the tier
-# that ends up ahead — two blocks only agreed with the live PATH as long as
-# brew happened to be persisted before the toolchain block; a
-# PERSIST_POS=before_links run whose brew came later flipped it).
+# that ends up ahead).
 # The brew tier still goes through _brew_path_snippet, which is where the
 # host decides HOW brew is placed, not whether it comes first:
 #   macOS — a prepend like every other dir, so running it first is what
@@ -430,7 +469,7 @@ persist_path() {
 	# the case guards re-check at shell startup. brew_ensure calls this too
 	# (not through install.sh's persist_path_step gate), so a host that
 	# bootstraps Homebrew gets its PATH persisted even with PERSIST_PATH=0 —
-	# the carve-out Homebrew always had, now for the whole block.
+	# Homebrew's carve-out, applied to the whole block.
 	# No summary line of its own: append_env_block reports each file it
 	# actually wrote, and this runs twice in a brew-carrying install
 	# (brew_ensure, then the gate) — a "persistence added" on the second,
@@ -449,7 +488,7 @@ persist_path() {
 #     NOT outrank system paths; positional insert, ahead of the WSL shims only.
 # Callers name dirs high → low (bin sbin); both arms honour that order.
 _brew_path_snippet() {
-	if [ "${OS:-unknown}" = macos ]; then
+	if [ "$OS" = macos ]; then
 		_path_prepend_snippet "$@"
 		return 0
 	fi
