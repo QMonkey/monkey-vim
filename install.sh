@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ──────────────────────────────────────────────────────────────
 # monkey-vim one-shot installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/QMonkey/monkey-vim/master/install.sh | bash 2>&1 | tee monkey-vim-install.log
 #
 # The shared installer (sudo, packages, clone, checkhealth, symlinks,
 # completion) lives in scripts/ — a `git subtree` of
@@ -128,93 +128,88 @@ SUMMARY_LINES=(
 
 install_vim_build_deps() {
 	info "Installing Vim build dependencies..."
-	distro_refresh
+	# Two engine calls, and no package manager named anywhere below: the
+	# toolchain group (compiler + git/curl, whose per-distro names live in
+	# lib/distro.sh) covers what the old hand-rolled batches carried for the
+	# build system, and the autotools group adds the autoconf/automake/
+	# pkg-config trio build_vim actually calls (it probes `pkg-config --exists`
+	# twice) — the one thing the old openSUSE branch got from a package pattern
+	# instead of a list. The dev headers go through the "pkg" LANE rather than
+	# install_pkg's chain — a header no distro repo carries must not become a
+	# reason to pull in AUR helpers or Homebrew bottles for a compile (the same
+	# reasoning install_build_deps records for its own groups). The lane probes
+	# each name first, so an unknown one is reported and skipped instead of
+	# aborting the transaction, which is what forced the old zypper list to be
+	# exactly right.
+	install_build_deps toolchain vcs autotools
+	local -a names=()
 	case "$OS" in
 	debian | ubuntu)
-		common=(git curl build-essential
-			libwayland-dev libcairo2-dev
+		names=(libwayland-dev libcairo2-dev
 			libgpm-dev libncurses-dev
 			python3-dev lua5.4 liblua5.4-dev
 			perl libperl-dev ruby ruby-dev)
 		if is_wsl; then
-			gui=(libgtk-3-dev libx11-dev libxt-dev libxpm-dev)
+			names+=(libgtk-3-dev libx11-dev libxt-dev libxpm-dev)
 		else
 			# Non-WSL: prefer GTK4 (no X11 dependency)
-			gui=(libgtk-4-dev)
+			names+=(libgtk-4-dev)
 		fi
-		retry -t "$RETRY_T_NET" -s "apt-get install" sudo_cmd apt-get install -y "${common[@]}" "${gui[@]}"
+		pkg_install pkg "${names[@]}" || :
 		;;
 	arch)
-		common=(base-devel git curl
-			wayland gpm ncurses
+		names=(wayland gpm ncurses
 			lua perl python ruby)
 		if is_wsl; then
-			gui=(gtk3 libx11 libxt libxpm)
+			names+=(gtk3 libx11 libxt libxpm)
 		else
-			gui=(gtk4)
+			names+=(gtk4)
 		fi
-		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
-		retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman install" sudo_cmd pacman -S --needed --noconfirm "${common[@]}" "${gui[@]}"
+		pkg_install pkg "${names[@]}" || :
 		;;
 	opensuse)
-		retry -t "$RETRY_T_NET" -s "zypper pattern" sudo_cmd zypper --non-interactive install -y -t pattern devel_basis
 		# Leap 16 names: python-devel and perl-devel do not exist (python3
 		# needs -devel-suffixed python3-devel only; perl headers ship in the
-		# main perl package), and xorg-x11-devel was removed — use the
-		# individual libX*-devel packages. One unknown name aborts the whole
-		# zypper transaction, so these must resolve exactly.
-		common=(git curl
-			wayland-devel cairo-devel
+		# main perl package), and xorg-x11-devel was removed — the individual
+		# libX*-devel packages replace it.
+		names=(wayland-devel cairo-devel
 			gpm-devel ncurses-devel
 			python3-devel
 			ruby-devel lua-devel perl)
 		if is_wsl; then
-			gui=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
+			names+=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
 		else
-			gui=(gtk4-devel)
+			names+=(gtk4-devel)
 		fi
-		retry -t "$RETRY_T_NET" -s "zypper install" sudo_cmd zypper --non-interactive install -y "${common[@]}" "${gui[@]}"
+		pkg_install pkg "${names[@]}" || :
 		;;
-	centos)
-		sudo_cmd dnf install -y epel-release || true
-		common=(gcc make git curl
-			wayland-devel cairo-devel
+	centos | fedora)
+		# One table for both: the distro lane installs epel-release ahead of the
+		# batch on CentOS only (lib/distro.sh, centos arm — the perl-ExtUtils-*
+		# and gtk names live there), and Fedora ships the same names in its base
+		# repos.
+		names=(wayland-devel cairo-devel
 			gpm-devel ncurses-devel
 			python3-devel ruby-devel lua-devel
 			perl perl-devel perl-ExtUtils-ParseXS
 			perl-ExtUtils-CBuilder perl-ExtUtils-Embed)
 		if is_wsl; then
-			gui=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
+			names+=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
 		else
-			gui=(gtk4-devel)
+			names+=(gtk4-devel)
 		fi
-		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
-		;;
-	fedora)
-		# No EPEL on Fedora — the same names ship in the base repos.
-		common=(gcc make git curl
-			wayland-devel cairo-devel
-			gpm-devel ncurses-devel
-			python3-devel ruby-devel lua-devel
-			perl perl-devel perl-ExtUtils-ParseXS
-			perl-ExtUtils-CBuilder perl-ExtUtils-Embed)
-		if is_wsl; then
-			gui=(gtk3-devel libX11-devel libXpm-devel libXt-devel)
-		else
-			gui=(gtk4-devel)
-		fi
-		retry -t "$RETRY_T_NET" -s "dnf install" sudo_cmd dnf install -y "${common[@]}" "${gui[@]}"
+		pkg_install pkg "${names[@]}" || :
 		;;
 	macos)
-		# Terminal-only build (--enable-gui=no); no gtk/cairo needed. git is
-		# required regardless — build_vim and the clone both pull sources.
-		if have_native_cmd brew; then
-			retry -t "$RETRY_T_NET" -s "brew install build deps" brew install git python3 ruby lua
-		else
+		# Terminal-only build (--enable-gui=no); no gtk/cairo needed. The brew
+		# lane declines silently when brew is unusable (lib/brew.sh), so the
+		# hint stays here; git comes from the vcs group above.
+		if ! pkg_install brew python3 ruby lua; then
 			warn "Homebrew not found — cannot install vim build deps. Install it first: https://brew.sh"
 		fi
 		;;
 	esac
+	warn_unknown_pkgs
 	hash -r # re-scan PATH: fresh binaries must not be shadowed by cached shim paths
 	ok "Build dependencies installed."
 }
@@ -420,10 +415,9 @@ install_plugins() {
 set nocompatible
 source $HOME/.vimrc
 EOF
-	# Same interrupted-clone hazard as monkey-nvim's vim.pack sweep: a
-	# plugin clone killed mid-CHECKOUT leaves a dir with a valid HEAD but
-	# an empty worktree — vim-plug then skips it as "already cloned" and
-	# the plugin is silently missing. Sweep the bundle tree via the shared
+	# An interrupted plugin clone leaves a directory with a valid HEAD but an
+	# empty worktree — vim-plug then skips it as "already cloned" and the
+	# plugin is silently missing. Sweep the bundle tree via the shared
 	# repair_broken_clone --strict (clone.sh) before every attempt: no
 	# HEAD → removed (re-clone); incomplete checkout → repaired OFFLINE
 	# (reset --hard; the objects are all local). Bundle dirs are never
