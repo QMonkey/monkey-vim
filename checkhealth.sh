@@ -49,6 +49,7 @@ RECOMMENDED_CHECKS=(
 EXTRA_SPECS=(
 	"bat|bin|bat|pkg"
 )
+
 check_bat() {
 	if have_native_cmd bat; then
 		ok "bat"
@@ -99,6 +100,9 @@ OPTIONAL_CHECKS=(
 	"lua-language-server|bin|lua-language-server|pkg,brew:lua-language-server||||Lua"
 	"node|bin|node|pkg||||Shell"
 	"bash-language-server|bin|bash-language-server|npm:bash-language-server||||Shell"
+	# The bash LSP takes its diagnostics from shellcheck — without it the
+	# server opens .sh files and reports nothing.
+	"shellcheck|bin|shellcheck|pkg,brew:shellcheck||||Shell"
 	"shfmt|bin|shfmt|go:mvdan.cc/sh/v3/cmd/shfmt@latest,pkg||||Shell"
 	"node|bin|node|pkg||||Vim"
 	"vim-language-server|bin|vim-language-server|npm:vim-language-server||||Vim"
