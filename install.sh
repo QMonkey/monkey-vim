@@ -102,6 +102,15 @@ run_checkhealth_step() {
 # blips, apt locks, aborted downloads) heal on retry. After the first pass
 # everything installed is skipped, so retries are cheap verifications.
 # retry()'s default attempt count, no -n here; exit code 0 wins.
+#
+# -r because checkhealth separates the non-zero answers: 3 means an install
+# never reached a verdict (a transaction died, an index was unreachable) and
+# another pass may land it; 1 means the remaining gaps are answered — this
+# distro does not carry the package — and re-walking the whole chain only pays
+# another refresh and backoff for the same reply. 124 stays on the list: a
+# pass timeout(1) cut short says nothing about the packages, so it is retried
+# exactly as before. Only the answered gap stops the loop. Both non-zero
+# outcomes still fall through to the same two warnings.
 run_checkhealth() {
 	info "Running checkhealth.sh --install to install remaining dependencies..."
 	# Chain marker: a chained --install keeps the NOPASSWD drop-in default —
@@ -110,7 +119,7 @@ run_checkhealth() {
 	# default to timestamp-only authentication.
 	INSTALL_CHAIN=1
 	export INSTALL_CHAIN
-	if retry -t "$RETRY_T_HEAVY" -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
+	if retry -t "$RETRY_T_HEAVY" -r "3 124" -s "checkhealth" bash "$INSTALL_DIR/checkhealth.sh" --install --skip-check-config; then
 		ok "Dependency check complete."
 	else
 		warn "Some dependencies could not be installed automatically."
@@ -134,6 +143,7 @@ checkhealth_step() { # <pos: tool | after_links>
 	run_checkhealth_step
 	printf '\n'
 }
+
 persist_path_step() { # <pos: before_links | after_links>
 	[ "$PERSIST_PATH" = 1 ] || return 0
 	[ "${PERSIST_POS:-after_links}" = "$1" ] || return 0

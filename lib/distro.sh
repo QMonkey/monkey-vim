@@ -337,8 +337,10 @@ distro_install() {
 	arch)
 		local rc=0
 		clear_stale_pacman_lock
+		# --needed: pacman reinstalls an already up-to-date target by default,
+		# and this batch means "make sure these are installed".
 		# -H: reap a timeout-orphaned pacman between attempts (db.lck).
-		retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman install" sudo_cmd pacman -S --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
+		retry -t "$RETRY_T_NET" -H distro_cleanup_timed_out -s "pacman install" sudo_cmd pacman -S --needed --noconfirm ${PKG_VALID[@]+"${PKG_VALID[@]}"} || rc=$?
 		return "$rc"
 		;;
 	opensuse) retry -t "$RETRY_T_NET" -s "zypper install" sudo_cmd zypper --non-interactive install -y ${PKG_VALID[@]+"${PKG_VALID[@]}"} ;;
@@ -442,10 +444,14 @@ install_build_deps() {
 	# go looking in the AUR or in bottles. One lane, chosen by OS, and this
 	# caller reports what that lane refused — distro_install filters silently
 	# because the chain reports at the end of its walk instead.
+	# The lane's status is dropped on purpose: warn_unknown_pkgs below IS that
+	# report, and an all-unknown batch returns 1 — bare non-zero would abort
+	# the consumer installer, the exact case lib/pkg.sh's "rc never aborts the
+	# run" contract forbids.
 	if [ "$OS" = macos ]; then
-		brew_install ${names[@]+"${names[@]}"}
+		brew_install ${names[@]+"${names[@]}"} || :
 	else
-		distro_install ${names[@]+"${names[@]}"}
+		distro_install ${names[@]+"${names[@]}"} || :
 	fi
 	warn_unknown_pkgs
 	hash -r

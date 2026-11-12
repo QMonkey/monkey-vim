@@ -20,6 +20,8 @@
 #   write_tty_autostart / autostart_block — guarded compositor exec block
 #   shell_env_files / append_env_block — which profile files exist and how
 #       blocks land in them
+#   PROXY_ENV_KEYS / no_proxy_floor — the proxy trio every networked project
+#       env file seeds, named once, plus the loopback floor NO_PROXY needs
 
 # Homebrew prefixes: the single source of truth, split by host OS, one prefix
 # per line. A brew already on PATH leads the list — its REAL prefix comes
@@ -124,6 +126,55 @@ env_source_line() {
 	*) _shown=$(printf '%q' "$_p") ;;
 	esac
 	printf '[[ -f %s ]] && { set -a; source %s; set +a; }\n' "$_shown" "$_shown"
+}
+
+# PROXY_ENV_KEYS — the proxy trio every project env file seeds for its
+# network-talking consumer. This is the single source for the KEY LIST (which
+# names get filled); the `KEY=` lines themselves must exist in each template,
+# because render_fill only ever fills a line that is already there. What each
+# reader actually honours was measured on this host with the installed curl
+# and Go toolchain, not read off documentation:
+#   Go net/http (smart-suggestion's transport) — honours all six spellings for
+#     both schemes, so HTTPS_PROXY/HTTP_PROXY/NO_PROXY are enough.
+#   curl (minuet-ai.nvim spawns it) — HTTPS_PROXY/https_proxy work for https
+#     URLs, NO_PROXY works either way, but for a PLAIN http URL curl only
+#     reads lowercase http_proxy and ignores HTTP_PROXY.
+# So the uppercase trio covers an https gateway in every consumer; a plain
+# http gateway reached through curl needs a hand-written `http_proxy=` line in
+# the same file — render_fill only ever touches the seeded keys, so that extra
+# line survives every re-run.
+#
+# Seeding it in every project is deliberate: a host that installs only the
+# editor and the shell (no agent tooling) has nothing else to fill in, and an
+# install run from a minimal environment (sudo, cron, a first boot) has no
+# inherited value to depend on either. The cost is that the same value now
+# lives in one file per project, and render_fill NEVER rewrites a non-empty
+# line — so rotating a proxy means editing every file that carries it, and
+# leaving the trio empty in one file while another holds a value is not inert:
+# the later-sourced empty line clears the earlier value for that subtree
+# (verified: an empty assignment blanks an inherited one in bash and zsh, and
+# curl as well as Go read an empty proxy as "do not proxy").
+PROXY_ENV_KEYS="HTTPS_PROXY HTTP_PROXY NO_PROXY"
+
+# no_proxy_floor [value] — NO_PROXY is additive by nature (exclusions only
+# grow), so the loopback binds are appended to whatever the caller already
+# listed rather than replacing it. Every consumer that dials a local endpoint
+# needs this: with a proxy exported and no loopback entry, curl and Go both
+# send http://127.0.0.1:… through the proxy, and the symptom (timeout from a
+# completion request) sits far from the cause. Prints the merged list; the
+# caller exports NO_PROXY to it before render_fill, which is what puts it in
+# the file — templates always leave the line empty so the fill mode takes this
+# value instead of a seeded default.
+no_proxy_floor() {
+	local np="${1-${NO_PROXY:-}}"
+	local _d
+	for _d in localhost 127.0.0.1 ::1; do
+		case ",$np," in
+		*,"$_d,"*) ;;
+		*) np="${np:+$np,}$_d" ;;
+		esac
+	done
+	printf '%s' "$np"
 }
 
 append_env_block() {
@@ -386,6 +437,26 @@ write_tty_autostart() {
 }
 
 # ────────────────────── bin dirs / PATH ──────────────────────
+# _path_dir_renderable <dir> — can this text be pasted into a PATH snippet that
+# a login shell will re-parse? Anything that would stop being one literal
+# directory name there is refused at the boundary instead of escaped at render
+# time, which keeps the emitted line byte-identical on every ordinary host: a
+# double quote or a backslash breaks out of the quoting, a backquote or a `$(`
+# runs a command, and a newline splits the line. A bare dollar sign is fine —
+# parameter expansion cannot run anything, and '$HOME/…' is the framework's own
+# idiom. Only environment-derived values reach this check: the framework's own
+# '$HOME/.local/bin' and '${CARGO_HOME:-$HOME/.cargo}/bin' expressions are
+# authored to be expanded by the login shell and are never validated.
+_path_dir_renderable() {
+	local _bad=$'"`\\'
+	# shellcheck disable=SC2016 # the two-character sequence $( is matched
+	# literally here; nothing is substituted at this point.
+	case "$1" in
+	*["$_bad"]* | *'$('* | *$'\n'*) return 1 ;;
+	esac
+	return 0
+}
+
 # _path_prepend_snippet <dir>... — the ONE rendering of a bin_dirs-style
 # idempotent PATH line. ARGUMENT ORDER IS THE RESULTING PATH ORDER ($1 ends up
 # ahead of $2), so callers name dirs high → low like the positional arm of
@@ -413,16 +484,27 @@ _path_prepend_snippet() {
 # Priority (high → low): ~/.local/bin, cargo, go, npm.
 # Consumed only by path_dirs_snippet, which decides what a not-yet-existing
 # dir means for this rendering (it is seeded anyway — future-proofing).
+# This stdout is a DATA channel: persist_path captures it into the profile
+# block verbatim, so a message here must go to stderr or it lands in the
+# sourced file as shell text.
 bin_dirs() {
 	local -a go_dirs=()
 	if [ -n "${GOBIN:-}" ]; then
-		go_dirs+=("$GOBIN")
+		if _path_dir_renderable "$GOBIN"; then
+			go_dirs+=("$GOBIN")
+		else
+			warn "GOBIN $(printf '%q' "$GOBIN") holds a character a login shell would re-parse (quote, backslash, backquote or command substitution) — left out of the PATH block" >&2
+		fi
 	else
 		# Split GOPATH on ':' ONLY (temporarily narrowed IFS — paths with
 		# spaces survive); the escaped default keeps $HOME literal.
 		local gopath_entry old_ifs=$IFS
 		IFS=':'
 		for gopath_entry in ${GOPATH:-\$HOME/go}; do
+			if [ -n "${GOPATH:-}" ] && ! _path_dir_renderable "$gopath_entry"; then
+				warn "GOPATH entry $(printf '%q' "$gopath_entry") holds a character a login shell would re-parse — its bin dir is left out of the PATH block" >&2
+				continue
+			fi
 			go_dirs+=("$gopath_entry/bin")
 		done
 		IFS=$old_ifs
@@ -451,6 +533,10 @@ path_dirs_snippet() {
 	local p
 	for p in $(brew_prefixes); do
 		[ "$p" = /usr/local ] && continue
+		# One of the reported prefixes is derived from PATH through
+		# `command -v brew`, so it gets the same boundary check as the go
+		# dirs; the two literal candidates can never fail it.
+		_path_dir_renderable "$p" || continue
 		_brew_path_snippet "$p/bin" "$p/sbin"
 	done
 	bin_dirs

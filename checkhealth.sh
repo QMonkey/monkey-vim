@@ -58,7 +58,11 @@ ENVIRONMENT
                    Default: 0 for a manual run, 1 when chained from an
                    installer. An explicit value always wins.
 
-Exit code: 1 if any required dependency is missing, 0 otherwise.
+Exit code: 1 if any required dependency is missing, 0 otherwise, 2 for an
+unrecognized option, 3 with --install when an install never reached a verdict
+(a transaction died, or a package index was unreachable) — the caller's retry
+loop is what that code is for; a trusted index answering "not in this distro"
+is reported as 1 and is NOT worth retrying.
 EOF
 	exit "${1:-0}"
 }
@@ -79,14 +83,26 @@ parse_args() {
 	done
 }
 
+# The verdict SENTENCE and the exit CODE answer different questions: the
+# sentence says whether required deps are satisfied, the code says whether
+# running again could change the answer. Only --install can produce 3, and 3
+# outranks 1 on purpose — an unresolved verdict is exactly the case where the
+# caller should try again, and the sentence above already told the human which
+# of the two it is. See PKG_RETRY_WORTHY in lib/pkg.sh.
 print_summary() {
 	if [ "$REQUIRED_FAILURES" -eq 0 ]; then
 		printf '%s\n' "${GREEN}${BOLD}All required dependencies satisfied.${NC}"
-		exit 0
+	else
+		printf '%s\n' "${RED}${BOLD}Some required dependencies are missing.${NC}"
+		if ! $INSTALL_MODE; then
+			printf '%s\n' "Run ${CYAN}$0 --install${NC} to install them automatically."
+		fi
 	fi
-	printf '%s\n' "${RED}${BOLD}Some required dependencies are missing.${NC}"
-	if ! $INSTALL_MODE; then
-		printf '%s\n' "Run ${CYAN}$0 --install${NC} to install them automatically."
+	if $INSTALL_MODE && [ "${PKG_RETRY_WORTHY:-0}" -ne 0 ]; then
+		exit 3
+	fi
+	if [ "$REQUIRED_FAILURES" -eq 0 ]; then
+		exit 0
 	fi
 	exit 1
 }
