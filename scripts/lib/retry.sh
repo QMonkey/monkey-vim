@@ -69,7 +69,7 @@ _retry_run() {
 # timeout — a black-holed connection would otherwise hang the installer
 # forever. rc 124 is timeout's own exit code.
 #
-# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-t timeout] [-s desc] [-H hook] cmd...
+# Usage: retry [-n attempts] [-d base_delay] [-m max_delay] [-t timeout] [-s desc] [-H hook] [-r codes] cmd...
 #   -n  total attempts, NOT retries (default 5)
 #   -d  first sleep in seconds (default 15)
 #   -m  sleep cap in seconds (default 120)
@@ -85,6 +85,13 @@ _retry_run() {
 #       attempt dies instantly on "unable to lock database". Runs after
 #       the final attempt and in nested single-shot mode too, so a stuck
 #       lock never outlives the retry.
+#   -r  space-separated exit codes worth another attempt (e.g. "-r 3"); any
+#       other code returns immediately, so a failure that no retry can
+#       change stops the loop instead of burning the whole backoff ladder on
+#       it. Unset = any non-zero, which is every pre-existing caller's
+#       assumption. Checked after -H, so the last attempt's aftermath is
+#       still cleaned up. Ignored in nested single-shot mode — that path has
+#       no second attempt to decide about.
 #
 # Function-first commands run in a child bash — a lib whose helpers must
 # reach that child appends their names to RETRY_EXPORT_FUNCS (space-
@@ -93,9 +100,9 @@ _retry_run() {
 # it — export what it needs at the call site (nvim/vim headless installs).
 # Returns the command's last exit code (124 = timed out). Safe under set -e;
 # cmd's own flags are untouched — getopts stops at the first non-option
-# word, so only the leading -n/-d/-m/-t/-s/-H belong to retry.
+# word, so only the leading -n/-d/-m/-t/-s/-H/-r belong to retry.
 retry() {
-	local attempts=5 base=15 max=120 timeout_s=600 desc="" hook=""
+	local attempts=5 base=15 max=120 timeout_s=600 desc="" hook="" retry_rcs=""
 	local opt
 	# A leading -- may guard a wrapped command that itself starts with an
 	# option-looking word; strip it BEFORE parsing.
@@ -103,7 +110,7 @@ retry() {
 	# OPTIND=1: getopts resumes at $OPTIND on the next call in the same
 	# shell — without the reset a second retry() call misparses.
 	OPTIND=1
-	while getopts ":n:d:m:t:s:H:" opt "$@"; do
+	while getopts ":n:d:m:t:s:H:r:" opt "$@"; do
 		case "$opt" in
 		n) attempts=$OPTARG ;;
 		d) base=$OPTARG ;;
@@ -111,6 +118,7 @@ retry() {
 		t) timeout_s=$OPTARG ;;
 		s) desc=$OPTARG ;;
 		H) hook=$OPTARG ;;
+		r) retry_rcs=$OPTARG ;;
 		*) return 2 ;;
 		esac
 	done
@@ -147,6 +155,17 @@ retry() {
 		if [ "$rc" -eq 0 ]; then
 			RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
 			return 0
+		fi
+		# -r: this code is not on the retry list — another attempt would
+		# only pay the backoff for a verdict that cannot change.
+		if [ -n "$retry_rcs" ]; then
+			case " $retry_rcs " in
+			*" $rc "*) ;;
+			*)
+				RETRY_ACTIVE_COUNT=$((RETRY_ACTIVE_COUNT - 1))
+				return "$rc"
+				;;
+			esac
 		fi
 		if [ "$attempt" -lt "$attempts" ]; then
 			wait_s=$base

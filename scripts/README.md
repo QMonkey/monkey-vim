@@ -106,7 +106,12 @@ Options: `-i` / `--install` (check, then install what is missing),
 `--skip-check-config` (skip the "Config files" section — `install.sh` passes
 it, the config symlinks are linked after this script runs), `-h` / `--help`.
 Exit code: 1 if any **required** dependency is missing, 0 otherwise, 2 for an
-unrecognized option.
+unrecognized option, and 3 under `--install` when an install never reached a
+verdict (a transaction died, or a package index was unreachable) — the code
+answers "would another pass change anything", the printed sentence answers
+"what is missing", and `run_checkhealth`'s `retry -r "3 124"` is what reads
+the difference (124 = the pass itself timed out, which says nothing about the
+packages and is retried as before).
 
 With `--install`, `SUDO_DROPIN=0|1` decides whether the run installs the
 temporary NOPASSWD drop-in (`lib/sudo.sh`): the default is `0` for a manual

@@ -46,8 +46,6 @@
 #          retry; a missing manager binary answers 0 — never drop a
 #          name because a lane cannot speak. That is why probing is 0/1 and
 #          not a tri-state: the tri-state lives in the chain's verdicts.
-#   pkg_admits_failed <lane>         → may this lane be handed names whose
-#          earlier transaction FAILED? only the distro safety net may
 #   pkg_version   <lane> <pkgname>   → the version this lane's INDEX offers
 #          (X.Y, "" when it carries no such name) — "what would I get", never
 #          "what is on disk", which is pkg_installed's question
@@ -152,30 +150,11 @@ chain_default() {
 	esac
 }
 
-# The lane a bare pkg_name call maps for: the head of this host's chain —
-# brew on macOS, the distro manager everywhere else.
-pkg_default_lane() {
-	local chain
-	chain="$(chain_default)"
-	printf '%s\n' "${chain%% *}"
-}
-
 # WHICH LANES, IN WHAT ORDER — one answer per host: chain_default above. A
 # single name asks for a different order by declaring it in its own strategy
 # string (`brew,pkg:fzf`), which install_strategy walks step by step. One lane
 # is therefore asked at most once per name per run — enforced by the visit
-# record STRATEGY_VISITED below, not by pre-computing a chain per name. A
-# bottle step keeps the distro manager behind it as the safety net for
-# downloads that never landed.
-
-# May this lane be handed names whose earlier transaction FAILED? Only the
-# distro manager: it is the safety net for a bottle install whose download
-# timed out and never landed. brew/aur never inherit a failure — a blind
-# fallback once installed wl-clipboard, wireplumber and mako from bottles on
-# arch while pacman was down. A FAILED name is the retry loop's business.
-pkg_admits_failed() {
-	[ "$1" = pkg ]
-}
+# record STRATEGY_VISITED below, not by pre-computing a chain per name.
 
 # ──────────────────────────── lane dispatch ────────────────────────────
 # The aggregator's only window into a domain: a case table (not
@@ -194,10 +173,18 @@ pkg_admits_failed() {
 # The one verb whose <lane> is NOT the first argument, on purpose: its answer
 # is a name, not a lane verdict, and every existing caller asks "what is this
 # binary called on this host" — forcing them to spell the default lane out
-# would just move pkg_default_lane into 13 call sites.
+# would just move this two-step derivation into every call site.
 pkg_name() {
 	local bin="$1" lane="${2:-}"
-	[ -n "$lane" ] || lane="$(pkg_default_lane)"
+	# bash cannot strip a pattern off a command substitution in one step, so
+	# the chain lands in $lane before it is cut to its head. The `|| lane=""`
+	# is not decoration: chain_default exits 1 for an OS with no lane, and
+	# without this the failing substitution would abort pkg_name itself
+	# instead of leaving the mapping to fall through to the distro table.
+	[ -n "$lane" ] || {
+		lane="$(chain_default)" || lane=""
+		lane="${lane%% *}"
+	}
 	case "$lane" in
 	brew) brew_name "$bin" ;;
 	*) distro_name "$bin" ;;
@@ -289,6 +276,16 @@ CHAIN_DELIVERED=()
 CHAIN_UNINDEXED=()
 CHAIN_FAILED=()
 
+# PKG_RETRY_WORTHY — the walk outcome the EXIT codes have to tell apart from
+# "missing": a name whose verdict never arrived. Two classes reach it (see
+# chain_walk's tail): names a lane carried but could not deliver, and names no
+# lane got to answer because its index was unreachable. Retrying can change
+# both. CHAIN_UNINDEXED — a trusted index that answered "not here" — cannot, so
+# that gap is reported once and left alone. Set in one place, never cleared:
+# every --install pass is a fresh process, and the retry loop re-runs the whole
+# chain from scratch, which resets the latch by construction.
+PKG_RETRY_WORTHY=0
+
 # Lanes already asked for a package name during the CURRENT strategy run. A
 # strategy is a sequence of steps for one spec, and a lane step plus the default
 # chain can name the same lane for the same package — without this record the
@@ -355,8 +352,9 @@ chain_walk() {
 	# walk stays shut against bottles. Scoped to this walk — the retry loop
 	# re-runs the chain from scratch, so nothing here degrades a later call.
 	local trusted=1
-	# Did THIS walk park a name as FAILED? Reported per walk so a group's
-	# status is its own (CHAIN_FAILED is the run-wide report).
+	# Did THIS walk park a name as FAILED? Per walk, so one group's status
+	# stays its own; PKG_RETRY_WORTHY is the process-wide view of the same
+	# fact, which is what the exit codes read.
 	local failed_here=0
 	# Names owed a verdict when the walk was cut short by an outage. They are
 	# NOT "unknown to the index" — reporting them as such would be a lie
@@ -365,13 +363,16 @@ chain_walk() {
 	local -a unverified=()
 	[ ${#todo[@]} -gt 0 ] || return 0
 	for lane in $lanes; do
-		# Candidates for this lane: the index misses still in flight, plus —
-		# only into a lane that ADMITS failures — the names an earlier lane
-		# carried and could not deliver. The question is asked of the lane
-		# being ENTERED, never of the one that failed: that is what keeps a
-		# dead pacman transaction from walking its names into a bottle.
+		# Candidates for this lane: the index misses still in flight, plus — only
+		# into the distro manager, the one lane that exists to catch a bottle
+		# whose download timed out and never landed — the names an earlier lane
+		# carried and could not deliver. The question is asked of the lane being
+		# ENTERED, never of the one that failed: brew/aur never inherit a failure,
+		# a blind fallback once installed wl-clipboard, wireplumber and mako from
+		# bottles on arch while pacman was down. A FAILED name is the retry
+		# loop's business.
 		todo=(${inflight[@]+"${inflight[@]}"})
-		if [ ${#dead[@]} -gt 0 ] && pkg_admits_failed "$lane"; then
+		if [ ${#dead[@]} -gt 0 ] && [ "$lane" = pkg ]; then
 			todo+=(${dead[@]+"${dead[@]}"})
 			dead=()
 		fi
@@ -453,6 +454,11 @@ chain_walk() {
 	if [ ${#dead[@]} -gt 0 ]; then
 		CHAIN_FAILED+=(${dead[@]+"${dead[@]}"})
 		failed_here=1
+	fi
+	# The one write site for the latch (both transient classes land here: a
+	# dead transaction, and the outage that left names unanswered).
+	if [ "$failed_here" -ne 0 ] || [ ${#unverified[@]} -gt 0 ]; then
+		PKG_RETRY_WORTHY=1
 	fi
 	# Anything still in flight was rejected by every lane that spoke.
 	if [ ${#inflight[@]} -gt 0 ]; then

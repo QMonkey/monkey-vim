@@ -1,0 +1,5 @@
+# The documented one-shot install writes <repo>-install.log into this
+# directory (curl ... | bash 2>&1 | tee). It carries the installer's own
+# output, including endpoint hosts and proxy host lists when a check fails,
+# so it is never a file to commit.
+*.log

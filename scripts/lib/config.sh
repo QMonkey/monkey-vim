@@ -232,6 +232,10 @@ check_config_files() {
 		warn "config checks skipped (handled by the installer)"
 		return 0
 	fi
+	# A project that owns no config file declares neither list (monkey-env, the
+	# meta-installer, is one): printing the header for an empty section reads as
+	# a broken check instead of as nothing to check.
+	[ -z "${CONFIG_LINKS[*]-}" ] && [ -z "${CONFIG_HINTS[*]-}" ] && return 0
 	print_bold_header "Config files"
 	check_config_links
 	local entry type params ok_msg incomplete missing
