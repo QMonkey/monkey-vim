@@ -425,8 +425,8 @@ _ensure_homebrew_once() {
 			# Reaching here mid-run puts the prefix ahead of the framework
 			# user dirs for the REST of this shell (the idempotent prepend
 			# lines never move an entry already on PATH); the profile block
-			# lands in the pinned order instead (path_dirs_snippet renders
-			# Homebrew first, the user dirs after).
+			# lands in the pinned order instead (path_dirs_snippet claims the
+			# user dirs first and Homebrew last, in one block).
 		fi
 		export_brew_path "$brew_prefix/bin" "$brew_prefix/sbin"
 		ok "Homebrew/Linuxbrew ready at $brew_prefix ($placement)."

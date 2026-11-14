@@ -78,15 +78,20 @@ link_config() {
 }
 
 setup_symlinks() {
+	local entry src dst mode d f
+	# The banner claims links are being made, so a project that declares
+	# nothing to create must not print it: the meta chain lands no config of
+	# its own, and this line from it would read as a landed config.
+	if [ ${#SYMLINKS[@]} -eq 0 ] && [ ${#ENSURE_DIRS[@]} -eq 0 ] && [ ${#ENSURE_FILES[@]} -eq 0 ]; then
+		return 0
+	fi
 	info "Setting up configuration symlinks..."
-	local entry src dst mode
 	for entry in ${SYMLINKS[@]+"${SYMLINKS[@]}"}; do
 		IFS='|' read -r src dst mode <<EOF
 $entry
 EOF
 		link_config "$src" "$dst" "$mode"
 	done
-	local d f
 	for d in ${ENSURE_DIRS[@]+"${ENSURE_DIRS[@]}"}; do
 		if [ -d "$d" ]; then
 			ok "$d exists"

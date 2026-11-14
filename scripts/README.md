@@ -363,11 +363,11 @@ with the file being replaced), a foreign directory is left alone, rc 1. Only
 `takeover` can fail.
 
 `PERSIST_PATH=1` writes one `head` block with exactly what `path_dirs_snippet`
-(`lib/env.sh`) emits: the Homebrew prefixes' `bin`/`sbin` first (placement per
-`_brew_path_snippet` — prepended on macOS, positional on Linux/WSL), then the
-`bin_dirs` exports in PATH order — `~/.local/bin`,
+(`lib/env.sh`) emits: one `bin_dirs` claim in PATH order — `~/.local/bin`,
 `${CARGO_HOME:-~/.cargo}/bin`, `GOBIN` or every `GOPATH` entry's bin,
-`~/.npm-global/bin` deepest; the profile set comes from
+`~/.npm-global/bin` — with the Homebrew prefixes' `bin`/`sbin` folded into it as
+its lowest tier on macOS, and kept as a separate positional insert (append, or
+before the first `/mnt`) on Linux/WSL; the profile set comes from
 `shell_env_files` (zsh → `~/.zprofile`, bash → `~/.bash_profile` or
 `~/.profile`, plus `~/.bashrc`). `brew_ensure` calls `persist_path` directly,
 past this gate: a run that bootstraps Homebrew persists its PATH even with
