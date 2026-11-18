@@ -58,6 +58,18 @@ distro_name() {
 	# notification-daemon sentinel: dunst where packaged (EPEL), mako elsewhere.
 	debian:notif | ubuntu:notif | centos:notif | fedora:notif) printf '%s\n' "dunst" ;;
 	*:notif) printf '%s\n' "mako" ;;
+	# cjkfont sentinel: the distro's Noto CJK package. Asked by the compositor
+	# repos' installers (install_pkg "$(pkg_name cjkfont)"), never by a check —
+	# Chinese text in waybar and the menus is tofu boxes without a CJK font, and
+	# Noto's shapes are the conventional ones, so the install just makes sure of
+	# it instead of judging what the host already carries.
+	arch:cjkfont) printf '%s\n' "noto-fonts-cjk" ;;
+	debian:cjkfont | ubuntu:cjkfont) printf '%s\n' "fonts-noto-cjk" ;;
+	# openSUSE has a per-script package and a metapackage that pulls all four;
+	# take the SC single. Fedora and CentOS ship the four scripts as one
+	# package, so there is nothing narrower to ask for.
+	opensuse:cjkfont) printf '%s\n' "google-noto-sans-sc-fonts" ;;
+	fedora:cjkfont | centos:cjkfont) printf '%s\n' "google-noto-sans-cjk-fonts" ;;
 	# polkit agents: the GNOME agent is retired upstream on Fedora/EPEL.
 	# Ubuntu carries policykit-1-gnome in universe (incl. resolute) — the
 	# D-Bus agent name must map, or apt gets asked for a name no repo has.

@@ -12,7 +12,10 @@
 #               py:module (Python module probe — pylsp plugins ship no
 #               binary; import the module instead) |
 #               match:bin (companion whose major.minor version must equal
-#               <bin>'s — zls vs zig; master missing ⇒ pass)
+#               <bin>'s — zls vs zig; master missing ⇒ pass) |
+#               fc:LANG[:family] (fontconfig knows a font covering LANG,
+#               optionally narrowed to families matching <family> — for deps
+#               that ship FILES, not binaries: CJK fonts)
 #     desc      printed text (default: id)
 #     install   pkg (default) | pkg:name name | aur:x | pip:x | npm:x | go:x |
 #               brew:x | rustup | rustup-component:x |
@@ -164,6 +167,34 @@ probe_spec() {
 		fi
 		return 1
 		;;
+	fc:*)
+		# Language coverage, asked of fontconfig itself — the only portable probe
+		# for a dependency that ships files instead of a binary. The optional
+		# family field narrows the question to one vendor's faces (fc:zh:Noto):
+		# what the compositor repos want is Noto's shapes, so another CJK font
+		# already on the host does NOT count as met.
+		# fc-match cannot stand in for this — with nothing covering the language
+		# it answers a Latin fallback, i.e. it reports success exactly when the
+		# screen shows tofu. No fc-list (package fontconfig) is not softened into
+		# a pass either: sway pulls pango and waybar pulls gtk3, both requiring
+		# fontconfig, so a host that reached this check has it.
+		have_native_cmd fc-list || return 1
+		local q lang pat fams hits
+		q="${SPEC_CHECK#fc:}"
+		lang="${q%%:*}"
+		pat=""
+		[ "$lang" = "$q" ] || pat="${q#*:}"
+		fams=$(fc-list ":lang=$lang" family 2>/dev/null | sort -u)
+		[ -n "$fams" ] || return 1
+		if [ -n "$pat" ]; then
+			hits=$(printf '%s\n' "$fams" | grep -iE -- "$pat") || true
+			[ -n "$hits" ] || return 1
+			PROBE_MATCH="${hits%%"$'\n'"*}"
+			return 0
+		fi
+		PROBE_MATCH="${fams%%"$'\n'"*}"
+		return 0
+		;;
 	*)
 		have_native_cmd "$SPEC_ID"
 		;;
@@ -271,7 +302,7 @@ check_spec() {
 	esac
 	if probe_spec "$spec"; then
 		case "$SPEC_CHECK" in
-		anyof:* | anyofext:* | ext)
+		anyof:* | anyofext:* | ext | fc:*)
 			ok "${SPEC_DESC} (${PROBE_MATCH})"
 			;;
 		*)
